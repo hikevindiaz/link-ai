@@ -10,7 +10,7 @@ import { fileTypesFullList } from "@/lib/validations/codeInterpreter";
 import { fileTypes as searchFile } from "@/lib/validations/fileSearch";
 import { File } from "buffer";
 
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 const routeContextSchema = z.object({
     params: z.object({
