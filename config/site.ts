@@ -7,8 +7,8 @@ export const siteConfig: SiteConfig = {
   url: "https://www.trudigital.agency/link",
   ogImage: "https://www.openassistantgpt.io/dashboard.png",
   links: {
-    twitter: "https://twitter.com/oassistantgpt",
-    github: "https://www.openassistantgpt.io/dashboard.png",
-    productHunt: "https://www.openassistantgpt.io/dashboard.png",
+    twitter: "https://www.trudigital.agency/link",
+    github: "https://www.trudigital.agency/link",
+    productHunt: "https://www.trudigital.agency/link",
   },
 }
