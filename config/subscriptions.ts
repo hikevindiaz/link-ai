@@ -96,5 +96,5 @@ export const proPlan: SubscriptionPlan = {
     chatFileAttachments: true,
     brandingCustomization: true,
 
-    price: 27,
+    price: 0,
 }
