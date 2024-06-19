@@ -1,9 +1,8 @@
 
-import React from 'react'
+import React from 'react';
 
-import { cn } from '@/lib/utils'
-import { ExternalLink } from '@/components/external-link'
-import { siteConfig } from '@/config/site'
+import { cn } from '@/lib/utils';
+import { ExternalLink } from '@/components/external-link';
 
 export function FooterText({ className, ...props }: React.ComponentProps<'p'>) {
     return (
@@ -15,7 +14,8 @@ export function FooterText({ className, ...props }: React.ComponentProps<'p'>) {
             {...props}
         >
             Powered by{' '}
-            <ExternalLink href={siteConfig.url}>Link AI</ExternalLink>
+            <ExternalLink href="https://www.trudigital.agency/link">Link AI</ExternalLink>
         </p>
-    )
+    );
 }
+
