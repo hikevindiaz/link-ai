@@ -2,7 +2,7 @@ import { SubscriptionPlan } from "@/types"
 
 export const freePlan: SubscriptionPlan = {
     name: "FREE",
-    description: "The FREE plan is limited to 1 chatbot, 1 crawler, 3 files and 500 messages per month.",
+    description: "The FREE plan is limited to 1000 chatbot, 1000 crawler, 3000 files and unlimited messages per month.",
     stripePriceId: "",
 
     maxChatbots: 1000,
@@ -82,7 +82,7 @@ export const legacyBasicPlan: SubscriptionPlan = {
 export const proPlan: SubscriptionPlan = {
     name: "PRO",
     description: "The PRO plan has 27 chatbots, 27 crawlers and 81 files and unlimited messages.",
-    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID || "",
+    stripePriceId: "",
 
     maxChatbots: 27,
     maxCrawlers: 27,
