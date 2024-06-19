@@ -4,7 +4,7 @@ export const siteConfig: SiteConfig = {
   name: "Link",
   description:
     "Use Link to convert clients way faster.",
-  url: "https://www.trudigital.agency/link",
+  url: "https://truai-three.vercel.app/",
   ogImage: "https://www.openassistantgpt.io/dashboard.png",
   links: {
     twitter: "https://www.trudigital.agency/link",
