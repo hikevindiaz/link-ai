@@ -11,13 +11,9 @@ import { fileTypes as searchTypes } from '@/lib/validations/fileSearch';
 import formidable from 'formidable';
 import fs from 'fs';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const dynamic = 'force-dynamic';
 
-export const POST = async (request: Request) => {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
