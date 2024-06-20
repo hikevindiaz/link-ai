@@ -1,3 +1,5 @@
+"use client"; // This line must be added at the top
+
 import { redirect } from "next/navigation";
 import { DashboardHeader } from "@/components/header";
 import { DashboardShell } from "@/components/shell";
