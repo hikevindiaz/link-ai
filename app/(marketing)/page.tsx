@@ -19,10 +19,10 @@ export default function IndexPage() {
             className="rounded-2xl border shadow-md bg-muted px-4 py-1.5 text-sm font-medium"
             target="_blank"
           >
-            Find us on 𝕏
+            Register Today
           </Link>
           <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
-            Build your own chatbot with OpenAI Assistant
+            Convert clients was faster.
           </h1>
           <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
             An open source platform for building chatbot with the Assistant API. We offer seamless integration for effortlessly incorporating a chatbot into your website.
