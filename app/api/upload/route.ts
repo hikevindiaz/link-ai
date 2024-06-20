@@ -10,13 +10,9 @@ import { fileTypes as codeTypes } from '@/lib/validations/codeInterpreter';
 import { fileTypes as searchTypes } from '@/lib/validations/fileSearch';
 import formidable from 'formidable';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const dynamic = 'force-dynamic';
 
-export async function POST(request: Request) {
+export const POST = async (request: Request) => {
   try {
     const session = await getServerSession(authOptions);
 
@@ -101,4 +97,4 @@ export async function POST(request: Request) {
     console.error(error);
     return new Response(null, { status: 500 });
   }
-}
+};
