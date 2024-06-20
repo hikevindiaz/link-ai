@@ -9,8 +9,13 @@ import { RequiresHigherPlanError } from '@/lib/exceptions';
 import { fileTypes as codeTypes } from '@/lib/validations/codeInterpreter';
 import { fileTypes as searchTypes } from '@/lib/validations/fileSearch';
 import formidable from 'formidable';
+import fs from 'fs';
 
-export const dynamic = 'force-dynamic';
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 export const POST = async (request: Request) => {
   try {
@@ -32,15 +37,21 @@ export const POST = async (request: Request) => {
       throw new RequiresHigherPlanError();
     }
 
-    const form = new formidable.IncomingForm();
-
-    const { fields, files } = await new Promise((resolve, reject) => {
-      form.parse(request, (err, fields, files) => {
-        if (err) reject(err);
-        resolve({ fields, files });
-      });
+    const form = formidable({
+      uploadDir: "/tmp",
+      keepExtensions: true,
     });
 
+    const parseForm = () => {
+      return new Promise<{ fields: formidable.Fields; files: formidable.Files }>((resolve, reject) => {
+        form.parse(request, (err, fields, files) => {
+          if (err) reject(err);
+          resolve({ fields, files });
+        });
+      });
+    };
+
+    const { fields, files } = await parseForm();
     const file = files.file as formidable.File;
     const filename = file.originalFilename;
 
@@ -53,7 +64,8 @@ export const POST = async (request: Request) => {
       return new Response(`Invalid file extension, check the documentation for more information.`, { status: 400 });
     }
 
-    const blob = await put(filename, file.filepath, {
+    const fileStream = fs.createReadStream(file.filepath);
+    const blob = await put(filename, fileStream, {
       access: 'public',
     });
 
