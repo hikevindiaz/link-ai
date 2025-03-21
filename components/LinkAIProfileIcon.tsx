@@ -18,7 +18,7 @@ const LinkAIProfileIcon: React.FC<LinkAIProfileIconProps> = ({ size = 32 }) => {
       
       {/* Link AI Logo on top */}
       <Image
-        src="/LinkAIicon.svg"  // Updated to use an existing file
+        src="/LINK AI ICON LIGHT.png"  // Updated to use an existing file
         alt="Link AI Logo"
         fill // Use fill instead of layout="fill"
         className="p-2 object-contain" // Use CSS for object fitting
