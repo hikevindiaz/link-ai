@@ -1,0 +1,116 @@
+/* Main wrapper to target all child elements */
+.customChatWrapper {
+  --user-message-bg: #000000;
+  --user-message-text: #ffffff;
+  --ai-message-bg: #ffffff;
+  --ai-message-text: #000000;
+  --input-bg: #ffffff;
+  --chat-bg: #f9f9f9;
+  --border-radius: 16px;
+  --send-button-bg: #000000;
+  --send-button-text: #ffffff;
+}
+
+/* Target the chat container */
+.customChatWrapper :global(.chatbot-page) {
+  background-color: var(--chat-bg) !important;
+}
+
+/* Message bubbles */
+.customChatWrapper :global([class*="message"]) {
+  margin-bottom: 16px !important;
+}
+
+/* User messages */
+.customChatWrapper :global([class*="user"][class*="message"]),
+.customChatWrapper :global([class*="message"][class*="user"]) {
+  background-color: var(--user-message-bg) !important;
+  color: var(--user-message-text) !important;
+  border-radius: var(--border-radius) !important;
+  border-top-right-radius: 4px !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* AI messages */
+.customChatWrapper :global([class*="assistant"][class*="message"]),
+.customChatWrapper :global([class*="message"][class*="assistant"]) {
+  background-color: var(--ai-message-bg) !important;
+  color: var(--ai-message-text) !important;
+  border-radius: var(--border-radius) !important;
+  border-top-left-radius: 4px !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Input container */
+.customChatWrapper :global([class*="input-container"]),
+.customChatWrapper :global(form) {
+  margin-bottom: 16px !important;
+}
+
+/* Input field */
+.customChatWrapper :global(textarea),
+.customChatWrapper :global(input[type="text"]) {
+  background-color: var(--input-bg) !important;
+  border: none !important;
+  border-radius: 24px !important;
+  padding: 12px 16px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  min-height: 50px !important;
+}
+
+/* Send button */
+.customChatWrapper :global(button[type="submit"]),
+.customChatWrapper :global([class*="send-button"]) {
+  background-color: var(--send-button-bg) !important;
+  color: var(--send-button-text) !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* Message actions (like, dislike, copy) */
+.customChatWrapper :global([class*="message-actions"]),
+.customChatWrapper :global([class*="action-buttons"]) {
+  display: flex !important;
+  gap: 4px !important;
+  margin-top: 4px !important;
+}
+
+.customChatWrapper :global([class*="message-actions"] button),
+.customChatWrapper :global([class*="action-buttons"] button) {
+  background-color: transparent !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Header styling */
+.customChatWrapper :global([class*="header"]) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+  padding: 12px 16px !important;
+}
+
+/* Avatar for AI */
+.customChatWrapper :global([class*="avatar"]),
+.customChatWrapper :global([class*="bot-icon"]) {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background-color: #f0f0f0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-right: 8px !important;
+} 

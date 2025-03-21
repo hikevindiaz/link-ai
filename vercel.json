@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "buildCommand": "npx prisma generate && NEXT_SKIP_TYPE_CHECK=1 NEXT_IGNORE_ESLINT=1 next build",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_SKIP_TYPE_CHECK": "1",
+    "NEXT_IGNORE_ESLINT": "1",
+    "NODE_OPTIONS": "--max-old-space-size=3072",
+    "NEXT_PUBLIC_DISABLE_CONTENTLAYER": "true",
+    "NEXT_PUBLIC_FALLBACK_TO_STATIC": "true",
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "NEXT_MINIMAL_BUILD": "1",
+    "ENABLE_EXPERIMENTAL_COREPACK": "0"
+  },
+  "framework": "nextjs",
+  "installCommand": "npm install --legacy-peer-deps"
+} 

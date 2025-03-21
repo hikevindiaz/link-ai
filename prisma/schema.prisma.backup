@@ -1,0 +1,385 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_DIRECT_URL")
+}
+
+model OpenAIConfig {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  globalAPIKey String
+  createdAt    DateTime @default(now()) @map("created_at")
+}
+
+model ChatbotFiles {
+  id         String   @id @default(cuid())
+  assignedAt DateTime @default(now())
+  chatbotId  String
+  fileId     String
+  chatbot    Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  file       File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+}
+
+model ChatbotMessagesExport {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now()) @map("created_at")
+  blobUrl         String
+  blobDownloadUrl String
+  lastXDays       Int
+  chatbotId       String
+  chatbot         Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+}
+
+model ChatbotErrors {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now()) @map("created_at")
+  errorMessage String
+  threadId     String
+  chatbotId    String
+  chatbot      Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+}
+
+model Chatbot {
+  id                              String                  @id @default(cuid())
+  name                            String
+  userId                          String
+  openaiId                        String?                 @default("")
+  createdAt                       DateTime                @default(now()) @map("created_at")
+  openaiKey                       String?                 @default("")
+  modelId                         String?
+  prompt                          String?                 @default("You are a helpful assistant.")
+  welcomeMessage                  String?                 @default("Hello! How can I help you today?")
+  chatbotErrorMessage             String?                 @default("I'm sorry, I encountered an error. Please try again later.")
+  isImported                      Boolean                 @default(false)
+  chatTitle                       String                  @default("2")
+  chatMessagePlaceHolder          String                  @default("Type a message...")
+  rightToLeftLanguage             Boolean                 @default(false)
+  bubbleColor                     String                  @default("#FFFFFF")
+  bubbleTextColor                 String                  @default("#000000")
+  chatHeaderBackgroundColor       String                  @default("FFFFFF")
+  chatHeaderTextColor             String                  @default("#000000")
+  chatbotReplyBackgroundColor     String                  @default("#e4e4e7")
+  chatbotReplyTextColor           String                  @default("#000000")
+  userReplyBackgroundColor        String                  @default("#e4e4e7")
+  userReplyTextColor              String                  @default("#000000")
+  chatbotLogoURL                  String?
+  chatInputStyle                  String                  @default("default")
+  inquiryEnabled                  Boolean                 @default(false)
+  inquiryLinkText                 String                  @default("Contact our support team")
+  inquiryTitle                    String                  @default("Contact our support team")
+  inquirySubtitle                 String                  @default("Our team is here to help you with any questions you may have. Please provide us with your email and a brief message so we can assist you.")
+  inquiryEmailLabel               String                  @default("Email")
+  inquiryMessageLabel             String                  @default("Message")
+  inquirySendButtonText           String                  @default("Send message")
+  inquiryAutomaticReplyText       String                  @default("Your inquiry has been sent. Our team will get back to you shortly.")
+  inquiryDisplayLinkAfterXMessage Int                     @default(1)
+  chatHistoryEnabled              Boolean                 @default(false)
+  displayBranding                 Boolean                 @default(true)
+  chatFileAttachementEnabled      Boolean                 @default(false)
+  maxCompletionTokens             Int                     @default(1200)
+  maxPromptTokens                 Int                     @default(1200)
+  bannedIps                       String[]                @default([])
+  allowEveryone                   Boolean                 @default(true)
+  allowedIpRanges                 String[]                @default([])
+  chatBackgroundColor             String                  @default("#FFFFFF")
+  callTimeout                     Int?
+  checkUserPresence               Boolean?                @default(false)
+  hangUpMessage                   String?
+  language                        String?                 @default("en")
+  phoneNumber                     String?
+  presenceMessage                 String?
+  presenceMessageDelay            Int?
+  responseRate                    String?
+  secondLanguage                  String?
+  silenceTimeout                  Int?
+  temperature                     Float                   @default(0.7)
+  voice                           String?
+  lastTrainedAt                   DateTime?
+  trainingMessage                 String?
+  trainingStatus                  String                  @default("idle")
+  ChatbotErrors                   ChatbotErrors[]
+  ChatbotFiles                    ChatbotFiles[]
+  ChatbotMessagesExport           ChatbotMessagesExport[]
+  ClientInquiries                 ClientInquiries[]
+  forms                           ChatbotForm[]
+  model                           ChatbotModel?           @relation(fields: [modelId], references: [id])
+  formSubmissions                 FormSubmission[]
+  knowledgeSources                KnowledgeSource[]       @relation("ChatbotToKnowledgeSource")
+
+  @@map("chatbots")
+}
+
+model File {
+  id                String           @id @default(cuid())
+  userId            String
+  name              String
+  openAIFileId      String           @unique
+  createdAt         DateTime         @default(now()) @map("created_at")
+  blobUrl           String
+  crawlerId         String?
+  knowledgeSourceId String?
+  ChatbotFiles      ChatbotFiles[]
+  CatalogContent    CatalogContent[]
+  crawler           Crawler?         @relation(fields: [crawlerId], references: [id], onDelete: Cascade)
+  knowledgeSource   KnowledgeSource? @relation(fields: [knowledgeSourceId], references: [id])
+
+  @@map("files")
+}
+
+model ChatbotModel {
+  id      String    @id @default(cuid())
+  name    String
+  Chatbot Chatbot[]
+
+  @@map("models")
+}
+
+model ClientInquiries {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  threadId  String
+  email     String
+  inquiry   String
+  chatbotId String
+  deletedAt DateTime?
+  chatbot   Chatbot   @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+  response  String
+  threadId  String   @default("")
+  from      String   @default("unknown")
+  userIP    String?
+  userId    String
+  chatbotId String
+  read      Boolean  @default(false)
+
+  @@map("messages")
+}
+
+model ConversationSummary {
+  id        String   @id @default(cuid())
+  threadId  String   @unique
+  title     String
+  summary   String
+  createdAt DateTime @default(now()) @map("created_at")
+  userId    String
+
+  @@map("conversationSummary")
+}
+
+model Crawler {
+  id              String   @id @default(cuid())
+  name            String
+  createdAt       DateTime @default(now()) @map("created_at")
+  userId          String
+  crawlUrl        String
+  urlMatch        String
+  selector        String
+  maxPagesToCrawl Int
+  File            File[]
+
+  @@map("crawlers")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  providerAccountId String
+  access_token      String?
+  expires_at        Int?
+  id_token          String?
+  provider          String
+  refresh_token     String?
+  scope             String?
+  session_state     String?
+  token_type        String?
+  type              String
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  expires      DateTime
+  sessionToken String   @unique
+}
+
+model User {
+  id                       String    @id @default(cuid())
+  name                     String?
+  email                    String?   @unique
+  emailVerified            DateTime?
+  image                    String?
+  createdAt                DateTime  @default(now()) @map("created_at")
+  inquiryEmailEnabled      Boolean   @default(true)
+  marketingEmailEnabled    Boolean   @default(true)
+  stripeSubscriptionStatus String?
+  stripeCurrentPeriodEnd   DateTime? @map("stripe_current_period_end")
+  stripeCustomerId         String?   @unique @map("stripe_customer_id")
+  stripePriceId            String?   @map("stripe_price_id")
+  stripeSubscriptionId     String?   @unique @map("stripe_subscription_id")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model KnowledgeSource {
+  id              String           @id @default(cuid())
+  name            String
+  description     String?
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  userId          String
+  catalogMode     String?
+  catalogContents CatalogContent[]
+  files           File[]
+  qaContents      QAContent[]
+  textContents    TextContent[]
+  websiteContents WebsiteContent[]
+  chatbots        Chatbot[]        @relation("ChatbotToKnowledgeSource")
+
+  @@map("knowledge_sources")
+}
+
+model TextContent {
+  id                String          @id @default(cuid())
+  content           String
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  knowledgeSourceId String
+  knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map("text_contents")
+}
+
+model WebsiteContent {
+  id                String          @id @default(cuid())
+  url               String
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  knowledgeSourceId String
+  knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map("website_contents")
+}
+
+model QAContent {
+  id                String          @id @default(cuid())
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  knowledgeSourceId String
+  answer            String
+  question          String
+  knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map("qa_contents")
+}
+
+model CatalogContent {
+  id                String          @id @default(cuid())
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  instructions      String?
+  knowledgeSourceId String
+  fileId            String?
+  file              File?           @relation(fields: [fileId], references: [id])
+  knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  products          Product[]
+
+  @@map("catalog_contents")
+}
+
+model Product {
+  id               String         @id @default(cuid())
+  title            String
+  description      String?
+  price            Float
+  taxRate          Float
+  categories       String[]
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+  catalogContentId String
+  catalogContent   CatalogContent @relation(fields: [catalogContentId], references: [id], onDelete: Cascade)
+
+  @@map("products")
+}
+
+model Form {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  status      String           @default("active")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  userId      String
+  chatbots    ChatbotForm[]
+  fields      FormField[]
+  submissions FormSubmission[]
+
+  @@map("forms")
+}
+
+model FormField {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  type        String
+  required    Boolean          @default(false)
+  options     String[]
+  position    Int
+  formId      String
+  fieldValues FormFieldValue[]
+  form        Form             @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@map("form_fields")
+}
+
+model FormSubmission {
+  id          String           @id @default(cuid())
+  createdAt   DateTime         @default(now())
+  threadId    String?
+  formId      String
+  chatbotId   String
+  fieldValues FormFieldValue[]
+  chatbot     Chatbot          @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  form        Form             @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@map("form_submissions")
+}
+
+model FormFieldValue {
+  id           String         @id @default(cuid())
+  value        String
+  fieldId      String
+  submissionId String
+  field        FormField      @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  submission   FormSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@map("form_field_values")
+}
+
+model ChatbotForm {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  formId    String
+  chatbotId String
+  chatbot   Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@unique([formId, chatbotId])
+  @@map("chatbot_forms")
+}

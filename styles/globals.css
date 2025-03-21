@@ -1,0 +1,332 @@
+/* 1. Tailwind Base Styles - MUST BE FIRST */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* 3. Global Reset */
+html, body, #__next {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* 4. Page Content Padding */
+.page-content {
+  padding: 2rem;
+}
+
+@media (min-width: 768px) {
+  .page-content {
+    padding: 3rem;
+  }
+}
+
+/* Light Theme Adjustments */
+.sidebar-light {
+  @apply bg-gray-50 text-gray-900;
+}
+
+.sidebar-light .sidebar-header {
+  @apply text-gray-900;
+}
+
+.sidebar-light .sidebar-link {
+  @apply text-gray-700 hover:bg-gray-200 hover:text-gray-900;
+}
+
+.sidebar-light .sidebar-divider {
+  @apply border-gray-200;
+}
+
+/* Dark Theme Adjustments */
+.sidebar-dark {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.sidebar-dark .sidebar-header {
+  @apply text-gray-100;
+}
+
+.sidebar-dark .sidebar-link {
+  @apply text-gray-400 hover:bg-gray-800 hover:text-white;
+}
+
+.sidebar-dark .sidebar-divider {
+  @apply border-gray-800;
+}
+
+/* Sidebar Hover Effects */
+.sidebar-link {
+  @apply flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200;
+}
+
+/* Active Link State */
+.sidebar-link-active {
+  @apply bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300;
+}
+
+/* Divider Styling */
+.sidebar-divider {
+  @apply my-2 border-t;
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+  @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100;
+}
+
+.profile-dropdown:hover {
+  @apply bg-gray-100 dark:bg-gray-700;
+}
+
+.toggle-button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.3rem;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.toggle-button:hover {
+  transform: scale(1.1);
+  background-color: hsl(var(--secondary));
+}
+
+/* 🔥 Pin/Unpin Button Styles */
+.toggle-button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 0.3rem;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.toggle-button:hover {
+  transform: scale(1.1);
+  background-color: hsl(var(--secondary));
+}
+
+/* Search Results Dropdown */
+.search-results {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.search-results button {
+  transition: background-color 0.2s ease;
+}
+
+/* Tremor Card Customization */
+.tremor-card {
+  @apply bg-white dark:bg-gray-900 shadow-md rounded-lg p-4;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tremor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Define the custom property for border angle */
+@property --border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+.animate-fadeUp {
+  animation: fadeUp 5s ease-in-out infinite;
+}
+
+@keyframes levitate {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-levitate {
+  animation: levitate 3s ease-in-out infinite;
+}
+
+@keyframes lavalamp {
+  0%, 100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(40px, -60px);
+  }
+  50% {
+    transform: translate(-40px, 60px);
+  }
+  75% {
+    transform: translate(-60px, -40px);
+  }
+}
+
+.animate-lavalamp {
+  animation: lavalamp 15s ease-in-out infinite;
+}
+
+@keyframes blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.container {
+  background: black;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.container:after {
+  content: '';
+  width: 100%;
+  height: 100vh;
+  background: url('https://i.imgur.com/PsjPzdO.png');
+  background-size: 200px;
+  mix-blend-mode: overlay;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.blobs {
+  width: 45vh;
+  height: 45vh;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.blob {
+  width: 100%;
+  height: 100%;
+  border-radius: 100%;
+  position: absolute;
+  background-color: #1E3A8A;
+  mix-blend-mode: multiply;
+  filter: blur(80px);
+}
+
+.blob.a {
+  background-color: rgba(30, 58, 138, 0.8);
+  animation: circular2 35s linear infinite;
+}
+
+.blob.b {
+  background-color: rgba(30, 58, 138, 0.5);
+  animation: circular 17s linear infinite;
+}
+
+.blob.c {
+  animation: circular 51s linear infinite;
+}
+
+@keyframes circular {
+  0% {
+    transform: translate(0, -150px);
+  }
+  25% {
+    transform: translate(150px, 0);
+  }
+  50% {
+    transform: translate(0, 150px);
+  }
+  75% {
+    transform: translate(-150px, 0);
+  }
+  100% {
+    transform: translate(0, -150px);
+  }
+}
+
+@keyframes circular2 {
+  0% {
+    transform: translate(0, 150px);
+  }
+  25% {
+    transform: translate(-150px, 0);
+  }
+  50% {
+    transform: translate(0, -150px);
+  }
+  75% {
+    transform: translate(150px, 0);
+  }
+  100% {
+    transform: translate(0, 150px);
+  }
+}
+
+/* Add these styles to your global stylesheet */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+  transition: background-color 0.3s;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb,
+.custom-scrollbar:active::-webkit-scrollbar-thumb,
+.custom-scrollbar:focus::-webkit-scrollbar-thumb {
+  background-color: rgba(107, 114, 128, 0.5); /* Tailwind's gray-500 at 50% opacity */
+}
+
+/* For Firefox (optional) */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.custom-scrollbar:hover {
+  scrollbar-color: rgba(107, 114, 128, 0.5) transparent;
+}
+

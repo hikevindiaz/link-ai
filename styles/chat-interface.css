@@ -1,0 +1,246 @@
+/* Scoped styles for chat interface */
+.chat-interface-container {
+  /* Import fonts needed for the chat interface */
+  font-family: var(--font-geist-sans, "Inter", system-ui, -apple-system, sans-serif);
+  
+  /* Reset some styles to prevent leakage from parent application */
+  box-sizing: border-box;
+  
+  /* Define CSS variables for the chat interface - black and white theme */
+  --chat-header-background: #ffffff;
+  --chat-header-foreground: #000000;
+  --chat-background: #f9f9f9;
+  --chat-bot-reply-background: #ffffff;
+  --chat-bot-reply-foreground: #000000;
+  --chat-user-reply-background: #000000;
+  --chat-user-reply-foreground: #ffffff;
+  --chat-border-color: #e5e7eb;
+  
+  /* Input area styling - updated for better contrast */
+  --chat-input-background: #ffffff;
+  --chat-input-foreground: #000000;
+  --chat-input-border: #e5e7eb;
+  --chat-input-focus-border: #000000;
+  --chat-input-placeholder: #6b7280;
+  
+  /* Button styling */
+  --chat-button-background: #000000;
+  --chat-button-foreground: #ffffff;
+  --chat-attachment-color: #000000;
+  --chat-hover-background: #F5F5F5;
+  
+  /* Thinking state styling - ensure visibility */
+  --chat-thinking-text: #000000;
+  
+  /* Map imported variables to chat interface variables */
+  --background: var(--chat-background);
+  --foreground: var(--chat-foreground);
+  --border: var(--chat-border-color);
+  --muted: var(--chat-hover-background);
+  --muted-foreground: #71717A;
+  --accent: var(--chat-hover-background);
+  --accent-foreground: var(--chat-foreground);
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  .chat-interface-container {
+    --chat-header-background: #171717;
+    --chat-header-foreground: #ffffff;
+    --chat-background: #0c0c0c;
+    --chat-bot-reply-background: #1e1e1e;
+    --chat-bot-reply-foreground: #ffffff;
+    --chat-user-reply-background: #3b3b3b;
+    --chat-user-reply-foreground: #ffffff;
+    --chat-border-color: #2e2e2e;
+    
+    /* Input area styling for dark mode - improved contrast */
+    --chat-input-background: #1e1e1e;
+    --chat-input-foreground: #ffffff;
+    --chat-input-border: #2e2e2e;
+    --chat-input-focus-border: #ffffff;
+    --chat-input-placeholder: #9ca3af;
+    
+    /* Button styling for dark mode */
+    --chat-button-background: #ffffff;
+    --chat-button-foreground: #000000;
+    --chat-attachment-color: #ffffff;
+    --chat-hover-background: #2A2A2A;
+    
+    /* Thinking state styling for dark mode - ensure it's white */
+    --chat-thinking-text: #ffffff;
+    
+    /* Map imported variables to chat interface variables */
+    --background: var(--chat-background);
+    --foreground: var(--chat-foreground);
+    --border: var(--chat-border-color);
+    --muted: var(--chat-hover-background);
+    --muted-foreground: #A1A1AA;
+    --accent: var(--chat-hover-background);
+    --accent-foreground: var(--chat-foreground);
+  }
+}
+
+/* Ensure the chat interface monospace font is used in code elements */
+.chat-interface-container code,
+.chat-interface-container pre {
+  font-family: var(--font-geist-mono), monospace;
+}
+
+/* Input area specific styling to ensure proper light/dark mode */
+.chat-interface-container textarea,
+.chat-interface-container .Textarea {
+  background-color: var(--chat-input-background) !important;
+  border-color: var(--chat-input-border) !important;
+  color: var(--chat-input-foreground) !important;
+}
+
+/* Override any default dark styling that might be leaking through */
+.chat-interface-container textarea.bg-gray-900\/50,
+.chat-interface-container .Textarea.bg-gray-900\/50 {
+  background-color: var(--chat-input-background) !important;
+}
+
+/* Make sure background specifically maintains light/dark mode colors */
+.chat-interface-container.light textarea,
+.chat-interface-container.light .Textarea {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.chat-interface-container.dark textarea,
+.chat-interface-container.dark .Textarea {
+  background-color: #1e1e1e !important;
+  color: #ffffff !important;
+}
+
+/* Force the proper text color for thinking state based on mode */
+.chat-interface-container.light [data-thinking="true"],
+.chat-interface-container.light .text-zinc-500 {
+  color: #000000 !important;
+}
+
+.chat-interface-container.dark [data-thinking="true"],
+.chat-interface-container.dark .text-zinc-500 {
+  color: #ffffff !important;
+}
+
+.chat-interface-container textarea::placeholder,
+.chat-interface-container .Textarea::placeholder {
+  color: var(--chat-input-placeholder);
+}
+
+.chat-interface-container textarea:focus,
+.chat-interface-container .Textarea:focus {
+  border-color: var(--chat-input-focus-border);
+  box-shadow: 0 0 0 1px var(--chat-input-focus-border);
+}
+
+/* Thinking state styling for both modes */
+.chat-interface-container .text-zinc-500,
+.chat-interface-container [data-thinking="true"] {
+  color: var(--chat-thinking-text) !important;
+}
+
+/* Button styling */
+.chat-interface-container button[data-testid="send-button"],
+.chat-interface-container button[data-testid="stop-button"] {
+  background-color: var(--chat-button-background);
+  color: var(--chat-button-foreground);
+  border-color: var(--chat-button-border, transparent);
+}
+
+.chat-interface-container button[data-testid="attachments-button"] {
+  color: var(--chat-attachment-color);
+}
+
+.chat-interface-container button[data-testid="attachments-button"]:hover {
+  background-color: var(--chat-hover-background);
+}
+
+/* Active state for inputs and controls */
+.chat-interface-container [data-state="checked"],
+.chat-interface-container [data-state="active"],
+.chat-interface-container [data-state="active"] svg,
+.chat-interface-container [aria-selected="true"] {
+  background-color: var(--chat-button-background);
+  color: var(--chat-button-foreground);
+}
+
+/* Message styling */
+.chat-interface-container [data-message-role="user"] > div {
+  background-color: var(--chat-user-reply-background);
+  color: var(--chat-user-reply-foreground);
+}
+
+.chat-interface-container [data-message-role="assistant"] > div {
+  background-color: var(--chat-bot-reply-background);
+  color: var(--chat-bot-reply-foreground);
+}
+
+/* Apply original styles but scoped to the chat interface container */
+.chat-interface-container .ProseMirror {
+  outline: none;
+}
+
+.chat-interface-container .cm-editor,
+.chat-interface-container .cm-gutters {
+  background-color: var(--chat-background);
+  outline: none;
+}
+
+.chat-interface-container .ͼo.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+.chat-interface-container .ͼo.cm-selectionBackground,
+.chat-interface-container .ͼo.cm-content::selection {
+  background-color: rgba(228, 228, 231, 0.5);
+}
+
+.dark .chat-interface-container .ͼo.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+.dark .chat-interface-container .ͼo.cm-selectionBackground,
+.dark .chat-interface-container .ͼo.cm-content::selection {
+  background-color: rgba(64, 64, 64, 0.5);
+}
+
+.chat-interface-container .cm-activeLine,
+.chat-interface-container .cm-activeLineGutter {
+  background-color: transparent !important;
+}
+
+.chat-interface-container .cm-activeLine {
+  border-radius: 0 0.125rem 0.125rem 0 !important;
+}
+
+.chat-interface-container .cm-lineNumbers {
+  min-width: 1.75rem;
+}
+
+.chat-interface-container .cm-foldGutter {
+  min-width: 0.75rem;
+}
+
+.chat-interface-container .cm-lineNumbers .cm-activeLineGutter {
+  border-radius: 0.125rem 0 0 0.125rem !important;
+}
+
+.chat-interface-container .suggestion-highlight {
+  background-color: rgba(229, 229, 229, 1);
+  color: var(--chat-foreground);
+}
+
+.chat-interface-container .suggestion-highlight:hover {
+  background-color: rgba(212, 212, 212, 1);
+}
+
+.dark .chat-interface-container .suggestion-highlight {
+  background-color: rgba(64, 64, 64, 0.8);
+  color: var(--chat-foreground);
+}
+
+.dark .chat-interface-container .suggestion-highlight:hover {
+  background-color: rgba(82, 82, 82, 0.8);
+}
+
+/* Fix for z-index issues with tooltips in the chat interface */
+.chat-interface-container [data-radix-popper-content-wrapper] {
+  z-index: 999 !important;
+} 

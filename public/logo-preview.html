@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animated Logo Preview</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #1f2937;
+    }
+    
+    .card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    h2 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: #1f2937;
+    }
+    
+    .color-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .color-button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .color-button.active {
+      background-color: #3b82f6;
+      color: white;
+    }
+    
+    .color-button:not(.active) {
+      background-color: #e5e7eb;
+    }
+    
+    .color-button:not(.active):hover {
+      background-color: #d1d5db;
+    }
+    
+    .logo-showcase {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    
+    .size-comparison {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 32px;
+    }
+    
+    .size-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .size-label {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #6b7280;
+    }
+    
+    .button-preview {
+      display: flex;
+      justify-content: center;
+    }
+    
+    .chat-button {
+      max-width: 280px;
+      border-radius: 16px;
+      padding: 1px;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .chat-button-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 14px;
+      background-color: white;
+    }
+    
+    .logo-container {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .text-container {
+      display: flex;
+      flex-direction: column;
+      margin-top: -4px;
+    }
+    
+    .title {
+      font-size: 10px;
+      opacity: 0.7;
+      color: #000000;
+    }
+    
+    .message {
+      font-size: 18px;
+      font-weight: bold;
+      color: #000000;
+      display: flex;
+      align-items: center;
+    }
+    
+    .wave-emoji {
+      margin-left: 4px;
+    }
+    
+    @property --border-angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+    
+    @keyframes border {
+      to {
+        --border-angle: 360deg;
+      }
+    }
+    
+    .animate-border {
+      animation: border 4s linear infinite;
+      background: conic-gradient(from var(--border-angle), #2563EB, #7E22CE, #F97316, #7E22CE, #2563EB);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Animated Logo Preview</h1>
+    
+    <div class="card">
+      <h2>Color Schemes</h2>
+      <div class="color-buttons">
+        <button class="color-button active" data-scheme="default">Default</button>
+        <button class="color-button" data-scheme="ocean">Ocean</button>
+        <button class="color-button" data-scheme="sunset">Sunset</button>
+        <button class="color-button" data-scheme="forest">Forest</button>
+        <button class="color-button" data-scheme="monochrome">Monochrome</button>
+      </div>
+      
+      <div class="logo-showcase">
+        <canvas id="main-logo" width="96" height="96" style="width: 96px; height: 96px; border-radius: 50%;"></canvas>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Size Comparison</h2>
+      <div class="size-comparison">
+        <div class="size-item">
+          <canvas class="size-logo" data-size="24" width="24" height="24" style="width: 24px; height: 24px; border-radius: 50%;"></canvas>
+          <span class="size-label">24px</span>
+        </div>
+        <div class="size-item">
+          <canvas class="size-logo" data-size="36" width="36" height="36" style="width: 36px; height: 36px; border-radius: 50%;"></canvas>
+          <span class="size-label">36px</span>
+        </div>
+        <div class="size-item">
+          <canvas class="size-logo" data-size="48" width="48" height="48" style="width: 48px; height: 48px; border-radius: 50%;"></canvas>
+          <span class="size-label">48px</span>
+        </div>
+        <div class="size-item">
+          <canvas class="size-logo" data-size="64" width="64" height="64" style="width: 64px; height: 64px; border-radius: 50%;"></canvas>
+          <span class="size-label">64px</span>
+        </div>
+        <div class="size-item">
+          <canvas class="size-logo" data-size="96" width="96" height="96" style="width: 96px; height: 96px; border-radius: 50%;"></canvas>
+          <span class="size-label">96px</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Button Preview</h2>
+      <div class="button-preview">
+        <div id="chat-button" class="chat-button animate-border">
+          <div class="chat-button-inner">
+            <div class="logo-container">
+              <canvas id="button-logo" width="36" height="36" style="width: 36px; height: 36px; border-radius: 50%;"></canvas>
+            </div>
+            <div class="text-container">
+              <span class="title">Link AI Smart Agent</span>
+              <div class="message">
+                Hi, let's talk
+                <span class="wave-emoji" role="img" aria-label="wave">👋</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Color schemes
+    const colorSchemes = {
+      default: ["#2563EB", "#7E22CE", "#F97316"], // Blue, Purple, Orange
+      ocean: ["#0EA5E9", "#0891B2", "#0C4A6E"], // Blues
+      sunset: ["#F97316", "#DC2626", "#7E22CE"], // Orange, Red, Purple
+      forest: ["#16A34A", "#65A30D", "#0D9488"], // Greens, Teal
+      monochrome: ["#94A3B8", "#64748B", "#334155"], // Grays
+    };
+    
+    let currentScheme = 'default';
+    let animations = {};
+    
+    // Initialize all canvases
+    function initCanvas(canvas, size, colors) {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      // Set canvas dimensions with device pixel ratio for sharp rendering
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = size * dpr;
+      canvas.height = size * dpr;
+      ctx.scale(dpr, dpr);
+      
+      // Set canvas CSS size
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+      
+      let gradientAngle = 0;
+      
+      // Animation function
+      function render() {
+        // Clear canvas
+        ctx.clearRect(0, 0, size, size);
+        
+        // Save context state before applying clip
+        ctx.save();
+        
+        // Create a circular clipping path
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+        ctx.clip();
+        
+        // Calculate gradient positions based on angle
+        const x1 = size / 2 + Math.cos(gradientAngle) * size;
+        const y1 = size / 2 + Math.sin(gradientAngle) * size;
+        const x2 = size / 2 + Math.cos(gradientAngle + Math.PI) * size;
+        const y2 = size / 2 + Math.sin(gradientAngle + Math.PI) * size;
+        
+        // Create gradient
+        const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+        
+        // Add color stops with extended color array for smoother transitions
+        const extendedColors = [...colors, ...colors];
+        const totalColors = extendedColors.length;
+        
+        extendedColors.forEach((color, index) => {
+          const offset = (index / (totalColors - 1)) % 1;
+          gradient.addColorStop(offset, color);
+        });
+        
+        // Fill background with gradient
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+        
+        // Add subtle pulsing waves for extra effect
+        const waveCount = 3;
+        const time = Date.now() / 2000; // Slow down the animation
+        
+        for (let i = 0; i < waveCount; i++) {
+          const phase = (time + i / waveCount) % 1;
+          const radius = phase * (size / 2);
+          const opacity = 0.1 * (1 - phase);
+          
+          ctx.beginPath();
+          ctx.arc(size / 2, size / 2, radius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+          ctx.fill();
+        }
+        
+        // Restore context state (removes clipping)
+        ctx.restore();
+        
+        // Draw border to ensure clean edges
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 0.5, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // Update gradient angle for next frame (slow rotation)
+        gradientAngle += 0.005;
+        
+        return requestAnimationFrame(render);
+      }
+      
+      // Start animation and return the animation ID
+      return render();
+    }
+    
+    // Initialize all logos with the default color scheme
+    function initAllLogos(colorScheme) {
+      // Cancel any existing animations
+      Object.values(animations).forEach(id => cancelAnimationFrame(id));
+      animations = {};
+      
+      // Main logo
+      const mainLogo = document.getElementById('main-logo');
+      animations.main = initCanvas(mainLogo, 96, colorSchemes[colorScheme]);
+      
+      // Size comparison logos
+      document.querySelectorAll('.size-logo').forEach(canvas => {
+        const size = parseInt(canvas.getAttribute('data-size'));
+        animations[`size-${size}`] = initCanvas(canvas, size, colorSchemes[colorScheme]);
+      });
+      
+      // Button logo
+      const buttonLogo = document.getElementById('button-logo');
+      animations.button = initCanvas(buttonLogo, 36, colorSchemes[colorScheme]);
+      
+      // Update button border gradient
+      const chatButton = document.getElementById('chat-button');
+      chatButton.style.background = `conic-gradient(from var(--border-angle), ${colorSchemes[colorScheme].join(', ')}, ${colorSchemes[colorScheme][0]})`;
+    }
+    
+    // Initialize with default color scheme
+    initAllLogos(currentScheme);
+    
+    // Add event listeners to color scheme buttons
+    document.querySelectorAll('.color-button').forEach(button => {
+      button.addEventListener('click', () => {
+        // Update active button
+        document.querySelector('.color-button.active').classList.remove('active');
+        button.classList.add('active');
+        
+        // Get color scheme and update logos
+        const scheme = button.getAttribute('data-scheme');
+        currentScheme = scheme;
+        initAllLogos(scheme);
+      });
+    });
+  </script>
+</body>
+</html> 

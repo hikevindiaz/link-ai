@@ -1,0 +1,68 @@
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+interface FormRadioGroupProps extends React.HTMLAttributes<HTMLDivElement> {
+  name: string;
+  value: string;
+  onValueChange: (value: string) => void;
+  children: React.ReactNode;
+}
+
+export function FormRadioGroup({
+  name,
+  value,
+  onValueChange,
+  children,
+  className,
+  ...props
+}: FormRadioGroupProps) {
+  return (
+    <div className={cn("", className)} {...props}>
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child)) {
+          return React.cloneElement(child as React.ReactElement<FormRadioItemProps>, {
+            name,
+            checked: child.props.value === value,
+            onChange: () => onValueChange(child.props.value),
+          });
+        }
+        return child;
+      })}
+    </div>
+  );
+}
+
+interface FormRadioItemProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  children: React.ReactNode;
+}
+
+export function FormRadioItem({
+  children,
+  className,
+  checked,
+  onChange,
+  name,
+  value,
+  ...props
+}: FormRadioItemProps) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer flex-col rounded-lg border border-gray-200 p-4 transition-all hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700",
+        checked && "border-indigo-500 ring-1 ring-indigo-500 dark:border-indigo-500 dark:ring-indigo-500",
+        className
+      )}
+    >
+      <input
+        type="radio"
+        className="sr-only"
+        checked={checked}
+        onChange={onChange}
+        name={name}
+        value={value}
+        {...props}
+      />
+      {children}
+    </label>
+  );
+} 
