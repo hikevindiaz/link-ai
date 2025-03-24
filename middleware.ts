@@ -13,13 +13,21 @@ export default withAuth(
     // Get pathname
     const { pathname } = req.nextUrl;
     
-    // Simple redirect logic:
-    // 1. If authenticated and on login page, redirect to dashboard
-    if (isAuth && pathname === "/login") {
+    // Handle root path
+    if (pathname === "/") {
+      if (isAuth) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      } else {
+        return NextResponse.redirect(new URL("/login", req.url));
+      }
+    }
+
+    // Handle login page
+    if (pathname === "/login" && isAuth) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     
-    // 2. For all other cases, let NextAuth handle it
+    // For all other protected routes, let NextAuth handle it
     return NextResponse.next();
   },
   {
@@ -32,17 +40,11 @@ export default withAuth(
   }
 );
 
-// Update matcher to exclude ALL API routes, not just auth ones
+// Update matcher to include root path
 export const config = {
   matcher: [
-    /*
-     * Match only these paths:
-     * - /login (sign-in page)
-     * - /welcome (onboarding page)
-     * - /dashboard (dashboard routes)
-     */
+    '/',  // Add root path
     '/login',
-    '/dashboard/:path*',
-    '/welcome'
+    '/dashboard/:path*'
   ],
 };
