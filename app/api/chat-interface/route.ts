@@ -47,6 +47,7 @@ export async function POST(req: Request) {
       {
         headers: {
           'Content-Type': 'application/json',
+          'Cookie': req.headers.get('cookie') || '',
           'Referer': req.headers.get('referer') || '',
         },
       }
@@ -54,7 +55,8 @@ export async function POST(req: Request) {
 
     let knowledgeSources = [];
     if (knowledgeSourcesResponse.ok) {
-      knowledgeSources = await knowledgeSourcesResponse.json();
+      const data = await knowledgeSourcesResponse.json();
+      knowledgeSources = Array.isArray(data) ? data : [];
     }
 
     // Get chatbot knowledge if available

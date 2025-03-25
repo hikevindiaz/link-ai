@@ -45,10 +45,18 @@ export async function GET(req: Request) {
         textContents: true,
         websiteContents: true,
         qaContents: true,
+        chatbots: true,
       }
     });
 
-    return NextResponse.json(knowledgeSources);
+    // For embedded requests, only return sources that are associated with public chatbots
+    const filteredSources = isEmbedded 
+      ? knowledgeSources.filter(source => 
+          source.chatbots?.some(chatbot => chatbot.allowEveryone)
+        )
+      : knowledgeSources;
+
+    return NextResponse.json(filteredSources);
   } catch (error) {
     console.error('Error fetching knowledge sources:', error);
     return NextResponse.json(
