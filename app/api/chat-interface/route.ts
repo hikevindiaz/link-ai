@@ -41,36 +41,38 @@ export async function POST(req: Request) {
       modelName = chatbot.model.name;
     }
 
+    // Fetch knowledge sources
+    const knowledgeSourcesResponse = await fetch(
+      `${req.headers.get('origin')}/api/knowledge-sources?chatbotId=${chatbotId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Referer': req.headers.get('referer') || '',
+        },
+      }
+    );
+
+    let knowledgeSources = [];
+    if (knowledgeSourcesResponse.ok) {
+      knowledgeSources = await knowledgeSourcesResponse.json();
+    }
+
     // Get chatbot knowledge if available
     let knowledge = '';
     try {
-      // Fetch knowledge sources using REST API
-      const knowledgeResponse = await fetch(
-        `${req.headers.get('origin')}/api/knowledge-sources?chatbotId=${chatbotId}`,
-        {
-          headers: {
-            'Cookie': req.headers.get('cookie') || '',
-            'Referer': req.headers.get('referer') || '',
-          }
+      knowledge = knowledgeSources.map((source: any) => {
+        let sourceKnowledge = '';
+        if (source.textContents) {
+          sourceKnowledge += source.textContents.map((text: any) => text.content).join('\n');
         }
-      );
-      
-      if (knowledgeResponse.ok) {
-        const knowledgeSources = await knowledgeResponse.json();
-        knowledge = knowledgeSources.map((source: any) => {
-          let sourceKnowledge = '';
-          if (source.textContents) {
-            sourceKnowledge += source.textContents.map((text: any) => text.content).join('\n');
-          }
-          if (source.websiteContents) {
-            sourceKnowledge += source.websiteContents.map((web: any) => `Content from ${web.url}`).join('\n');
-          }
-          if (source.qaContents) {
-            sourceKnowledge += source.qaContents.map((qa: any) => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n');
-          }
-          return sourceKnowledge;
-        }).join('\n\n');
-      }
+        if (source.websiteContents) {
+          sourceKnowledge += source.websiteContents.map((web: any) => `Content from ${web.url}`).join('\n');
+        }
+        if (source.qaContents) {
+          sourceKnowledge += source.qaContents.map((qa: any) => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n');
+        }
+        return sourceKnowledge;
+      }).join('\n\n');
     } catch (error) {
       console.error('Error fetching knowledge:', error);
       // Continue without knowledge if there's an error

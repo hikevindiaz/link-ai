@@ -15,12 +15,14 @@ const createSourceSchema = z.object({
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return new Response("Unauthorized", { status: 403 });
-    }
-
     const { searchParams } = new URL(req.url);
     const chatbotId = searchParams.get('chatbotId');
+    const isEmbedded = req.headers.get('referer')?.includes('/embed/');
+
+    // If it's an embedded request, we don't require authentication
+    if (!isEmbedded && !session?.user) {
+      return new Response("Unauthorized", { status: 403 });
+    }
 
     // If chatbotId is provided, fetch sources for that chatbot
     // Otherwise, fetch all sources for the current user
@@ -28,11 +30,12 @@ export async function GET(req: Request) {
       chatbots: {
         some: {
           id: chatbotId,
-          userId: session.user.id // Ensure the chatbot belongs to the user
+          // Only check user ownership for non-embedded requests
+          ...(isEmbedded ? {} : { userId: session?.user?.id })
         }
       }
     } : {
-      userId: session.user.id
+      userId: session?.user?.id
     };
 
     // Get knowledge sources with their contents
