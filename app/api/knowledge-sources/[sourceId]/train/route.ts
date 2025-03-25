@@ -6,7 +6,7 @@ import { OpenAI } from 'openai';
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { sourceId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,7 +17,7 @@ export async function POST(
     // Get the knowledge source
     const knowledgeSource = await db.knowledgeSource.findUnique({
       where: {
-        id: params.id,
+        id: params.sourceId,
         userId: session.user.id,
       },
       include: {
