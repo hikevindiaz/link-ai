@@ -118,6 +118,7 @@ function PureMultimodalInput({
       // @ts-ignore - Ignore type checking for this call as we're handling different API versions
       handleSubmit({
         preventDefault: () => {},
+        stopPropagation: () => {},
       }, {
         experimental_attachments: attachments,
       });
@@ -125,6 +126,7 @@ function PureMultimodalInput({
       // Fallback to simpler version if the above signature doesn't work
       handleSubmit({
         preventDefault: () => {},
+        stopPropagation: () => {},
       } as React.FormEvent<HTMLFormElement>);
     }
 

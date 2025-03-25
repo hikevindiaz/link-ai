@@ -41,23 +41,26 @@ export function FixedChatInput(props: FixedChatInputProps) {
   // Create a compatible wrapper around handleSubmit
   const wrappedHandleSubmit = useCallback((e?: React.FormEvent<HTMLFormElement>) => {
     try {
-      if (e) e.preventDefault();
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       
       // Try to submit with attachments if they exist
       if (attachments.length > 0) {
         try {
           // @ts-ignore - Support different API versions
-          handleSubmit(e || { preventDefault: () => {} }, { 
+          handleSubmit(e || { preventDefault: () => {}, stopPropagation: () => {} }, { 
             experimental_attachments: attachments 
           });
         } catch (error) {
           // Fallback to simpler version
-          handleSubmit(e || { preventDefault: () => {} });
+          handleSubmit(e || { preventDefault: () => {}, stopPropagation: () => {} });
           toast.error("Attachments may not be supported in this version");
         }
       } else {
         // No attachments, use simple version
-        handleSubmit(e || { preventDefault: () => {} });
+        handleSubmit(e || { preventDefault: () => {}, stopPropagation: () => {} });
       }
     } catch (error) {
       console.error("Error in submit:", error);
