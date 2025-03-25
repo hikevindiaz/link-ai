@@ -5,6 +5,15 @@
  * to avoid build errors in production environments.
  */
 
+import { formatStreamPart as localFormatStreamPart } from '@/lib/chat-interface/ai/compatibility';
+
+// Patch the ai package to include formatStreamPart
+const aiPackage = require('ai');
+aiPackage.formatStreamPart = localFormatStreamPart;
+
+// Re-export the patched ai package
+module.exports = aiPackage;
+
 // Fixed StreamingTextResponse implementation that avoids the 'i' initialization error
 export class StreamingTextResponse extends Response {
   constructor(stream: ReadableStream, options: ResponseInit = {}) {
