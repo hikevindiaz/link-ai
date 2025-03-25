@@ -256,116 +256,95 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
 
   return (
     <SettingsTabWrapper
+      tabName="LLM"
       isDirty={isDirty}
       onSave={handleSaveSettings}
       onCancel={handleCancel}
-      tabName="LLM"
     >
-      <div className="mt-8 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* OpenAI Model Selection */}
-          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-              <div className="flex items-center gap-2">
-                <Codepen className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Label className="font-medium text-gray-900 dark:text-gray-100">LLM Model</Label>
-              </div>
+      <div className="space-y-6">
+        {/* Model Selection */}
+        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center gap-2">
+              <Brain className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <Label className="font-medium text-gray-900 dark:text-gray-100">Model</Label>
             </div>
-            <div className="p-4 bg-white dark:bg-gray-900/50">
-              <div className="flex-1">
-                <div className="relative">
-                  <Codepen className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
-                  <Select 
-                    value={selectedModel} 
-                    onValueChange={handleModelChange}
-                    disabled={isLoading || models.length === 0}
-                  >
-                    <SelectTrigger className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-                      <SelectValue placeholder={isLoading ? "Loading models..." : "Select model"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <div className="p-2 text-xs text-muted-foreground font-medium uppercase">
-                        Available Models
+          </div>
+          <div className="p-4 bg-white dark:bg-gray-900/50">
+            <div className="flex-1">
+              <div className="relative">
+                <Brain className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+                <Select 
+                  value={selectedModel} 
+                  onValueChange={handleModelChange}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+                    <SelectValue placeholder={isLoading ? "Loading models..." : "Select model"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {models.length > 0 && (
+                      <div className="py-2">
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground font-medium uppercase">
+                          Available Models
+                        </div>
+                        {models.map((model) => (
+                          <SelectItem key={model.id} value={model.id}>
+                            <div className="flex flex-col">
+                              <span>{model.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </div>
-                      {models.map((model) => (
-                        <SelectItem key={model.id} value={model.id}>
-                          {model.name}
-                        </SelectItem>
-                      ))}
-                      <div className="p-2 text-xs text-muted-foreground font-medium uppercase mt-2">
-                        Coming Soon
+                    )}
+                    
+                    {models.length === 0 && !isLoading && (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        No models available.
                       </div>
-                      {DISABLED_MODELS.map((modelName) => (
-                        <SelectItem key={modelName} value={`disabled-${modelName}`} disabled className="text-gray-400 dark:text-gray-600">
-                          {modelName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
-                  Select the AI model that will power your agent.
-                </p>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
+              <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                Choose the language model that will power your agent.
+              </p>
             </div>
-          </Card>
+          </div>
+        </Card>
 
-          {/* Temperature */}
-          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-              <div className="flex items-center gap-2">
-                <Thermometer className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Label className="font-medium text-gray-900 dark:text-gray-100">Response Temperature</Label>
-              </div>
+        {/* Temperature */}
+        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+            <div className="flex items-center gap-2">
+              <Thermometer className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <Label className="font-medium text-gray-900 dark:text-gray-100">Temperature</Label>
             </div>
-            <div className="p-4 bg-white dark:bg-gray-900/50">
-              <div className="flex-1">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <Slider
-                        id="temperature"
-                        value={[temperature]}
-                        max={1.0}
-                        min={0}
-                        step={0.1}
-                        onValueChange={handleTemperatureChange}
-                      />
-                    </div>
-                    <div className="w-16">
-                      <Input
-                        type="number"
-                        value={temperature}
-                        onChange={(e) => setTemperature(Number(parseFloat(e.target.value).toFixed(1)))}
-                        min={0}
-                        max={1}
-                        step={0.1}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">More Precise</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">More Creative</span>
-                  </div>
-                  
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Current level:
-                    <span className="ml-1 font-semibold text-gray-900 dark:text-gray-100">
-                      {temperature < 0.3 ? "Precise" : 
-                       temperature < 0.7 ? "Balanced" : "Creative"}
-                      ({temperature.toFixed(1)})
-                    </span>
-                  </p>
-                </div>
-                <p className="mt-4 text-sm/6 text-gray-500 dark:text-gray-400">
-                  Higher temperature increases creativity but may reduce accuracy.
-                </p>
-              </div>
+          </div>
+          <div className="p-4 bg-white dark:bg-gray-900/50">
+            <div className="space-y-4">
+              <Slider
+                value={[temperature]}
+                onValueChange={handleTemperatureChange}
+                min={0}
+                max={1}
+                step={0.1}
+                className="w-full"
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Current level:
+                <span className="ml-1 font-semibold text-gray-900 dark:text-gray-100">
+                  {temperature < 0.3 ? "Precise" : 
+                   temperature < 0.7 ? "Balanced" : "Creative"}
+                  ({temperature.toFixed(1)})
+                </span>
+              </p>
+              <p className="mt-4 text-sm/6 text-gray-500 dark:text-gray-400">
+                Higher temperature increases creativity but may reduce accuracy.
+              </p>
             </div>
-          </Card>
-        </div>
+          </div>
+        </Card>
 
         {/* Knowledge Source */}
         <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
@@ -442,111 +421,6 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
                   Manage Knowledge Source
                 </Button>
               )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Training Section */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-            <div className="flex items-center gap-2">
-              <Brain className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-100">Training</Label>
-            </div>
-          </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
-            <div className="flex-1">
-              <Collapsible>
-                <div className="flex items-center justify-between">
-                  <CollapsibleTrigger asChild>
-                    <Button variant="secondary" onClick={toggleTrainingOptions}>
-                      {showTrainingOptions ? "Hide" : "Show"} Training Options
-                    </Button>
-                  </CollapsibleTrigger>
-                  <Button
-                    onClick={handleTrainAgent}
-                    disabled={trainingStatus.status === "training" || 
-                             (selectedKnowledgeSource === "none" && 
-                              !trainingOptions.forceRetrain)}
-                    className="ml-2"
-                  >
-                    {trainingStatus.status === "training" ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Training...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        Train Agent
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                <CollapsibleContent className="mt-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="force-retrain">Force Retrain</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Ignore cached data and retrain from scratch.
-                      </p>
-                    </div>
-                    <Switch
-                      id="force-retrain"
-                      checked={trainingOptions.forceRetrain}
-                      onCheckedChange={(checked) =>
-                        updateTrainingOption("forceRetrain", checked)
-                      }
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="optimize-speed">Optimize for Speed</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Process knowledge sources faster with simpler processing.
-                      </p>
-                    </div>
-                    <Switch
-                      id="optimize-speed"
-                      checked={trainingOptions.optimizeForSpeed}
-                      onCheckedChange={(checked) =>
-                        updateTrainingOption("optimizeForSpeed", checked)
-                      }
-                    />
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              {trainingStatus.status !== "idle" && (
-                <div className="space-y-2 mt-4">
-                  {trainingStatus.status === "training" && (
-                    <Progress value={trainingStatus.progress} className="h-2" />
-                  )}
-                  <div
-                    className={`text-sm ${
-                      trainingStatus.status === "error"
-                        ? "text-destructive"
-                        : trainingStatus.status === "success"
-                        ? "text-green-600"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {trainingStatus.message}
-                  </div>
-                  {trainingStatus.lastTrainedAt && (
-                    <div className="text-xs text-muted-foreground">
-                      Last trained:{" "}
-                      {trainingStatus.lastTrainedAt.toLocaleString()}
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <p className="mt-4 text-sm/6 text-gray-500 dark:text-gray-400">
-                Train your agent with the selected knowledge source to make it ready for use.
-              </p>
             </div>
           </div>
         </Card>

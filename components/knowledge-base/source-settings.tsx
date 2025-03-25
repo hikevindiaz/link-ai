@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { Source } from './source-sidebar';
-import { RiCloseLine, RiFileExcelLine, RiFileTextLine, RiGlobalLine, RiQuestionAnswerLine, RiListCheck2 } from '@remixicon/react';
+import { RiCloseLine, RiFileExcelLine, RiFileTextLine, RiGlobalLine, RiQuestionAnswerLine, RiListCheck2, RiBrainLine } from '@remixicon/react';
 import { toast } from "sonner";
 import FileUploadTab from './file-upload-tab';
 import { WebsiteTab } from './website-tab';
 import { QATab } from './qa-tab';
 import { CatalogTab } from './catalog-tab';
 import { TextContentTab } from './text-tab';
+import { TrainingSection } from './training-section';
 import { TabNavigation, TabNavigationLink } from "@/components/TabNavigation";
 
 // Progress bar component since we don't have @tremor/react imported
@@ -60,6 +61,8 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
         return <QATab source={source} onSave={handleSave} />;
       case 'catalog':
         return <CatalogTab source={source} onSave={handleSave} />;
+      case 'training':
+        return <TrainingSection knowledgeSourceId={source.id} />;
       default:
         return <FileUploadTab source={source} onSave={handleSave} />;
     }
@@ -128,6 +131,15 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
           >
             <RiListCheck2 className="size-4" aria-hidden="true" />
             Catalog
+          </TabNavigationLink>
+
+          <TabNavigationLink 
+            href="#" 
+            className={getTabClassName('training')}
+            onClick={(e) => { e.preventDefault(); handleTabChange('training'); }}
+          >
+            <RiBrainLine className="size-4" aria-hidden="true" />
+            Training
           </TabNavigationLink>
         </TabNavigation>
         

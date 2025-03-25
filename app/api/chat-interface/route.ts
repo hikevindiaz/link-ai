@@ -1,501 +1,153 @@
-import { OpenAIStream, StreamingTextResponse } from 'ai';
-import { OpenAI } from 'openai';
-import { getThreadMessages, storeUserMessage, storeAssistantMessage } from '@/lib/chat-interface/adapters';
+import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-import { Message } from 'ai';
+import { getThreadMessages } from '@/lib/chat-interface/adapters';
+import { StreamingTextResponse } from '@/lib/chat-interface/ai/compatibility';
 
-// Define interfaces for our chatbot model
-interface ChatbotWithAssistant {
-  id?: string;
-  prompt?: string;
-  temperature?: number;
-  maxCompletionTokens?: number;
-  modelId?: string;
-  name?: string;
-  openaiAssistantId?: string | undefined;
-  openaiThreadId?: string | undefined;
-}
+export const runtime = 'edge';
 
-// Initialize Prisma client
-const prisma = new PrismaClient();
-
-// Create an OpenAI API client (ensuring we use the API key from environment variables)
+// Create an OpenAI API client (edge-compatible)
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
-// Validate that we have an API key
-if (!process.env.OPENAI_API_KEY) {
-  console.error('OPENAI_API_KEY is not set in the environment variables');
-}
-
-async function getChatbotKnowledge(chatbotId: string) {
+export async function POST(req: Request) {
   try {
-    // First, get the chatbot to make sure it exists
-    const chatbot = await prisma.chatbot.findUnique({
-      where: { id: chatbotId }
-    });
+    const { messages, chatbotId } = await req.json();
 
-    if (!chatbot) {
-      return '';
+    if (!messages || !chatbotId) {
+      return new Response('Missing messages or chatbotId', { status: 400 });
     }
 
-    // Process and combine all knowledge sources
-    let combinedKnowledge = '';
+    // Fetch chatbot details using REST API
+    const chatbotResponse = await fetch(`${req.headers.get('origin')}/api/chatbots/${chatbotId}`, {
+      headers: {
+        'Cookie': req.headers.get('cookie') || '',
+      }
+    });
+    
+    if (!chatbotResponse.ok) {
+      return new Response(
+        JSON.stringify({ error: 'Chatbot not found' }), 
+        { status: 404 }
+      );
+    }
+    
+    const chatbot = await chatbotResponse.json();
 
-    // Get knowledge sources associated with this chatbot
-    const knowledgeSources = await prisma.knowledgeSource.findMany({
-      where: {
-        chatbots: {
-          some: {
-            id: chatbotId
+    // Get the model name from the chatbot's model relation
+    let modelName = 'gpt-4o-mini'; // Default model
+    if (chatbot.model && chatbot.model.name) {
+      modelName = chatbot.model.name;
+    }
+
+    // Get chatbot knowledge if available
+    let knowledge = '';
+    try {
+      // Fetch knowledge sources using REST API
+      const knowledgeResponse = await fetch(
+        `${req.headers.get('origin')}/api/knowledge-sources?chatbotId=${chatbotId}`,
+        {
+          headers: {
+            'Cookie': req.headers.get('cookie') || '',
           }
         }
-      }
-    });
-
-    // Process each knowledge source
-    for (const source of knowledgeSources) {
-      // Process text content
-      const textContents = await prisma.textContent.findMany({
-        where: { knowledgeSourceId: source.id }
-      });
-
-      for (const text of textContents) {
-        combinedKnowledge += `\nText content from ${source.name}: ${text.content}\n`;
-      }
-
-      // Process website content
-      const websiteContents = await prisma.websiteContent.findMany({
-        where: { knowledgeSourceId: source.id }
-      });
-
-      for (const website of websiteContents) {
-        combinedKnowledge += `\nWebsite content from ${website.url}\n`;
-      }
-
-      // Process Q&A content
-      const qaContents = await prisma.qAContent.findMany({
-        where: { knowledgeSourceId: source.id }
-      });
-
-      for (const qa of qaContents) {
-        combinedKnowledge += `\nQ: ${qa.question}\nA: ${qa.answer}\n`;
-      }
-
-      // Process catalog content
-      const catalogContents = await prisma.catalogContent.findMany({
-        where: { knowledgeSourceId: source.id }
-      });
-
-      for (const catalog of catalogContents) {
-        combinedKnowledge += `\nCatalog: ${catalog.id}\n`;
-
-        // Get products for this catalog
-        const products = await prisma.product.findMany({
-          where: { catalogContentId: catalog.id }
-        });
-
-        for (const product of products) {
-          combinedKnowledge += `\nProduct: ${product.title}, Description: ${product.description || ''}, Price: ${product.price}\n`;
-        }
-      }
-    }
-
-    return combinedKnowledge;
-  } catch (error) {
-    console.error('Error retrieving chatbot knowledge:', error);
-    return '';
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    const { messages, id, chatbotId, selectedChatModel, testKnowledge } = await req.json();
-    
-    // Ensure we have required fields
-    if (!messages || !chatbotId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-    
-    // Use the provided thread ID or generate a new one with a consistent format
-    // This is CRITICAL for inbox integration - thread IDs must be consistent
-    const threadId = id || `thread_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    
-    // Get the chatbot/agent details to use its settings
-    let chatbot: ChatbotWithAssistant | null = null;
-    let openaiAssistantId: string | null = null;
-    let openaiThreadId: string | null = null;
-    
-    try {
-      // Get the base chatbot
-      const dbChatbot = await prisma.chatbot.findUnique({
-        where: { id: chatbotId },
-      });
-
-      // Check for OpenAI assistant settings
-      const assistantSettings = await prisma.$queryRaw`
-        SELECT * FROM "AssistantSettings" 
-        WHERE "chatbotId" = ${chatbotId} 
-        LIMIT 1
-      `;
-
-      // Extract OpenAI assistant settings if they exist
-      if (Array.isArray(assistantSettings) && assistantSettings.length > 0) {
-        openaiAssistantId = assistantSettings[0].openaiAssistantId || null;
-        openaiThreadId = assistantSettings[0].openaiThreadId || null;
-      }
+      );
       
-      // If this is an agent ID from the test page, it might not exist yet
-      if (!dbChatbot && chatbotId.startsWith('test-')) {
-        // Use default settings for test agents
-        chatbot = {
-          id: chatbotId,
-          prompt: 'You are a helpful assistant.',
-          temperature: 0.7,
-          maxCompletionTokens: 1200,
-          modelId: selectedChatModel || 'gpt-3.5-turbo',
-          name: 'Test Agent',
-        };
-      } else if (dbChatbot) {
-        // Map the database chatbot to our expected format
-        chatbot = {
-          id: dbChatbot.id,
-          prompt: dbChatbot.prompt || 'You are a helpful assistant.',
-          temperature: dbChatbot.temperature || 0.7,
-          maxCompletionTokens: dbChatbot.maxCompletionTokens || 1200,
-          modelId: selectedChatModel || dbChatbot.modelId || 'gpt-3.5-turbo',
-          name: dbChatbot.name,
-          openaiAssistantId: openaiAssistantId || undefined,
-          openaiThreadId: openaiThreadId || undefined
-        };
+      if (knowledgeResponse.ok) {
+        const knowledgeSources = await knowledgeResponse.json();
+        knowledge = knowledgeSources.map((source: any) => {
+          let sourceKnowledge = '';
+          if (source.textContents) {
+            sourceKnowledge += source.textContents.map((text: any) => text.content).join('\n');
+          }
+          if (source.websiteContents) {
+            sourceKnowledge += source.websiteContents.map((web: any) => `Content from ${web.url}`).join('\n');
+          }
+          if (source.qaContents) {
+            sourceKnowledge += source.qaContents.map((qa: any) => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n');
+          }
+          return sourceKnowledge;
+        }).join('\n\n');
       }
     } catch (error) {
-      console.error('Error fetching chatbot:', error);
-      // If we can't find the chatbot, use default settings
-      chatbot = {
-        prompt: 'You are a helpful assistant.',
-        temperature: 0.7,
-        maxCompletionTokens: 1200,
-        modelId: selectedChatModel || 'gpt-3.5-turbo',
-      };
+      console.error('Error fetching knowledge:', error);
+      // Continue without knowledge if there's an error
     }
-    
-    // Store the user's message
-    const userIp = req.headers.get('x-forwarded-for') || 
-                   req.headers.get('x-real-ip') || 
-                   'unknown';
-    
-    // Get the origin of the request (where the chat was started)
-    const origin = req.headers.get('referer') || 
-                   req.headers.get('origin') || 
-                   'unknown';
-    
-    // Use the full origin URL instead of just extracting the hostname
-    let from = origin;
-    
-    const latestMessage = messages[messages.length - 1];
-    
-    // Only store if it's a user message (not system or previous assistant messages)
-    if (latestMessage.role === 'user') {
-      try {
-        const storedUserMessage = await storeUserMessage({
-          threadId,
-          content: latestMessage.content,
-          chatbotId,
-          userIP: userIp.toString(),
-          from
-        });
-        console.log(`User message stored with ID: ${storedUserMessage.id} in thread: ${threadId}`);
-      } catch (error) {
-        console.error('Error storing user message:', error);
-        // Continue even if storage fails
-      }
-    }
-    
-    // Ensure we're using OpenAI's Assistant API if we have an assistant ID
-    if (openaiAssistantId && !testKnowledge) {
-      return handleWithAssistantsAPI(
-        threadId, 
-        chatbot, 
-        openaiAssistantId, 
-        openaiThreadId, 
-        latestMessage, 
-        chatbotId,
-        userIp.toString(),
-        from
-      );
-    } else {
-      // Use standard Chat Completions API
-      if (chatbot) {
-        return handleWithChatCompletions(
-          messages, 
-          chatbot, 
-          threadId, 
-          testKnowledge,
-          userIp.toString(),
-          from
-        );
-      } else {
-        return NextResponse.json({ error: 'Failed to initialize chatbot' }, { status: 500 });
-      }
-    }
-  } catch (error) {
-    console.error('Error in chat API:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error', 
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
-  }
-}
 
-// Handle chat with OpenAI's Assistants API
-async function handleWithAssistantsAPI(
-  threadId: string,
-  chatbot: ChatbotWithAssistant | null,
-  assistantId: string,
-  existingThreadId: string | null,
-  latestMessage: any,
-  chatbotId: string,
-  userIP: string = 'unknown',
-  from: string = 'unknown'
-) {
-  if (!chatbot) {
-    return NextResponse.json({ error: 'Missing chatbot configuration' }, { status: 500 });
-  }
-  
-  try {
-    // Use Assistants API with existing assistant
-    console.log(`Using existing Assistant ID: ${assistantId} for thread ${threadId}`);
-    
-    // Get or create OpenAI thread
-    let openaiThreadId: string | undefined = existingThreadId || undefined;
-    
-    if (!openaiThreadId) {
-      // Create a new thread
-      const thread = await openai.beta.threads.create();
-      openaiThreadId = thread.id;
-      
-      // Store the thread ID for future use if this is a persistent chatbot
-      if (chatbot?.id && !chatbot.id.startsWith('test-')) {
-        try {
-          await prisma.$executeRaw`
-            UPDATE "AssistantSettings" 
-            SET "openaiThreadId" = ${thread.id} 
-            WHERE "chatbotId" = ${chatbot.id}
-          `;
-        } catch (error) {
-          console.error('Error updating thread ID:', error);
-        }
-      }
-    }
-    
-    // Add the user message to the thread
-    await openai.beta.threads.messages.create(
-      openaiThreadId,
-      { role: 'user', content: latestMessage.content }
-    );
-    
-    // Run the assistant
-    const run = await openai.beta.threads.runs.create(
-      openaiThreadId,
-      { assistant_id: assistantId }
-    );
-    
-    // Create a streaming response
-    const streamResponse = new ReadableStream({
-      async start(controller) {
-        let isComplete = false;
-        let response = '';
-        
-        while (!isComplete) {
-          // Check the run status
-          if (!openaiThreadId) {
-            const errorMessage = 'Missing OpenAI thread ID';
-            controller.enqueue(new TextEncoder().encode(errorMessage));
-            isComplete = true;
-            controller.close();
-            continue;
-          }
+    // Combine the chatbot's prompt with knowledge and messages
+    const systemPrompt = chatbot.prompt || 'You are a helpful AI assistant.';
+    const fullPrompt = knowledge 
+      ? `${systemPrompt}\n\nHere is relevant knowledge to help answer questions:\n${knowledge}`
+      : systemPrompt;
 
-          const runStatus = await openai.beta.threads.runs.retrieve(
-            openaiThreadId,
-            run.id
-          );
-          
-          if (runStatus.status === 'completed') {
-            // Get the assistant's messages
-            const messages = await openai.beta.threads.messages.list(
-              openaiThreadId
-            );
-            
-            // Find the assistant's response message (should be the most recent)
-            const assistantMessage = messages.data
-              .filter(message => message.role === 'assistant')
-              .sort((a, b) => 
-                new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-              )[0];
-            
-            if (assistantMessage) {
-              // Get the text content from the message
-              const textContent = assistantMessage.content
-                .filter(content => content.type === 'text')
-                .map(content => (content.type === 'text' ? content.text.value : ''))
-                .join('\n');
-              
-              response = textContent;
-              
-              // Stream the final chunk
-              controller.enqueue(new TextEncoder().encode(response));
-              
-              // Store the assistant's response in our database
-              try {
-                const storedAssistantMessage = await storeAssistantMessage({
-                  threadId,
-                  content: response,
-                  chatbotId,
-                  userIP,
-                  from
-                });
-                console.log(`Assistant message stored with ID: ${storedAssistantMessage.id} in thread: ${threadId}`);
-              } catch (error) {
-                console.error('Error storing assistant message:', error);
-              }
-            }
-            
-            isComplete = true;
-            controller.close();
-          } else if (runStatus.status === 'failed' || runStatus.status === 'cancelled') {
-            const errorMessage = 'Assistant failed to generate a response.';
-            controller.enqueue(new TextEncoder().encode(errorMessage));
-            isComplete = true;
-            controller.close();
-          } else {
-            // Wait before polling again
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
-      }
-    });
-    
-    return new StreamingTextResponse(streamResponse);
-  } catch (error) {
-    console.error('Error using Assistants API:', error);
-    // Fall back to Chat Completions API if we have a valid chatbot
-    if (chatbot) {
-      return handleWithChatCompletions([latestMessage], chatbot, threadId, undefined, userIP, from);
-    } else {
-      return NextResponse.json({ error: 'Failed to generate response with Assistant API' }, { status: 500 });
-    }
-  }
-}
-
-// Helper function to handle chat with the Chat Completions API
-async function handleWithChatCompletions(
-  messages: Message[], 
-  chatbot: ChatbotWithAssistant, 
-  threadId: string, 
-  testKnowledge?: string,
-  userIP: string = 'unknown',
-  from: string = 'unknown'
-) {
-  try {
-    console.log(`Processing chat with Thread ID: ${threadId}`);
-    
-    // Get chatbot knowledge if this is a real chatbot (not a test one)
-    let knowledge = '';
-    if (chatbot && chatbot.id && !chatbot.id.startsWith('test-')) {
-      knowledge = await getChatbotKnowledge(chatbot.id);
-    }
-    
-    // Prepare the system prompt
-    let systemPrompt = chatbot?.prompt || 'You are a helpful assistant.';
-    
-    // Use test knowledge if provided (for testing purposes)
-    if (testKnowledge) {
-      systemPrompt += `\n\nHere is information about the system that you should use to answer questions:\n${testKnowledge}\n\nWhen you don't know the answer based on this information, please say 'I don't have that information' rather than making up an answer.`;
-    }
-    // Otherwise use real knowledge if available
-    else if (knowledge) {
-      systemPrompt += `\n\nHere is relevant knowledge you should use to answer questions:\n${knowledge}\n\nWhen you don't know the answer based on this knowledge, please say 'I don't have that information' rather than making up an answer.`;
-    }
-    
-    // Prepare the messages for OpenAI, including the system prompt from the chatbot
-    // Convert messages to the format expected by OpenAI API
-    const apiMessages = [
-      {
-        role: 'system',
-        content: systemPrompt
-      },
-      ...messages.map(msg => ({
-        role: msg.role === 'user' || msg.role === 'assistant' || msg.role === 'system' ? msg.role : 'user',
-        content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content)
-      }))
+    const fullMessages = [
+      { role: 'system', content: fullPrompt },
+      ...messages
     ];
-    
-    // Validate model - ensure it's a valid OpenAI model and not a chatbot ID
-    // List of valid OpenAI models (update as needed)
-    const validOpenAIModels = [
-      'gpt-3.5-turbo', 
-      'gpt-4', 
-      'gpt-4-turbo',
-      'gpt-4-vision-preview', 
-      'gpt-4-1106-preview',
-      'gpt-4-0613',
-      'gpt-4-32k',
-      'gpt-4-32k-0613',
-      'gpt-3.5-turbo-16k',
-      'gpt-3.5-turbo-instruct'
-    ];
-    
-    // Get the specified model or use a default
-    let model = chatbot?.modelId || 'gpt-3.5-turbo';
-    
-    // If the model doesn't look like a valid OpenAI model, use a default
-    if (!validOpenAIModels.includes(model) && !model.startsWith('gpt-')) {
-      console.warn(`Invalid model detected: "${model}". Falling back to gpt-3.5-turbo.`);
-      model = 'gpt-3.5-turbo';
-    }
-    
-    console.log(`Using Chat Completions API for thread ${threadId} with model ${model}`);
-    
-    // Generate a completion using the model specified by the chatbot
+
+    // Create chat completion with OpenAI
     const response = await openai.chat.completions.create({
-      model,
-      messages: apiMessages as any, // Type assertion to bypass TypeScript error
-      temperature: chatbot?.temperature || 0.7,
-      max_tokens: chatbot?.maxCompletionTokens || 1200,
+      model: modelName,
+      messages: fullMessages,
+      temperature: chatbot.temperature || 0.7,
+      max_tokens: chatbot.maxCompletionTokens || 1000,
       stream: true,
     });
-    
-    // Create a streaming response
-    const stream = OpenAIStream(response, {
-      onCompletion: async (completion) => {
-        // Store the assistant's response
+
+    // Convert the response to a stream using Vercel AI SDK
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+
         try {
-          const storedAssistantMessage = await storeAssistantMessage({
-            threadId,
-            content: completion,
-            chatbotId: chatbot.id || threadId, // Fallback to threadId if no chatbot ID
-            userIP,
-            from
-          });
-          console.log(`Assistant message stored with ID: ${storedAssistantMessage.id} in thread: ${threadId}`);
+          for await (const chunk of response) {
+            const text = chunk.choices[0]?.delta?.content;
+            if (text) {
+              // Format each chunk according to Vercel AI SDK's expected format
+              // Using '0:' prefix for text chunks as per the SDK's format
+              controller.enqueue(encoder.encode(`0:${JSON.stringify(text)}\n\n`));
+            }
+          }
+          // Send the end-of-stream marker
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
         } catch (error) {
-          console.error('Error storing assistant message:', error);
-          // Continue even if storage fails
+          console.error('Error in stream processing:', error);
+          controller.error(error);
+        } finally {
+          controller.close();
         }
       },
     });
-    
-    return new StreamingTextResponse(stream);
+
+    // Return the streaming response using Vercel AI SDK
+    return new StreamingTextResponse(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
   } catch (error) {
-    console.error('Error in chat completions API:', error);
-    return NextResponse.json({ 
-      error: 'Internal server error', 
-      message: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('Error in chat completion:', error);
+    if (error instanceof OpenAI.APIError) {
+      const { name, status, headers, message } = error;
+      return new Response(
+        JSON.stringify({ 
+          error: 'OpenAI API Error',
+          message,
+          status,
+          type: name
+        }), 
+        { status: status || 500 }
+      );
+    }
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal Server Error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      }), 
+      { status: 500 }
+    );
   }
 }
 

@@ -95,7 +95,9 @@ function WebsiteWidgetConfig({ agent, onSave, onClose }: {
     }
   };
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://example.com';
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  
+  // Add two types of embed codes
   const widgetCode = `<script>
     window.chatbotConfig = { chatbotId: '${agent.id}' };
     (function() {
@@ -104,6 +106,12 @@ function WebsiteWidgetConfig({ agent, onSave, onClose }: {
         document.head.appendChild(script);
     })();
 </script>`;
+
+  const windowCode = `<iframe 
+    src="${baseUrl}/embed/${agent.id}/window"
+    style="border: none; width: 100%; height: 600px;"
+    allow="microphone"
+></iframe>`;
 
   return (
     <div className="space-y-6 px-2">
@@ -242,23 +250,62 @@ function WebsiteWidgetConfig({ agent, onSave, onClose }: {
             </div>
           </div>
           
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Embed Code</h3>
-            <div className="relative">
-              <pre className="p-4 bg-gray-50 dark:bg-gray-900 border rounded-md overflow-auto">
-                <code className="text-sm">{widgetCode}</code>
-              </pre>
-              <Button 
-                type="button" 
-                variant="secondary" 
-                size="sm" 
-                className="absolute top-2 right-2"
-                onClick={() => {
-                  navigator.clipboard.writeText(widgetCode);
-                }}
-              >
-                <Code2 className="w-4 h-4 mr-1" /> Copy
-              </Button>
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Preview</h3>
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <iframe 
+                src={`${baseUrl}/embed/${agent.id}/window`}
+                className="w-full h-[400px] rounded-md border"
+                allow="microphone"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Embed Options</h3>
+            
+            {/* Chat Widget Code */}
+            <div className="space-y-2">
+              <Label>Chat Widget (Floating Button)</Label>
+              <div className="relative">
+                <pre className="p-4 bg-gray-50 dark:bg-gray-900 border rounded-md overflow-auto">
+                  <code className="text-sm">{widgetCode}</code>
+                </pre>
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  size="sm" 
+                  className="absolute top-2 right-2"
+                  onClick={() => {
+                    navigator.clipboard.writeText(widgetCode);
+                    toast.success('Widget code copied to clipboard');
+                  }}
+                >
+                  <Code2 className="w-4 h-4 mr-1" /> Copy Widget
+                </Button>
+              </div>
+            </div>
+
+            {/* Chat Window Code */}
+            <div className="space-y-2">
+              <Label>Chat Window (Inline Frame)</Label>
+              <div className="relative">
+                <pre className="p-4 bg-gray-50 dark:bg-gray-900 border rounded-md overflow-auto">
+                  <code className="text-sm">{windowCode}</code>
+                </pre>
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  size="sm" 
+                  className="absolute top-2 right-2"
+                  onClick={() => {
+                    navigator.clipboard.writeText(windowCode);
+                    toast.success('Window code copied to clipboard');
+                  }}
+                >
+                  <Code2 className="w-4 h-4 mr-1" /> Copy Window
+                </Button>
+              </div>
             </div>
           </div>
           

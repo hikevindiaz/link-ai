@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import { NextResponse } from 'next/server';
 
 // Schema for creating a new knowledge source
 const createSourceSchema = z.object({
@@ -11,47 +12,38 @@ const createSourceSchema = z.object({
 });
 
 // GET handler to fetch all knowledge sources for the current user
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return new Response("Unauthorized", { status: 403 });
+    const { searchParams } = new URL(req.url);
+    const chatbotId = searchParams.get('chatbotId');
+
+    if (!chatbotId) {
+      return NextResponse.json({ error: 'chatbotId is required' }, { status: 400 });
     }
 
-    try {
-      // @ts-ignore - The knowledgeSource model exists in the schema but TypeScript doesn't know about it yet
-      const sources = await db.knowledgeSource.findMany({
-        where: {
-          userId: session.user.id,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
-
-      return new Response(JSON.stringify(sources), {
-        headers: { "Content-Type": "application/json" },
-      });
-    } catch (dbError: unknown) {
-      // Check if the error is because the table doesn't exist
-      if (dbError instanceof Prisma.PrismaClientKnownRequestError && dbError.code === 'P2021') {
-        console.error("Database table does not exist:", dbError);
-        return new Response(JSON.stringify([]), {
-          headers: { "Content-Type": "application/json" },
-        });
+    // Get knowledge sources with their contents
+    const knowledgeSources = await db.knowledgeSource.findMany({
+      where: {
+        chatbots: {
+          some: {
+            id: chatbotId
+          }
+        }
+      },
+      include: {
+        textContents: true,
+        websiteContents: true,
+        qaContents: true,
       }
-      throw dbError;
-    }
+    });
+
+    return NextResponse.json(knowledgeSources);
   } catch (error) {
-    console.error("Error fetching knowledge sources:", error);
-    return new Response(`Internal Server Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { status: 500 });
+    console.error('Error fetching knowledge sources:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch knowledge sources' },
+      { status: 500 }
+    );
   }
 }
 

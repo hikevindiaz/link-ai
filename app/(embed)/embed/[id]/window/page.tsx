@@ -1,12 +1,9 @@
 'use client';
 
 import { Chat } from '@/components/chat-interface/chat';
-import { ChatContainer } from '@/components/chat-interface/chat-container';
 import { useEffect, useState } from 'react';
-import { generateUUID } from '@/lib/chat-interface/utils';
-import { db } from '@/lib/db';
 
-export interface ChatComponentProps {
+export interface ChatWindowProps {
   params: { id: string };
   searchParams: { 
     withExitX?: string; 
@@ -17,75 +14,54 @@ export interface ChatComponentProps {
   };
 }
 
-export default function EmbeddedChat({ params, searchParams }: ChatComponentProps) {
+export default function ChatWindow({ params, searchParams }: ChatWindowProps) {
   const [chatbot, setChatbot] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [threadId, setThreadId] = useState<string>(generateUUID());
-  
-  // Fetch chatbot data
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     async function fetchChatbot() {
       try {
         const response = await fetch(`/api/chatbots/${params.id}`);
         if (!response.ok) {
-          throw new Error('Chatbot not found');
+          throw new Error('Failed to fetch chatbot');
         }
         const data = await response.json();
         setChatbot(data);
       } catch (error) {
         console.error('Error fetching chatbot:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     }
 
-    if (params.id) {
-      fetchChatbot();
-    }
+    fetchChatbot();
   }, [params.id]);
 
-  // Set initial message if provided
-  useEffect(() => {
-    if (searchParams.defaultMessage && !isLoading && chatbot) {
-      // Could dispatch an event to set initial message
-      // Or implement a way to set default messages through the Chat component
-    }
-  }, [searchParams.defaultMessage, isLoading, chatbot]);
-  
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <div className="text-lg text-gray-500">Loading chat...</div>
       </div>
     );
   }
 
-  if (!chatbot && !isLoading) {
+  if (!chatbot) {
     return (
-      <div className="flex h-full w-full items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
         <div className="text-lg text-red-500">Chatbot not found</div>
       </div>
     );
   }
 
   return (
-    <ChatContainer 
-      className={`flex h-full w-full flex-col overflow-hidden ${
-        searchParams.theme === 'dark' ? 'dark' : ''
-      }`}
-    >
-      <div className="flex-1 relative h-[calc(100vh-0px)]">
-        <Chat
-          id={threadId}
-          initialMessages={[]}
-          chatbotId={params.id}
-          selectedChatModel={chatbot?.modelId || 'gpt-4'}
-          selectedVisibilityType="public"
-          isReadonly={false}
-          chatbotLogoURL={chatbot?.chatbotLogoURL}
-          chatTitle={chatbot?.name}
-        />
-      </div>
-    </ChatContainer>
+    <div className="flex flex-col h-screen bg-white">
+      <Chat
+        id={params.id}
+        chatbotId={chatbot.id}
+        selectedChatModel={chatbot.modelId}
+        chatbotLogoURL={chatbot.chatbotLogoURL || undefined}
+        chatTitle={chatbot.chatTitle || undefined}
+      />
+    </div>
   );
 }

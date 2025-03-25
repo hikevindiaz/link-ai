@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import OpenAI from "openai";
-import { StreamingTextResponse } from "ai";
+import { OpenAIStream, StreamingTextResponse } from 'ai';
+
 
 export const maxDuration = 300;
 
@@ -171,7 +172,7 @@ export async function POST(
     const stream = createStream(assistantResponse);
     
     // Return a streaming response
-    return new StreamingTextResponse(stream, {
+    return StreamingTextResponse(stream, {
       headers: {
         'X-Thread-ID': threadId,
       },

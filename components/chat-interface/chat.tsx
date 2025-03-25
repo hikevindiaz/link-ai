@@ -1,27 +1,39 @@
 'use client';
 
-import type { Attachment, Message } from 'ai';
-import { useChat } from '@ai-sdk/react';
-import { useState, useEffect } from 'react';
+import { Message } from 'ai';
+import { useChat } from 'ai/react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChatHeader } from '@/components/chat-interface/chat-header';
-import { fetcher, generateUUID } from '@/lib/chat-interface/utils';
+import { fetcher } from '@/lib/chat-interface/utils';
 import { FixedChatInput } from '@/components/chat-interface/fixed-chat-input';
 import { Messages } from '@/components/chat-interface/messages';
 import { VisibilityType } from '@/components/chat-interface/visibility-selector';
 import { useArtifactSelector } from '@/components/chat-interface/hooks/use-artifact';
 import { toast } from 'sonner';
 
+// Define the Attachment type locally since it's not exported from 'ai'
+interface Attachment {
+  name: string;
+  type: string;
+  url: string;
+}
+
+// Define our own Message type that extends the AI SDK Message type
+interface ChatMessage extends Message {
+  id: string; // Make id required
+}
+
 // This interface adapts to your existing schema
 export interface ChatProps {
-  id: string; // This can be your threadId
-  initialMessages?: Array<Message>;
-  chatbotId: string; // Using your chatbot/agent ID
+  id: string;
+  initialMessages?: ChatMessage[];
+  chatbotId: string;
   selectedChatModel?: string;
   selectedVisibilityType?: VisibilityType;
   isReadonly?: boolean;
   chatbotLogoURL?: string | null;
   chatTitle?: string | null;
-  testKnowledge?: string; // Add this parameter for testing
+  testKnowledge?: string;
 }
 
 export function Chat({
@@ -35,93 +47,48 @@ export function Chat({
   chatTitle,
   testKnowledge,
 }: ChatProps) {
-  // Ensure the id is in the proper format for inbox integration
-  // If it doesn't start with 'thread_', prefix it to ensure consistency
-  const [currentThreadId, setCurrentThreadId] = useState(id.startsWith('thread_') ? id : `thread_${id}`);
-  
-  // Track if we need to reset
-  const [shouldReset, setShouldReset] = useState(false);
-  
+  const [currentThreadId] = useState(id.startsWith('thread_') ? id : `thread_${id}`);
+  const [votes, setVotes] = useState<any[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+
   const {
     messages,
     setMessages,
     handleSubmit,
     input,
     setInput,
-    append,
+    append: originalAppend,
     status,
     stop,
     reload,
+    isLoading,
+    error
   } = useChat({
-    id: currentThreadId, // Use the properly formatted thread ID
-    body: { 
-      id: currentThreadId, // Send the proper thread ID format to the API
-      chatbotId, 
+    api: '/api/chat-interface',
+    id: currentThreadId,
+    body: {
+      chatbotId,
       selectedChatModel,
-      testKnowledge, // Pass the test knowledge to the API
+      testKnowledge,
     },
-    // @ts-ignore - Type differences between ai-sdk versions
-    initialMessages,
-    experimental_throttle: 100,
-    sendExtraMessageFields: true,
-    generateId: generateUUID,
-    onFinish: () => {
-      // Optionally refresh the inbox to show new messages
-      // This could trigger an event that the inbox page listens for
-      try {
-        window.dispatchEvent(new CustomEvent('inboxThreadUpdated', {
-          detail: { threadId: currentThreadId }
-        }));
-      } catch (error) {
-        console.error('Error dispatching inbox update event:', error);
-      }
-    },
-    onError: () => {
+    initialMessages: initialMessages.map(msg => ({
+      ...msg,
+      role: msg.role as 'user' | 'assistant' | 'system'
+    })),
+    onError: (error) => {
+      console.error('Chat error:', error);
       toast.error('An error occurred, please try again!');
     },
-    api: '/api/chat-interface', // Point to our custom endpoint that uses your schema
   });
 
-  const [votes, setVotes] = useState<Array<any>>([]);
-  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
-  
-  // Handle new chat request
-  useEffect(() => {
-    const handleNewChat = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      if (customEvent.detail && customEvent.detail.newChatId) {
-        // Generate a new thread ID
-        const newThreadId = `thread_${customEvent.detail.newChatId}`;
-        
-        // Clear all current messages and state
-        setMessages([]);
-        setInput('');
-        setAttachments([]);
-        setVotes([]);
-        
-        // Update the thread ID
-        setCurrentThreadId(newThreadId);
-        setShouldReset(true);
-      }
-    };
-    
-    // Listen for new chat events
-    window.addEventListener('newChatRequested', handleNewChat);
-    
-    return () => {
-      window.removeEventListener('newChatRequested', handleNewChat);
-    };
-  }, [setMessages, setInput, setAttachments]);
-  
-  // Reset the chat when thread ID changes
-  useEffect(() => {
-    if (shouldReset) {
-      // Reset state after thread ID updated
-      reload();
-      setShouldReset(false);
-    }
-  }, [currentThreadId, shouldReset, reload]);
+  // Create a wrapper around append that returns void and handles role type correctly
+  const append = useCallback(async (message: Message) => {
+    await originalAppend({
+      ...message,
+      role: message.role as 'user' | 'assistant' | 'system'
+    });
+  }, [originalAppend]);
 
   // Fetch votes if needed
   useEffect(() => {
@@ -139,35 +106,22 @@ export function Chat({
     }
   }, [currentThreadId]);
 
-  // Simple wrapper for append to ensure correct types
-  const handleAppend = async (message: Message): Promise<void> => {
+  // Handle message submission
+  const handleMessageSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      // @ts-ignore - Our type definitions might not match exactly with the library
-      await append(message);
+      await handleSubmit(e);
     } catch (error) {
-      console.error('Error in append:', error);
+      console.error('Error submitting message:', error);
+      toast.error('Failed to send message');
     }
   };
-  
-  // Function to handle starting a new chat
-  const handleNewChat = () => {
-    const newThreadId = `thread_${generateUUID()}`;
-    
-    // Clear all messages and state
-    setMessages([]);
-    setInput('');
-    setAttachments([]);
-    setVotes([]);
-    
-    // Update the thread ID
-    setCurrentThreadId(newThreadId);
-    setShouldReset(true);
-    
-    // Update the URL to reflect the new thread
-    const url = new URL(window.location.href);
-    url.searchParams.set('thread', newThreadId.replace('thread_', ''));
-    window.history.pushState({}, '', url.toString());
-  };
+
+  // Convert messages to ChatMessage type by ensuring id exists
+  const chatMessages = messages.map(msg => ({
+    ...msg,
+    id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  })) as ChatMessage[];
 
   return (
     <div className="flex flex-col min-w-0 h-dvh bg-white dark:bg-black">
@@ -176,16 +130,14 @@ export function Chat({
         selectedModelId={selectedChatModel}
         selectedVisibilityType={selectedVisibilityType}
         isReadonly={isReadonly}
-        onNewChat={handleNewChat} // Pass the new chat handler
       />
 
       <Messages
         chatId={currentThreadId}
         status={status}
         votes={votes}
-        messages={messages}
-        // @ts-ignore - Type differences between ai-sdk versions
-        setMessages={setMessages}
+        messages={chatMessages}
+        setMessages={setMessages as any}
         reload={reload}
         isReadonly={isReadonly}
         isArtifactVisible={isArtifactVisible}
@@ -193,7 +145,7 @@ export function Chat({
         chatbotName={chatTitle}
       />
 
-      <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+      <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl" onSubmit={handleMessageSubmit}>
         {!isReadonly && (
           <FixedChatInput
             chatId={currentThreadId}
@@ -204,11 +156,9 @@ export function Chat({
             stop={stop}
             attachments={attachments}
             setAttachments={setAttachments}
-            messages={messages}
-            // @ts-ignore - Type differences between ai-sdk versions
-            setMessages={setMessages}
-            // @ts-ignore - Type differences between ai-sdk versions
-            append={handleAppend}
+            messages={chatMessages}
+            setMessages={setMessages as any}
+            append={append}
           />
         )}
       </form>

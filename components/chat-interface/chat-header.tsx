@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
 
 import { memo } from 'react';
@@ -22,6 +22,7 @@ function PureChatHeader({
   onNewChat?: () => void;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { width: windowWidth } = useWindowSize();
 
   const handleNewChat = () => {
@@ -30,13 +31,11 @@ function PureChatHeader({
     } else {
       const newChatId = generateUUID();
       
-      const path = window.location.pathname;
-      
-      if (path.includes('/dashboard/agents/')) {
-        const currentPath = path.split('?')[0];
-        router.push(`${currentPath}?thread=${newChatId}`);
+      // Always use the current path and append thread parameter for agent chats
+      if (pathname.includes('/dashboard/agents/')) {
+        router.push(`${pathname}?thread=${newChatId}`);
       } else {
-        router.push(`/dashboard/test-chatbot?id=${newChatId}`);
+        router.push(`/chat/${newChatId}`);
       }
       
       window.dispatchEvent(new CustomEvent('newChatRequested', { 

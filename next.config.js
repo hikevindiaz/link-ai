@@ -24,14 +24,12 @@ const nextConfig = {
       'gwetfkan2dovfoiz.public.blob.vercel-storage.com',
     ],
   },
-  transpilePackages: ['ai', '@ai-sdk/react', '@ai-sdk/openai', '@ai-sdk/fireworks', '@openassistantgpt/assistant'],
+  transpilePackages: ['ai'],
   webpack: (config) => {
     // Updated alias setup to use our patch file
     config.resolve.alias = {
       ...config.resolve.alias,
       '@': path.resolve(__dirname),
-      // Use our custom patch file for all 'ai' imports
-      'ai': path.resolve(__dirname, 'app/api/ai-package-patch.ts'),
       'contentlayer/generated': path.resolve(__dirname, '.contentlayer/generated'),
     };
 

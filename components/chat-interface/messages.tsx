@@ -4,25 +4,28 @@ import { useScrollToBottom } from './use-scroll-to-bottom';
 import { Overview } from './overview';
 import { memo } from 'react';
 import equal from 'fast-deep-equal';
-import { UseChatHelpers } from '@ai-sdk/react';
 import Image from 'next/image';
 import { UserIcon } from 'lucide-react';
 
-// Define a simple Vote interface since we can't import it
+// Define the Vote interface to match what's expected
 interface Vote {
-  id: string;
+  chatId: string;
   messageId: string;
-  threadId: string;
-  value: number;
+  isUpvoted: boolean;
+}
+
+// Extend the Message type from Vercel AI SDK to include required fields
+interface ChatMessage extends Message {
+  id: string;
 }
 
 interface MessagesProps {
   chatId: string;
-  status: UseChatHelpers['status'];
+  status: 'error' | 'submitted' | 'streaming' | 'ready';
   votes: Array<Vote> | undefined;
-  messages: Array<Message>;
-  setMessages: UseChatHelpers['setMessages'];
-  reload: UseChatHelpers['reload'];
+  messages: Array<ChatMessage>;
+  setMessages: (messages: ChatMessage[] | ((messages: ChatMessage[]) => ChatMessage[])) => void;
+  reload: (options?: any) => Promise<string>;
   isReadonly: boolean;
   isArtifactVisible: boolean;
   chatbotLogoURL?: string | null;

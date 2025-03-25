@@ -73,13 +73,28 @@ const PureChatItem = ({
     chatId: chat.id,
     initialVisibility: chat.visibility,
   });
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setOpenMobile(false);
+    
+    // Determine the correct path based on the current location
+    if (pathname.includes('/dashboard/agents/')) {
+      const basePath = pathname.split('?')[0];
+      router.push(`${basePath}?thread=${chat.id}`);
+    } else {
+      router.push(`/chat/${chat.id}`);
+    }
+  };
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
+        <a href="#" onClick={handleClick}>
           <span>{chat.title}</span>
-        </Link>
+        </a>
       </SidebarMenuButton>
 
       <DropdownMenu modal={true}>
