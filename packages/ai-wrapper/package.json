@@ -1,0 +1,9 @@
+{
+  "name": "@openassistantgpt/ai-wrapper",
+  "version": "1.0.0",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "ai": "4.2.2"
+  }
+} 

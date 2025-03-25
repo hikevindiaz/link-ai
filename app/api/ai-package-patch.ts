@@ -7,12 +7,18 @@
 
 import { formatStreamPart as localFormatStreamPart } from '@/lib/chat-interface/ai/compatibility';
 
-// Patch the ai package to include formatStreamPart
-const aiPackage = require('ai');
-aiPackage.formatStreamPart = localFormatStreamPart;
+// Create a proxy for the ai package that includes formatStreamPart
+const aiProxy = new Proxy(require('ai'), {
+  get(target, prop) {
+    if (prop === 'formatStreamPart') {
+      return localFormatStreamPart;
+    }
+    return target[prop];
+  }
+});
 
 // Re-export the patched ai package
-module.exports = aiPackage;
+module.exports = aiProxy;
 
 // Fixed StreamingTextResponse implementation that avoids the 'i' initialization error
 export class StreamingTextResponse extends Response {
