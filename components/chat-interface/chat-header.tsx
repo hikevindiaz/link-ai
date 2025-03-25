@@ -2,63 +2,52 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
-
-import { memo } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/chat-interface/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { generateUUID } from '@/lib/chat-interface/utils';
 
-function PureChatHeader({
-  chatId,
-  selectedModelId,
-  selectedVisibilityType,
-  isReadonly,
-  onNewChat,
-}: {
+interface ChatHeaderProps {
   chatId: string;
   selectedModelId: string;
   selectedVisibilityType: any;
   isReadonly: boolean;
-  onNewChat?: () => void;
-}) {
+}
+
+export function ChatHeader({
+  chatId,
+  selectedModelId,
+  selectedVisibilityType,
+  isReadonly,
+}: ChatHeaderProps) {
   const router = useRouter();
-  const pathname = usePathname();
-  const { width: windowWidth } = useWindowSize();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
+  const [isVisibilityMenuOpen, setIsVisibilityMenuOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [exportDays, setExportDays] = useState(7);
 
   const handleNewChat = () => {
-    if (onNewChat) {
-      onNewChat();
-    } else {
-      const newChatId = generateUUID();
-      
-      // Always use the current path and append thread parameter for agent chats
-      if (pathname.includes('/dashboard/agents/')) {
-        router.push(`${pathname}?thread=${newChatId}`);
-      } else {
-        router.push(`/chat/${newChatId}`);
-      }
-      
-      window.dispatchEvent(new CustomEvent('newChatRequested', { 
-        detail: { newChatId } 
-      }));
-    }
+    // Simply refresh the page to start a new chat
+    window.location.reload();
   };
 
   return (
-    <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-2 gap-2">
-      <Button 
-        onClick={handleNewChat}
-        variant="outline" 
-        size="icon" 
-        className="size-8 rounded-sm dark:black dark:text-gray-100 dark:hover:bg-gray-800"
-      >
-        <PlusIcon className="size-4" />
-        <span className="sr-only">New Chat</span>
-      </Button>
+    <header className="sticky top-0 z-50 flex items-center justify-between w-full border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black px-4 py-2">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={handleNewChat}
+        >
+          <PlusIcon className="h-4 w-4" />
+          <span className="sr-only">New chat</span>
+        </Button>
+        <h2 className="text-lg font-semibold">Chat</h2>
+      </div>
+      {/* Rest of the header content */}
     </header>
   );
 }
-
-export const ChatHeader = memo(PureChatHeader, (prevProps, nextProps) => {
-  return prevProps.selectedModelId === nextProps.selectedModelId;
-});

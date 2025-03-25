@@ -2,7 +2,7 @@
 
 import { Message } from 'ai';
 import { useChat } from 'ai/react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChatHeader } from '@/components/chat-interface/chat-header';
 import { fetcher } from '@/lib/chat-interface/utils';
 import { FixedChatInput } from '@/components/chat-interface/fixed-chat-input';
@@ -52,6 +52,7 @@ export function Chat({
   const [votes, setVotes] = useState<any[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const {
     messages,
@@ -82,6 +83,13 @@ export function Chat({
       toast.error('An error occurred, please try again!');
     },
   });
+
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   // Create a wrapper around append that returns void and handles role type correctly
   const append = useCallback(async (message: Message) => {
@@ -134,18 +142,20 @@ export function Chat({
         isReadonly={isReadonly}
       />
 
-      <Messages
-        chatId={currentThreadId}
-        status={status}
-        votes={votes}
-        messages={chatMessages}
-        setMessages={setMessages as any}
-        reload={reload}
-        isReadonly={isReadonly}
-        isArtifactVisible={isArtifactVisible}
-        chatbotLogoURL={chatbotLogoURL}
-        chatbotName={chatTitle}
-      />
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
+        <Messages
+          chatId={currentThreadId}
+          status={status}
+          votes={votes}
+          messages={chatMessages}
+          setMessages={setMessages as any}
+          reload={reload}
+          isReadonly={isReadonly}
+          isArtifactVisible={isArtifactVisible}
+          chatbotLogoURL={chatbotLogoURL}
+          chatbotName={chatTitle}
+        />
+      </div>
 
       {/* Show suggested actions only when there are no messages */}
       {!isReadonly && messages.length === 0 && (
