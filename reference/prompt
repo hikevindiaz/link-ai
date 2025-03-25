@@ -1,0 +1,128 @@
+
+**Robust Prompt for Link AI Refactoring**
+
+**Context Overview:**
+
+Our project, *Link AI*, originated as a fork from [OpenAssistantGPT](https://github.com/OpenAssistantGPT/OpenAssistantGPT/tree/main) but has since diverged considerably. We have adopted the chat UI components and animations from the Vercel Next.js AI Chatbot ([vercel/ai-chatbot](https://github.com/vercel/ai-chatbot), template: [https://vercel.com/templates/next.js/nextjs-ai-chatbot](https://vercel.com/templates/next.js/nextjs-ai-chatbot)) purely for its aesthetic and user experience. However, the underlying workflow and business logic are entirely different from the original implementations.
+
+**Intended Workflow and System Architecture:**
+
+1. **User Journey:**
+   - **Account Creation:** User creates an account.
+   - **Knowledge Source Creation:**  
+     The user uploads and manages various knowledge sources. These include:
+     - PDF files
+     - Textual data
+     - Q&A entries
+     - Menu Items
+     - Websites (for live searches specific to that site)
+     - Crawler files (legacy functionality that is still operational)  
+     Each type is managed in its own tab but all data is stored correctly in our schema.
+   - **Retraining Agents:**  
+     Once knowledge sources are added or updated, the user triggers a “Retrain Assigned Agents” button. This process should:
+     - Identify the new/changed data
+     - Embed/vectorize/cache this data (or use another state-of-the-art approach)
+     - Update all agents associated with that knowledge base
+     - Provide visual feedback via a progress dialog or progress bar.
+   - **Agent Functionality:**  
+     The agent acts as the “brain” for multi-channel communications (web chat, phone calls, voice chats via our widget, SMS, WhatsApp, Messenger, Instagram, Slack, etc.).  
+     - The agent should have an initial configuration message that displays as soon as the chat (or call) starts.
+     - A prompt configuration (set in the agents tab) is used by the agent for generating responses.
+   - **Channel Consistency:**  
+     Whether the user interacts via web chat or phone, the response mechanism should be identical.
+
+2. **Existing Codebase Concerns:**
+   - The original chat logic from the Vercel ai-chatbot project follows a workflow such as:  
+     *Visit Website Domain → Chat → Login → Create More Chats*  
+     This does not match our approach, which is:  
+     *Create an Account → Create Knowledge Sources → Create Agent → Chat with that Specific Agent*
+   - There is a mix of legacy chat-related files (route files, chat-specific components/pages, action handlers) that are redundant or conflicting with our new design.
+
+**Specific Instructions and Requirements:**
+
+1. **Codebase Cleanup:**
+   - **Task:** Thoroughly scan the entire codebase to identify redundant files that pertain solely to chat functionalities inherited from the legacy system.  
+   - **Files to Target:**  
+     - Route files specific to chat
+     - Chat page components
+     - Chat action handler pages
+     - Any other files that enforce the old “chat only” logic  
+   - **Outcome:** Remove or archive these files so that only our new workflow remains active.
+
+2. **Preserve the UI Aesthetic:**
+   - **Do Not Alter:** The current UI components and animations derived from the Vercel ai-chatbot template.  
+   - **Guideline:** Use existing components as-is. If new components must be created to bridge functionality gaps, explicitly request permission before proceeding.
+
+3. **API Integration & Usage Examples:**
+   - **APIs to Consider:**
+     - **Vercel SDK for OpenAI Responses:**  
+       Documentation: [https://sdk.vercel.ai/docs/guides/openai-responses](https://sdk.vercel.ai/docs/guides/openai-responses)
+     - **OpenAI Chat Completions vs. Responses:**  
+       Guidance: [https://platform.openai.com/docs/guides/responses-vs-chat-completions](https://platform.openai.com/docs/guides/responses-vs-chat-completions)
+     - **OpenAI API Reference for Responses:**  
+       API details: [https://platform.openai.com/docs/api-reference/responses](https://platform.openai.com/docs/api-reference/responses)
+   - **Example (Pseudo-code):**
+     ```javascript
+     // Import the SDK function from the installed AI npm package
+     import { getOpenAIResponse } from 'ai-sdk';
+
+     async function fetchChatResponse(userPrompt) {
+       try {
+         const response = await getOpenAIResponse({
+           prompt: userPrompt,
+           maxTokens: 150,
+           temperature: 0.7
+         });
+         return response;
+       } catch (error) {
+         console.error('Error fetching OpenAI response:', error);
+         throw error;
+       }
+     }
+
+     // Sample usage in a chat component
+     const userPrompt = "Hello, how can I assist you today?";
+     fetchChatResponse(userPrompt).then(response => {
+       // Update the chat UI with the fetched response
+       updateChatUI(response);
+     });
+     ```
+   - **Note:** Adjust parameters and logic based on the specific API documentation linked above.
+
+4. **Dependency Confirmation:**
+   - Confirm that the project uses the latest versions of the AI npm package and the OpenAI package. No updates are required unless they conflict with the new design.
+
+5. **Training Mechanism Adjustment:**
+   - **Current Issue:** The training module is currently under the LLM tab at the agent level.
+   - **Proposed Change:** Move the training functionality to the knowledge source level.  
+     - **Rationale:** This ensures that whenever a knowledge source is updated (e.g., new file uploaded, Q&A modified), the agent is automatically flagged for retraining, eliminating an extra manual step.
+   - **Implementation:** The “Retrain Assigned Agents” button should reside within the knowledge source management interface.
+
+6. **Chat Interface Placement:**
+   - **Requirement:** The chat interface should appear only in:
+     - The `dashboard/agents/[id]/chat` window
+     - Embeddable chat windows (as defined)
+   - **Action:** Remove any chat interfaces or components that appear outside these designated contexts.
+
+7. **Mixed Configuration Diagnostic:**
+   - **Current Problem:** Although the chat interface is visible, we are not receiving any responses.  
+   - **Action:** Analyze and identify the conflict between legacy files and our new workflow. Clean up the redundant components and routes to establish a fresh, clean approach.
+   - **Output:** Provide a clear analysis of the issues along with a step-by-step plan to resolve them.
+
+8. **Assertiveness in Decision Making:**
+   - Base decisions on the analysis of the current codebase and the outlined workflow.  
+   - Do not allow ambiguity to dictate implementation; choose the best approach to remove redundant files and streamline functionality.
+   - Clearly document and justify every change made based on the requirements provided.
+
+9. **External Links and References:**
+   - When referring to external resources, include the full URL text (e.g., `https://sdk.vercel.ai/docs/guides/openai-responses`) because the LLM cannot resolve hyperlinks automatically.
+
+**Final Deliverable Expectations:**
+
+- **A Clean Codebase:** All unnecessary chat-specific files and legacy logic should be removed. Only files that support the workflow:
+  - Account creation
+  - Knowledge source management (with embedded training trigger)
+  - Agent creation and multi-channel chat integration (located solely on `agents/[id]/chat` and embeddable windows) remain.
+- **Detailed API Integration:** Clear examples (like the pseudo-code provided) for invoking OpenAI responses via the listed APIs.
+- **Workflow Reconfiguration:** The training process should be seamlessly integrated into the knowledge source update cycle.
+- **Diagnostic and Documentation:** A comprehensive analysis explaining the removal of redundant components, justification for architectural changes, and a step-by-step guide to the new configuration.
