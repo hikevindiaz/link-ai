@@ -46,6 +46,11 @@ export function FixedChatInput(props: FixedChatInputProps) {
         e.stopPropagation();
       }
       
+      // Don't submit if input is empty
+      if (!input.trim()) {
+        return;
+      }
+      
       // Try to submit with attachments if they exist
       if (attachments.length > 0) {
         try {
@@ -66,7 +71,7 @@ export function FixedChatInput(props: FixedChatInputProps) {
       console.error("Error in submit:", error);
       toast.error("Failed to send message");
     }
-  }, [handleSubmit, attachments]);
+  }, [handleSubmit, attachments, input]);
 
   // Create a compatible wrapper around append
   const wrappedAppend = useCallback(async (message: Message) => {

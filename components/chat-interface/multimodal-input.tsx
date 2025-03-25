@@ -263,15 +263,12 @@ function PureMultimodalInput({
           if (
             event.key === 'Enter' &&
             !event.shiftKey &&
-            !event.nativeEvent.isComposing
+            !event.nativeEvent.isComposing &&
+            input.trim().length > 0
           ) {
             event.preventDefault();
-
-            if (mappedStatus !== 'ready') {
-              toast.error('Please wait for the model to finish its response!');
-            } else {
-              submitForm();
-            }
+            event.stopPropagation();
+            submitForm();
           }
         }}
       />
