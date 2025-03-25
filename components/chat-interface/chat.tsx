@@ -9,7 +9,6 @@ import { FixedChatInput } from '@/components/chat-interface/fixed-chat-input';
 import { Messages } from '@/components/chat-interface/messages';
 import { VisibilityType } from '@/components/chat-interface/visibility-selector';
 import { useArtifactSelector } from '@/components/chat-interface/hooks/use-artifact';
-import { ChatFAQ } from '@/components/chat-interface/chat-faq';
 import { SuggestedActions } from '@/components/chat-interface/suggested-actions';
 import { toast } from 'sonner';
 
@@ -52,7 +51,6 @@ export function Chat({
   const [currentThreadId] = useState(id.startsWith('thread_') ? id : `thread_${id}`);
   const [votes, setVotes] = useState<any[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [faqs, setFaqs] = useState<Array<{ question: string, answer: string }>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
   const {
@@ -84,43 +82,6 @@ export function Chat({
       toast.error('An error occurred, please try again!');
     },
   });
-
-  // Fetch FAQs from knowledge sources
-  useEffect(() => {
-    async function fetchFAQs() {
-      try {
-        // Fetch knowledge sources for the chatbot
-        const response = await fetch(`/api/chatbots/${chatbotId}/knowledge-sources`);
-        if (!response.ok) throw new Error('Failed to fetch knowledge sources');
-        
-        const sources = await response.json();
-        
-        // Fetch QA pairs for each knowledge source
-        const allQAPairs = await Promise.all(
-          sources.map(async (source: any) => {
-            const qaResponse = await fetch(`/api/knowledge-sources/${source.id}/qa`);
-            if (!qaResponse.ok) return [];
-            return qaResponse.json();
-          })
-        );
-        
-        // Flatten and filter QA pairs
-        const allQuestions = allQAPairs
-          .flat()
-          .filter(qa => qa.question && qa.answer)
-          // Take only first 4 questions
-          .slice(0, 4);
-        
-        setFaqs(allQuestions);
-      } catch (error) {
-        console.error('Error fetching FAQs:', error);
-      }
-    }
-
-    if (chatbotId) {
-      fetchFAQs();
-    }
-  }, [chatbotId]);
 
   // Create a wrapper around append that returns void and handles role type correctly
   const append = useCallback(async (message: Message) => {
@@ -163,13 +124,6 @@ export function Chat({
     id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   })) as ChatMessage[];
 
-  const handleFAQSelect = (question: string) => {
-    append({
-      role: 'user',
-      content: question,
-    });
-  };
-
   return (
     <div className="flex flex-col min-w-0 h-dvh bg-white dark:bg-black">
       <ChatHeader
@@ -191,14 +145,6 @@ export function Chat({
         chatbotLogoURL={chatbotLogoURL}
         chatbotName={chatTitle}
       />
-
-      {/* Add ChatFAQ component with dynamic questions */}
-      {faqs.length > 0 && !isReadonly && messages.length === 0 && (
-        <ChatFAQ
-          faqs={faqs}
-          onSelectQuestion={handleFAQSelect}
-        />
-      )}
 
       {/* Show suggested actions only when there are no messages */}
       {!isReadonly && messages.length === 0 && (

@@ -17,7 +17,7 @@ function PureSuggestedActions({ chatId, chatbotId, append }: SuggestedActionsPro
   useEffect(() => {
     async function fetchQuestions() {
       try {
-        const response = await fetch(`/api/agents/${chatbotId}/knowledge-sources`);
+        const response = await fetch(`/api/knowledge-sources?chatbotId=${chatbotId}`);
         if (!response.ok) return;
         
         const sources = await response.json();
@@ -54,7 +54,7 @@ function PureSuggestedActions({ chatId, chatbotId, append }: SuggestedActionsPro
   return (
     <div
       data-testid="suggested-actions"
-      className="grid sm:grid-cols-2 gap-2 w-full dark:bg-black dark:text-gray-100"
+      className="grid sm:grid-cols-2 gap-2 w-full max-w-3xl mx-auto px-4 mb-6 dark:bg-black dark:text-gray-100"
     >
       {questions.map((question, index) => (
         <motion.div
@@ -74,9 +74,11 @@ function PureSuggestedActions({ chatId, chatbotId, append }: SuggestedActionsPro
                 id: `${Date.now()}`
               });
             }}
-            className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
+            className="text-left border rounded-xl px-4 py-3.5 text-sm w-full h-auto min-h-[3.5rem] flex items-start justify-start hover:bg-gray-50 dark:hover:bg-gray-800"
           >
-            <span className="font-medium">{question}</span>
+            <span className="font-medium line-clamp-2 break-words whitespace-pre-wrap overflow-hidden text-ellipsis">
+              {question}
+            </span>
           </Button>
         </motion.div>
       ))}
