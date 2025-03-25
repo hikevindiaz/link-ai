@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import { NextResponse } from 'next/server';
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -38,40 +39,46 @@ async function verifyUserHasAccessToSource(sourceId: string, userId: string) {
 // GET handler to fetch QA content for a knowledge source
 export async function GET(
   req: Request,
-  context: z.infer<typeof routeContextSchema>
+  { params }: { params: { sourceId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const isEmbedded = req.headers.get('referer')?.includes('/embed/');
+    const sourceId = params.sourceId;
+
+    // If it's an embedded request, check if the source is associated with a public chatbot
+    if (isEmbedded) {
+      const source = await db.knowledgeSource.findUnique({
+        where: { id: sourceId },
+        include: {
+          chatbots: true
+        }
+      });
+
+      if (!source || !source.chatbots?.some(chatbot => chatbot.allowEveryone)) {
+        return new Response("Forbidden", { status: 403 });
+      }
+    } else if (!session?.user) {
       return new Response("Unauthorized", { status: 403 });
     }
 
-    // Validate route params
-    const { params } = routeContextSchema.parse(context);
-    const { sourceId } = params;
-
-    // Verify user has access to the knowledge source
-    const hasAccess = await verifyUserHasAccessToSource(sourceId, session.user.id);
-    if (!hasAccess) {
-      return new Response("Unauthorized", { status: 403 });
-    }
-
-    // Fetch QA content from the QAContent table
-    const qaContent = await db.qAContent.findMany({
+    // Get QA contents for the source
+    const qaContents = await db.qAContent.findMany({
       where: {
         knowledgeSourceId: sourceId,
       },
       orderBy: {
-        updatedAt: "desc",
+        createdAt: 'asc',
       },
     });
 
-    return new Response(JSON.stringify(qaContent), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json(qaContents);
   } catch (error) {
-    console.error("Error fetching QA content:", error);
-    return new Response(`Internal Server Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { status: 500 });
+    console.error('Error fetching QA contents:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch QA contents' },
+      { status: 500 }
+    );
   }
 }
 
