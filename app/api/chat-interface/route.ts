@@ -109,8 +109,9 @@ export async function POST(req: Request) {
           for await (const chunk of response) {
             const text = chunk.choices[0]?.delta?.content;
             if (text) {
-              // Format each chunk as a data event
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+              // Format each chunk according to Vercel AI SDK's expected format
+              // Using '0:' prefix for text chunks as per the SDK's format
+              controller.enqueue(encoder.encode(`0:${JSON.stringify(text)}\n\n`));
             }
           }
           // Send the end-of-stream marker
