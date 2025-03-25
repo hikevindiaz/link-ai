@@ -1,13 +1,12 @@
-> Build error occurred
-Error: You cannot use different slug names for the same dynamic path ('id' !== 'sourceId').
-    at handleSlug (/vercel/path0/node_modules/next/dist/shared/lib/router/utils/sorted-routes.js:94:31)
-    at UrlNode._insert (/vercel/path0/node_modules/next/dist/shared/lib/router/utils/sorted-routes.js:131:17)
-    at UrlNode._insert (/vercel/path0/node_modules/next/dist/shared/lib/router/utils/sorted-routes.js:142:40)
-    at UrlNode._insert (/vercel/path0/node_modules/next/dist/shared/lib/router/utils/sorted-routes.js:142:40)
-    at UrlNode.insert (/vercel/path0/node_modules/next/dist/shared/lib/router/utils/sorted-routes.js:13:14)
-    at /vercel/path0/node_modules/next/dist/shared/lib/router/utils/sorted-routes.js:165:46
-    at Array.forEach (<anonymous>)
-    at getSortedRoutes (/vercel/path0/node_modules/next/dist/shared/lib/router/utils/sorted-routes.js:165:21)
-    at /vercel/path0/node_modules/next/dist/build/index.js:625:65
-    at Span.traceFn (/vercel/path0/node_modules/next/dist/trace/trace.js:147:20)
-Error: Command "npx prisma generate && NEXT_SKIP_TYPE_CHECK=1 NEXT_IGNORE_ESLINT=1 next build" exited with 1
+Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
+app-index.js:33 Error fetching FAQs: Error: Failed to fetch knowledge sources
+    at fetchFAQs (chat.tsx:94:33)
+window.console.error @ app-index.js:33Understand this errorAI
+app-index.js:33 Chat error: Error: "text" parts expect a string value.
+    at Object.parse (index.mjs:506:13)
+    at parseDataStreamPart (index.mjs:769:38)
+    at Array.map (<anonymous>)
+    at processDataStream (index.mjs:829:120)
+    at async processChatResponse (index.mjs:960:3)
+    at async callChatApi (index.mjs:1270:7)
+    at async eval (index.mjs:306:9)

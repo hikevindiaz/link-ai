@@ -14,22 +14,30 @@ const createSourceSchema = z.object({
 // GET handler to fetch all knowledge sources for the current user
 export async function GET(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return new Response("Unauthorized", { status: 403 });
+    }
+
     const { searchParams } = new URL(req.url);
     const chatbotId = searchParams.get('chatbotId');
 
-    if (!chatbotId) {
-      return NextResponse.json({ error: 'chatbotId is required' }, { status: 400 });
-    }
+    // If chatbotId is provided, fetch sources for that chatbot
+    // Otherwise, fetch all sources for the current user
+    const where = chatbotId ? {
+      chatbots: {
+        some: {
+          id: chatbotId,
+          userId: session.user.id // Ensure the chatbot belongs to the user
+        }
+      }
+    } : {
+      userId: session.user.id
+    };
 
     // Get knowledge sources with their contents
     const knowledgeSources = await db.knowledgeSource.findMany({
-      where: {
-        chatbots: {
-          some: {
-            id: chatbotId
-          }
-        }
-      },
+      where,
       include: {
         textContents: true,
         websiteContents: true,

@@ -11,52 +11,43 @@ interface SuggestedActionsProps {
   append: (message: Message) => Promise<void>;
 }
 
-interface QAPair {
-  question: string;
-  answer: string;
-}
-
 function PureSuggestedActions({ chatId, chatbotId, append }: SuggestedActionsProps) {
-  const [suggestedQuestions, setSuggestedQuestions] = useState<QAPair[]>([]);
+  const [questions, setQuestions] = useState<string[]>([]);
 
   useEffect(() => {
-    async function fetchQAPairs() {
+    async function fetchQuestions() {
       try {
-        // Fetch knowledge sources
-        const sourcesResponse = await fetch(`/api/agents/${chatbotId}/knowledge-sources`);
-        if (!sourcesResponse.ok) {
-          throw new Error('Failed to fetch knowledge sources');
+        const response = await fetch(`/api/agents/${chatbotId}/knowledge-sources`);
+        if (!response.ok) return;
+        
+        const sources = await response.json();
+        const allQuestions: string[] = [];
+        
+        for (const source of sources) {
+          const qaResponse = await fetch(`/api/knowledge-sources/${source.id}/qa`);
+          if (qaResponse.ok) {
+            const qaPairs = await qaResponse.json();
+            qaPairs.forEach((qa: any) => {
+              if (qa.question && allQuestions.length < 4) {
+                allQuestions.push(qa.question);
+              }
+            });
+            if (allQuestions.length >= 4) break;
+          }
         }
         
-        const sources = await sourcesResponse.json();
-        
-        // Fetch QA pairs for each knowledge source
-        const allQAPairs = await Promise.all(
-          sources.map(async (source: any) => {
-            const qaResponse = await fetch(`/api/knowledge-sources/${source.id}/qa`);
-            if (!qaResponse.ok) return [];
-            return qaResponse.json();
-          })
-        );
-        
-        // Flatten, filter, and limit to 4 questions
-        const questions = allQAPairs
-          .flat()
-          .filter((qa: QAPair) => qa.question && qa.answer)
-          .slice(0, 4);
-        
-        setSuggestedQuestions(questions);
+        setQuestions(allQuestions);
       } catch (error) {
-        console.error('Error fetching QA pairs:', error);
+        console.error('Error fetching questions:', error);
       }
     }
 
     if (chatbotId) {
-      fetchQAPairs();
+      fetchQuestions();
     }
   }, [chatbotId]);
 
-  if (suggestedQuestions.length === 0) {
+  if (questions.length === 0) {
     return null;
   }
 
@@ -65,7 +56,7 @@ function PureSuggestedActions({ chatId, chatbotId, append }: SuggestedActionsPro
       data-testid="suggested-actions"
       className="grid sm:grid-cols-2 gap-2 w-full dark:bg-black dark:text-gray-100"
     >
-      {suggestedQuestions.map((qa, index) => (
+      {questions.map((question, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -79,13 +70,13 @@ function PureSuggestedActions({ chatId, chatbotId, append }: SuggestedActionsPro
             onClick={() => {
               append({
                 role: 'user',
-                content: qa.question,
+                content: question,
                 id: `${Date.now()}`
               });
             }}
             className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
           >
-            <span className="font-medium">{qa.question}</span>
+            <span className="font-medium">{question}</span>
           </Button>
         </motion.div>
       ))}

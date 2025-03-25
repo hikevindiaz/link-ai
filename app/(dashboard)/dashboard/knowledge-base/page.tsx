@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from "next-auth/react";
 import { RiAddLine, RiDatabase2Line, RiAlertLine } from '@remixicon/react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -21,6 +22,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function KnowledgeBasePage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newSourceName, setNewSourceName] = useState('');
   const [newSourceDescription, setNewSourceDescription] = useState('');
@@ -31,9 +33,11 @@ export default function KnowledgeBasePage() {
 
   useEffect(() => {
     const checkForSources = async () => {
+      if (!session?.user?.id) return;
+
       try {
         setIsLoading(true);
-        const response = await fetch('/api/knowledge-sources');
+        const response = await fetch(`/api/knowledge-sources?userId=${session.user.id}`);
         
         if (response.status === 500) {
           const errorText = await response.text();
@@ -57,9 +61,14 @@ export default function KnowledgeBasePage() {
     };
 
     checkForSources();
-  }, []);
+  }, [session?.user?.id]);
 
   const handleCreateSource = async () => {
+    if (!session?.user?.id) {
+      toast.error('You must be logged in to create a knowledge source');
+      return;
+    }
+
     if (!newSourceName.trim()) {
       toast.error('Please enter a name for the source');
       return;
@@ -76,6 +85,7 @@ export default function KnowledgeBasePage() {
         body: JSON.stringify({
           name: newSourceName.trim(),
           description: newSourceDescription.trim() || undefined,
+          userId: session.user.id,
         }),
       });
 

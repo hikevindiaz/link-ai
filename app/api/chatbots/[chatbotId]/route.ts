@@ -36,34 +36,53 @@ export async function GET(
   { params }: { params: { chatbotId: string } }
 ) {
   try {
-    // Check if user is authenticated
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const chatbotId = params.chatbotId;
+    const isEmbedded = req.headers.get('referer')?.includes('/embed/');
 
-    // Fetch the chatbot
+    // Get the session only if not embedded
+    const session = !isEmbedded ? await getServerSession(authOptions) : null;
+
+    // For embedded chat, only fetch necessary public fields
+    // For admin access, verify ownership and fetch all fields
     const chatbot = await prisma.chatbot.findUnique({
-      where: {
-        id: chatbotId,
-        userId: session.user.id,
-      },
-      include: {
-        model: true,
-        knowledgeSources: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
+      where: session?.user?.id
+        ? {
+            id: chatbotId,
+            userId: session.user.id,
+          }
+        : {
+            id: chatbotId,
           },
-        },
-      },
+      include: isEmbedded
+        ? {
+            model: true,
+            knowledgeSources: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+              },
+            },
+          }
+        : {
+            model: true,
+            knowledgeSources: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+              },
+            },
+          },
     });
 
     if (!chatbot) {
       return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
+    }
+
+    // If not embedded and no session, return unauthorized
+    if (!isEmbedded && !session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     return NextResponse.json(chatbot);

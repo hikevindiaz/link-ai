@@ -112,7 +112,7 @@ export default function TestChatbotPage() {
       setIsLoading(true);
       console.log('[AGENTS DEBUG] Fetching agents for user:', session.user.id);
       
-      const response = await fetch('/api/chatbots');
+      const response = await fetch(`/api/chatbots?userId=${session.user.id}`);
       console.log('[AGENTS DEBUG] API Status:', response.status, response.statusText);
       
       if (!response.ok) throw new Error('Failed to fetch agents');
@@ -126,15 +126,15 @@ export default function TestChatbotPage() {
         setAgents(data.chatbots.map((chatbot: any) => ({
           id: chatbot.id,
           name: chatbot.name,
-          status: 'draft',
+          status: chatbot.isLive ? 'live' : 'draft',
           userId: session.user?.id || '',
-          createdAt: new Date(),
-          updatedAt: new Date()
+          createdAt: new Date(chatbot.createdAt),
+          updatedAt: new Date(chatbot.updatedAt)
         })));
       } else if (Array.isArray(data)) {
         // Legacy format - direct array
         console.log('[AGENTS DEBUG] Using direct array response');
-        setAgents(data);
+        setAgents(data.filter((agent: any) => agent.userId === session.user?.id));
       } else {
         console.error('[AGENTS DEBUG] Unexpected data format:', data);
         setAgents([]);
@@ -148,6 +148,11 @@ export default function TestChatbotPage() {
   };
 
   const handleCreateAgent = async (name: string, templateId: string) => {
+    if (!session?.user?.id) {
+      toast.error('You must be logged in to create an agent');
+      return;
+    }
+
     try {
       setIsCreating(true);
       const response = await fetch('/api/chatbots', {
@@ -160,6 +165,7 @@ export default function TestChatbotPage() {
           prompt: 'You are a helpful assistant.',
           welcomeMessage: 'Hello! How can I help you today?',
           chatbotErrorMessage: "I'm sorry, I encountered an error. Please try again.",
+          userId: session.user.id,
         }),
       });
 
