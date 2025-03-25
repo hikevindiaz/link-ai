@@ -84,13 +84,6 @@ export function Chat({
     },
   });
 
-  // Scroll to bottom when new messages arrive
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
   // Create a wrapper around append that returns void and handles role type correctly
   const append = useCallback(async (message: Message) => {
     await originalAppend({

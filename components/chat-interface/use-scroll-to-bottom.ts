@@ -12,8 +12,17 @@ export function useScrollToBottom<T extends HTMLElement>(): [
     const end = endRef.current;
 
     if (container && end) {
-      const observer = new MutationObserver(() => {
-        end.scrollIntoView({ behavior: 'instant', block: 'end' });
+      // Only scroll when the end element is added or when its content changes
+      const observer = new MutationObserver((mutations) => {
+        // Check if the mutation is related to the end element
+        const isEndElementMutation = mutations.some(mutation => 
+          mutation.target === end || 
+          mutation.target.parentElement === end
+        );
+        
+        if (isEndElementMutation) {
+          end.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
       });
 
       observer.observe(container, {
