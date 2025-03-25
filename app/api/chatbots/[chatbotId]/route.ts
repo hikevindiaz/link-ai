@@ -45,51 +45,53 @@ export async function GET(
     // For embedded chat, only fetch necessary public fields
     // For admin access, verify ownership and fetch all fields
     const chatbot = await prisma.chatbot.findUnique({
-      where: session?.user?.id
-        ? {
-            id: chatbotId,
-            userId: session.user.id,
+      where: {
+        id: chatbotId,
+      },
+      select: isEmbedded ? {
+        id: true,
+        name: true,
+        modelId: true,
+        model: {
+          select: {
+            name: true
           }
-        : {
-            id: chatbotId,
-          },
-      include: isEmbedded
-        ? {
-            model: true,
-            knowledgeSources: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-              },
-            },
+        },
+        chatbotLogoURL: true,
+        chatTitle: true,
+        prompt: true,
+        welcomeMessage: true,
+        allowEveryone: true,
+        knowledgeSources: {
+          select: {
+            id: true,
+            name: true,
+            description: true
           }
-        : {
-            model: true,
-            knowledgeSources: {
-              select: {
-                id: true,
-                name: true,
-                description: true,
-              },
-            },
-          },
+        }
+      } : undefined
     });
 
     if (!chatbot) {
-      return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
+      return new Response(
+        JSON.stringify({ error: 'Chatbot not found' }), 
+        { status: 404 }
+      );
     }
 
-    // If not embedded and no session, return unauthorized
-    if (!isEmbedded && !session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // For embedded chat, check if public access is allowed
+    if (isEmbedded && !chatbot.allowEveryone) {
+      return new Response(
+        JSON.stringify({ error: 'This chatbot is not publicly accessible' }), 
+        { status: 403 }
+      );
     }
 
     return NextResponse.json(chatbot);
   } catch (error) {
-    console.error("Error fetching chatbot:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error occurred" },
+    console.error('Error fetching chatbot:', error);
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }), 
       { status: 500 }
     );
   }

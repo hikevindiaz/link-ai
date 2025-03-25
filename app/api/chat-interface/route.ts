@@ -22,6 +22,7 @@ export async function POST(req: Request) {
     const chatbotResponse = await fetch(`${req.headers.get('origin')}/api/chatbots/${chatbotId}`, {
       headers: {
         'Cookie': req.headers.get('cookie') || '',
+        'Referer': req.headers.get('referer') || '',
       }
     });
     
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
         {
           headers: {
             'Cookie': req.headers.get('cookie') || '',
+            'Referer': req.headers.get('referer') || '',
           }
         }
       );
