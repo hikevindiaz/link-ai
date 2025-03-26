@@ -82,6 +82,7 @@ export function Chat({
       console.error('Chat error:', error);
       toast.error('An error occurred, please try again!');
     },
+    streamProtocol: 'text'
   });
 
   // Create a wrapper around append that returns void and handles role type correctly
@@ -121,10 +122,11 @@ export function Chat({
   };
 
   // Convert messages to ChatMessage type by ensuring id exists
-  const chatMessages = messages.map(msg => ({
-    ...msg,
-    id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-  })) as ChatMessage[];
+  const chatMessages = messages
+    .map(msg => ({
+      ...msg,
+      id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    })) as ChatMessage[];
 
   return (
     <div className="flex flex-col min-w-0 h-dvh bg-white dark:bg-black">

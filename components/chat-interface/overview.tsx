@@ -42,16 +42,16 @@ export const Overview = ({ chatbotLogoURL, chatbotName }: OverviewProps) => {
             href="https://getlinkai.com/legal"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-xs text-gray-900 hover:text-gray-700"
           >
-            Terms of Service
+            Terms of Service 
           </a>
-          <span className="text-gray-300">•</span>
+          <span className="text-xs dark:text-gray-300 text-gray-500"> and our </span>
           <a
             href="https://getlinkai.com/legal"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-xs text-gray-900 hover:text-gray-700"
           >
             Privacy Policy
           </a>

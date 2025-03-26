@@ -1,12 +1,116 @@
-Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
-app-index.js:33 Error fetching FAQs: Error: Failed to fetch knowledge sources
-    at fetchFAQs (chat.tsx:94:33)
-window.console.error @ app-index.js:33Understand this errorAI
-app-index.js:33 Chat error: Error: "text" parts expect a string value.
-    at Object.parse (index.mjs:506:13)
-    at parseDataStreamPart (index.mjs:769:38)
-    at Array.map (<anonymous>)
-    at processDataStream (index.mjs:829:120)
-    at async processChatResponse (index.mjs:960:3)
-    at async callChatApi (index.mjs:1270:7)
-    at async eval (index.mjs:306:9)
+Solution
+To fix this issue, you need to ensure that the server sends a stream that the client can parse correctly. Here’s a step-by-step approach:
+
+1. Fix the Server-Side Stream Format
+Modify the /api/chat-interface endpoint to ensure the data field contains a JSON object, as the Vercel AI SDK might expect a structured format. Update the POST handler as follows:
+
+javascript
+
+Collapse
+
+Wrap
+
+Copy
+const stream = new ReadableStream({
+  async start(controller) {
+    const encoder = new TextEncoder();
+
+    try {
+      for await (const chunk of response) {
+        const text = chunk.choices[0]?.delta?.content;
+        if (text) {
+          // Send the text as a JSON object with a "content" field
+          const data = { content: text };
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        }
+      }
+      controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+    } catch (error) {
+      console.error('Error in stream processing:', error);
+      controller.error(error);
+    } finally {
+      controller.close();
+    }
+  },
+});
+Instead of sending data: ${JSON.stringify(text)}\n\n, send data: ${JSON.stringify({ content: text })}\n\n. This ensures the data field contains a JSON object with a content property, which aligns with what the Vercel AI SDK might expect.
+Remove the quotes around [DONE] in the end-of-stream marker (i.e., use data: [DONE]\n\n instead of data: "[DONE]"\n\n), as this is the standard convention in the Vercel AI SDK.
+2. Add Debugging on the Server Side
+Add logging to see what text values are being sent in the stream:
+
+javascript
+
+Collapse
+
+Wrap
+
+Copy
+for await (const chunk of response) {
+  const text = chunk.choices[0]?.delta?.content;
+  console.log('Stream chunk:', text); // Debug the chunk content
+  if (text) {
+    const data = { content: text };
+    controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+  }
+}
+This will help you identify if the OpenAI API is returning unexpected values (e.g., undefined, empty strings, or non-strings).
+
+3. Add Debugging on the Client Side
+In the useChat hook’s onError callback, log more details about the error:
+
+javascript
+
+Collapse
+
+Wrap
+
+Copy
+onError: (error) => {
+  console.error('Chat error details:', error.message, error.stack);
+  toast.error('An error occurred, please try again!');
+},
+This will give you more context about what’s failing on the client side.
+
+4. Test the Stream Manually
+You can test the /api/chat-interface endpoint directly using a tool like curl to verify the SSE stream format:
+
+bash
+
+Collapse
+
+Wrap
+
+Copy
+curl -N -H "Content-Type: application/json" -X POST -d '{"messages":[{"role":"user","content":"Hello"}],"chatbotId":"your-chatbot-id"}' http://localhost:3000/api/chat-interface
+This will show you the raw SSE stream. It should look something like this:
+
+text
+
+Collapse
+
+Wrap
+
+Copy
+data: {"content":"Hello, world"}\n\n
+data: {"content":"How can I help you?"}\n\n
+data: [DONE]\n\n
+If the format deviates (e.g., missing \n\n, invalid JSON, or unexpected data), you’ll need to fix the server-side code.
+
+5. Handle Edge Cases
+Ensure the server handles cases where chunk.choices[0]?.delta?.content is undefined or not a string:
+
+javascript
+
+Collapse
+
+Wrap
+
+Copy
+for await (const chunk of response) {
+  const text = chunk.choices[0]?.delta?.content;
+  if (typeof text === 'string' && text.length > 0) {
+    const data = { content: text };
+    controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+  }
+}
+This prevents sending invalid or empty chunks to the client.

@@ -109,12 +109,11 @@ export async function POST(req: Request) {
           for await (const chunk of response) {
             const text = chunk.choices[0]?.delta?.content;
             if (text) {
-              // Format each chunk according to Vercel AI SDK's expected format
-              controller.enqueue(encoder.encode(`0:${JSON.stringify(text)}\n\n`));
+              // Send text chunks directly for text protocol
+              controller.enqueue(encoder.encode(text));
             }
           }
-          // Send the end-of-stream marker with proper format
-          controller.enqueue(encoder.encode('0:[DONE]\n\n'));
+          // No need to send [DONE] marker for text protocol
         } catch (error) {
           console.error('Error in stream processing:', error);
           controller.error(error);
@@ -124,12 +123,12 @@ export async function POST(req: Request) {
       },
     });
 
-    // Return the streaming response using Vercel AI SDK
-    return new StreamingTextResponse(stream, {
+    // Return the streaming response with the correct headers for text protocol
+    return new Response(stream, {
       headers: {
-        'Content-Type': 'text/event-stream',
+        'Content-Type': 'text/plain; charset=utf-8',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        'Connection': 'keep-alive'
       },
     });
   } catch (error) {
