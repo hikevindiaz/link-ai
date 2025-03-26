@@ -38,21 +38,23 @@ export const Overview = ({ chatbotLogoURL, chatbotName }: OverviewProps) => {
         </div>
         <p className="text-xs dark:text-gray-300 text-gray-500">
           By using this chatbot, you agree to our{' '}
-          <Link
-            className="font-medium underline underline-offset-4 dark:text-gray-100"
-            href="/terms"
+          <a
+            href="https://getlinkai.com/legal"
             target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 hover:text-gray-700"
           >
             Terms of Service
-          </Link>
-          {' '}and{' '}
-          <Link
-            className="font-medium underline underline-offset-4 dark:text-gray-100"
-            href="/privacy"
+          </a>
+          <span className="text-gray-300">•</span>
+          <a
+            href="https://getlinkai.com/legal"
             target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-500 hover:text-gray-700"
           >
             Privacy Policy
-          </Link>
+          </a>
           . Your conversations may be stored to improve our services. Please do not share sensitive personal information through this interface.
         </p>
       </div>

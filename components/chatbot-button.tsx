@@ -53,8 +53,8 @@ export default function ChatbotButton({
     chatbotName,
     maxButtonWidth = 320,
     minButtonWidth = 180,
-    termsUrl = "https://getlinkai.com/terms",
-    privacyUrl = "https://getlinkai.com/privacy",
+    termsUrl = "https://getlinkai.com/legal",
+    privacyUrl = "https://getlinkai.com/legal",
     icon = defaultIcon
 }: ChatbotButtonComponentProps) {
     const [isChatVisible, setIsChatVisible] = useState(false);

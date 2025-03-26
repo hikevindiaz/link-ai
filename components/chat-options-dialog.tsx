@@ -23,8 +23,8 @@ export default function ChatOptionsDialog({
   backgroundColor = "#000000",
   borderGradientColors = ["#2563EB", "#7E22CE", "#F97316"],
   gradientColors = ["#022597", "#000001", "#1a56db"],
-  termsUrl = "https://getlinkai.com/terms",
-  privacyUrl = "https://getlinkai.com/privacy"
+  termsUrl = "https://getlinkai.com/legal",
+  privacyUrl = "https://getlinkai.com/legal"
 }: ChatOptionsDialogProps) {
   // Create gradient colors for conic gradient (border)
   const [color1, color2, color3] = borderGradientColors;
