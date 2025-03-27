@@ -13,6 +13,7 @@ const ClientOnlyForm = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
   const searchParams = useSearchParams();
   const [SparklesIcon, setSparklesIcon] = useState(null);
 
@@ -31,33 +32,64 @@ const ClientOnlyForm = () => {
     setError('');
 
     try {
-      // Dynamically import magic to ensure it only loads on the client
       const { magic } = await import('@/lib/magic');
       
-      // Get DID token from Magic
-      const didToken = await magic.auth.loginWithMagicLink({ 
+      // First, show the email sent message
+      setEmailSent(true);
+      
+      // Configure Magic link with proper callback
+      const didToken = await magic.auth.loginWithMagicLink({
         email,
-        redirectURI: new URL('/callback', window.location.origin).href
+        showUI: true, // Show Magic's UI for better user experience
+        redirectURI: `${window.location.origin}/api/auth/callback/magic`
       });
 
+      // Only proceed with NextAuth if we got a token
       if (didToken) {
-        // Use next-auth's signIn with the DID token
         const result = await signIn('credentials', {
           didToken,
           redirect: true,
           callbackUrl: searchParams?.get("from") || "/dashboard"
         });
 
-        // The redirect option is true, so we don't need to handle
-        // the redirect manually - NextAuth will do it for us
+        if (result?.error) {
+          throw new Error(result.error);
+        }
       }
     } catch (error) {
       console.error('Login failed:', error);
-      setError(error.message || 'Failed to send magic link. Please try again.');
+      setError('Authentication failed. Please try again.');
+      setEmailSent(false);
     } finally {
       setLoading(false);
     }
   };
+
+  if (emailSent) {
+    return (
+      <div className="flex flex-col items-center space-y-4 p-6 text-center">
+        <h2 className="text-xl font-semibold">Check your email</h2>
+        <p className="text-gray-600">
+          We've sent a magic link to {email}.<br />
+          Click the link in the email to sign in.
+        </p>
+        <p className="text-sm text-gray-500">
+          The email might take a few minutes to arrive.<br />
+          Remember to check your spam folder.
+        </p>
+        <Button
+          onClick={() => {
+            setEmailSent(false);
+            setEmail('');
+          }}
+          variant="secondary"
+          className="mt-4"
+        >
+          Use a different email
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleLogin} className="flex flex-col space-y-4">
