@@ -17,7 +17,7 @@ export default function GoogleLoginForm() {
         setLoading(true);
         await signIn("google", {
           redirect: false,
-          callbackUrl: searchParams?.get("from") || "/welcome",
+          callbackUrl: searchParams?.get("from") || "/dashboard",
         });
       }}
       className="flex flex-col space-y-4"

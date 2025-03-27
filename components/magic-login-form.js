@@ -13,6 +13,7 @@ import { Label } from '@/components/Label';
 const ClientOnlyForm = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const searchParams = useSearchParams();
   const [SparklesIcon, setSparklesIcon] = useState(null);
 
@@ -28,6 +29,7 @@ const ClientOnlyForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
       // Dynamically import magic to ensure it only loads on the client
@@ -36,20 +38,29 @@ const ClientOnlyForm = () => {
       const didToken = await magic.auth.loginWithMagicLink({ email });
       if (didToken) {
         console.log('Login successful:', didToken);
-        Cookies.set('auth_token', didToken, { expires: 1 }); // Store token in cookies
+        Cookies.set('auth_token', didToken, { 
+          expires: 1,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        }); // Store token in cookies with secure settings
 
-        // Use next-auth's signIn for consistency
-        await signIn('credentials', {
+        // Use next-auth's signIn for authentication
+        const result = await signIn('credentials', {
           redirect: false,
           callbackUrl: searchParams?.get("from") || "/dashboard",
           didToken,
         });
 
-        window.location.href = searchParams?.get("from") || "/dashboard"; // Redirect to dashboard instead of welcome
+        if (result?.error) {
+          throw new Error(result.error);
+        }
+
+        // Let NextAuth handle the redirect
+        return;
       }
     } catch (error) {
       console.error('Login failed:', error);
-      alert(`Login failed: ${error.message || 'Please try again.'}`);
+      setError(error.message || 'Failed to send magic link. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -77,6 +88,9 @@ const ClientOnlyForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+          {error && (
+            <p className="text-sm text-red-500 mt-1">{error}</p>
+          )}
         </div>
         <Button
           type="submit"
