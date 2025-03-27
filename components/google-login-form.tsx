@@ -15,10 +15,21 @@ export default function GoogleLoginForm() {
       onSubmit={async (e) => {
         e.preventDefault();
         setLoading(true);
-        await signIn("google", {
-          redirect: false,
-          callbackUrl: searchParams?.get("from") || "/dashboard",
-        });
+        try {
+          const result = await signIn("google", {
+            redirect: false,
+            callbackUrl: searchParams?.get("from") || "/dashboard",
+          });
+
+          if (result?.error) {
+            console.error("Login failed:", result.error);
+            // Handle error appropriately
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+        } finally {
+          setLoading(false);
+        }
       }}
       className="flex flex-col space-y-4"
     >

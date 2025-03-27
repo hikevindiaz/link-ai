@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
         path: '/',
         secure: process.env.NODE_ENV === 'production',
         domain: process.env.NODE_ENV === 'production' 
-          ? '.getlinkai.com'
+          ? 'dashboard.getlinkai.com'
           : undefined
       }
     },
@@ -45,7 +45,7 @@ export const authOptions: NextAuthOptions = {
         path: '/',
         secure: process.env.NODE_ENV === 'production',
         domain: process.env.NODE_ENV === 'production' 
-          ? '.getlinkai.com'
+          ? 'dashboard.getlinkai.com'
           : undefined
       }
     },
@@ -57,7 +57,7 @@ export const authOptions: NextAuthOptions = {
         path: '/',
         secure: process.env.NODE_ENV === 'production',
         domain: process.env.NODE_ENV === 'production' 
-          ? '.getlinkai.com'
+          ? 'dashboard.getlinkai.com'
           : undefined
       }
     }
