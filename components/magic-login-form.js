@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import Cookies from 'js-cookie';
 import LoadingDots from "@/components/loading-dots";
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
@@ -35,28 +34,22 @@ const ClientOnlyForm = () => {
       // Dynamically import magic to ensure it only loads on the client
       const { magic } = await import('@/lib/magic');
       
-      const didToken = await magic.auth.loginWithMagicLink({ email });
-      if (didToken) {
-        console.log('Login successful:', didToken);
-        Cookies.set('auth_token', didToken, { 
-          expires: 1,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax'
-        }); // Store token in cookies with secure settings
+      // Get DID token from Magic
+      const didToken = await magic.auth.loginWithMagicLink({ 
+        email,
+        redirectURI: new URL('/callback', window.location.origin).href
+      });
 
-        // Use next-auth's signIn for authentication
+      if (didToken) {
+        // Use next-auth's signIn with the DID token
         const result = await signIn('credentials', {
-          redirect: false,
-          callbackUrl: searchParams?.get("from") || "/dashboard",
           didToken,
+          redirect: true,
+          callbackUrl: searchParams?.get("from") || "/dashboard"
         });
 
-        if (result?.error) {
-          throw new Error(result.error);
-        }
-
-        // Let NextAuth handle the redirect
-        return;
+        // The redirect option is true, so we don't need to handle
+        // the redirect manually - NextAuth will do it for us
       }
     } catch (error) {
       console.error('Login failed:', error);
