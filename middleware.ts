@@ -17,22 +17,50 @@ export default withAuth(
     if (pathname === "/") {
       if (isAuth) {
         return NextResponse.redirect(new URL("/dashboard", req.url));
-      } else {
-        return NextResponse.redirect(new URL("/login", req.url));
       }
+      return NextResponse.redirect(new URL("/login", req.url));
     }
 
     // Handle login page
-    if (pathname === "/login" && isAuth) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+    if (pathname === "/login") {
+      if (isAuth) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+      return NextResponse.next();
     }
-    
-    // For all other protected routes, let NextAuth handle it
+
+    // Handle dashboard and protected routes
+    if (pathname.startsWith("/dashboard")) {
+      if (!isAuth) {
+        const from = pathname + req.nextUrl.search;
+        return NextResponse.redirect(
+          new URL(`/login?from=${encodeURIComponent(from)}`, req.url)
+        );
+      }
+      return NextResponse.next();
+    }
+
+    // For all other routes, let NextAuth handle it
     return NextResponse.next();
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        const { pathname } = req.nextUrl;
+        
+        // Allow access to login page
+        if (pathname === "/login") {
+          return true;
+        }
+
+        // Require authentication for dashboard and protected routes
+        if (pathname.startsWith("/dashboard")) {
+          return !!token;
+        }
+
+        // For all other routes, require authentication
+        return !!token;
+      },
     },
     pages: {
       signIn: "/login",
@@ -40,11 +68,12 @@ export default withAuth(
   }
 );
 
-// Update matcher to include root path
+// Update matcher to include all protected routes
 export const config = {
   matcher: [
-    '/',  // Add root path
+    '/',
     '/login',
-    '/dashboard/:path*'
+    '/dashboard/:path*',
+    '/api/:path*'
   ],
 };
