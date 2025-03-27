@@ -179,7 +179,7 @@ export function DropdownUserProfile({
           <DropdownMenuSeparator className="dark:border-gray-800" />
           <DropdownMenuGroup>
             <DropdownMenuItem className="text-foreground dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <a href="https://www.getlinkai.com/legal/terms-of-use" className="w-full">
+            <a href="https://www.getlinkai.com/legal" className="w-full">
                 Terms of Use
               </a>
               <ArrowUpRight
@@ -188,7 +188,7 @@ export function DropdownUserProfile({
               />
             </DropdownMenuItem>
             <DropdownMenuItem className="text-foreground dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <a href="https://www.getlinkai.com/legal/privacy-policy" className="w-full">
+            <a href="https://www.getlinkai.com/legal" className="w-full">
                 Privacy Policy
               </a>
               <ArrowUpRight

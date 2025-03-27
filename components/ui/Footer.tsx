@@ -26,8 +26,8 @@ const navigation = {
   ],
   legal: [
     { name: "Imprint", href: "#", external: false },
-    { name: "Privacy", href: "#", external: false },
-    { name: "Terms", href: "#", external: false },
+    { name: "Privacy", href: "https://www.getlinkai.com/legal", external: false },
+    { name: "Terms", href: "https://www.getlinkai.com/legal", external: false },
     { name: "DPA", href: "#", external: false },
   ],
 }

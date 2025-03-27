@@ -8,8 +8,8 @@ export const siteConfig = {
     changelog: "/changelog",
     pricing: "/pricing",
     imprint: "/imprint",
-    privacy: "/privacy",
-    terms: "/terms",
+    privacy: "https://www.getlinkai.com/legal",
+    terms: "https://www.getlinkai.com/legal",
   },
 }
 

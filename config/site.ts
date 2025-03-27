@@ -42,7 +42,7 @@ export const siteConfig = {
     },
   ],
   footerNav: [
-    { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Terms of Service", href: "/terms" },
+    { label: "Privacy Policy", href: "https://www.getlinkai.com/legal" },
+    { label: "Terms of Service", href: "https://www.getlinkai.com/legal" },
   ],
 };

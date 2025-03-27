@@ -192,14 +192,14 @@ const LoginForm = () => {
                 <p className="text-xs text-gray-700 dark:text-gray-400">
                   By signing in, you agree to our{' '}
                   <a
-                    href="/docs/legal/terms"
+                    href="https://www.getlinkai.com/legal"
                     className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-500 hover:dark:text-indigo-600"
                   >
                     Terms of Service
                   </a>{' '}
                   and{' '}
                   <a
-                    href="/docs/legal/privacy"
+                    href="https://www.getlinkai.com/legal"
                     className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-500 hover:dark:text-indigo-600"
                   >
                     Privacy Policy
