@@ -19,48 +19,9 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60, // 24 hours
   },
   pages: {
     signIn: "/login",
-  },
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' 
-          ? '.getlinkai.com'
-          : undefined
-      }
-    },
-    callbackUrl: {
-      name: `next-auth.callback-url`,
-      options: {
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' 
-          ? '.getlinkai.com'
-          : undefined
-      }
-    },
-    csrfToken: {
-      name: 'next-auth.csrf-token',
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' 
-          ? '.getlinkai.com'
-          : undefined
-      }
-    }
   },
   providers: [
     GithubProvider({
@@ -72,13 +33,6 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
       allowDangerousEmailAccountLinking: true,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code"
-        }
-      }
     }),
     CredentialsProvider({
       name: "Magic Link",
@@ -129,39 +83,26 @@ export const authOptions: NextAuthOptions = {
 
       return session;
     },
-    async jwt({ token, user, account }) {
-      if (account && user) {
-        const dbUser = await db.user.findFirst({
-          where: {
-            email: user.email,
-          },
-        });
+    async jwt({ token, user }) {
+      const dbUser = await db.user.findFirst({
+        where: {
+          email: token.email,
+        },
+      });
 
-        if (!dbUser) {
-          const newUser = await db.user.create({
-            data: {
-              email: user.email,
-              name: user.name || user.email.split('@')[0],
-              image: user.image,
-            },
-          });
-          return {
-            id: newUser.id,
-            name: newUser.name,
-            email: newUser.email,
-            picture: newUser.image,
-          };
+      if (!dbUser) {
+        if (user) {
+          token.id = user?.id;
         }
-
-        return {
-          id: dbUser.id,
-          name: dbUser.name,
-          email: dbUser.email,
-          picture: dbUser.image,
-        };
+        return token;
       }
 
-      return token;
+      return {
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        picture: dbUser.image,
+      };
     },
   },
   events: {
