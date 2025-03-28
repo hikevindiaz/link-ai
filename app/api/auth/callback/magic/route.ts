@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { signIn } from 'next-auth/react';
-import { authOptions } from '@/lib/auth';
 import { Magic } from '@magic-sdk/admin';
 
 // Initialize Magic Admin SDK
@@ -19,21 +17,62 @@ export async function GET(request: Request) {
     try {
       await magicAdmin.token.validate(didToken);
       
-      // Get user metadata from the token
-      const metadata = await magicAdmin.users.getMetadataByToken(didToken);
-      
-      // Sign in with NextAuth using the verified token
-      const result = await signIn('credentials', {
-        didToken,
-        redirect: false,
-      });
-
-      if (result?.error) {
-        return NextResponse.redirect(new URL(`/login?error=${result.error}`, request.url));
-      }
-
-      // Redirect to dashboard on success
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      // Return a success page that can be closed
+      return new NextResponse(
+        `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Login Successful</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                background-color: #f9fafb;
+              }
+              .container {
+                text-align: center;
+                padding: 2rem;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+              }
+              h1 {
+                color: #1a1a1a;
+                margin-bottom: 1rem;
+              }
+              p {
+                color: #4b5563;
+                margin-bottom: 1.5rem;
+              }
+              .success-icon {
+                color: #10b981;
+                font-size: 3rem;
+                margin-bottom: 1rem;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="success-icon">✓</div>
+              <h1>Login Successful!</h1>
+              <p>You can now close this window and return to the login page.</p>
+              <p>The page will automatically refresh and log you in.</p>
+            </div>
+          </body>
+        </html>
+        `,
+        {
+          headers: {
+            'Content-Type': 'text/html',
+          },
+        }
+      );
     } catch (error) {
       console.error('Token validation error:', error);
       return NextResponse.redirect(new URL('/login?error=invalid_token', request.url));

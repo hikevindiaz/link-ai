@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { signIn } from 'next-auth/react';
-import { useSearchParams } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 import LoadingDots from "@/components/loading-dots";
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
@@ -12,9 +13,9 @@ import { Label } from '@/components/Label';
 const ClientOnlyForm = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [emailSent, setEmailSent] = useState(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [SparklesIcon, setSparklesIcon] = useState(null);
 
   // Load icons only on client side
@@ -26,31 +27,62 @@ const ClientOnlyForm = () => {
     loadIcons();
   }, []);
 
+  // Check for auth token on mount and after email verification
+  useEffect(() => {
+    const checkAuth = async () => {
+      const authToken = Cookies.get('auth_token');
+      if (authToken) {
+        try {
+          const result = await signIn('credentials', {
+            redirect: false,
+            callbackUrl: searchParams?.get("from") || "/dashboard",
+            didToken: authToken,
+          });
+
+          if (result?.error) {
+            console.error('Auth error:', result.error);
+            Cookies.remove('auth_token');
+          } else {
+            router.push(searchParams?.get("from") || "/dashboard");
+          }
+        } catch (error) {
+          console.error('Auth check error:', error);
+          Cookies.remove('auth_token');
+        }
+      }
+    };
+
+    checkAuth();
+  }, [router, searchParams]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
+      // Dynamically import magic to ensure it only loads on the client
       const { magic } = await import('@/lib/magic');
       
-      // Configure Magic link with proper callback
-      await magic.auth.loginWithMagicLink({
+      await magic.auth.loginWithMagicLink({ 
         email,
-        showUI: true, // This will show Magic's UI for the entire flow
         redirectURI: `${window.location.origin}/api/auth/callback/magic`
       });
-
-      // Magic's UI will handle the rest of the flow
-      // User will see the email sent screen, then the "check other tab" screen
-      // The callback will handle the authentication
+      
+      // Show success message
+      alert('Please check your email for the magic link. Click the link to complete your login.');
     } catch (error) {
       console.error('Login failed:', error);
-      setError('Authentication failed. Please try again.');
+      alert(`Login failed: ${error.message || 'Please try again.'}`);
     } finally {
       setLoading(false);
     }
   };
+
+  // If already authenticated, redirect to dashboard
+  if (status === 'authenticated') {
+    router.push(searchParams?.get("from") || "/dashboard");
+    return null;
+  }
 
   return (
     <form onSubmit={handleLogin} className="flex flex-col space-y-4">
@@ -74,9 +106,6 @@ const ClientOnlyForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          {error && (
-            <p className="text-sm text-red-500 mt-1">{error}</p>
-          )}
         </div>
         <Button
           type="submit"
