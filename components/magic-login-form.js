@@ -14,10 +14,12 @@ const ClientOnlyForm = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [statusChecking, setStatusChecking] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session, status } = useSession();
   const [SparklesIcon, setSparklesIcon] = useState(null);
+  const [magic, setMagic] = useState(null);
 
   // Load icons only on client side
   useEffect(() => {
@@ -28,35 +30,21 @@ const ClientOnlyForm = () => {
     loadIcons();
   }, []);
 
-  // Check for auth token on mount and after email verification
+  // Initialize Magic
   useEffect(() => {
-    const checkAuth = async () => {
-      const authToken = Cookies.get('auth_token');
-      if (authToken) {
-        try {
-          const result = await signIn('credentials', {
-            redirect: false,
-            callbackUrl: searchParams?.get("from") || "/dashboard",
-            didToken: authToken,
-          });
-
-          if (result?.error) {
-            console.error('Auth error:', result.error);
-            setError('Authentication failed. Please try again.');
-            Cookies.remove('auth_token');
-          } else {
-            router.push(searchParams?.get("from") || "/dashboard");
-          }
-        } catch (error) {
-          console.error('Auth check error:', error);
-          setError('Authentication failed. Please try again.');
-          Cookies.remove('auth_token');
-        }
-      }
+    const initMagic = async () => {
+      const { magic } = await import('@/lib/magic');
+      setMagic(magic);
     };
+    initMagic();
+  }, []);
 
-    checkAuth();
-  }, [router, searchParams]);
+  // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push(searchParams?.get("from") || "/dashboard");
+    }
+  }, [router, searchParams, status]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -64,21 +52,35 @@ const ClientOnlyForm = () => {
     setError('');
 
     try {
-      // Dynamically import magic to ensure it only loads on the client
-      const { magic } = await import('@/lib/magic');
-      
       if (!magic) {
         throw new Error('Magic SDK not initialized');
       }
 
-      await magic.auth.loginWithMagicLink({ 
+      // Use Magic SDK to send the user a magic link
+      const didToken = await magic.auth.loginWithMagicLink({ 
         email,
-        redirectURI: `${window.location.origin}/api/auth/callback/magic`,
         showUI: true,
+        redirectURI: `${window.location.origin}/api/auth/callback/magic`
       });
       
-      // Show success message
-      alert('Please check your email for the magic link. Click the link to complete your login.');
+      if (didToken) {
+        // Store the DID token in a cookie
+        Cookies.set('auth_token', didToken, { expires: 1 });
+        
+        // Sign in with NextAuth
+        const result = await signIn('credentials', {
+          redirect: false,
+          didToken,
+          callbackUrl: searchParams?.get("from") || "/dashboard",
+        });
+
+        if (result?.error) {
+          setError('Authentication failed. Please try again.');
+          Cookies.remove('auth_token');
+        } else {
+          router.push(searchParams?.get("from") || "/dashboard");
+        }
+      }
     } catch (error) {
       console.error('Login failed:', error);
       setError(error.message || 'Failed to send magic link. Please try again.');
@@ -86,12 +88,6 @@ const ClientOnlyForm = () => {
       setLoading(false);
     }
   };
-
-  // If already authenticated, redirect to dashboard
-  if (status === 'authenticated') {
-    router.push(searchParams?.get("from") || "/dashboard");
-    return null;
-  }
 
   return (
     <form onSubmit={handleLogin} className="flex flex-col space-y-4">

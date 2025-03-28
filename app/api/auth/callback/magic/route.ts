@@ -7,7 +7,7 @@ const magicAdmin = new Magic(process.env.MAGIC_SECRET_KEY);
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
-    const didToken = url.searchParams.get('didToken');
+    const didToken = url.searchParams.get('magic_credential');
 
     if (!didToken) {
       return NextResponse.redirect(new URL('/login?error=no_token', request.url));
@@ -24,6 +24,17 @@ export async function GET(request: Request) {
         <html>
           <head>
             <title>Login Successful</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <script>
+              // Store the DID token in localStorage to be retrieved by the main window
+              window.localStorage.setItem("magic_credential", "${didToken}");
+              
+              // Close this window if it was opened as a popup
+              if (window.opener) {
+                window.opener.postMessage({ magic_credential: "${didToken}" }, "*");
+                setTimeout(() => window.close(), 1000);
+              }
+            </script>
             <style>
               body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -41,6 +52,8 @@ export async function GET(request: Request) {
                 background: white;
                 border-radius: 8px;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                max-width: 90%;
+                width: 400px;
               }
               h1 {
                 color: #1a1a1a;
