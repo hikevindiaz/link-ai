@@ -38,14 +38,24 @@ const ClientOnlyForm = () => {
       setEmailSent(true);
       
       // Configure Magic link with proper callback
-      await magic.auth.loginWithMagicLink({
+      const didToken = await magic.auth.loginWithMagicLink({
         email,
         showUI: true, // Show Magic's UI for better user experience
-        redirectURI: `${window.location.origin}/api/auth/callback/magic`
+        redirectURI: `${window.location.origin}/login`
       });
 
-      // The user will be redirected to the callback URL after clicking the magic link
-      // The callback will handle the authentication with NextAuth
+      // Sign in with NextAuth using the DID token
+      if (didToken) {
+        const result = await signIn('credentials', {
+          didToken,
+          redirect: true,
+          callbackUrl: searchParams?.get("from") || "/dashboard"
+        });
+
+        if (result?.error) {
+          throw new Error(result.error);
+        }
+      }
     } catch (error) {
       console.error('Login failed:', error);
       setError('Authentication failed. Please try again.');
