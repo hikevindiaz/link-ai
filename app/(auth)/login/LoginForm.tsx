@@ -217,7 +217,7 @@ const LoginForm = () => {
       >
         <Card className="relative w-full max-w-[650px] aspect-square overflow-hidden bg-gray-950 shadow-lg rounded-2xl p-0">
           <img 
-            src="/login.gif" 
+            src="/LINK LOGIN.png" 
             alt="Link AI Login Animation"
             className="w-full h-full object-cover"
           />
