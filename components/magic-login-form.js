@@ -34,52 +34,23 @@ const ClientOnlyForm = () => {
     try {
       const { magic } = await import('@/lib/magic');
       
-      // First, show the email sent message
-      setEmailSent(true);
-      
       // Configure Magic link with proper callback
       await magic.auth.loginWithMagicLink({
         email,
-        showUI: true, // Show Magic's UI for better user experience
+        showUI: true, // This will show Magic's UI for the entire flow
         redirectURI: `${window.location.origin}/api/auth/callback/magic`
       });
 
-      // The user will be redirected to the callback URL after clicking the magic link
-      // The callback will handle the authentication securely
+      // Magic's UI will handle the rest of the flow
+      // User will see the email sent screen, then the "check other tab" screen
+      // The callback will handle the authentication
     } catch (error) {
       console.error('Login failed:', error);
       setError('Authentication failed. Please try again.');
-      setEmailSent(false);
     } finally {
       setLoading(false);
     }
   };
-
-  if (emailSent) {
-    return (
-      <div className="flex flex-col items-center space-y-4 p-6 text-center">
-        <h2 className="text-xl font-semibold">Check your email</h2>
-        <p className="text-gray-600">
-          We've sent a magic link to {email}.<br />
-          Click the link in the email to sign in.
-        </p>
-        <p className="text-sm text-gray-500">
-          The email might take a few minutes to arrive.<br />
-          Remember to check your spam folder.
-        </p>
-        <Button
-          onClick={() => {
-            setEmailSent(false);
-            setEmail('');
-          }}
-          variant="secondary"
-          className="mt-4"
-        >
-          Use a different email
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleLogin} className="flex flex-col space-y-4">

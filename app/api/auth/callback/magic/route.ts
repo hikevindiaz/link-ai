@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { signIn } from 'next-auth/react';
 import { authOptions } from '@/lib/auth';
 import { Magic } from '@magic-sdk/admin';
 
@@ -22,11 +22,14 @@ export async function GET(request: Request) {
       // Get user metadata from the token
       const metadata = await magicAdmin.users.getMetadataByToken(didToken);
       
-      // Create a session with the verified user data
-      const session = await getServerSession(authOptions);
-      
-      if (!session) {
-        return NextResponse.redirect(new URL('/login?error=invalid_session', request.url));
+      // Sign in with NextAuth using the verified token
+      const result = await signIn('credentials', {
+        didToken,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        return NextResponse.redirect(new URL(`/login?error=${result.error}`, request.url));
       }
 
       // Redirect to dashboard on success
