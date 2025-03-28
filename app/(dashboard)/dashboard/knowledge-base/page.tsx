@@ -278,7 +278,7 @@ export default function KnowledgeBasePage() {
   }
 
   return (
-    <div className="h-full p-6 relative">
+    <div className="flex flex-col items-center justify-center h-full p-6 relative">
       <div className="mx-auto max-w-md text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
           <RiDatabase2Line className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />

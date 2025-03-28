@@ -17,26 +17,38 @@ export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
     const { searchParams } = new URL(req.url);
     const chatbotId = searchParams.get('chatbotId');
+    const userId = searchParams.get('userId');
     const isEmbedded = req.headers.get('referer')?.includes('/embed/');
 
     // If it's an embedded request, we don't require authentication
-    if (!isEmbedded && !session?.user) {
+    if (!isEmbedded && !session?.user && !userId) {
       return new Response("Unauthorized", { status: 403 });
     }
 
+    // Define where clause based on parameters
+    let where: any = {};
+    
     // If chatbotId is provided, fetch sources for that chatbot
-    // Otherwise, fetch all sources for the current user
-    const where = chatbotId ? {
-      chatbots: {
-        some: {
-          id: chatbotId,
-          // Only check user ownership for non-embedded requests
-          ...(isEmbedded ? {} : { userId: session?.user?.id })
+    if (chatbotId) {
+      where = {
+        chatbots: {
+          some: {
+            id: chatbotId,
+            // Only check user ownership for non-embedded requests
+            ...(isEmbedded ? {} : { userId: session?.user?.id || userId })
+          }
         }
-      }
-    } : {
-      userId: session?.user?.id
-    };
+      };
+    } 
+    // Otherwise, fetch all sources for the provided userId or current user
+    else {
+      where = {
+        userId: userId || session?.user?.id
+      };
+    }
+
+    // Log the query we're about to make for debugging
+    console.log('Fetching knowledge sources with query:', JSON.stringify(where));
 
     // Get knowledge sources with their contents
     const knowledgeSources = await db.knowledgeSource.findMany({
@@ -49,6 +61,8 @@ export async function GET(req: Request) {
       }
     });
 
+    console.log(`Found ${knowledgeSources.length} knowledge sources`);
+
     // For embedded requests, only return sources that are associated with public chatbots
     const filteredSources = isEmbedded 
       ? knowledgeSources.filter(source => 
@@ -59,9 +73,24 @@ export async function GET(req: Request) {
     return NextResponse.json(filteredSources);
   } catch (error) {
     console.error('Error fetching knowledge sources:', error);
+    
+    // Provide more detailed error information
+    let errorMessage = 'Failed to fetch knowledge sources';
+    let statusCode = 500;
+    
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2021') {
+        errorMessage = 'Database table does not exist. Please run prisma db push';
+      } else {
+        errorMessage = `Prisma error: ${error.code} - ${error.message}`;
+      }
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to fetch knowledge sources' },
-      { status: 500 }
+      { error: errorMessage, details: error instanceof Error ? error.stack : undefined },
+      { status: statusCode }
     );
   }
 }

@@ -9,7 +9,7 @@ interface EmptyStateProps {
 
 export function EmptyState({ onCreateSource }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center h-full p-8">
+    <div className="flex flex-col items-center justify-center h-full flex-grow p-8">
       <div className="max-w-md text-center">
         <h3 className="text-xl font-semibold mb-2">No source selected</h3>
         <p className="text-gray-500 dark:text-gray-400 mb-6">
