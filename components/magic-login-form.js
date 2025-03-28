@@ -13,6 +13,7 @@ import { Label } from '@/components/Label';
 const ClientOnlyForm = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const searchParams = useSearchParams();
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -41,12 +42,14 @@ const ClientOnlyForm = () => {
 
           if (result?.error) {
             console.error('Auth error:', result.error);
+            setError('Authentication failed. Please try again.');
             Cookies.remove('auth_token');
           } else {
             router.push(searchParams?.get("from") || "/dashboard");
           }
         } catch (error) {
           console.error('Auth check error:', error);
+          setError('Authentication failed. Please try again.');
           Cookies.remove('auth_token');
         }
       }
@@ -58,21 +61,27 @@ const ClientOnlyForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     try {
       // Dynamically import magic to ensure it only loads on the client
       const { magic } = await import('@/lib/magic');
       
+      if (!magic) {
+        throw new Error('Magic SDK not initialized');
+      }
+
       await magic.auth.loginWithMagicLink({ 
         email,
-        redirectURI: `${window.location.origin}/api/auth/callback/magic`
+        redirectURI: `${window.location.origin}/api/auth/callback/magic`,
+        showUI: true,
       });
       
       // Show success message
       alert('Please check your email for the magic link. Click the link to complete your login.');
     } catch (error) {
       console.error('Login failed:', error);
-      alert(`Login failed: ${error.message || 'Please try again.'}`);
+      setError(error.message || 'Failed to send magic link. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -87,6 +96,11 @@ const ClientOnlyForm = () => {
   return (
     <form onSubmit={handleLogin} className="flex flex-col space-y-4">
       <div className="space-y-4">
+        {error && (
+          <div className="text-red-500 text-sm">
+            {error}
+          </div>
+        )}
         <div className="space-y-2">
           <Label
             htmlFor="email"
