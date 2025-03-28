@@ -169,7 +169,8 @@ export async function POST(req: Request) {
       // Add tools based on available knowledge
       if (useFileSearch) {
         tools.push({ 
-          type: "file_search" 
+          type: "file_search",
+          vector_store_ids: vectorStoreIds
         });
       }
       
@@ -190,13 +191,14 @@ export async function POST(req: Request) {
       // Use the Responses API which properly supports file_search and web_search_preview
       response = await openai.responses.create({
         model: modelName,
-        system_prompt: fullPrompt,
+        instructions: fullPrompt,
         input: userInput,
         temperature: chatbot.temperature || 0.7,
-        max_tokens: chatbot.maxCompletionTokens || 1000,
+        max_output_tokens: chatbot.maxCompletionTokens || 1000,
         stream: true,
         tools: tools.length > 0 ? tools : undefined,
-        tool_resources: toolResources,
+        // Removing tool_resources as it's not supported
+        // tool_resources: toolResources,
         // Optionally force the model to use the right tools when needed
         tool_choice: tools.length > 0 ? "auto" : undefined
       } as any); // Use type assertion to bypass TS errors with the OpenAI SDK
@@ -242,16 +244,38 @@ export async function POST(req: Request) {
       async start(controller) {
         const encoder = new TextEncoder();
 
+        // When using the Vercel AI SDK with streamProtocol: 'text',
+        // we need to format the response as raw text with no JSON structures
         try {
           // Handle streaming from the Responses API
           for await (const chunk of response) {
-            if (chunk.type === 'message' && chunk.status === 'in_progress') {
-              const delta = chunk.delta?.content?.[0]?.text;
-              if (delta) {
-                controller.enqueue(encoder.encode(delta));
+            // Debug response structure
+            console.log('Response chunk type:', chunk.type);
+            
+            // Handle response.output_text.delta chunks - this is the main content
+            if (chunk.type === 'response.output_text.delta') {
+              // For direct string values in the delta property
+              if (typeof chunk.delta === 'string') {
+                controller.enqueue(encoder.encode(chunk.delta));
+              } 
+              // Object with text property (less common)
+              else if (chunk.delta && typeof chunk.delta.text === 'string') {
+                controller.enqueue(encoder.encode(chunk.delta.text));
               }
-            } else if (chunk.type === 'message' && chunk.status === 'completed') {
-              // Final message - already handled by the deltas
+              // Object with value property (some versions)
+              else if (chunk.delta && chunk.delta.value) {
+                controller.enqueue(encoder.encode(chunk.delta.value));
+              }
+            } 
+            // Handle other chunk types as fallbacks
+            else if (chunk.type === 'message_delta' && chunk.delta?.content?.[0]?.text) {
+              controller.enqueue(encoder.encode(chunk.delta.content[0].text));
+            } else if (chunk.type === 'message' && chunk.content?.[0]?.text) {
+              controller.enqueue(encoder.encode(chunk.content[0].text));
+            } else if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
+              controller.enqueue(encoder.encode(chunk.delta.text));
+            } else if (chunk.delta?.text) {
+              controller.enqueue(encoder.encode(chunk.delta.text));
             }
           }
         } catch (error) {
@@ -263,13 +287,13 @@ export async function POST(req: Request) {
       },
     });
 
-    // Return the streaming response with the correct headers for text protocol
+    // Return the stream with appropriate headers for SSE
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive'
-      },
+        'Cache-Control': 'no-cache, no-transform',
+        'X-Content-Type-Options': 'nosniff'
+      }
     });
   } catch (error) {
     console.error('Error in chat completion:', error);
