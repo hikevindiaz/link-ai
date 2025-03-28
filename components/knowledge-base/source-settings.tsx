@@ -1,26 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Source } from './source-sidebar';
-import { RiCloseLine, RiFileExcelLine, RiFileTextLine, RiGlobalLine, RiQuestionAnswerLine, RiListCheck2, RiBrainLine } from '@remixicon/react';
+import { RiFileExcelLine, RiFileTextLine, RiGlobalLine, RiQuestionAnswerLine, RiListCheck2, RiEdit2Line, RiCheckLine } from '@remixicon/react';
 import { toast } from "sonner";
 import FileUploadTab from './file-upload-tab';
 import { WebsiteTab } from './website-tab';
 import { QATab } from './qa-tab';
 import { CatalogTab } from './catalog-tab';
 import { TextContentTab } from './text-tab';
-import { TrainingSection } from './training-section';
 import { TabNavigation, TabNavigationLink } from "@/components/TabNavigation";
-
-// Progress bar component since we don't have @tremor/react imported
-const ProgressBar = ({ value, className }: { value: number, className?: string }) => (
-  <div className={`w-full bg-gray-200 rounded-full dark:bg-gray-700 ${className}`}>
-    <div 
-      className="bg-indigo-500 rounded-full h-1.5" 
-      style={{ width: `${value}%` }}
-    ></div>
-  </div>
-);
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useKnowledgeBase } from '@/app/(dashboard)/dashboard/knowledge-base/layout';
 
 interface SourceSettingsProps {
   source: Source;
@@ -29,6 +21,8 @@ interface SourceSettingsProps {
 
 export function SourceSettings({ source, onSave }: SourceSettingsProps) {
   const [activeTab, setActiveTab] = useState('files');
+  const { isDirty, pendingChanges } = useKnowledgeBase();
+  const hasChangesForThisSource = pendingChanges[source.id] !== undefined;
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -61,8 +55,6 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
         return <QATab source={source} onSave={handleSave} />;
       case 'catalog':
         return <CatalogTab source={source} onSave={handleSave} />;
-      case 'training':
-        return <TrainingSection knowledgeSourceId={source.id} />;
       default:
         return <FileUploadTab source={source} onSave={handleSave} />;
     }
@@ -79,12 +71,32 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
 
   return (
     <div className="p-6">
-      <h1 className="text-lg font-bold text-gray-900 dark:text-gray-50">
-        {source.name}
-      </h1>
-      <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
-        Manage your knowledge source settings and content.
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-50">
+            {source.name}
+          </h1>
+          <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
+            Manage your knowledge source content
+          </p>
+        </div>
+        
+        <div className="flex items-center">
+          {hasChangesForThisSource ? (
+            <Badge variant="secondary" className="ml-2 flex items-center gap-1 bg-amber-100 text-amber-600 font-medium dark:bg-amber-900/20 dark:text-amber-400 px-3 py-1">
+              <RiEdit2Line className="h-4 w-4" />
+              <span>Needs Saving</span>
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="ml-2 flex items-center gap-1 bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400">
+              <RiCheckLine className="h-3 w-3" />
+              <span>Up to Date</span>
+            </Badge>
+          )}
+        </div>
+      </div>
+      
+      <Separator className="my-6" />
 
       <div className="mt-8">
         <TabNavigation>
@@ -131,15 +143,6 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
           >
             <RiListCheck2 className="size-4" aria-hidden="true" />
             Catalog
-          </TabNavigationLink>
-
-          <TabNavigationLink 
-            href="#" 
-            className={getTabClassName('training')}
-            onClick={(e) => { e.preventDefault(); handleTabChange('training'); }}
-          >
-            <RiBrainLine className="size-4" aria-hidden="true" />
-            Training
           </TabNavigationLink>
         </TabNavigation>
         

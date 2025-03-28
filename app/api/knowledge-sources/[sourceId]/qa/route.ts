@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { NextResponse } from 'next/server';
+import { processContentToVectorStore } from "@/lib/knowledge-vector-integration";
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -122,6 +123,21 @@ export async function POST(
               },
             },
           });
+
+          // Process to vector store
+          try {
+            // This is async but we don't need to wait for it to complete
+            processContentToVectorStore(sourceId, {
+              question: qa.question,
+              answer: qa.answer
+            }, 'qa').catch(error => {
+              console.error(`Error processing QA to vector store:`, error);
+            });
+          } catch (vectorStoreError) {
+            console.error(`Error adding QA to vector store:`, vectorStoreError);
+            // Continue even if vector store processing fails
+          }
+
           return { success: true, id: qaContent.id, question: qa.question };
         } catch (error) {
           console.error(`Error saving QA pair:`, error);

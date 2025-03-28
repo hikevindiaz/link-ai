@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import { processContentToVectorStore } from "@/lib/knowledge-vector-integration";
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -113,6 +114,19 @@ export async function POST(
       },
     });
 
+    // Process to vector store
+    try {
+      // This is async but we don't need to wait for it to complete
+      processContentToVectorStore(sourceId, {
+        content: body.content
+      }, 'text').catch(error => {
+        console.error(`Error processing text to vector store:`, error);
+      });
+    } catch (vectorStoreError) {
+      console.error(`Error adding text to vector store:`, vectorStoreError);
+      // Continue even if vector store processing fails
+    }
+
     return new Response(JSON.stringify(textContent), {
       status: 201,
       headers: { "Content-Type": "application/json" },
@@ -177,6 +191,19 @@ export async function PUT(
         content: body.content,
       },
     });
+
+    // Process updated content to vector store
+    try {
+      // This is async but we don't need to wait for it to complete
+      processContentToVectorStore(sourceId, {
+        content: body.content
+      }, 'text').catch(error => {
+        console.error(`Error processing updated text to vector store:`, error);
+      });
+    } catch (vectorStoreError) {
+      console.error(`Error adding updated text to vector store:`, vectorStoreError);
+      // Continue even if vector store processing fails
+    }
 
     return new Response(JSON.stringify(textContent), {
       headers: { "Content-Type": "application/json" },

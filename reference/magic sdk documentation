@@ -1,0 +1,163 @@
+Integrating Magic into a new or existing app is as simple as installing the SDK, initializing Magic with your Magic Publishable API Key and chosen blockchain, authenticating your users with magic.wallet.connectWithUI() and other common smart contract interactions like sending a transaction and checking a user's balance. The sections below go through each of these steps one at a time.
+
+If you want to jump straight into the code, check out this GitHub Repository or tinker directly in the browser with the CodeSandbox version.
+
+Install the SDK
+Navigate to your project directory and install the Magic SDK as a project dependency.
+
+NPM
+Yarn
+
+npm install magic-sdk
+Get your Magic Publishable API Key
+Grab your Magic Publishable API Key from your Magic Dashboard. If you haven’t already, you’ll need to sign up for a free developer account.
+
+
+Initialize Magic
+To get started, simply initialize an instance of Magic with your Publishable API Key and your choice of blockchain. Then initialize your chosen blockchain library, like Web3.js or Ethers.js, with the RPC provider in a separate file.
+
+Here's how you would initialize the Magic instance.
+
+Typescript
+
+const magic = new Magic(process.env.NEXT_PUBLIC_MAGIC_API_KEY, {
+  network: {
+    rpcUrl: "<https://rpc2.sepolia.org/>",
+    chainId: 11155111,
+  },
+})
+The suggested approach for the Magic instance is to create a hook so Magic can be made available and used across the whole application like the one below.
+
+Typescript
+
+import { Magic as MagicBase } from 'magic-sdk';
+import { ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
+
+export type Magic = MagicBase<OAuthExtension[]>;
+
+type MagicContextType = {
+  magic: Magic | null;
+};
+
+const MagicContext = createContext<MagicContextType>({
+  magic: null,
+});
+
+export const useMagic = () => useContext(MagicContext);
+
+const MagicProvider = ({ children }: { children: ReactNode }) => {
+  const [magic, setMagic] = useState<Magic | null>(null);
+
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_MAGIC_API_KEY) {
+      const magic = new MagicBase(process.env.NEXT_PUBLIC_MAGIC_API_KEY as string, {
+        network: {
+          rpcUrl: "<https://rpc2.sepolia.org/>",
+          chainId: 11155111,
+        },
+      });
+
+      setMagic(magic);
+    }
+  }, []);
+
+  const value = useMemo(() => {
+    return {
+      magic,
+    };
+  }, [magic]);
+
+  return <MagicContext.Provider value={value}>{children}</MagicContext.Provider>;
+};
+
+export default MagicProvider;
+When you want to use the Magic instance, import the hook and destructure the required properties from it, which in this case is the Magic instance itself.
+
+Typescript
+
+const { magic } = useMagic();
+In a separate file, create a hook to initialize your web3 instance. For this quickstart we will be using the Web3.js library but you can use other web3 blockchain libraries such as Ethers.js.
+
+Typescript
+
+import { Web3 } from  'web3';
+import { useEffect, useState } from  'react';
+import { useMagic } from  './MagicProvider';
+
+const  useWeb3  = () => {
+  const { magic } =  useMagic();
+  const [web3, setWeb3] =  useState<Web3  |  null>(null);
+
+  useEffect(() => {
+    if (magic) {
+      setWeb3(new  Web3((magic as  any).rpcProvider));
+    } else {
+      console.log('Magic is not initialized');
+    }
+  }, [magic]);
+  
+  return web3;
+};
+
+export  default  useWeb3;
+Now whenever you need to use the web3 instance, import the hook into the file you need it in and call it within your component to get the web3 instance.
+
+Typescript
+
+const web3 = useWeb3();
+The above code snippets initializes Magic and web3 with a public Sepolia Testnet URL. You can point the instance to a different chain by modifying the URL and Chain ID. Magic seamlessly supports over 25 different blockchains.
+
+Authenticate your users
+Authenticating your users is as easy as calling magic.wallet.connectWithUI(). This will display Magic's Login UI. Magic will handle authentication using Email OTP with no additional code needed from your app. You log your users out by calling magic.user.logout().
+
+In addition to the flow provided by the Login UI, you can customize a Dedicated Wallet to use a variety of authentication options like SMS login, OAuth through popular social login providers, and more.
+
+Display the authenticated user’s wallet
+Display the authenticated user’s wallet with magic.wallet.showUI(). This will show the user’s wallet using Magic’s Widget UI.
+
+Get user address
+One thing you may want to do is retrieve the address and balance of a logged in user. To do this, call the getInfo function and set it as a variable. Then on that variable call the publicAddress property to get the user's address.
+
+Typescript
+
+const metadata = await magic?.user.getInfo();
+const publicAddress = metadata.publicAddress;
+Get user balance
+To get the token balance of a user, import the web3 instance and then inside an asynchronous function call the getBalance function and pass the Magic user's public address to it. Given that the Magic instance is connected to the Sepolia network, calling getBalance will return the amount of Sepolia tokens the user has.
+
+In this we will be using the web3 instance mentioned earlier.
+
+Typescript
+
+const web3 = useWeb3();
+const balance = await web3.eth.getBalance(publicAddress);
+Interact with the network
+Magic integrates with all popular blockchain libraries so that you don’t have to change anything about how you interact with the blockchain. For example, if you’re using Ethereum or other EVM chains, you can get the user’s wallet address or sign and send transactions the same way you normally would using Web3.js or Ethers.js.
+
+Here is an example of sending a transaction:
+
+Typescript
+
+async function sendEth(amount: number, recipientAddress: string) {
+  const metadata = await magic?.user.getInfo();
+  const senderAddress = metadata.publicAddress;
+
+  const txnParams = {
+    from: senderAddress,
+    to: recipientAddress,
+    value: web3.utils.toWei(amount, "ether"),
+    gas: 21000,
+  }
+
+  web3.eth
+    .sendTransaction(txnParams as any)
+    .on("transactionHash", (txHash: string) => {
+      console.log("Transaction hash:", txHash)
+    })
+    .then((receipt: any) => {
+      console.log("Transaction receipt:", receipt)
+    })
+}
+Customize Your App
+This application uses our Dedicated Wallet. The Dedicated Wallet meets the widest variety of needs while still being incredibly simple to implement. In addition to the baked-in Login UI, it has plenty of customization options, supports social login through providers like GitHub and Discord, allows for enterprise multi-factor authentication, and more.
+

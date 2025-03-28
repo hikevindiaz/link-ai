@@ -5,12 +5,14 @@ import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { SourceSettings } from '@/components/knowledge-base/source-settings';
 import { Source } from '@/components/knowledge-base/source-sidebar';
+import { useKnowledgeBase } from '../layout';
 
 export default function SourcePage() {
   const params = useParams();
   const sourceId = params?.sourceId as string;
   const [source, setSource] = useState<Source | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { addPendingChange } = useKnowledgeBase();
 
   useEffect(() => {
     const fetchSource = async () => {
@@ -36,24 +38,9 @@ export default function SourcePage() {
   }, [sourceId]);
 
   const handleSave = async (data: any) => {
-    try {
-      const response = await fetch(`/api/knowledge-sources/${sourceId}/content`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save content');
-      }
-
-      toast.success('Content saved successfully');
-    } catch (error) {
-      console.error('Error saving content:', error);
-      toast.error('Failed to save content');
-    }
+    // Instead of saving directly, add to pending changes
+    addPendingChange(sourceId, data);
+    toast.success('Changes queued for saving');
   };
 
   if (isLoading) {

@@ -35,7 +35,7 @@ interface TextContent {
 export function TextContentTab({ source, onSave }: TextContentTabProps) {
   const [textContent, setTextContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const [savedTexts, setSavedTexts] = useState<TextContent[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingText, setEditingText] = useState<TextContent | null>(null);
@@ -91,13 +91,13 @@ export function TextContentTab({ source, onSave }: TextContentTabProps) {
     setSuccessDialogOpen(true);
   };
 
-  const handleSaveText = async () => {
+  const handleAddText = async () => {
     if (!textContent.trim() || !source?.id) {
-      toast.error("Please enter some text to save");
+      toast.error("Please enter some text to add");
       return;
     }
     
-    setIsSaving(true);
+    setIsAdding(true);
     
     try {
       // Use the dedicated text-content API endpoint
@@ -112,11 +112,11 @@ export function TextContentTab({ source, onSave }: TextContentTabProps) {
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to save text: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to add text: ${response.status} ${response.statusText}`);
       }
       
       const newText = await response.json();
-      console.log('New text saved:', newText);
+      console.log('New text added:', newText);
       
       // Add the new text to the list
       setSavedTexts([newText, ...savedTexts]);
@@ -124,16 +124,19 @@ export function TextContentTab({ source, onSave }: TextContentTabProps) {
       // Clear the text input
       setTextContent("");
       
-      // Show success dialog instead of toast
+      // Queue the change for global save
+      onSave({ textContent: newText });
+      
+      // Show success message
       showSuccessDialog(
-        "Text Saved Successfully",
-        "Your text content has been saved successfully. This will be used to train your Agent."
+        "Text Added Successfully",
+        "Your text content has been added. Use the Save button at the bottom of the page to save all changes."
       );
     } catch (error) {
-      console.error('Error saving text:', error);
-      toast.error("Failed to save text. Please try again.");
+      console.error('Error adding text:', error);
+      toast.error("Failed to add text. Please try again.");
     } finally {
-      setIsSaving(false);
+      setIsAdding(false);
     }
   };
 
@@ -149,7 +152,7 @@ export function TextContentTab({ source, onSave }: TextContentTabProps) {
       return;
     }
     
-    setIsSaving(true);
+    setIsAdding(true);
     
     try {
       // Use the dedicated text-content API endpoint
@@ -179,16 +182,19 @@ export function TextContentTab({ source, onSave }: TextContentTabProps) {
       setEditDialogOpen(false);
       setEditingText(null);
       
-      // Show success dialog instead of toast
+      // Queue the change for global save
+      onSave({ updatedText });
+      
+      // Show success message
       showSuccessDialog(
         "Text Updated Successfully",
-        "Your text content has been updated successfully."
+        "Your text content has been updated. Use the Save button at the bottom of the page to save all changes."
       );
     } catch (error) {
       console.error('Error updating text:', error);
       toast.error("Failed to update text. Please try again.");
     } finally {
-      setIsSaving(false);
+      setIsAdding(false);
     }
   };
 
@@ -203,34 +209,30 @@ export function TextContentTab({ source, onSave }: TextContentTabProps) {
     setIsDeleting(true);
     
     try {
-      console.log(`Attempting to delete text with ID: ${textToDelete.id}`);
-      
-      // Use the correct URL structure for the DELETE endpoint
       const response = await fetch(`/api/knowledge-sources/${source.id}/text-content/${textToDelete.id}`, {
         method: 'DELETE',
       });
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Delete API response:', errorText);
         throw new Error(`Failed to delete text: ${response.status} ${response.statusText}`);
       }
       
-      // Remove the text from the list
+      // Remove from list
       setSavedTexts(savedTexts.filter(text => text.id !== textToDelete.id));
       
-      // Show success dialog instead of toast
-      showSuccessDialog(
-        "Text Deleted Successfully",
-        "The selected text content has been deleted successfully."
-      );
+      // Close dialog
+      setDeleteDialogOpen(false);
+      setTextToDelete(null);
+      
+      // Queue the change for global save
+      onSave({ deletedTextId: textToDelete.id });
+      
+      toast.success("Text deleted successfully");
     } catch (error) {
       console.error('Error deleting text:', error);
       toast.error("Failed to delete text. Please try again.");
     } finally {
       setIsDeleting(false);
-      setDeleteDialogOpen(false);
-      setTextToDelete(null);
     }
   };
 
@@ -264,18 +266,18 @@ export function TextContentTab({ source, onSave }: TextContentTabProps) {
             
             <div className="mt-4 flex justify-end">
               <Button
-                onClick={handleSaveText}
-                disabled={!textContent.trim() || isSaving}
+                onClick={handleAddText}
+                disabled={!textContent.trim() || isAdding}
               >
-                {isSaving ? (
+                {isAdding ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    Adding...
                   </>
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add
                   </>
                 )}
               </Button>
@@ -368,15 +370,15 @@ export function TextContentTab({ source, onSave }: TextContentTabProps) {
             <Button
               variant="secondary"
               onClick={() => setEditDialogOpen(false)}
-              disabled={isSaving}
+              disabled={isAdding}
             >
               Cancel
             </Button>
             <Button
               onClick={handleUpdateText}
-              disabled={!editedContent.trim() || isSaving}
+              disabled={!editedContent.trim() || isAdding}
             >
-              {isSaving ? (
+              {isAdding ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Updating...

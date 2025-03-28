@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from "next-auth/react";
-import { RiAddLine, RiDatabase2Line, RiAlertLine } from '@remixicon/react';
+import { RiAddLine, RiDatabase2Line, RiAlertLine, RiArrowUpCircleLine } from '@remixicon/react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -13,12 +13,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ProgressDialog } from '@/components/ui/progress-dialog';
+import { useKnowledgeBase } from './layout';
 
 export default function KnowledgeBasePage() {
   const router = useRouter();
@@ -30,6 +31,14 @@ export default function KnowledgeBasePage() {
   const [hasExistingSources, setHasExistingSources] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [databaseError, setDatabaseError] = useState(false);
+  const { isDirty, isSaving, pendingChanges, saveAllChanges, resetPendingChanges } = useKnowledgeBase();
+  
+  // Migration state
+  const [sources, setSources] = useState<any[]>([]);
+  const [showMigrationDialog, setShowMigrationDialog] = useState(false);
+  const [migrationProgress, setMigrationProgress] = useState(0);
+  const [migrationStatus, setMigrationStatus] = useState<'idle' | 'processing' | 'completed' | 'error'>('idle');
+  const [migrationMessages, setMigrationMessages] = useState<{type: 'info' | 'success' | 'error', content: string}[]>([]);
 
   useEffect(() => {
     const checkForSources = async () => {
@@ -51,8 +60,9 @@ export default function KnowledgeBasePage() {
           throw new Error('Failed to fetch sources');
         }
         
-        const sources = await response.json();
-        setHasExistingSources(sources.length > 0);
+        const data = await response.json();
+        setSources(data);
+        setHasExistingSources(data.length > 0);
       } catch (error) {
         console.error('Error checking for sources:', error);
       } finally {
@@ -118,6 +128,108 @@ export default function KnowledgeBasePage() {
     }
   };
 
+  const handleTrainAgents = async () => {
+    if (sources.length === 0) {
+      toast.error('No knowledge sources to train agents with');
+      return;
+    }
+
+    // Reset migration state
+    setMigrationStatus('processing');
+    setMigrationProgress(0);
+    setMigrationMessages([
+      { type: 'info', content: 'Starting to train your agents with knowledge sources...' }
+    ]);
+    setShowMigrationDialog(true);
+
+    let completedCount = 0;
+    let errorCount = 0;
+    
+    // Process each source sequentially
+    for (const source of sources) {
+      try {
+        // Check if this source already has a vector store
+        setMigrationMessages(prev => [
+          ...prev, 
+          { type: 'info', content: `Preparing knowledge from: ${source.name}` }
+        ]);
+        
+        // Attempt to migrate this source
+        const response = await fetch('/api/knowledge-sources/migrate-to-vector', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            knowledgeSourceId: source.id,
+          }),
+        });
+
+        if (response.ok) {
+          completedCount++;
+          
+          setMigrationMessages(prev => [
+            ...prev, 
+            { 
+              type: 'success', 
+              content: `Successfully trained agents with "${source.name}"` 
+            }
+          ]);
+        } else {
+          const errorData = await response.json();
+          errorCount++;
+          
+          setMigrationMessages(prev => [
+            ...prev, 
+            { 
+              type: 'error', 
+              content: `Failed to train with "${source.name}": ${errorData.error || 'Unknown error'}` 
+            }
+          ]);
+        }
+        
+        // Update progress
+        const progress = Math.round(((completedCount + errorCount) / sources.length) * 100);
+        setMigrationProgress(progress);
+        
+      } catch (error) {
+        errorCount++;
+        setMigrationMessages(prev => [
+          ...prev, 
+          { 
+            type: 'error', 
+            content: `Error processing "${source.name}": ${error instanceof Error ? error.message : 'Unknown error'}` 
+          }
+        ]);
+        
+        // Update progress
+        const progress = Math.round(((completedCount + errorCount) / sources.length) * 100);
+        setMigrationProgress(progress);
+      }
+    }
+
+    // Finalize migration
+    if (errorCount === 0) {
+      setMigrationStatus('completed');
+      setMigrationMessages(prev => [
+        ...prev, 
+        { 
+          type: 'success', 
+          content: `Training completed successfully! Your agents can now access ${completedCount} knowledge sources.` 
+        }
+      ]);
+    } else {
+      setMigrationStatus('error');
+      setMigrationMessages(prev => [
+        ...prev, 
+        { 
+          type: 'error', 
+          content: `Training completed with some issues. ${completedCount} successful, ${errorCount} failed.` 
+        }
+      ]);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -166,67 +278,96 @@ export default function KnowledgeBasePage() {
   }
 
   return (
-    <div className="flex h-full flex-col items-center justify-center p-6">
+    <div className="h-full p-6 relative">
       <div className="mx-auto max-w-md text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
           <RiDatabase2Line className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
-          {hasExistingSources 
-            ? 'Select a Knowledge Source' 
-            : 'Welcome to Knowledge Base'}
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Knowledge Base</h1>
         <p className="mt-2 text-gray-500 dark:text-gray-400">
-          {hasExistingSources 
-            ? 'Select a knowledge source from the sidebar or create a new one to get started.' 
-            : 'Create your first knowledge source to enhance your Agent with custom data.'}
+          Add knowledge to make your AI assistants smarter.
         </p>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="mt-6" onClick={() => setIsCreateDialogOpen(true)}>
-              <RiAddLine className="mr-2 h-4 w-4" />
-              Create Knowledge Source
+        <div className="mt-6 flex justify-center gap-2">
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="inline-flex items-center"
+          >
+            <RiAddLine className="mr-1 h-4 w-4" />
+            Create New Source
+          </Button>
+          
+          {hasExistingSources && (
+            <Button 
+              variant="secondary"
+              onClick={handleTrainAgents}
+              className="inline-flex items-center"
+            >
+              <RiArrowUpCircleLine className="mr-1 h-4 w-4" />
+              Train Agents
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create Knowledge Source</DialogTitle>
-              <DialogDescription>
-                Add a new knowledge source to enhance your Agent's capabilities.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Enter source name"
-                  value={newSourceName}
-                  onChange={(e) => setNewSourceName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description (optional)</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Enter a description for this knowledge source"
-                  value={newSourceDescription}
-                  onChange={(e) => setNewSourceDescription(e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="secondary" onClick={() => setIsCreateDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleCreateSource} disabled={isCreating || !newSourceName.trim()}>
-                {isCreating ? 'Creating...' : 'Create Source'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          )}
+        </div>
       </div>
+      
+      {/* Progress Dialog for training */}
+      <ProgressDialog
+        title="Training Agents"
+        description="Your agents are learning from your knowledge sources"
+        open={showMigrationDialog}
+        onOpenChange={(open) => {
+          if (!open && migrationStatus !== 'processing') {
+            setShowMigrationDialog(false);
+          }
+        }}
+        progress={migrationProgress}
+        status={migrationStatus}
+        messages={migrationMessages}
+        allowClose={migrationStatus !== 'processing'}
+      />
+
+      {/* Create source dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create Knowledge Source</DialogTitle>
+            <DialogDescription>
+              Create a new knowledge source to power your AI assistants.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={newSourceName}
+                onChange={(e) => setNewSourceName(e.target.value)}
+                placeholder="e.g. Product Documentation"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description (optional)</Label>
+              <Textarea
+                id="description"
+                value={newSourceDescription}
+                onChange={(e) => setNewSourceDescription(e.target.value)}
+                placeholder="Brief description of this knowledge source"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIsCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateSource}
+              disabled={isCreating}
+            >
+              {isCreating ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -286,20 +286,22 @@ model VerificationToken {
 }
 
 model KnowledgeSource {
-  id              String           @id @default(cuid())
-  name            String
-  description     String?
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
-  userId          String
-  catalogMode     String?
-  catalogContents CatalogContent[]
-  files           File[]
-  qaContents      QAContent[]
-  textContents    TextContent[]
-  websiteContents WebsiteContent[]
-  chatbots        Chatbot[]        @relation("ChatbotToKnowledgeSource")
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String           @id @default(cuid())
+  name              String
+  description       String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  userId            String
+  catalogMode       String?
+  vectorStoreId     String?          // OpenAI Vector Store ID
+  vectorStoreUpdatedAt DateTime?     // Last time the vector store was updated
+  catalogContents   CatalogContent[]
+  files             File[]
+  qaContents        QAContent[]
+  textContents      TextContent[]
+  websiteContents   WebsiteContent[]
+  chatbots          Chatbot[]        @relation("ChatbotToKnowledgeSource")
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("knowledge_sources")
 }
@@ -321,6 +323,7 @@ model WebsiteContent {
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt         DateTime        @updatedAt @map("updated_at")
   knowledgeSourceId String
+  searchType        String          @default("crawl") // "live" or "crawl"
   knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
 
   @@map("website_contents")

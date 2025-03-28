@@ -1,0 +1,96 @@
+Great! Now that we know that, there are some updates we should make to the process:
+
+Knowledge Bases include several configurations for the end, but not all of those knowledge sources configurations work the same, here are the distinctions:
+1. Files - This is a general file upload segment for users to upload general knowledge of the agent/chatbot. This context is important because it defines how the agent interacts with this and the other knowledge.
+
+2. Text - This is a simple text input tab where users can write or paste instructions or general knowledge for the agent. Instead of uploading a PDF or CSV user can decide to write the knowledge here.
+
+3. Website - This section is divided in two sections that are of vital importance:
+A. Live Search Links- In this section users will paste URLs that will be available for the agent to live searches. Should we add an input for instructions on when to do the live searches or can we just add that in the prompt? This should give the command to the agent to search those specific URLs to find live updated answers: https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses [ALSO IN CONTEXT]
+
+B. Crawlers - This option on the other hand, crawls a website to find information and indexes it in a crawler file. This function has been here since we started so we might need to actually link that file with the actual assigned agent/chatbot and make sure it is available for the agent to access this data before giving an answer.
+
+These 2 options are the most vital in the configuration of the knowledge source.
+
+4. Q&A- This section are just text pair with question and answer for the agent to have the knowledge for the FAQ’s. This is working fine and it’s accessible right now. So no need to do anything else here I believe.
+
+5. Catalog Upload- Here we also have 2 sections:
+A. File Upload- In this case the agent should know that the uploaded files in this section are strictly for the user’s store catalog with prices and descriptions. It also includes a section for special instructions like Taxes and checkout method that the agent should follow this flow.
+
+B. Manually Upload Catalog- In this section users can use text inputs to upload the catalog manually. Agent should know that this section is for the user’s store catalog. This section also has space for tax calculation and tags (categories) so agent has even more context on each product. 
+
+
+
+PROMPT: I want you to consider if should implement the new Open AI API method for storing files for the responses API (which is the one I believe we’re using) [IN CONTEXT]- 
+https://platform.openai.com/docs/api-reference/vector-stores
+https://platform.openai.com/docs/assistants/tools/file-search
+https://platform.openai.com/docs/guides/tools-web-search?api-mode=responses
+
+In here we could user vector storing. But before doing this let’s first consider if it’s the best approach and scalable.
+
+__________________________________________
+
+Now, before doing all that there are some things we need to fix on the knowledge sources tabs:
+
+- files-tab: we can upload and delete files fine, but the agent doesn’t have access to this data still.
+
+- website-tab: Uploads: Yes
+Deletions: Not working ( I can’t delete saved URL’s: 2117-4d438d943338c2d2.js:1 Error deleting website: Error: Failed to delete website: 405 
+    at ex (page-e25df14627c71ccc.js:1:12539)]
+Agent Access: NO**** [web search function needs to be implemented]
+
+- website-tab: Crawlers
+Uploads: Yes
+Deletions: Yes
+Agent Access: NO** [find a way for agent to have access]
+
+- qa-tab: Uploads: Yes
+Deletions: Mixed / if I delete something and add another thing and hit save the deleted ones come back
+Agent Access: Yes
+
+- catalog-tab: Manual
+Uploads: Yes
+Deletions: Yes
+Agent Access:  NO**
+
+- catalog-tab: Upload
+Uploads: Yes
+Deletions: No option to delete/just replace
+Agent Access: No***
+
+______________________
+Finally, we should delete the “Agent Training” from our app and replace with a global knowledge source saving process. Meaning that instead of having an individual save button in each tab, we should have a global save/cancel one with a confirmation dialog. 
+
+
+Answer:
+
+Knowledge Management Enhancement Project
+I understand your request completely. Breaking this down into phases makes perfect sense given the complexity of the knowledge management improvements needed. Based on your prompt and the code you've shared, I'll propose a structured approach.
+Project Overview
+Let me first outline what I understand from your knowledge prompt:
+You have 5 different knowledge source types (Files, Text, Website, Q&A, Catalog)
+Several issues exist with different tabs (deletion, agent access, etc.)
+You want to leverage OpenAI's Vector Stores, File Search, and Web Search APIs
+You want to replace individual tab save buttons with a global save process
+Phase Breakdown
+Here's how I propose we divide this project:
+Phase 1: Core Infrastructure & Data Access
+Implement OpenAI Vector Stores integration for file storage
+Fix agent access to existing knowledge sources
+Standardize the knowledge retrieval mechanism across all source types
+
+Phase 2: Real-Time Search Capabilities
+Implement the OpenAI Web Search API for live searches
+Connect website URLs to the search function
+Create a proper flow for when to use live search vs. stored knowledge
+Phase 3: Interface Improvements
+Fix deletion functionality across all tabs
+Implement unified global save/cancel with confirmation
+Replace "Agent Training" with consolidated knowledge management
+Phase 4: Advanced Features
+Enhanced knowledge chunking and retrieval
+Cross-referencing between knowledge sources
+Analytics on knowledge base usage and effectiveness
+Starting Point
+I recommend beginning with Phase 1 since it addresses the foundational issue – agents can't access most knowledge types. This will provide immediate value while setting up the architecture for subsequent phases.
+Does this approach align with your vision? Or would you prefer we prioritize different aspects first?

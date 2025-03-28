@@ -6,6 +6,8 @@ import { put } from '@vercel/blob';
 import OpenAI from "openai";
 import { randomUUID } from 'crypto';
 import { Prisma } from "@prisma/client";
+import { ensureVectorStore, updateChatbotsWithKnowledgeSource } from "@/lib/knowledge-vector-integration";
+import { getOpenAIClient } from "@/lib/openai";
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -222,6 +224,13 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
         access: 'public',
       });
 
+      // Upload file to OpenAI for vector search
+      const openai = getOpenAIClient();
+      const uploadedFile = await openai.files.create({
+        file: file,
+        purpose: "assistants"
+      });
+
       // Generate a file ID
       const fileId = generateFileId();
 
@@ -241,12 +250,26 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
             ${fileId}, 
             ${file.name}, 
             ${blob.url}, 
-            ${'file-' + Date.now()}, 
+            ${uploadedFile.id}, 
             ${session.user.id}, 
             ${sourceId}, 
             ${new Date()}
           )
         `;
+
+        // Ensure the source has a vector store and add the file to it
+        try {
+          // This is async but we don't need to wait for it
+          ensureVectorStore(sourceId).then(vectorStoreId => {
+            if (vectorStoreId) {
+              // Update all chatbots that use this knowledge source
+              updateChatbotsWithKnowledgeSource(sourceId);
+            }
+          });
+        } catch (vectorError) {
+          console.error("Error integrating with vector store:", vectorError);
+          // Continue with the response even if vector store integration fails
+        }
 
         // Return the file data
         return new Response(
@@ -254,6 +277,7 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
             id: fileId,
             name: file.name,
             url: blob.url,
+            openAIFileId: uploadedFile.id
           }),
           { 
             status: 200,

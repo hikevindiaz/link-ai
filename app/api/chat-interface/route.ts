@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
 import { getThreadMessages } from '@/lib/chat-interface/adapters';
 import { StreamingTextResponse } from '@/lib/chat-interface/ai/compatibility';
+import { db } from '@/lib/db';
 
 export const runtime = 'edge';
 
@@ -12,7 +13,7 @@ const openai = new OpenAI({
 
 export async function POST(req: Request) {
   try {
-    const { messages, chatbotId } = await req.json();
+    const { messages, chatbotId, userLocation } = await req.json();
 
     if (!messages || !chatbotId) {
       return new Response('Missing messages or chatbotId', { status: 400 });
@@ -54,66 +55,205 @@ export async function POST(req: Request) {
     );
 
     let knowledgeSources = [];
+    let vectorStoreIds = [];
+    let hasWebsiteUrls = false;
+    let websiteUrls: string[] = [];
+    
     if (knowledgeSourcesResponse.ok) {
       const data = await knowledgeSourcesResponse.json();
       knowledgeSources = Array.isArray(data) ? data : [];
+      
+      // Extract vector store IDs
+      vectorStoreIds = knowledgeSources
+        .filter(source => source.vectorStoreId)
+        .map(source => source.vectorStoreId);
+      
+      // Check for website URLs that can be searched live
+      for (const source of knowledgeSources) {
+        if (source.websiteContents && source.websiteContents.length > 0) {
+          // Filter for websites marked for live search (no searchType means using the website
+          // for crawling, not for live search)
+          const liveSearchUrls = source.websiteContents.map((web: any) => web.url);
+          
+          if (liveSearchUrls.length > 0) {
+            hasWebsiteUrls = true;
+            websiteUrls = [...websiteUrls, ...liveSearchUrls];
+          }
+        }
+      }
     }
 
-    // Get chatbot knowledge if available
+    // Define which tools to use based on available knowledge
+    const useFileSearch = vectorStoreIds.length > 0;
+    const useWebSearch = hasWebsiteUrls && websiteUrls.length > 0;
+    
+    // Get chatbot knowledge if available - only needed if not using file_search or web_search
     let knowledge = '';
-    try {
-      knowledge = knowledgeSources.map((source: any) => {
-        let sourceKnowledge = '';
-        if (source.textContents) {
-          sourceKnowledge += source.textContents.map((text: any) => text.content).join('\n');
-        }
-        if (source.websiteContents) {
-          sourceKnowledge += source.websiteContents.map((web: any) => `Content from ${web.url}`).join('\n');
-        }
-        if (source.qaContents) {
-          sourceKnowledge += source.qaContents.map((qa: any) => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n');
-        }
-        return sourceKnowledge;
-      }).join('\n\n');
-    } catch (error) {
-      console.error('Error fetching knowledge:', error);
-      // Continue without knowledge if there's an error
+    if (!useFileSearch && !useWebSearch) {
+      try {
+        knowledge = knowledgeSources.map((source: any) => {
+          let sourceKnowledge = '';
+          if (source.textContents) {
+            sourceKnowledge += source.textContents.map((text: any) => text.content).join('\n');
+          }
+          if (source.websiteContents) {
+            sourceKnowledge += source.websiteContents.map((web: any) => `Content from ${web.url}`).join('\n');
+          }
+          if (source.qaContents) {
+            sourceKnowledge += source.qaContents.map((qa: any) => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n');
+          }
+          return sourceKnowledge;
+        }).join('\n\n');
+      } catch (error) {
+        console.error('Error fetching knowledge:', error);
+        // Continue without knowledge if there's an error
+      }
     }
 
     // Combine the chatbot's prompt with knowledge and messages
-    const systemPrompt = chatbot.prompt || 'You are a helpful AI assistant.';
-    const fullPrompt = knowledge 
+    let systemPrompt = chatbot.prompt || 'You are a helpful AI assistant.';
+    
+    // Create a formatted list of allowed URLs for web search
+    let authorizedDomains = '';
+    if (useWebSearch && websiteUrls.length > 0) {
+      // Extract domains from URLs for clearer presentation
+      const domains = websiteUrls.map(url => {
+        try {
+          const urlObj = new URL(url);
+          return urlObj.hostname;
+        } catch (e) {
+          return url;
+        }
+      });
+      
+      // Remove duplicates
+      const uniqueDomains = Array.from(new Set(domains));
+      authorizedDomains = uniqueDomains.join(', ');
+      
+      // Add instructions for web search
+      systemPrompt += `\n\nYou have the capability to search the web for current information. You're specifically authorized to search these websites for information when relevant to the user's query: ${authorizedDomains}. Only search these websites when necessary to provide up-to-date information.`;
+    }
+    
+    const fullPrompt = !useFileSearch && !useWebSearch && knowledge
       ? `${systemPrompt}\n\nHere is relevant knowledge to help answer questions:\n${knowledge}`
       : systemPrompt;
 
-    const fullMessages = [
-      { role: 'system', content: fullPrompt },
-      ...messages
-    ];
+    // Prepare messages for the Responses API - convert format from Chat Completions to Responses
+    // The Responses API accepts a string 'input' and a system_prompt parameter instead of messages array
+    const userInput = messages.filter((msg: any) => msg.role === 'user').pop()?.content || "";
+    
+    // Configure web search options
+    let webSearchOptions = {};
+    if (useWebSearch) {
+      webSearchOptions = {
+        search_context_size: "medium" // Could be "low", "medium", or "high"
+      };
+      
+      // If user location is provided, add it to the web search options
+      if (userLocation) {
+        webSearchOptions = {
+          ...webSearchOptions,
+          user_location: {
+            type: "approximate",
+            ...userLocation
+          }
+        };
+      }
+    }
 
-    // Create chat completion with OpenAI
-    const response = await openai.chat.completions.create({
-      model: modelName,
-      messages: fullMessages,
-      temperature: chatbot.temperature || 0.7,
-      max_tokens: chatbot.maxCompletionTokens || 1000,
-      stream: true,
-    });
+    let response;
+    
+    try {
+      const tools = [];
+      
+      // Add tools based on available knowledge
+      if (useFileSearch) {
+        tools.push({ 
+          type: "file_search" 
+        });
+      }
+      
+      if (useWebSearch) {
+        tools.push({ 
+          type: "web_search_preview",
+          ...webSearchOptions
+        });
+      }
+      
+      // Set up tool resources for file_search if needed
+      const toolResources = useFileSearch ? {
+        file_search: {
+          vector_store_ids: vectorStoreIds
+        }
+      } : undefined;
+      
+      // Use the Responses API which properly supports file_search and web_search_preview
+      response = await openai.responses.create({
+        model: modelName,
+        context: fullPrompt,
+        input: userInput,
+        temperature: chatbot.temperature || 0.7,
+        max_tokens: chatbot.maxCompletionTokens || 1000,
+        stream: true,
+        tools: tools.length > 0 ? tools : undefined,
+        tool_resources: toolResources,
+        // Optionally force the model to use the right tools when needed
+        tool_choice: tools.length > 0 ? "auto" : undefined
+      } as any); // Use type assertion to bypass TS errors with the OpenAI SDK
+      
+    } catch (error) {
+      console.error('Error in OpenAI API call:', error);
+      
+      // Check if it's a tool-related error
+      if (error instanceof OpenAI.APIError) {
+        const { message, status } = error;
+        
+        // Specific handling for web search errors
+        if (message.includes('web_search') || message.includes('search')) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Web Search Error',
+              message: 'There was an issue with the web search functionality. Trying again without web search.',
+              status
+            }), 
+            { status: 500 }
+          );
+        }
+        
+        // Specific handling for file search errors
+        if (message.includes('file_search') || message.includes('vector_store')) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Knowledge Base Error',
+              message: 'There was an issue accessing the knowledge base. Trying again with standard response.',
+              status
+            }), 
+            { status: 500 }
+          );
+        }
+      }
+      
+      // Re-throw for general error handling
+      throw error;
+    }
 
-    // Convert the response to a stream using Vercel AI SDK
+    // Convert the response to a stream
     const stream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
 
         try {
+          // Handle streaming from the Responses API
           for await (const chunk of response) {
-            const text = chunk.choices[0]?.delta?.content;
-            if (text) {
-              // Send text chunks directly for text protocol
-              controller.enqueue(encoder.encode(text));
+            if (chunk.type === 'message' && chunk.status === 'in_progress') {
+              const delta = chunk.delta?.content?.[0]?.text;
+              if (delta) {
+                controller.enqueue(encoder.encode(delta));
+              }
+            } else if (chunk.type === 'message' && chunk.status === 'completed') {
+              // Final message - already handled by the deltas
             }
           }
-          // No need to send [DONE] marker for text protocol
         } catch (error) {
           console.error('Error in stream processing:', error);
           controller.error(error);
