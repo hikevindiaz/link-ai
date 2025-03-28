@@ -3,11 +3,22 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
 export default async function HomePage() {
-  const session = await getServerSession(authOptions);
+  console.log('[ROOT] Accessing root page');
   
-  if (session?.user) {
-    redirect('/dashboard');
-  } else {
+  try {
+    const session = await getServerSession(authOptions);
+    console.log('[ROOT] Session status:', !!session);
+    
+    if (session?.user) {
+      console.log('[ROOT] User authenticated, redirecting to dashboard');
+      redirect('/dashboard');
+    } else {
+      console.log('[ROOT] User not authenticated, redirecting to login');
+      redirect('/login');
+    }
+  } catch (error) {
+    console.error('[ROOT] Error in root page redirection:', error);
+    // In case of error, redirect to login as fallback
     redirect('/login');
   }
   

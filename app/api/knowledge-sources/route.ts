@@ -20,8 +20,17 @@ export async function GET(req: Request) {
     const userId = searchParams.get('userId');
     const isEmbedded = req.headers.get('referer')?.includes('/embed/');
 
+    console.log('[KnowledgeSource] Request Info:', { 
+      sessionUserId: session?.user?.id,
+      queryUserId: userId,
+      chatbotId,
+      isEmbedded,
+      url: req.url
+    });
+
     // If it's an embedded request, we don't require authentication
     if (!isEmbedded && !session?.user && !userId) {
+      console.log('[KnowledgeSource] Unauthorized: No session user or userId');
       return new Response("Unauthorized", { status: 403 });
     }
 
@@ -42,54 +51,77 @@ export async function GET(req: Request) {
     } 
     // Otherwise, fetch all sources for the provided userId or current user
     else {
-      where = {
-        userId: userId || session?.user?.id
-      };
+      const effectiveUserId = userId || session?.user?.id;
+      if (!effectiveUserId) {
+        console.log('[KnowledgeSource] No effective userId found');
+        return NextResponse.json(
+          { error: 'No user ID provided or found in session' },
+          { status: 400 }
+        );
+      }
+      where = { userId: effectiveUserId };
     }
 
     // Log the query we're about to make for debugging
-    console.log('Fetching knowledge sources with query:', JSON.stringify(where));
+    console.log('[KnowledgeSource] Fetching with query:', JSON.stringify(where));
 
-    // Get knowledge sources with their contents
-    const knowledgeSources = await db.knowledgeSource.findMany({
-      where,
-      include: {
-        textContents: true,
-        websiteContents: true,
-        qaContents: true,
-        chatbots: true,
+    try {
+      // Get knowledge sources with their contents
+      const knowledgeSources = await db.knowledgeSource.findMany({
+        where,
+        include: {
+          textContents: true,
+          websiteContents: true,
+          qaContents: true,
+          chatbots: true,
+        }
+      });
+
+      console.log(`[KnowledgeSource] Found ${knowledgeSources.length} sources`);
+
+      // For embedded requests, only return sources that are associated with public chatbots
+      const filteredSources = isEmbedded 
+        ? knowledgeSources.filter(source => 
+            source.chatbots?.some(chatbot => chatbot.allowEveryone)
+          )
+        : knowledgeSources;
+
+      return NextResponse.json(filteredSources);
+    } catch (dbError) {
+      console.error('[KnowledgeSource] Database error:', dbError);
+      
+      // Handle database errors specifically
+      if (dbError instanceof Prisma.PrismaClientKnownRequestError) {
+        if (dbError.code === 'P2021') {
+          return NextResponse.json(
+            { error: 'Database table does not exist. Please run prisma db push' },
+            { status: 500 }
+          );
+        }
       }
-    });
-
-    console.log(`Found ${knowledgeSources.length} knowledge sources`);
-
-    // For embedded requests, only return sources that are associated with public chatbots
-    const filteredSources = isEmbedded 
-      ? knowledgeSources.filter(source => 
-          source.chatbots?.some(chatbot => chatbot.allowEveryone)
-        )
-      : knowledgeSources;
-
-    return NextResponse.json(filteredSources);
+      
+      throw dbError; // Re-throw to be caught by the outer catch
+    }
   } catch (error) {
-    console.error('Error fetching knowledge sources:', error);
+    console.error('[KnowledgeSource] Error fetching knowledge sources:', error);
     
     // Provide more detailed error information
     let errorMessage = 'Failed to fetch knowledge sources';
     let statusCode = 500;
     
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2021') {
-        errorMessage = 'Database table does not exist. Please run prisma db push';
-      } else {
-        errorMessage = `Prisma error: ${error.code} - ${error.message}`;
-      }
+      errorMessage = `Prisma error ${error.code}: ${error.message}`;
+      console.log('[KnowledgeSource] Prisma error details:', error);
     } else if (error instanceof Error) {
       errorMessage = error.message;
     }
     
     return NextResponse.json(
-      { error: errorMessage, details: error instanceof Error ? error.stack : undefined },
+      { 
+        error: errorMessage, 
+        details: error instanceof Error ? error.stack : undefined,
+        message: 'See server logs for more details'
+      },
       { status: statusCode }
     );
   }
