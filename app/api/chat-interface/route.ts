@@ -190,7 +190,7 @@ export async function POST(req: Request) {
       // Use the Responses API which properly supports file_search and web_search_preview
       response = await openai.responses.create({
         model: modelName,
-        context: fullPrompt,
+        system_prompt: fullPrompt,
         input: userInput,
         temperature: chatbot.temperature || 0.7,
         max_tokens: chatbot.maxCompletionTokens || 1000,
