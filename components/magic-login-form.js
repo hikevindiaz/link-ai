@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { signIn, useSession } from 'next-auth/react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import Cookies from 'js-cookie';
 import LoadingDots from "@/components/loading-dots";
 import { Input } from '@/components/Input';
@@ -13,13 +13,8 @@ import { Label } from '@/components/Label';
 const ClientOnlyForm = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [statusChecking, setStatusChecking] = useState(false);
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const { data: session, status } = useSession();
   const [SparklesIcon, setSparklesIcon] = useState(null);
-  const [magic, setMagic] = useState(null);
 
   // Load icons only on client side
   useEffect(() => {
@@ -30,60 +25,35 @@ const ClientOnlyForm = () => {
     loadIcons();
   }, []);
 
-  // Initialize Magic
-  useEffect(() => {
-    const initMagic = async () => {
-      const { magic } = await import('@/lib/magic');
-      setMagic(magic);
-    };
-    initMagic();
-  }, []);
-
-  // If already authenticated, redirect to dashboard
-  useEffect(() => {
-    if (status === 'authenticated') {
-      router.push(searchParams?.get("from") || "/dashboard");
-    }
-  }, [router, searchParams, status]);
-
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
-      if (!magic) {
-        throw new Error('Magic SDK not initialized');
-      }
-
-      // Use Magic SDK to send the user a magic link
-      const didToken = await magic.auth.loginWithMagicLink({ 
-        email,
-        showUI: true,
-        redirectURI: `${window.location.origin}/api/auth/callback/magic`
-      });
+      // Dynamically import magic to ensure it only loads on the client
+      const { magic } = await import('@/lib/magic');
       
+      const didToken = await magic.auth.loginWithMagicLink({ email });
       if (didToken) {
-        // Store the DID token in a cookie
-        Cookies.set('auth_token', didToken, { expires: 1 });
+        console.log('Login successful:', didToken);
         
-        // Sign in with NextAuth
+        // Use next-auth's signIn for consistency
         const result = await signIn('credentials', {
           redirect: false,
-          didToken,
           callbackUrl: searchParams?.get("from") || "/dashboard",
+          didToken,
         });
 
         if (result?.error) {
-          setError('Authentication failed. Please try again.');
-          Cookies.remove('auth_token');
+          console.error('Auth error:', result.error);
+          alert(`Login failed: ${result.error}`);
         } else {
-          router.push(searchParams?.get("from") || "/dashboard");
+          window.location.href = searchParams?.get("from") || "/dashboard";
         }
       }
     } catch (error) {
       console.error('Login failed:', error);
-      setError(error.message || 'Failed to send magic link. Please try again.');
+      alert(`Login failed: ${error.message || 'Please try again.'}`);
     } finally {
       setLoading(false);
     }
@@ -92,11 +62,6 @@ const ClientOnlyForm = () => {
   return (
     <form onSubmit={handleLogin} className="flex flex-col space-y-4">
       <div className="space-y-4">
-        {error && (
-          <div className="text-red-500 text-sm">
-            {error}
-          </div>
-        )}
         <div className="space-y-2">
           <Label
             htmlFor="email"

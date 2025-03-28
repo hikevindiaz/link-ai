@@ -17,24 +17,13 @@ export async function GET(request: Request) {
     try {
       await magicAdmin.token.validate(didToken);
       
-      // Return a success page that can be closed
+      // Return a simple success page
       return new NextResponse(
         `
         <!DOCTYPE html>
         <html>
           <head>
             <title>Login Successful</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <script>
-              // Store the DID token in localStorage to be retrieved by the main window
-              window.localStorage.setItem("magic_credential", "${didToken}");
-              
-              // Close this window if it was opened as a popup
-              if (window.opener) {
-                window.opener.postMessage({ magic_credential: "${didToken}" }, "*");
-                setTimeout(() => window.close(), 1000);
-              }
-            </script>
             <style>
               body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -74,8 +63,8 @@ export async function GET(request: Request) {
             <div class="container">
               <div class="success-icon">✓</div>
               <h1>Login Successful!</h1>
-              <p>You can now close this window and return to the login page.</p>
-              <p>The page will automatically refresh and log you in.</p>
+              <p>You can now close this window.</p>
+              <p>Your login was successful.</p>
             </div>
           </body>
         </html>
