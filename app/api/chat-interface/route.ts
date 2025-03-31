@@ -150,7 +150,13 @@ export async function POST(req: Request) {
     
     // Add context about knowledge base access without mentioning uploads
     if (useFileSearch) {
-      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. Use this information when relevant to provide precise answers. IMPORTANT: Before answering any question, you MUST search the knowledge base using the file_search tool. Only respond with information that is explicitly found in the knowledge base. If the information is not available in your knowledge base, clearly state that you don't have that information rather than making up an answer.`;
+      systemPrompt += `\n\n[CRITICAL INSTRUCTION] You have access to a knowledge base that contains information about our company. YOU MUST ALWAYS USE THE FILE_SEARCH TOOL BEFORE RESPONDING TO ANY QUESTION. This is absolutely required and non-negotiable.
+
+Step 1: For EVERY user question, first use file_search to look up relevant information in the knowledge base.
+Step 2: ONLY answer based on what you find in the knowledge base. 
+Step 3: If you don't find relevant information in the knowledge base, explicitly say "I don't have information about that in my knowledge base" rather than making up an answer.
+
+Do not rely on your general knowledge to answer questions. Only use information explicitly found in the knowledge base.`;
       
       // Log vector store IDs to help with debugging
       console.log(`[${process.env.VERCEL_ENV || 'local'}] Vector store IDs available: ${JSON.stringify(vectorStoreIds)}`);
@@ -223,10 +229,12 @@ export async function POST(req: Request) {
         max_output_tokens: chatbot.maxCompletionTokens || 1000,
         stream: true,
         tools: tools.length > 0 ? tools : undefined,
-        // Force the model to consider using tools when they're available
-        tool_choice: useFileSearch ? "auto" : undefined,
+        // Force the model to ALWAYS use file_search when available
+        tool_choice: useFileSearch ? 
+          { type: "function", function: { name: "file_search" } } : 
+          undefined,
         tool_use_instructions: useFileSearch ? 
-          "Always use file_search to look up information before responding. Don't make up information that isn't in the knowledge base." : 
+          "You MUST ALWAYS use file_search to look up information before responding to ANY question. Never rely on your general knowledge when file_search is available." : 
           undefined
       } as any); // Use type assertion to bypass TS errors with the OpenAI SDK
       
