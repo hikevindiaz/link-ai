@@ -4,7 +4,7 @@ import { getThreadMessages } from '@/lib/chat-interface/adapters';
 import { StreamingTextResponse } from '@/lib/chat-interface/ai/compatibility';
 import { db } from '@/lib/db';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 // Create an OpenAI API client (edge-compatible)
 const openai = new OpenAI({
@@ -116,8 +116,11 @@ export async function POST(req: Request) {
     // Add general instruction about not mentioning uploads
     systemPrompt = `${systemPrompt}\n\nImportant: You should never mention "uploaded files" or suggest that the user has uploaded any documents. All information in your knowledge base was prepared by administrators, not the current user.`;
     
+    // Add critical instruction for first-person company usage
+    systemPrompt += `\n\n[CRITICAL] YOU ARE THE COMPANY. Always use first person plural ("we", "our", "us") when referring to the company. NEVER say "[Company] is" or "[Company] has" - always say "We are" and "We have".`;
+    
     // Add instructions for speaking in first person and handling missing information
-    systemPrompt += `\n\nWhen referencing company information, always speak in first person as if you are representing the company itself. For example, say "At our company, we..." instead of "The company is..." or "They are...".`;
+    systemPrompt += `\n\nYou ARE the company mentioned in the knowledge base - not just representing it. Always speak in first person plural. Say "We are..." or "At [Company Name], we..." instead of "The company is..." or "[Company Name] is...". Never refer to the company in third person. You are speaking as the company itself in all interactions.`;
     
     systemPrompt += `\n\nIf you can't find requested information in your knowledge base, never say "I couldn't find this in the provided document" or similar phrases. Instead, respond with something like "This information doesn't appear to be in my knowledge base, but I'll make note of your question so it can be addressed in the future." or "I don't have that specific information available, but I'd be happy to help with what I do know or pass your inquiry along to my creator."`;
     
@@ -150,6 +153,9 @@ export async function POST(req: Request) {
     const fullPrompt = !useFileSearch && !useWebSearch && knowledge
       ? `${systemPrompt}\n\nHere is relevant knowledge to help answer questions:\n${knowledge}`
       : systemPrompt;
+      
+    // Add debugging with environment marker
+    console.log(`[${process.env.VERCEL_ENV || 'local'}] Using prompt: ${fullPrompt.substring(0, 200)}...`);
 
     // Prepare messages for the Responses API - convert format from Chat Completions to Responses
     // The Responses API accepts a string 'input' and a system_prompt parameter instead of messages array
