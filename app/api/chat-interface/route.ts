@@ -131,7 +131,12 @@ export async function POST(req: Request) {
       authorizedDomains = uniqueDomains.join(', ');
       
       // Add instructions for web search
-      systemPrompt += `\n\nYou have the capability to search the web for current information. You're specifically authorized to search these websites for information when relevant to the user's query: ${authorizedDomains}. Only search these websites when necessary to provide up-to-date information.`;
+      systemPrompt += `\n\nYou have access to search these specific websites for current information when relevant: ${authorizedDomains}.`;
+    }
+    
+    // Add context about knowledge base access without mentioning uploads
+    if (useFileSearch) {
+      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. Use this information when relevant to provide precise answers.`;
     }
     
     const fullPrompt = !useFileSearch && !useWebSearch && knowledge

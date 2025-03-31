@@ -96,57 +96,57 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
         </div>
       </div>
       
-      <Separator className="my-6" />
-
-      <div className="mt-8">
-        <TabNavigation>
-          <TabNavigationLink 
-            href="#" 
-            className={getTabClassName('files')}
-            onClick={(e) => { e.preventDefault(); handleTabChange('files'); }}
-          >
-            <RiFileExcelLine className="size-4" aria-hidden="true" />
-            Files
-          </TabNavigationLink>
-          
-          <TabNavigationLink 
-            href="#" 
-            className={getTabClassName('text')}
-            onClick={(e) => { e.preventDefault(); handleTabChange('text'); }}
-          >
-            <RiFileTextLine className="size-4" aria-hidden="true" />
-            Text
-          </TabNavigationLink>
-          
-          <TabNavigationLink 
-            href="#" 
-            className={getTabClassName('website')}
-            onClick={(e) => { e.preventDefault(); handleTabChange('website'); }}
-          >
-            <RiGlobalLine className="size-4" aria-hidden="true" />
-            Website
-          </TabNavigationLink>
-          
-          <TabNavigationLink 
-            href="#" 
-            className={getTabClassName('qa')}
-            onClick={(e) => { e.preventDefault(); handleTabChange('qa'); }}
-          >
-            <RiQuestionAnswerLine className="size-4" aria-hidden="true" />
-            Q&A
-          </TabNavigationLink>
-          
-          <TabNavigationLink 
-            href="#" 
-            className={getTabClassName('catalog')}
-            onClick={(e) => { e.preventDefault(); handleTabChange('catalog'); }}
-          >
-            <RiListCheck2 className="size-4" aria-hidden="true" />
-            Catalog
-          </TabNavigationLink>
+      <div className="-mx-6 mt-4">
+        <TabNavigation className="border-b border-gray-200 dark:border-gray-800">
+          <div className="px-6">
+            <TabNavigationLink 
+              href="#" 
+              className={getTabClassName('files')}
+              onClick={(e) => { e.preventDefault(); handleTabChange('files'); }}
+            >
+              <RiFileExcelLine className="size-4" aria-hidden="true" />
+              Files
+            </TabNavigationLink>
+            
+            <TabNavigationLink 
+              href="#" 
+              className={getTabClassName('text')}
+              onClick={(e) => { e.preventDefault(); handleTabChange('text'); }}
+            >
+              <RiFileTextLine className="size-4" aria-hidden="true" />
+              Text
+            </TabNavigationLink>
+            
+            <TabNavigationLink 
+              href="#" 
+              className={getTabClassName('website')}
+              onClick={(e) => { e.preventDefault(); handleTabChange('website'); }}
+            >
+              <RiGlobalLine className="size-4" aria-hidden="true" />
+              Website
+            </TabNavigationLink>
+            
+            <TabNavigationLink 
+              href="#" 
+              className={getTabClassName('qa')}
+              onClick={(e) => { e.preventDefault(); handleTabChange('qa'); }}
+            >
+              <RiQuestionAnswerLine className="size-4" aria-hidden="true" />
+              Q&A
+            </TabNavigationLink>
+            
+            <TabNavigationLink 
+              href="#" 
+              className={getTabClassName('catalog')}
+              onClick={(e) => { e.preventDefault(); handleTabChange('catalog'); }}
+            >
+              <RiListCheck2 className="size-4" aria-hidden="true" />
+              Catalog
+            </TabNavigationLink>
+          </div>
         </TabNavigation>
         
-        <div className="mt-8">
+        <div className="px-6 mt-6">
           {renderTabContent()}
         </div>
       </div>
