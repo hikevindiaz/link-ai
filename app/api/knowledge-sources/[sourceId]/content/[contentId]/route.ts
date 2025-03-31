@@ -3,6 +3,9 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { del } from '@vercel/blob';
+import { removeFileFromVectorStore } from "@/lib/vector-store";
+import OpenAI from "openai";
+import { getOpenAIClient } from "@/lib/openai";
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -60,12 +63,18 @@ export async function DELETE(
 
     // Check content type from query params
     const url = new URL(req.url);
-    const type = url.searchParams.get("type") || "file"; // Default to file if not specified
+    const type = url.searchParams.get("type") || "file";
 
     if (type === "file") {
-      // Get the file to delete
+      // Get the file and knowledge source to delete
+      const knowledgeSources = await db.$queryRaw`
+        SELECT ks.id, ks."vectorStoreId" 
+        FROM "knowledge_sources" ks
+        WHERE ks.id = ${sourceId}
+      `;
+
       const files = await db.$queryRaw`
-        SELECT id, "blobUrl"
+        SELECT id, "blobUrl", "openAIFileId"
         FROM "files"
         WHERE id = ${contentId} AND "knowledgeSourceId" = ${sourceId}
       `;
@@ -74,7 +83,41 @@ export async function DELETE(
         return new Response("File not found", { status: 404 });
       }
 
-      const file = files[0] as { id: string; blobUrl: string };
+      const file = files[0] as { id: string; blobUrl: string; openAIFileId: string };
+      
+      // Get OpenAI API key for the user
+      const openAIConfig = await db.openAIConfig.findUnique({
+        select: {
+          globalAPIKey: true,
+        },
+        where: {
+          userId: session.user.id
+        }
+      });
+
+      if (!openAIConfig?.globalAPIKey) {
+        console.error("Missing OpenAI API key");
+        return new Response("Missing OpenAI API key", { status: 400 });
+      }
+
+      // Get vector store ID
+      if (Array.isArray(knowledgeSources) && knowledgeSources.length > 0) {
+        const knowledgeSource = knowledgeSources[0] as { id: string; vectorStoreId: string | null };
+        
+        // If there's a vector store ID, remove the file from it
+        if (knowledgeSource.vectorStoreId && file.openAIFileId) {
+          try {
+            console.log(`Removing file ${file.openAIFileId} from vector store ${knowledgeSource.vectorStoreId}`);
+            const removed = await removeFileFromVectorStore(knowledgeSource.vectorStoreId, file.openAIFileId);
+            if (!removed) {
+              console.warn(`Failed to remove file from vector store, continuing with deletion from database`);
+            }
+          } catch (vectorError) {
+            console.error("Error removing file from vector store:", vectorError);
+            // Continue with deletion even if vector store removal fails
+          }
+        }
+      }
 
       // Delete the file from Vercel Blob if it has a valid URL
       if (file.blobUrl && file.blobUrl.startsWith('http')) {
@@ -84,6 +127,17 @@ export async function DELETE(
           console.error('Error deleting file from blob storage:', error);
           // Continue with database deletion even if blob deletion fails
         }
+      }
+
+      // Delete the OpenAI file if possible
+      try {
+        const openai = new OpenAI({
+          apiKey: openAIConfig.globalAPIKey
+        });
+        await openai.files.del(file.openAIFileId);
+      } catch (error) {
+        console.error(`Error deleting OpenAI file: ${error}`);
+        // Continue with database deletion even if OpenAI deletion fails
       }
 
       // Delete the file from the database

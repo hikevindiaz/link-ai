@@ -319,4 +319,55 @@ export async function updateChatbotVectorStores(
     console.error(`Error updating chatbot ${chatbotId} with vector stores:`, error);
     throw error;
   }
+}
+
+/**
+ * Removes a file from a Vector Store
+ * @param vectorStoreId ID of the vector store to remove the file from
+ * @param fileId ID of the file in OpenAI to remove
+ */
+export async function removeFileFromVectorStore(
+  vectorStoreId: string,
+  fileId: string
+): Promise<boolean> {
+  const openai = getOpenAIClient();
+
+  try {
+    // Delete the file from the vector store
+    const response = await openai.vectorStores.files.del(
+      vectorStoreId,
+      fileId
+    );
+
+    // Check if deletion was successful
+    if (response.deleted) {
+      console.log(`Successfully removed file ${fileId} from vector store ${vectorStoreId}`);
+      
+      // Update the timestamp for the vector store in our database
+      const knowledgeSource = await prisma.knowledgeSource.findFirst({
+        where: {
+          vectorStoreId: {
+            equals: vectorStoreId
+          }
+        }
+      });
+
+      if (knowledgeSource) {
+        await prisma.knowledgeSource.update({
+          where: { id: knowledgeSource.id },
+          data: { 
+            vectorStoreUpdatedAt: new Date() 
+          }
+        });
+      }
+      
+      return true;
+    } else {
+      console.error(`Failed to remove file ${fileId} from vector store ${vectorStoreId}`);
+      return false;
+    }
+  } catch (error) {
+    console.error(`Error removing file ${fileId} from vector store ${vectorStoreId}:`, error);
+    return false;
+  }
 } 
