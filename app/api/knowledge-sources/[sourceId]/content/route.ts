@@ -259,16 +259,30 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
 
         // Ensure the source has a vector store and add the file to it
         try {
-          // This is async but we don't need to wait for it
-          ensureVectorStore(sourceId).then(vectorStoreId => {
-            if (vectorStoreId) {
-              // Update all chatbots that use this knowledge source
-              updateChatbotsWithKnowledgeSource(sourceId);
-            }
-          });
+          // Wait for vector store operations to complete (don't use promise chaining)
+          console.log(`Ensuring vector store exists for knowledge source ${sourceId}`);
+          const vectorStoreId = await ensureVectorStore(sourceId);
+          
+          if (vectorStoreId) {
+            console.log(`Vector store ${vectorStoreId} found or created. Adding file ${uploadedFile.id} to vector store.`);
+            
+            // Add the file explicitly to the vector store
+            const { addFileToVectorStore } = await import('@/lib/vector-store');
+            await addFileToVectorStore(vectorStoreId, uploadedFile.id, 
+              file.type.includes('pdf') ? 'pdf' : 'text');
+            
+            // Update chatbots only after file has been added to vector store
+            console.log(`File added to vector store. Updating chatbots with knowledge source.`);
+            await updateChatbotsWithKnowledgeSource(sourceId);
+            
+            console.log(`Vector store integration complete for file ${fileId} (${file.name})`);
+          } else {
+            console.error(`Failed to create or find vector store for knowledge source ${sourceId}`);
+          }
         } catch (vectorError) {
-          console.error("Error integrating with vector store:", vectorError);
-          // Continue with the response even if vector store integration fails
+          console.error(`Error integrating file with vector store:`, vectorError);
+          // Even though there was an error with vector store, we'll still return success 
+          // since the file was uploaded successfully
         }
 
         // Return the file data
