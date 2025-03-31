@@ -199,10 +199,14 @@ Do not rely on your general knowledge to answer questions. Only use information 
       const tools = [];
       
       // Add tools based on available knowledge
-      if (useFileSearch) {
+      if (useFileSearch && vectorStoreIds.length > 0) {
+        // Log key information for debugging
+        console.log(`[DEBUG] Setting up file_search with vector stores: ${JSON.stringify(vectorStoreIds)}`);
+        
+        // Define file_search tool based on latest OpenAI API format
         tools.push({ 
-          type: "file_search",
-          vector_store_ids: vectorStoreIds
+          type: "file_search" 
+          // Note: Do not include vector_store_ids here, they go in tool_resources
         });
       }
       
@@ -214,30 +218,69 @@ Do not rely on your general knowledge to answer questions. Only use information 
       }
       
       // Set up tool resources for file_search if needed
-      const toolResources = useFileSearch ? {
+      const toolResources = useFileSearch && vectorStoreIds.length > 0 ? {
         file_search: {
           vector_store_ids: vectorStoreIds
         }
       } : undefined;
       
-      // Use the Responses API which properly supports file_search and web_search_preview
-      response = await openai.responses.create({
-        model: modelName,
-        instructions: fullPrompt,
-        input: userInput,
-        temperature: chatbot.temperature || 0.7,
-        max_output_tokens: chatbot.maxCompletionTokens || 1000,
-        stream: true,
-        tools: tools.length > 0 ? tools : undefined,
-        // Force the model to ALWAYS use file_search when available
-        tool_choice: useFileSearch ? 
-          { type: "function", function: { name: "file_search" } } : 
-          undefined,
-        tool_use_instructions: useFileSearch ? 
-          "You MUST ALWAYS use file_search to look up information before responding to ANY question. Never rely on your general knowledge when file_search is available." : 
-          undefined
-      } as any); // Use type assertion to bypass TS errors with the OpenAI SDK
+      // Log the full configuration for debugging
+      console.log(`[DEBUG] Tools config: ${JSON.stringify(tools)}`);
+      console.log(`[DEBUG] Tool resources: ${JSON.stringify(toolResources)}`);
+      console.log(`[DEBUG] Vector store IDs: ${JSON.stringify(vectorStoreIds)}`);
+      console.log(`[DEBUG] useFileSearch: ${useFileSearch}`);
       
+      try {
+        // Use the Responses API which properly supports file_search and web_search_preview
+        response = await openai.responses.create({
+          model: modelName,
+          instructions: fullPrompt,
+          input: userInput,
+          temperature: chatbot.temperature || 0.7,
+          max_output_tokens: chatbot.maxCompletionTokens || 1000,
+          stream: true,
+          tools: tools.length > 0 ? tools : undefined,
+          // Explicitly set both tool_choice and tool_resources
+          tool_choice: useFileSearch && vectorStoreIds.length > 0 ? 
+            { type: "function", function: { name: "file_search" } } : 
+            undefined,
+          tool_resources: toolResources,
+          tool_use_instructions: useFileSearch && vectorStoreIds.length > 0 ? 
+            "You MUST ALWAYS use file_search to look up information before responding to ANY question. Never rely on your general knowledge when file_search is available." : 
+            undefined
+        } as any); // Use type assertion to bypass TS errors with the OpenAI SDK
+      } catch (apiError) {
+        console.error("[ERROR] OpenAI API call failed:", apiError);
+        if (apiError instanceof Error) {
+          console.error(`[ERROR] Details: ${apiError.message}`);
+          if ('status' in apiError) {
+            console.error(`[ERROR] Status: ${(apiError as any).status}`);
+          }
+        }
+        
+        // Try a fallback without tool_resources if that was the issue
+        if (useFileSearch && vectorStoreIds.length > 0) {
+          console.log("[DEBUG] Attempting fallback without tool_resources");
+          response = await openai.responses.create({
+            model: modelName,
+            instructions: fullPrompt,
+            input: userInput,
+            temperature: chatbot.temperature || 0.7,
+            max_output_tokens: chatbot.maxCompletionTokens || 1000,
+            stream: true,
+            tools: [{ 
+              type: "file_search",
+              file_search: {
+                vector_store_ids: vectorStoreIds
+              }
+            }],
+            tool_choice: { type: "function", function: { name: "file_search" } }
+          } as any);
+        } else {
+          throw apiError; // Re-throw if we can't handle it
+        }
+      }
+
     } catch (error) {
       console.error('Error in OpenAI API call:', error);
       
