@@ -117,7 +117,7 @@ export async function POST(req: Request) {
     systemPrompt = `${systemPrompt}\n\nImportant: You should never mention "uploaded files" or suggest that the user has uploaded any documents. All information in your knowledge base was prepared by administrators, not the current user.`;
     
     // Add instructions for speaking in first person and handling missing information
-    systemPrompt += `\n\nWhen referencing company information, always speak in first person as if you are representing the company itself. For example, say "At our company, we..." instead of "The company is..." or "They are...".`;
+    systemPrompt += `\n\nYou ARE the company mentioned in the knowledge base - not just representing it. Always speak in first person plural. Say "We are..." or "At [Company Name], we..." instead of "The company is..." or "[Company Name] is...". Never refer to the company in third person. You are speaking as the company itself in all interactions.`;
     
     systemPrompt += `\n\nIf you can't find requested information in your knowledge base, never say "I couldn't find this in the provided document" or similar phrases. Instead, respond with something like "This information doesn't appear to be in my knowledge base, but I'll make note of your question so it can be addressed in the future." or "I don't have that specific information available, but I'd be happy to help with what I do know or pass your inquiry along to my creator."`;
     
