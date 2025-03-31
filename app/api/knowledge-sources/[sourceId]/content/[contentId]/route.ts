@@ -123,9 +123,10 @@ export async function DELETE(
             
             // Handle potential format mismatch for file ID
             let fileIdToDelete = file.openAIFileId;
-            // If it doesn't start with 'file-', let's try removing anyway but note the inconsistency
-            if (!fileIdToDelete.startsWith('file-')) {
-              console.warn(`Warning: File ID ${fileIdToDelete} doesn't follow expected format. Proceeding with deletion anyway.`);
+            // Convert file_123 to file-123 for OpenAI API if needed
+            if (fileIdToDelete.startsWith('file_')) {
+              fileIdToDelete = fileIdToDelete.replace('file_', 'file-');
+              console.log(`Reformatted file ID for vector store from ${file.openAIFileId} to ${fileIdToDelete}`);
             }
             
             const removed = await removeFileFromVectorStore(knowledgeSource.vectorStoreId, fileIdToDelete);
@@ -168,13 +169,21 @@ export async function DELETE(
       let openaiError = null;
       try {
         console.log(`Deleting file from OpenAI: ${file.openAIFileId}`);
-        const openai = new OpenAI({
-          apiKey: openAIConfig.globalAPIKey
-        });
-        await openai.files.del(file.openAIFileId);
+        const openai = getOpenAIClient();
+        
+        // Format the file ID properly for OpenAI
+        // OpenAI expects file IDs to start with 'file-' but they might be stored with 'file_'
+        let openAIFileId = file.openAIFileId;
+        if (openAIFileId.startsWith('file_')) {
+          // Convert file_123 to file-123 for OpenAI API
+          openAIFileId = openAIFileId.replace('file_', 'file-');
+          console.log(`Reformatted file ID from ${file.openAIFileId} to ${openAIFileId}`);
+        }
+        
+        await openai.files.del(openAIFileId);
         console.log(`Successfully deleted file from OpenAI`);
       } catch (error) {
-        console.error(`Error deleting OpenAI file: ${error}`);
+        console.error(`Error deleting OpenAI file:`, error);
         openaiSuccess = false;
         openaiError = error instanceof Error ? error.message : "Unknown OpenAI error";
         // Continue with database deletion even if OpenAI deletion fails

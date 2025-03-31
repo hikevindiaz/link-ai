@@ -333,15 +333,24 @@ export async function removeFileFromVectorStore(
   const openai = getOpenAIClient();
 
   try {
+    // Format the file ID properly for OpenAI
+    // OpenAI expects file IDs to start with 'file-' but they might be stored with 'file_'
+    let openAIFileId = fileId;
+    if (openAIFileId.startsWith('file_')) {
+      // Convert file_123 to file-123 for OpenAI API
+      openAIFileId = openAIFileId.replace('file_', 'file-');
+      console.log(`Reformatted file ID from ${fileId} to ${openAIFileId}`);
+    }
+    
     // Delete the file from the vector store
     const response = await openai.vectorStores.files.del(
       vectorStoreId,
-      fileId
+      openAIFileId
     );
 
     // Check if deletion was successful
     if (response.deleted) {
-      console.log(`Successfully removed file ${fileId} from vector store ${vectorStoreId}`);
+      console.log(`Successfully removed file ${openAIFileId} from vector store ${vectorStoreId}`);
       
       // Update the timestamp for the vector store in our database
       const knowledgeSource = await prisma.knowledgeSource.findFirst({
@@ -363,7 +372,7 @@ export async function removeFileFromVectorStore(
       
       return true;
     } else {
-      console.error(`Failed to remove file ${fileId} from vector store ${vectorStoreId}`);
+      console.error(`Failed to remove file ${openAIFileId} from vector store ${vectorStoreId}`);
       return false;
     }
   } catch (error) {
