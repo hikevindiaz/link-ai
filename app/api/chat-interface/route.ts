@@ -119,6 +119,9 @@ export async function POST(req: Request) {
     // Add critical instruction for first-person company usage
     systemPrompt += `\n\n[CRITICAL] YOU ARE THE COMPANY. Always use first person plural ("we", "our", "us") when referring to the company. NEVER say "[Company] is" or "[Company] has" - always say "We are" and "We have".`;
     
+    // Add guardrail for handling unknown company questions
+    systemPrompt += `\n\n[GUARDRAIL] If someone asks about a company that's not in your knowledge base, DO NOT pretend to be that company or make up information about it. Clearly state that you don't have information about that specific company and can only speak as the company in your knowledge base.`;
+    
     // Add instructions for speaking in first person and handling missing information
     systemPrompt += `\n\nYou ARE the company mentioned in the knowledge base - not just representing it. Always speak in first person plural. Say "We are..." or "At [Company Name], we..." instead of "The company is..." or "[Company Name] is...". Never refer to the company in third person. You are speaking as the company itself in all interactions.`;
     
@@ -147,7 +150,10 @@ export async function POST(req: Request) {
     
     // Add context about knowledge base access without mentioning uploads
     if (useFileSearch) {
-      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. Use this information when relevant to provide precise answers. Important: Never mention "uploaded files" or suggest that the user has uploaded any documents. The knowledge base was prepared by administrators, not the current user.`;
+      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. Use this information when relevant to provide precise answers. IMPORTANT: Before answering any question, you MUST search the knowledge base using the file_search tool. Only respond with information that is explicitly found in the knowledge base. If the information is not available in your knowledge base, clearly state that you don't have that information rather than making up an answer.`;
+      
+      // Log vector store IDs to help with debugging
+      console.log(`[${process.env.VERCEL_ENV || 'local'}] Vector store IDs available: ${JSON.stringify(vectorStoreIds)}`);
     }
     
     const fullPrompt = !useFileSearch && !useWebSearch && knowledge
@@ -156,6 +162,7 @@ export async function POST(req: Request) {
       
     // Add debugging with environment marker
     console.log(`[${process.env.VERCEL_ENV || 'local'}] Using prompt: ${fullPrompt.substring(0, 200)}...`);
+    console.log(`[${process.env.VERCEL_ENV || 'local'}] Use file search: ${useFileSearch}, Vector stores available: ${vectorStoreIds.length}`);
 
     // Prepare messages for the Responses API - convert format from Chat Completions to Responses
     // The Responses API accepts a string 'input' and a system_prompt parameter instead of messages array
@@ -216,10 +223,11 @@ export async function POST(req: Request) {
         max_output_tokens: chatbot.maxCompletionTokens || 1000,
         stream: true,
         tools: tools.length > 0 ? tools : undefined,
-        // Removing tool_resources as it's not supported
-        // tool_resources: toolResources,
-        // Optionally force the model to use the right tools when needed
-        tool_choice: tools.length > 0 ? "auto" : undefined
+        // Force the model to consider using tools when they're available
+        tool_choice: useFileSearch ? "auto" : undefined,
+        tool_use_instructions: useFileSearch ? 
+          "Always use file_search to look up information before responding. Don't make up information that isn't in the knowledge base." : 
+          undefined
       } as any); // Use type assertion to bypass TS errors with the OpenAI SDK
       
     } catch (error) {
