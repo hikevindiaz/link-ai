@@ -90,20 +90,24 @@ export async function DELETE(
       const file = files[0] as { id: string; blobUrl: string; openAIFileId: string };
       console.log(`Found file to delete: ${file.id} (${file.openAIFileId})`);
       
-      // Get OpenAI API key for the user
-      const openAIConfig = await db.openAIConfig.findUnique({
-        select: {
-          globalAPIKey: true,
-        },
-        where: {
-          userId: session.user.id
+      // Use getOpenAIKey instead of directly querying for the API key
+      let apiKey: string;
+      try {
+        // Import the getOpenAIKey function
+        const { getOpenAIKey } = await import("@/lib/openai");
+        apiKey = await getOpenAIKey(session.user.id);
+        
+        if (!apiKey) {
+          console.error("Could not retrieve OpenAI API key");
+          return new Response(
+            JSON.stringify({ error: "Missing OpenAI API key" }),
+            { status: 400, headers: { "Content-Type": "application/json" } }
+          );
         }
-      });
-
-      if (!openAIConfig?.globalAPIKey) {
-        console.error("Missing OpenAI API key");
+      } catch (error) {
+        console.error("Error retrieving OpenAI API key:", error);
         return new Response(
-          JSON.stringify({ error: "Missing OpenAI API key" }),
+          JSON.stringify({ error: "Failed to retrieve OpenAI API key" }),
           { status: 400, headers: { "Content-Type": "application/json" } }
         );
       }
@@ -169,6 +173,8 @@ export async function DELETE(
       let openaiError = null;
       try {
         console.log(`Deleting file from OpenAI: ${file.openAIFileId}`);
+        
+        // Get the OpenAI client
         const openai = getOpenAIClient();
         
         // Format the file ID properly for OpenAI
