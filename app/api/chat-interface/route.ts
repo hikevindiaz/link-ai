@@ -113,6 +113,9 @@ export async function POST(req: Request) {
     // Combine the chatbot's prompt with knowledge and messages
     let systemPrompt = chatbot.prompt || 'You are a helpful AI assistant.';
     
+    // Add general instruction about not mentioning uploads
+    systemPrompt = `${systemPrompt}\n\nImportant: You should never mention "uploaded files" or suggest that the user has uploaded any documents. All information in your knowledge base was prepared by administrators, not the current user.`;
+    
     // Create a formatted list of allowed URLs for web search
     let authorizedDomains = '';
     if (useWebSearch && websiteUrls.length > 0) {
@@ -136,7 +139,7 @@ export async function POST(req: Request) {
     
     // Add context about knowledge base access without mentioning uploads
     if (useFileSearch) {
-      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. Use this information when relevant to provide precise answers.`;
+      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. Use this information when relevant to provide precise answers. Important: Never mention "uploaded files" or suggest that the user has uploaded any documents. The knowledge base was prepared by administrators, not the current user.`;
     }
     
     const fullPrompt = !useFileSearch && !useWebSearch && knowledge
