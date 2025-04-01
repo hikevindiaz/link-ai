@@ -13,12 +13,52 @@ const routeContextSchema = z.object({
 
 // Schema for website URL validation
 const websiteSchema = z.object({
-  urls: z.array(z.string().url("Invalid URL format")).min(1, "At least one URL is required"),
+  urls: z.array(
+    z.string()
+      .min(1, "URL cannot be empty")
+      .transform(url => {
+        // Try to make the URL valid by adding https:// if it doesn't have a protocol
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = `https://${url}`;
+        }
+        return url;
+      })
+      .refine(
+        (url) => {
+          try {
+            new URL(url);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        },
+        { message: "Invalid URL format" }
+      )
+  ).min(1, "At least one URL is required"),
   instructions: z.string().optional()
 }).or(
   // Alternative schema for backward compatibility
   z.object({
-    url: z.string().url("Invalid URL format"),
+    url: z.string()
+      .min(1, "URL cannot be empty")
+      .transform(url => {
+        // Try to make the URL valid by adding https:// if it doesn't have a protocol
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = `https://${url}`;
+        }
+        return url;
+      })
+      .refine(
+        (url) => {
+          try {
+            new URL(url);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        },
+        { message: "Invalid URL format" }
+      ),
     searchType: z.string().optional(),
     instructions: z.string().optional()
   })
@@ -103,8 +143,33 @@ export async function POST(
     }
 
     // Parse request body
-    const json = await req.json();
-    const body = websiteSchema.parse(json);
+    let json;
+    try {
+      json = await req.json();
+      console.log('Received request body:', JSON.stringify(json));
+    } catch (e) {
+      console.error('Error parsing request JSON:', e);
+      return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate the input against our schema
+    let body;
+    try {
+      body = websiteSchema.parse(json);
+      console.log('Validated body:', JSON.stringify(body));
+    } catch (e) {
+      console.error('Schema validation error:', e);
+      if (e instanceof z.ZodError) {
+        return new Response(JSON.stringify(e.errors), {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      throw e;
+    }
 
     // Determine which URLs to process based on the schema
     let urlsToProcess: string[] = [];
@@ -133,7 +198,7 @@ export async function POST(
             const id = crypto.randomUUID();
             
             const websiteContent = await db.$executeRaw`
-              INSERT INTO website_contents (id, url, search_type, instructions, "knowledgeSourceId", created_at, updated_at)
+              INSERT INTO website_contents (id, url, "searchType", instructions, "knowledgeSourceId", created_at, updated_at)
               VALUES (${id}, ${url}, 'live', ${instructions}, ${sourceId}, NOW(), NOW())
               RETURNING id;
             `;
