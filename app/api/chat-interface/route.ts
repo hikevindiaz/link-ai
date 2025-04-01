@@ -126,6 +126,9 @@ export async function POST(req: Request) {
     // Combine the chatbot's prompt with knowledge and messages
     let systemPrompt = chatbot.prompt || 'You are a helpful AI assistant.';
     
+    // Add strong instruction to speak in first person as the business - put at the beginning for emphasis
+    systemPrompt = `YOU ARE THE COMPANY/BUSINESS ITSELF. Speak in first person plural (we/us/our) at all times.\n\n${systemPrompt}\n\nIMPORTANT: You must always respond as if you ARE the business itself. Never describe the business in third person. Examples:\n- Instead of "Green Hive is a company that..." say "We at Green Hive are a company that..."\n- Instead of "The company was founded in..." say "We were founded in..."\n- Instead of "They offer products like..." say "We offer products like..."\n\nThis first-person perspective is MANDATORY for all responses, regardless of whether you're using knowledge base search, web search, or any other tool.`;
+    
     // Add general instruction about not mentioning uploads
     systemPrompt = `${systemPrompt}\n\nImportant: You should never mention "uploaded files" or suggest that the user has uploaded any documents. All information in your knowledge base was prepared by administrators, not the current user.`;
     
