@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import crypto from 'crypto';
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -123,20 +124,47 @@ export async function POST(
     const results = await Promise.all(
       urlsToProcess.map(async (url) => {
         try {
-          // Use Prisma client now that types are updated
-          const websiteContent = await db.websiteContent.create({
-            data: {
-              url: url,
-              searchType: 'live', // Always set to 'live' for Live Search URLs
-              instructions: instructions, // Add instructions if provided
-              knowledgeSource: {
-                connect: {
-                  id: sourceId,
+          // Handle the instructions field with raw SQL or type casting
+          // The 'instructions' field might not be in the Prisma client types yet
+          
+          // Option 1: Using raw SQL to create the website content with instructions
+          if (instructions) {
+            // Generate a random ID
+            const id = crypto.randomUUID();
+            
+            const websiteContent = await db.$executeRaw`
+              INSERT INTO website_contents (id, url, search_type, instructions, "knowledgeSourceId", created_at, updated_at)
+              VALUES (${id}, ${url}, 'live', ${instructions}, ${sourceId}, NOW(), NOW())
+              RETURNING id;
+            `;
+            
+            // Find the newly created content to return its ID
+            const result = await db.websiteContent.findFirst({
+              where: {
+                url: url,
+                knowledgeSourceId: sourceId,
+              },
+              orderBy: {
+                createdAt: 'desc',
+              },
+            });
+            
+            return { success: true, url, id: result?.id || id };
+          } else {
+            // If no instructions, use the standard Prisma client
+            const websiteContent = await db.websiteContent.create({
+              data: {
+                url: url,
+                searchType: 'live', // Always set to 'live' for Live Search URLs
+                knowledgeSource: {
+                  connect: {
+                    id: sourceId,
+                  },
                 },
               },
-            },
-          });
-          return { success: true, url, id: websiteContent.id };
+            });
+            return { success: true, url, id: websiteContent.id };
+          }
         } catch (error) {
           console.error(`Error saving URL ${url}:`, error);
           return { success: false, url, error: error instanceof Error ? error.message : 'Unknown error' };
