@@ -224,24 +224,6 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
       // Generate a file ID
       fileId = generateFileId();
 
-      // Create the file record in the database first
-      await db.$executeRaw`
-        INSERT INTO "files" (
-          "id", 
-          "name", 
-          "userId", 
-          "knowledgeSourceId", 
-          "created_at"
-        ) 
-        VALUES (
-          ${fileId}, 
-          ${file.name}, 
-          ${session.user.id}, 
-          ${sourceId}, 
-          ${new Date()}
-        )
-      `;
-
       // Upload file to Vercel Blob with timeout
       const blob = await Promise.race<{ url: string }>([
         put(file.name, file, {
@@ -251,12 +233,6 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
           setTimeout(() => reject(new Error('Blob upload timed out')), 8000)
         )
       ]);
-
-      // Update file record with blob URL
-      await db.file.update({
-        where: { id: fileId },
-        data: { blobUrl: blob.url }
-      });
 
       // Upload file to OpenAI for vector search with timeout
       const openai = getOpenAIClient();
@@ -270,10 +246,17 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
         )
       ]);
 
-      // Update file record with OpenAI file ID
-      await db.file.update({
-        where: { id: fileId },
-        data: { openAIFileId: uploadedFile.id }
+      // Create the file record in the database with all required fields
+      await db.file.create({
+        data: {
+          id: fileId,
+          name: file.name,
+          userId: session.user.id,
+          knowledgeSourceId: sourceId,
+          blobUrl: blob.url,
+          openAIFileId: uploadedFile.id,
+          createdAt: new Date()
+        }
       });
 
       // Ensure the source has a vector store and add the file to it
