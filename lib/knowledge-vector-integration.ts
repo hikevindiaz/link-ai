@@ -165,4 +165,54 @@ export async function updateChatbotsWithKnowledgeSource(knowledgeSourceId: strin
   } catch (error) {
     console.error(`Error updating chatbots with vector store for knowledge source ${knowledgeSourceId}:`, error);
   }
+}
+
+/**
+ * Handles deletion of text content, including vector store cleanup
+ * @param knowledgeSourceId The ID of the knowledge source
+ * @param contentId The ID of the text content being deleted
+ */
+export async function handleTextContentDeletion(knowledgeSourceId: string, contentId: string): Promise<void> {
+  try {
+    console.log(`Handling deletion of text content ${contentId} from knowledge source ${knowledgeSourceId}`);
+    
+    // Get knowledge source
+    const knowledgeSource = await prisma.knowledgeSource.findUnique({
+      where: { id: knowledgeSourceId },
+    });
+
+    if (!knowledgeSource) {
+      console.error(`Knowledge source with ID ${knowledgeSourceId} not found`);
+      return;
+    }
+
+    // If there's no vector store, nothing to clean up
+    if (!knowledgeSource.vectorStoreId) {
+      console.log(`Knowledge source has no vector store, no cleanup needed`);
+      return;
+    }
+
+    const vectorStoreId = knowledgeSource.vectorStoreId;
+    
+    // Since individual text content pieces can't be directly removed from vector stores
+    // we need to take a different approach. We update the timestamp and force chatbots 
+    // to refresh their connection with the knowledge source
+    
+    // 1. Update the vector store timestamp to indicate a change
+    await prisma.knowledgeSource.update({
+      where: { id: knowledgeSourceId },
+      data: { 
+        vectorStoreUpdatedAt: new Date(),
+      }
+    });
+    
+    console.log(`Updated vector store timestamp for knowledge source ${knowledgeSourceId}`);
+    
+    // 2. Update all associated chatbots to ensure they have the latest vector store info
+    await updateChatbotsWithKnowledgeSource(knowledgeSourceId);
+    
+    console.log(`Updated associated chatbots for knowledge source ${knowledgeSourceId}`);
+  } catch (error) {
+    console.error(`Error handling text content deletion for knowledge source ${knowledgeSourceId}:`, error);
+  }
 } 

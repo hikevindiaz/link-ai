@@ -114,14 +114,13 @@ export async function POST(
       },
     });
 
-    // Process to vector store
+    // Process to vector store - fully awaited to ensure completion
     try {
-      // This is async but we don't need to wait for it to complete
-      processContentToVectorStore(sourceId, {
+      console.log(`Processing text content ${textContent.id} to vector store for knowledge source ${sourceId}`);
+      await processContentToVectorStore(sourceId, {
         content: body.content
-      }, 'text').catch(error => {
-        console.error(`Error processing text to vector store:`, error);
-      });
+      }, 'text');
+      console.log(`Successfully processed text content to vector store for knowledge source ${sourceId}`);
     } catch (vectorStoreError) {
       console.error(`Error adding text to vector store:`, vectorStoreError);
       // Continue even if vector store processing fails
@@ -181,6 +180,11 @@ export async function PUT(
       });
     }
 
+    // Get knowledge source info for vector store handling
+    const knowledgeSource = await db.knowledgeSource.findUnique({
+      where: { id: sourceId }
+    });
+
     // Update text content
     const textContent = await db.textContent.update({
       where: {
@@ -192,14 +196,34 @@ export async function PUT(
       },
     });
 
-    // Process updated content to vector store
+    // Process updated content to vector store - fully awaited
     try {
-      // This is async but we don't need to wait for it to complete
-      processContentToVectorStore(sourceId, {
-        content: body.content
-      }, 'text').catch(error => {
-        console.error(`Error processing updated text to vector store:`, error);
-      });
+      console.log(`Processing updated text content ${textContent.id} to vector store for knowledge source ${sourceId}`);
+      
+      // If this knowledge source already has a vector store ID, use a different approach
+      if (knowledgeSource?.vectorStoreId) {
+        // First, mark the knowledge source so its vector store will be updated
+        await db.knowledgeSource.update({
+          where: { id: sourceId },
+          data: { vectorStoreUpdatedAt: new Date() }
+        });
+        
+        // Then process the new content to add it to the vector store
+        await processContentToVectorStore(sourceId, {
+          content: body.content
+        }, 'text');
+        
+        // Finally update all associated chatbots
+        const { updateChatbotsWithKnowledgeSource } = await import('@/lib/knowledge-vector-integration');
+        await updateChatbotsWithKnowledgeSource(sourceId);
+      } else {
+        // No vector store yet, just process normally
+        await processContentToVectorStore(sourceId, {
+          content: body.content
+        }, 'text');
+      }
+      
+      console.log(`Successfully processed updated text content to vector store for knowledge source ${sourceId}`);
     } catch (vectorStoreError) {
       console.error(`Error adding updated text to vector store:`, vectorStoreError);
       // Continue even if vector store processing fails

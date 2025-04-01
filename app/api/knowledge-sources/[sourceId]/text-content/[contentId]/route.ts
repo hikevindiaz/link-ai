@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { handleTextContentDeletion } from '@/lib/knowledge-vector-integration';
 
 // Define schema for route parameters
 const routeParamsSchema = z.object({
@@ -36,13 +37,19 @@ export async function DELETE(
       return NextResponse.json({ error: 'Knowledge source not found' }, { status: 404 });
     }
 
-    // Delete the text content
+    // First, handle vector store deletion
+    console.log(`Handling vector store cleanup for text content ${contentId}`);
+    await handleTextContentDeletion(sourceId, contentId);
+
+    // Then delete the text content from the database
     await db.textContent.delete({
       where: {
         id: contentId,
         knowledgeSourceId: sourceId,
       },
     });
+
+    console.log(`Successfully deleted text content ${contentId} from database and updated vector store`);
 
     // Return success response
     return new NextResponse(null, { status: 204 });

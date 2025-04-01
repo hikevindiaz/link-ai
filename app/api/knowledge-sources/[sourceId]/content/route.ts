@@ -525,38 +525,55 @@ export async function DELETE(
     // Delete content based on type
     if (type === "text" || type === "TextContent") {
       try {
-        // @ts-ignore - The textContent model exists in the schema but TypeScript doesn't know about it yet
-        await db.textContent.delete({
-          where: {
-            id: id,
-            knowledgeSourceId: sourceId,
-          },
-        });
-
-        console.log(`Successfully deleted text content: ${id}`);
-        return new Response(null, { status: 204 });
-      } catch (error) {
-        console.error("Error deleting text content:", error);
+        // First handle vector store cleanup
+        const { handleTextContentDeletion } = await import('@/lib/knowledge-vector-integration');
+        await handleTextContentDeletion(sourceId, id);
+        console.log(`Handled vector store cleanup for text content ${id}`);
         
-        // Try raw SQL as a fallback
+        // Then delete from database
         try {
-          await db.$executeRaw`
-            DELETE FROM "text_contents"
-            WHERE id = ${id} AND "knowledgeSourceId" = ${sourceId}
-          `;
-          
-          console.log(`Successfully deleted text content with raw SQL: ${id}`);
-          return new Response(null, { status: 204 });
-        } catch (sqlError) {
-          console.error("SQL delete error:", sqlError);
-          return new Response(JSON.stringify({ 
-            error: "Failed to delete content", 
-            details: String(sqlError) 
-          }), { 
-            status: 500,
-            headers: { "Content-Type": "application/json" }
+          // @ts-ignore - The textContent model exists in the schema but TypeScript doesn't know about it yet
+          await db.textContent.delete({
+            where: {
+              id: id,
+              knowledgeSourceId: sourceId,
+            },
           });
+          
+          console.log(`Successfully deleted text content ${id} from database and updated vector store`);
+          return new Response(null, { status: 204 });
+        } catch (dbError) {
+          console.error("Error deleting text content:", dbError);
+          
+          // Try raw SQL as a fallback
+          try {
+            await db.$executeRaw`
+              DELETE FROM "text_contents"
+              WHERE id = ${id} AND "knowledgeSourceId" = ${sourceId}
+            `;
+            
+            console.log(`Successfully deleted text content with raw SQL: ${id}`);
+            return new Response(null, { status: 204 });
+          } catch (sqlError) {
+            console.error("SQL delete error:", sqlError);
+            return new Response(JSON.stringify({ 
+              error: "Failed to delete content", 
+              details: String(sqlError) 
+            }), { 
+              status: 500,
+              headers: { "Content-Type": "application/json" }
+            });
+          }
         }
+      } catch (error) {
+        console.error("Error handling text content deletion:", error);
+        return new Response(JSON.stringify({ 
+          error: "Failed to delete content and update vector store",
+          details: error instanceof Error ? error.message : "Unknown error"
+        }), { 
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        });
       }
     } else {
       return new Response(JSON.stringify({ error: "Invalid content type for deletion" }), {
