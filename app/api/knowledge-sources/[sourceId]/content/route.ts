@@ -224,7 +224,72 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
       // Generate a file ID
       fileId = generateFileId();
 
-      // Upload file to Vercel Blob with timeout
+      // For files larger than 5MB, use chunked upload
+      if (file.size > 5 * 1024 * 1024) {
+        console.log('File too large, using chunked upload...');
+        
+        // Upload to Vercel Blob with timeout
+        const blob = await Promise.race<{ url: string }>([
+          put(file.name, file, {
+            access: 'public',
+          }),
+          new Promise<{ url: string }>((_, reject) => 
+            setTimeout(() => reject(new Error('Blob upload timed out')), 30000)
+          )
+        ]);
+
+        // Create a temporary file record
+        await db.file.create({
+          data: {
+            id: fileId,
+            name: file.name,
+            userId: session.user.id,
+            knowledgeSourceId: sourceId,
+            blobUrl: blob.url,
+            openAIFileId: `temp_${fileId}`, // Temporary OpenAI file ID
+            createdAt: new Date()
+          }
+        });
+
+        // Start chunked upload process
+        console.log(`Initiating chunked upload for file ${fileId}`);
+        const chunkResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/knowledge-sources/${sourceId}/content/${fileId}/chunked-upload`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileId: fileId,
+            fileName: file.name,
+            fileType: file.type,
+            fileSize: file.size
+          }),
+        });
+
+        if (!chunkResponse.ok) {
+          const errorData = await chunkResponse.json();
+          throw new Error(`Failed to initiate chunked upload: ${errorData.error || chunkResponse.statusText}`);
+        }
+
+        // Return success with a message about background processing
+        return new Response(
+          JSON.stringify({
+            id: fileId,
+            name: file.name,
+            url: blob.url,
+            message: 'File upload started in background. The file will be processed and added to the vector store shortly.'
+          }),
+          { 
+            status: 202,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // For smaller files, proceed with direct upload
+      console.log('Processing file with direct upload...');
+      
+      // Upload to Vercel Blob with timeout
       const blob = await Promise.race<{ url: string }>([
         put(file.name, file, {
           access: 'public',
@@ -234,81 +299,19 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
         )
       ]);
 
-      // Upload file to OpenAI for vector search with timeout and retry logic
+      // Upload to OpenAI with timeout
       const openai = getOpenAIClient();
-      let uploadedFile: OpenAI.Files.FileObject;
-      
-      try {
-        // First attempt with timeout
-        uploadedFile = await Promise.race<OpenAI.Files.FileObject>([
-          openai.files.create({
-            file: file,
-            purpose: "assistants"
-          }),
-          new Promise<OpenAI.Files.FileObject>((_, reject) => 
-            setTimeout(() => reject(new Error('OpenAI upload timed out')), 30000)
-          )
-        ]);
-      } catch (error) {
-        // If first attempt fails, try with chunked upload for files larger than 5MB
-        if (file.size > 5 * 1024 * 1024) {
-          console.log('File too large, attempting chunked upload...');
-          // Create a temporary file record first
-          await db.file.create({
-            data: {
-              id: fileId,
-              name: file.name,
-              userId: session.user.id,
-              knowledgeSourceId: sourceId,
-              blobUrl: blob.url,
-              openAIFileId: `temp_${fileId}`, // Add a temporary OpenAI file ID
-              createdAt: new Date()
-            } as any // Use type assertion to bypass strict type checking temporarily
-          });
+      const uploadedFile = await Promise.race<OpenAI.Files.FileObject>([
+        openai.files.create({
+          file: file,
+          purpose: "assistants"
+        }),
+        new Promise<OpenAI.Files.FileObject>((_, reject) => 
+          setTimeout(() => reject(new Error('OpenAI upload timed out')), 30000)
+        )
+      ]);
 
-          // Start a background process for chunked upload
-          // This will be handled by a separate endpoint
-          console.log(`Initiating chunked upload for file ${fileId}`);
-          const chunkResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/knowledge-sources/${sourceId}/content/${fileId}/chunked-upload`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              fileId: fileId,
-              fileName: file.name,
-              fileType: file.type,
-              fileSize: file.size
-            }),
-          });
-
-          if (!chunkResponse.ok) {
-            const errorData = await chunkResponse.json();
-            throw new Error(`Failed to initiate chunked upload: ${errorData.error || chunkResponse.statusText}`);
-          }
-
-          const chunkResult = await chunkResponse.json();
-          console.log(`Chunked upload initiated successfully:`, chunkResult);
-
-          // Return success with a message about background processing
-          return new Response(
-            JSON.stringify({
-              id: fileId,
-              name: file.name,
-              url: blob.url,
-              message: 'File upload started in background. The file will be processed and added to the vector store shortly.'
-            }),
-            { 
-              status: 202,
-              headers: { "Content-Type": "application/json" }
-            }
-          );
-        } else {
-          throw error;
-        }
-      }
-
-      // Create the file record in the database with all required fields
+      // Create the file record in the database
       await db.file.create({
         data: {
           id: fileId,
@@ -321,44 +324,28 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
         }
       });
 
-      // Ensure the source has a vector store and add the file to it
-      try {
-        console.log(`Ensuring vector store exists for knowledge source ${sourceId}`);
-        const vectorStoreId = await ensureVectorStore(sourceId);
-        
-        if (vectorStoreId) {
-          console.log(`Vector store ${vectorStoreId} found or created. Adding file ${uploadedFile.id} to vector store.`);
-          
-          // Add the file to vector store with timeout
-          await Promise.race<void>([
-            addFileToVectorStore(vectorStoreId, uploadedFile.id, 
-              file.type.includes('pdf') ? 'pdf' : 'text'),
-            new Promise<void>((_, reject) => 
-              setTimeout(() => reject(new Error('Vector store addition timed out')), 30000)
-            )
-          ]);
-          
-          // Update chatbots only after file has been added to vector store
-          console.log(`File added to vector store. Updating chatbots with knowledge source.`);
-          await updateChatbotsWithKnowledgeSource(sourceId);
-          
-          console.log(`Vector store integration complete for file ${fileId} (${file.name})`);
-        } else {
-          console.error(`Failed to create or find vector store for knowledge source ${sourceId}`);
-        }
-      } catch (vectorError) {
-        console.error(`Error integrating file with vector store:`, vectorError);
-        // Even though there was an error with vector store, we'll still return success 
-        // since the file was uploaded successfully
-      }
+      // Start vector store integration in the background
+      console.log(`Starting vector store integration for file ${fileId}`);
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/knowledge-sources/${sourceId}/content/${fileId}/vector`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          openAIFileId: uploadedFile.id
+        }),
+      }).catch(error => {
+        console.error('Error in background vector store integration:', error);
+      });
 
-      // Return the file data
+      // Return success immediately
       return new Response(
         JSON.stringify({
           id: fileId,
           name: file.name,
           url: blob.url,
-          openAIFileId: uploadedFile.id
+          openAIFileId: uploadedFile.id,
+          message: 'File uploaded successfully. Vector store integration is processing in the background.'
         }),
         { 
           status: 200,
@@ -368,10 +355,9 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
     } catch (error) {
       console.error("Error in file upload process:", error);
       
-      // If we created a file record but failed later, try to clean it up
+      // Clean up any temporary file records
       if (fileId) {
         try {
-          // First check if the file exists
           const existingFile = await db.file.findUnique({
             where: { id: fileId }
           });
@@ -381,12 +367,9 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
               where: { id: fileId }
             });
             console.log(`Cleaned up file record for ${fileId}`);
-          } else {
-            console.log(`File record ${fileId} does not exist, skipping cleanup`);
           }
         } catch (deleteError) {
           console.error("Error cleaning up failed file upload:", deleteError);
-          // Don't throw here, we want to return the original error
         }
       }
       

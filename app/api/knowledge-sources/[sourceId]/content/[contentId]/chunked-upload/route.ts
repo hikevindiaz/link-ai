@@ -35,10 +35,10 @@ export async function POST(
     console.log(`Found file record with blob URL: ${fileRecord.blobUrl}`);
 
     // Get the file from the blob URL
-    const blobResponse = await Promise.race([
-      fetch(fileRecord.blobUrl) as Promise<Response>,
+    const blobResponse = await Promise.race<Response>([
+      fetch(fileRecord.blobUrl),
       new Promise<Response>((_, reject) => 
-        setTimeout(() => reject(new Error('Blob fetch timed out')), 30000)
+        setTimeout(() => reject(new Error('Blob fetch timed out')), 60000)
       )
     ]);
 
@@ -55,13 +55,13 @@ export async function POST(
     // Upload to OpenAI with increased timeout
     console.log('Uploading file to OpenAI...');
     const openai = getOpenAIClient();
-    const uploadedFile = await Promise.race([
+    const uploadedFile = await Promise.race<{ id: string }>([
       openai.files.create({
         file: file,
         purpose: "assistants"
-      }) as Promise<{ id: string }>,
+      }),
       new Promise<{ id: string }>((_, reject) => 
-        setTimeout(() => reject(new Error('OpenAI upload timed out')), 30000)
+        setTimeout(() => reject(new Error('OpenAI upload timed out')), 60000)
       )
     ]);
 
@@ -75,39 +75,24 @@ export async function POST(
 
     console.log('Updated file record with OpenAI file ID');
 
-    // Ensure vector store exists and add the file
-    console.log(`Ensuring vector store exists for knowledge source ${params.sourceId}`);
-    const vectorStoreId = await ensureVectorStore(params.sourceId);
-    
-    if (vectorStoreId) {
-      console.log(`Vector store ${vectorStoreId} found or created. Adding file ${uploadedFile.id} to vector store.`);
-      
-      try {
-        // Add the file to vector store with timeout
-        await Promise.race([
-          addFileToVectorStore(vectorStoreId, uploadedFile.id, 
-            fileType.includes('pdf') ? 'pdf' : 'text') as Promise<void>,
-          new Promise<void>((_, reject) => 
-            setTimeout(() => reject(new Error('Vector store addition timed out')), 30000)
-          )
-        ]);
-        
-        console.log(`File added to vector store successfully`);
-        
-        // Update chatbots only after file has been added to vector store
-        console.log(`Updating chatbots with knowledge source ${params.sourceId}`);
-        await updateChatbotsWithKnowledgeSource(params.sourceId);
-        
-        console.log(`Vector store integration complete for file ${fileId}`);
-      } catch (vectorError) {
-        console.error(`Error integrating file with vector store:`, vectorError);
-        // Don't throw here, we'll still return success since the file was uploaded
-      }
-    } else {
-      console.error(`Failed to create or find vector store for knowledge source ${params.sourceId}`);
-    }
+    // Start vector store integration in the background
+    console.log(`Starting vector store integration for file ${fileId}`);
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/knowledge-sources/${params.sourceId}/content/${fileId}/vector`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        openAIFileId: uploadedFile.id
+      }),
+    }).catch(error => {
+      console.error('Error in background vector store integration:', error);
+    });
 
-    return new NextResponse(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ 
+      success: true,
+      message: 'File uploaded successfully. Vector store integration is processing in the background.'
+    }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -115,10 +100,9 @@ export async function POST(
   } catch (error) {
     console.error('Error in chunked upload:', error);
     
-    // If we have a fileId, try to clean up the temporary file record
+    // Clean up any temporary file records
     if (fileId) {
       try {
-        // First check if the file exists
         const existingFile = await db.file.findUnique({
           where: { id: fileId }
         });
@@ -128,16 +112,13 @@ export async function POST(
             where: { id: fileId }
           });
           console.log(`Cleaned up file record for ${fileId}`);
-        } else {
-          console.log(`File record ${fileId} does not exist, skipping cleanup`);
         }
       } catch (deleteError) {
         console.error('Error cleaning up failed chunked upload:', deleteError);
-        // Don't throw here, we want to return the original error
       }
     }
 
-    return new NextResponse(
+    return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Failed to process chunked upload'
       }),
