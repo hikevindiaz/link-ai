@@ -6,6 +6,7 @@ import { del } from '@vercel/blob';
 import { removeFileFromVectorStore } from "@/lib/vector-store";
 import OpenAI from "openai";
 import { getOpenAIClient } from "@/lib/openai";
+import { NextResponse } from "next/server";
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -35,134 +36,115 @@ async function verifyUserHasAccessToSource(sourceId: string, userId: string) {
 // DELETE endpoint to remove content (text, QA pairs, etc.)
 export async function DELETE(
   req: Request,
-  context: z.infer<typeof routeContextSchema>
+  { params }: { params: { sourceId: string; contentId: string } }
 ) {
   try {
-    console.log("DELETE request received for content");
-    
+    // Check for user session
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      console.log("Unauthorized: No session or user");
-      return new Response("Unauthorized", { status: 403 });
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Validate route params
-    const { params } = routeContextSchema.parse(context);
-    const { sourceId, contentId } = params;
-    
-    console.log(`Params received - sourceId: ${sourceId}, contentId: ${contentId}`);
+    // Get file details first to check for associations
+    const file = await db.file.findUnique({
+      where: { 
+        id: params.contentId
+      },
+      include: {
+        crawler: true,
+        knowledgeSource: true
+      }
+    });
 
-    // Verify user has access to the knowledge source
-    const hasAccess = await verifyUserHasAccessToSource(sourceId, session.user.id);
-    if (!hasAccess) {
-      console.log("Unauthorized: User does not have access to this source");
-      return new Response("Unauthorized", { status: 403 });
+    if (!file) {
+      return NextResponse.json({ error: "File not found" }, { status: 404 });
     }
 
-    console.log(`Attempting to delete content: ${contentId} from source: ${sourceId}`);
+    // Verify the file belongs to the correct knowledge source
+    if (file.knowledgeSourceId !== params.sourceId) {
+      return NextResponse.json({ error: "File does not belong to this knowledge source" }, { status: 403 });
+    }
 
-    // Check content type from query params
-    const url = new URL(req.url);
-    const type = url.searchParams.get("type") || "file";
-
-    if (type === "file") {
-      // Get the file details first to check for crawler association
-      const fileDetails = await db.file.findUnique({
-        where: { id: contentId },
-        select: { crawlerId: true, openAIFileId: true }
-      });
-
-      if (fileDetails?.crawlerId) {
-        console.log(`File has an associated crawler with ID: ${fileDetails.crawlerId}. Deleting crawler too.`);
-        
-        try {
-          // Delete the crawler first
-          await db.crawler.delete({
-            where: { id: fileDetails.crawlerId }
-          });
-          console.log(`Successfully deleted crawler: ${fileDetails.crawlerId}`);
-        } catch (crawlerError) {
-          console.error('Error deleting associated crawler:', crawlerError);
-          // Continue with file deletion even if crawler deletion fails
-        }
-      }
-
-      // Try to delete the OpenAI file if available
-      if (fileDetails?.openAIFileId && !fileDetails.openAIFileId.startsWith('crawl_')) {
-        try {
-          const openai = getOpenAIClient();
-          await openai.files.del(fileDetails.openAIFileId);
-          console.log(`Deleted OpenAI file: ${fileDetails.openAIFileId}`);
-        } catch (openaiError) {
-          console.error('Error deleting OpenAI file:', openaiError);
-          // Continue with file deletion even if OpenAI file deletion fails
-        }
-      }
-
-      // Delete the file from DB
+    // Delete associated crawler if it exists
+    if (file.crawler) {
       try {
-        await db.file.delete({
-          where: {
-            id: contentId,
-            knowledgeSourceId: sourceId,
-          },
+        await db.crawler.delete({
+          where: { id: file.crawler.id }
         });
-        
-        console.log(`Successfully deleted file content: ${contentId}`);
-      } catch (error) {
-        console.error('Error deleting file content:', error);
-        return new Response(
-          JSON.stringify({ error: "Failed to delete file content" }),
-          { status: 500, headers: { "Content-Type": "application/json" } }
-        );
+        console.log(`Deleted associated crawler: ${file.crawler.id}`);
+      } catch (crawlerError) {
+        console.error('Error deleting crawler:', crawlerError);
+        // Continue with file deletion even if crawler deletion fails
       }
-    } else if (type === "text") {
-      // Delete text content
-      try {
-        await db.$executeRaw`
-          DELETE FROM "text_contents"
-          WHERE id = ${contentId} AND "knowledgeSourceId" = ${sourceId}
-        `;
-      } catch (error) {
-        console.error('Error deleting text content:', error);
-        return new Response(
-          JSON.stringify({ error: "Failed to delete text content" }),
-          { status: 500, headers: { "Content-Type": "application/json" } }
-        );
-      }
-    } else if (type === "website") {
-      // Delete website content
-      try {
-        await db.$executeRaw`
-          DELETE FROM "website_contents"
-          WHERE id = ${contentId} AND "knowledgeSourceId" = ${sourceId}
-        `;
-      } catch (error) {
-        console.error('Error deleting website content:', error);
-        return new Response(
-          JSON.stringify({ error: "Failed to delete website content" }),
-          { status: 500, headers: { "Content-Type": "application/json" } }
-        );
-      }
-    } else {
-      return new Response(
-        JSON.stringify({ error: "Unsupported content type" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
     }
 
-    return new Response(null, { status: 204 });
-  } catch (error) {
-    console.error("Error in DELETE handler:", error);
-    return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Failed to delete content",
-        details: error instanceof Error ? error.stack : "No stack trace available"
-      }),
-      { 
-        status: 500,
-        headers: { "Content-Type": "application/json" }
+    // If file is associated with a knowledge source with a vector store, clean up there
+    if (file.knowledgeSource?.vectorStoreId && file.openAIFileId) {
+      try {
+        const removed = await removeFileFromVectorStore(
+          file.knowledgeSource.vectorStoreId, 
+          file.openAIFileId
+        );
+        
+        if (removed) {
+          console.log(`Removed file ${file.openAIFileId} from vector store ${file.knowledgeSource.vectorStoreId}`);
+          
+          // Update the knowledge source's vectorStoreUpdatedAt timestamp
+          await db.knowledgeSource.update({
+            where: { id: file.knowledgeSource.id },
+            data: {
+              vectorStoreUpdatedAt: new Date()
+            }
+          });
+        } else {
+          console.warn(`Failed to remove file from vector store - continuing with deletion`);
+        }
+      } catch (vectorError) {
+        console.error('Error removing file from vector store:', vectorError);
+        // Continue with file deletion even if vector store cleanup fails
       }
-    );
+    }
+
+    // Delete the OpenAI file if it exists
+    if (file.openAIFileId) {
+      try {
+        const openai = getOpenAIClient();
+        await openai.files.del(file.openAIFileId);
+        console.log(`Deleted OpenAI file: ${file.openAIFileId}`);
+      } catch (openaiError) {
+        console.error('Error deleting OpenAI file:', openaiError);
+        // Continue with file deletion even if OpenAI deletion fails
+      }
+    }
+
+    try {
+      // Finally delete the file from our database
+      await db.file.delete({
+        where: { 
+          id: params.contentId
+        }
+      });
+    } catch (deleteError) {
+      console.error('Error deleting file from database:', deleteError);
+      // If the file is already deleted, we can consider this a success
+      if (deleteError.code === 'P2025') {
+        return NextResponse.json({ 
+          success: true,
+          message: "File and associated resources deleted successfully"
+        });
+      }
+      throw deleteError;
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      message: "File and associated resources deleted successfully"
+    });
+  } catch (error) {
+    console.error('Error in DELETE handler:', error);
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : "Failed to delete file",
+      details: error instanceof Error ? error.stack : undefined
+    }, { status: 500 });
   }
 } 

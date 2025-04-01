@@ -344,10 +344,35 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       const data = await response.json();
       console.log('Crawler started:', data);
       
-      // Set progress based on status from response
-      if (data.status) {
+      if (data.success) {
+        // Start the crawling process
+        const crawlResponse = await fetch(`/api/crawlers/${data.crawlerId}/crawling`, {
+          method: 'POST'
+        });
+
+        if (!crawlResponse.ok) {
+          const errorText = await crawlResponse.text();
+          console.error(`Crawling API response (${crawlResponse.status}):`, errorText);
+          throw new Error(`Failed to start crawling: ${crawlResponse.status} ${crawlResponse.statusText}`);
+        }
+
+        const crawlData = await crawlResponse.json();
+        console.log('Crawling process started:', crawlData);
+        
+        // Add the crawled file to pending changes
+        if (source?.id && crawlData.fileId) {
+          addPendingChange(source.id, {
+            crawledFile: {
+              type: 'add',
+              fileId: crawlData.fileId,
+              openAIFileId: crawlData.openAIFileId
+            }
+          });
+        }
+        
+        // Set progress based on status from response
         setCrawlingProgress(10);
-        if (data.status.estimatedTimeMinutes) {
+        if (data.status?.estimatedTimeMinutes) {
           setCrawlingStatus(`Estimated time: ${data.status.estimatedTimeMinutes} minutes`);
         }
       }
@@ -380,7 +405,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
           fetchCrawlerFiles();
           
           // Show success message
-          setSuccessMessage(data.message || "Website crawled successfully. The content has been added to your knowledge base and is ready for your agents to use.");
+          setSuccessMessage(data.message || "Website crawled successfully. Click 'Save Changes' to add the content to your knowledge base and make it available to your agents.");
           setSuccessDialogOpen(true);
           toast.success("Crawler completed successfully");
           
@@ -426,6 +451,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
     if (!fileToDelete || !source?.id) return;
 
     setIsDeleting(true);
+    const toastId = toast.loading("Deleting file and cleaning up resources...");
 
     try {
       // Make API call to delete file
@@ -433,22 +459,42 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
         method: 'DELETE',
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`Failed to delete file: ${response.statusText}`);
+        throw new Error(data.error || `Failed to delete file: ${response.statusText}`);
       }
 
       // Update UI by removing deleted file
       setCrawlerFiles(prev => prev.filter(file => file.id !== fileToDelete.id));
       
-      // Show success message
-      toast.success("File deleted successfully");
-    } catch (error) {
-      console.error('Error deleting file:', error);
-      toast.error("Failed to delete file. Please try again.");
-    } finally {
-      setIsDeleting(false);
+      // Close dialog and reset state
       setDeleteDialogOpen(false);
       setFileToDelete(null);
+      
+      // Show success message
+      toast.dismiss(toastId);
+      toast.success(data.message || "File deleted successfully");
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast.dismiss(toastId);
+      
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('not found')) {
+          // If file is not found, we can consider it deleted
+          setCrawlerFiles(prev => prev.filter(file => file.id !== fileToDelete?.id));
+          setDeleteDialogOpen(false);
+          setFileToDelete(null);
+          toast.success("File has been removed from your knowledge base");
+        } else {
+          toast.error(`Error: ${error.message}`);
+        }
+      } else {
+        toast.error("An unexpected error occurred while deleting the file");
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -459,41 +505,6 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  // Add this function to handle starting the actual crawl
-  const handleStartActualCrawl = async (crawlerId: string) => {
-    if (!crawlerId) return;
-    
-    toast.info("Starting crawler process...");
-    
-    try {
-      const response = await fetch(`/api/crawlers/${crawlerId}/crawling`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to start crawler: ${response.status} ${errorText}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        toast.success("Crawler executed successfully");
-        setSuccessMessage(data.message || "Content crawled and added to knowledge base. Your agent can now use this information.");
-        setSuccessDialogOpen(true);
-        fetchCrawlerFiles(); // Refresh the file list
-      } else {
-        toast.error(data.message || "Failed to execute crawler");
-      }
-    } catch (error) {
-      console.error('Error executing crawler:', error);
-      toast.error(error instanceof Error ? error.message : "Failed to execute crawler");
-    }
   };
 
   // Render content
@@ -647,6 +658,14 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
         <TabsContent value="crawler" className="space-y-4 pt-4">
           <Card className="p-6">
             <div className="space-y-4">
+              <Alert>
+                <RiInformationLine className="h-4 w-4" />
+                <AlertTitle>Remember to Save Changes</AlertTitle>
+                <AlertDescription>
+                  After crawling a website, click the "Save Changes" button to add the content to your knowledge base and make it available to your agents.
+                </AlertDescription>
+              </Alert>
+              
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="crawlerUrl">Crawl Website</Label>
@@ -724,17 +743,6 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                           <TableCell className="whitespace-nowrap">{formatDate(file.createdAt)}</TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              {file.crawlerId && (
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => handleStartActualCrawl(file.crawlerId)}
-                                  className="flex items-center gap-1"
-                                >
-                                  <Bug className="h-4 w-4" />
-                                  <span>Run Crawler</span>
-                                </Button>
-                              )}
                               <Button
                                 variant="secondary"
                                 size="sm"
@@ -791,23 +799,46 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete File</DialogTitle>
+            <DialogTitle>Delete Crawled Content</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this file? This action cannot be undone.
+              Are you sure you want to delete this crawled content? This will remove it from your knowledge base and vector store. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-md overflow-hidden text-ellipsis">
-            {fileToDelete?.name}
+          <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-md">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-gray-500" />
+                <span className="font-medium">File name:</span>
+                <span className="text-gray-600 dark:text-gray-400">{fileToDelete?.name}</span>
+              </div>
+              {fileToDelete?.blobUrl && (
+                <div className="flex items-center gap-2">
+                  <RiGlobalLine className="h-4 w-4 text-gray-500" />
+                  <span className="font-medium">Source URL:</span>
+                  <span className="text-gray-600 dark:text-gray-400 break-all">{fileToDelete.blobUrl}</span>
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteFile} disabled={isDeleting}>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteFile} 
+              disabled={isDeleting}
+              className="gap-2"
+            >
               {isDeleting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   Deleting...
                 </>
-              ) : "Delete"}
+              ) : (
+                <>
+                  <RiDeleteBinLine className="h-4 w-4" />
+                  Delete
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

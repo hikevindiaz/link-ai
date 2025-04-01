@@ -87,6 +87,41 @@ export default function KnowledgeBaseLayout({
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error || `Failed to upload file: ${response.status}`);
               }
+            } else if (change.type === 'delete' && change.fileId) {
+              // Handle file deletion
+              const response = await fetch(`/api/knowledge-sources/${sourceId}/content/${change.fileId}`, {
+                method: 'DELETE',
+              });
+              
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Failed to delete file: ${response.status}`);
+              }
+            }
+          }
+        }
+        
+        // Process crawled files
+        if (data.crawledFile) {
+          const crawledChanges = Array.isArray(data.crawledFile) ? data.crawledFile : [data.crawledFile];
+          
+          for (const change of crawledChanges) {
+            if (change.type === 'add' && change.fileId && change.openAIFileId) {
+              // Add the file to the vector store
+              const response = await fetch(`/api/knowledge-sources/${sourceId}/content/${change.fileId}/vector`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  openAIFileId: change.openAIFileId
+                }),
+              });
+              
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Failed to add file to vector store: ${response.status}`);
+              }
             }
           }
         }
@@ -98,20 +133,54 @@ export default function KnowledgeBaseLayout({
           for (const change of websiteChanges) {
             // Add new website
             if (change.type === 'add' && change.url) {
-              const response = await fetch(`/api/knowledge-sources/${sourceId}/website`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
+              try {
+                console.log('Sending website URL:', change.url, 'with instructions:', change.instructions);
+                
+                const payload = {
                   urls: [change.url], // Send as array of URLs to match API schema
-                  instructions: change.instructions // Add instructions if provided
-                }),
-              });
-              
-              if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Failed to save website URL: ${response.status}`);
+                };
+                
+                // Only add instructions if they exist and aren't empty
+                if (change.instructions && change.instructions.trim() !== '') {
+                  payload['instructions'] = change.instructions.trim();
+                }
+                
+                console.log('Request payload:', JSON.stringify(payload));
+                
+                const response = await fetch(`/api/knowledge-sources/${sourceId}/website`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(payload),
+                });
+                
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error('Error response:', errorText);
+                  let errorMessage = `Failed to save website URL: ${response.status}`;
+                  
+                  try {
+                    // Try to parse the error as JSON
+                    const errorData = JSON.parse(errorText);
+                    if (errorData.error) {
+                      errorMessage = errorData.error;
+                    } else if (Array.isArray(errorData) && errorData.length > 0) {
+                      // This might be a Zod validation error array
+                      errorMessage = errorData.map(err => err.message || JSON.stringify(err)).join(', ');
+                    }
+                  } catch (e) {
+                    // If it's not valid JSON, use the raw text
+                    if (errorText) {
+                      errorMessage = errorText;
+                    }
+                  }
+                  
+                  throw new Error(errorMessage);
+                }
+              } catch (error) {
+                console.error('Error in website URL saving:', error);
+                throw error; // Re-throw to be caught by the outer try/catch
               }
             } 
             // Delete website
@@ -123,6 +192,8 @@ export default function KnowledgeBaseLayout({
               });
               
               if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error deleting website:', errorText);
                 throw new Error(`Failed to delete website: ${response.status}`);
               }
             }

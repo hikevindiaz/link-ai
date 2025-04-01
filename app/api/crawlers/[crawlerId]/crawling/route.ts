@@ -2,94 +2,108 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import * as cheerio from 'cheerio';
-import axios from 'axios';
 import { getOpenAIClient } from "@/lib/openai";
-import { ensureVectorStore, addDocumentsToVectorStore } from "@/lib/knowledge-vector-integration";
+import { ensureVectorStore } from "@/lib/knowledge-vector-integration";
+import { addFileToVectorStore } from "@/lib/vector-store";
+import * as cheerio from 'cheerio';
+
+// Retry function with exponential backoff
+async function retryWithBackoff<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (i === maxRetries - 1) throw error;
+      const delay = baseDelay * Math.pow(2, i);
+      console.log(`Attempt ${i + 1} failed, retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw lastError;
+}
 
 export async function POST(
   req: Request,
   { params }: { params: { crawlerId: string } }
 ) {
+  let createdFile = null;
+  
   try {
     // Check for user session
     const session = await getServerSession(authOptions);
     if (!session) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { crawlerId } = params;
-    
-    // Find the crawler
+    // Get crawler details with associated file
     const crawler = await db.crawler.findFirst({
-      where: {
-        id: crawlerId,
+      where: { 
+        id: params.crawlerId,
         userId: session.user.id
+      },
+      include: {
+        File: {
+          select: {
+            id: true,
+            knowledgeSourceId: true,
+            openAIFileId: true
+          }
+        }
       }
     });
 
     if (!crawler) {
-      return new NextResponse("Crawler not found", { status: 404 });
+      return NextResponse.json({ error: "Crawler not found" }, { status: 404 });
     }
-    
-    // Find associated files
-    const files = await db.file.findMany({
-      where: {
-        crawlerId: crawlerId
-      },
-      select: {
-        id: true,
-        knowledgeSourceId: true
-      }
-    });
-    
-    const file = files[0]; // Use the first file associated with this crawler
 
-    // Start the crawling process
-    console.log(`Starting crawl for ${crawler.crawlUrl}`);
-    
-    if (!file?.knowledgeSourceId) {
-      return new NextResponse("No associated file or knowledge source found", { status: 400 });
+    // Get the existing file and knowledge source ID
+    const existingFile = crawler.File[0];
+    if (!existingFile?.knowledgeSourceId) {
+      return NextResponse.json({ error: "No associated knowledge source found" }, { status: 400 });
     }
-    
-    // Ensure vector store exists for this knowledge source
-    const vectorStoreId = await ensureVectorStore(file.knowledgeSourceId);
-    if (!vectorStoreId) {
-      console.error(`Failed to create or find vector store for knowledge source ${file.knowledgeSourceId}`);
-      return new NextResponse("Failed to create vector store", { status: 500 });
-    }
-    
-    // Fetch content from the crawl URL
-    let content = "";
-    
+
+    const knowledgeSourceId = existingFile.knowledgeSourceId;
+
     try {
-      const response = await axios.get(crawler.crawlUrl);
-      const $ = cheerio.load(response.data);
-      
-      // Apply selector to extract content
-      const selectedContent = $(crawler.selector).text();
-      content = selectedContent.trim();
-      
-      if (!content) {
-        content = $('body').text().trim(); // Fallback to body if selector returned nothing
+      // First ensure vector store exists
+      console.log('Ensuring vector store exists for knowledge source:', knowledgeSourceId);
+      const vectorStoreId = await ensureVectorStore(knowledgeSourceId);
+      if (!vectorStoreId) {
+        throw new Error('Failed to create or access vector store');
+      }
+      console.log('Vector store ID:', vectorStoreId);
+
+      // Fetch the webpage content
+      console.log('Fetching content from URL:', crawler.crawlUrl);
+      const response = await fetch(crawler.crawlUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch URL: ${response.statusText}`);
       }
       
-      // Clean up content - remove excessive whitespace
-      content = content.replace(/\s+/g, ' ');
-    } catch (error) {
-      console.error('Error fetching or parsing web content:', error);
-      return new NextResponse("Failed to fetch or parse web content", { status: 500 });
-    }
-    
-    if (!content) {
-      return new NextResponse("No content extracted from URL", { status: 400 });
-    }
-    
-    // Format into a markdown file for better OpenAI processing
-    const markdownContent = `# Crawled Content from ${crawler.crawlUrl}\n\n${content}`;
-    
-    try {
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      
+      // Extract text content from the body or specified selector
+      const selector = crawler.selector || 'body';
+      let content = $(selector).text();
+      
+      // Clean up the content
+      content = content
+        .replace(/\s+/g, ' ')
+        .replace(/\n+/g, '\n')
+        .trim();
+
+      // Format into a markdown file for better OpenAI processing
+      const markdownContent = `# Crawled Content from ${crawler.crawlUrl}\n\n${content}`;
+      
       // Create an OpenAI file with the content
+      console.log('Creating OpenAI file...');
       const openai = getOpenAIClient();
       const fileName = `crawled-content-${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
       
@@ -97,82 +111,84 @@ export async function POST(
       const file_blob = new Blob([markdownContent], { type: 'text/markdown' });
       const openai_file = new File([file_blob], fileName, { type: 'text/markdown' });
       
-      // Upload the file to OpenAI
-      const uploadedFile = await openai.files.create({
-        file: openai_file,
-        purpose: "assistants",
+      // Upload the file to OpenAI with retry logic
+      const uploadedFile = await retryWithBackoff(async () => {
+        return await openai.files.create({
+          file: openai_file,
+          purpose: "assistants",
+        });
       });
       
       console.log(`Created OpenAI file: ${uploadedFile.id}`);
-      
-      // Update the file with the crawled content
-      await db.file.update({
-        where: { id: file.id },
+
+      // Update the existing file record
+      const file = await db.file.update({
+        where: { id: existingFile.id },
         data: {
           openAIFileId: uploadedFile.id,
-          blobUrl: crawler.crawlUrl, // Use the crawl URL as the blob URL for now
+          blobUrl: crawler.crawlUrl
         }
       });
+      createdFile = file;
+
+      // Add content to vector store with retry logic
+      console.log(`Adding file ${uploadedFile.id} to vector store ${vectorStoreId}...`);
+      await retryWithBackoff(async () => {
+        await addFileToVectorStore(vectorStoreId, uploadedFile.id);
+      });
+      console.log('Successfully added file to vector store');
       
-      // Add content to vector store
-      try {
-        const documents = [{
-          pageContent: content,
-          metadata: {
-            source: crawler.crawlUrl,
-            fileId: file.id,
-            crawlerId: crawler.id
-          }
-        }];
-        
-        await addDocumentsToVectorStore(vectorStoreId, documents);
-        console.log(`Added crawled content to vector store ${vectorStoreId}`);
-        
-        // Update the knowledge source's vectorStoreUpdatedAt timestamp
-        await db.knowledgeSource.update({
-          where: { id: file.knowledgeSourceId },
-          data: {
-            vectorStoreUpdatedAt: new Date()
-          }
-        });
-        
-        // Try to update the file to associate it with the vector store
-        try {
-          await db.$executeRaw`
-            UPDATE "files"
-            SET "vectorStoreId" = ${vectorStoreId}
-            WHERE id = ${file.id}
-          `;
-        } catch (sqlError) {
-          console.error('Error updating file with vector store ID:', sqlError);
-          // Continue even if this fails
+      // Update the knowledge source's vectorStoreUpdatedAt timestamp
+      await db.knowledgeSource.update({
+        where: { id: knowledgeSourceId },
+        data: {
+          vectorStoreId: vectorStoreId,
+          vectorStoreUpdatedAt: new Date()
         }
-      } catch (vectorError) {
-        console.error('Error adding content to vector store:', vectorError);
-        // We'll continue even if vector store update fails, at least content is saved
-      }
+      });
       
       return NextResponse.json({
         success: true,
         message: "Content crawled and added to knowledge base successfully",
         fileId: file.id,
         openAIFileId: uploadedFile.id,
+        vectorStoreId: vectorStoreId,
         content: content.substring(0, 200) + "..." // Preview of content
       });
-    } catch (fileError) {
-      console.error('Error creating OpenAI file:', fileError);
+    } catch (error) {
+      console.error('Error in crawling process:', error);
+      // Clean up any created files if we failed
+      if (createdFile?.id) {
+        try {
+          await db.file.delete({
+            where: { id: createdFile.id }
+          });
+        } catch (deleteError) {
+          console.error('Error cleaning up file:', deleteError);
+        }
+      }
+      
+      // Log the full error details
+      if (error.response) {
+        console.error('Error response:', {
+          status: error.response.status,
+          headers: error.response.headers,
+          data: error.response.data
+        });
+      }
+
+      // Return a more detailed error response
       return NextResponse.json({ 
-        success: false,
-        message: "Error saving content to OpenAI",
-        error: fileError instanceof Error ? fileError.message : "Unknown error"
-      }, { status: 500 });
+        error: error instanceof Error ? error.message : "Failed to crawl website",
+        details: error.response?.data || error,
+        cause: error.cause
+      }, { status: error.status || 500 });
     }
   } catch (error) {
-    console.error("[CRAWLING_POST]", error);
+    console.error('Error in crawler:', error);
     return NextResponse.json({ 
-      success: false,
-      message: "Error processing crawler request",
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: error instanceof Error ? error.message : "Failed to crawl website",
+      details: error
     }, { status: 500 });
   }
 }
