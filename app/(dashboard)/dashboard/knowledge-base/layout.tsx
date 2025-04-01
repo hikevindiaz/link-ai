@@ -105,6 +105,7 @@ export default function KnowledgeBaseLayout({
                 },
                 body: JSON.stringify({
                   urls: [change.url], // Send as array of URLs to match API schema
+                  instructions: change.instructions // Add instructions if provided
                 }),
               });
               

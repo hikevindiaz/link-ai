@@ -13,11 +13,13 @@ const routeContextSchema = z.object({
 // Schema for website URL validation
 const websiteSchema = z.object({
   urls: z.array(z.string().url("Invalid URL format")).min(1, "At least one URL is required"),
+  instructions: z.string().optional()
 }).or(
   // Alternative schema for backward compatibility
   z.object({
     url: z.string().url("Invalid URL format"),
-    searchType: z.string().optional()
+    searchType: z.string().optional(),
+    instructions: z.string().optional()
   })
 );
 
@@ -105,10 +107,14 @@ export async function POST(
 
     // Determine which URLs to process based on the schema
     let urlsToProcess: string[] = [];
+    let instructions: string | undefined;
+    
     if ('urls' in body && Array.isArray(body.urls)) {
       urlsToProcess = body.urls;
+      instructions = body.instructions;
     } else if ('url' in body && typeof body.url === 'string') {
       urlsToProcess = [body.url];
+      instructions = body.instructions;
     } else {
       throw new Error('Invalid request format - no valid URLs provided');
     }
@@ -117,9 +123,12 @@ export async function POST(
     const results = await Promise.all(
       urlsToProcess.map(async (url) => {
         try {
+          // Use Prisma client now that types are updated
           const websiteContent = await db.websiteContent.create({
             data: {
               url: url,
+              searchType: 'live', // Always set to 'live' for Live Search URLs
+              instructions: instructions, // Add instructions if provided
               knowledgeSource: {
                 connect: {
                   id: sourceId,

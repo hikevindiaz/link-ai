@@ -66,168 +66,53 @@ export async function DELETE(
     const type = url.searchParams.get("type") || "file";
 
     if (type === "file") {
-      // Get the file and knowledge source to delete
-      const knowledgeSources = await db.$queryRaw`
-        SELECT ks.id, ks."vectorStoreId" 
-        FROM "knowledge_sources" ks
-        WHERE ks.id = ${sourceId}
-      `;
+      // Get the file details first to check for crawler association
+      const fileDetails = await db.file.findUnique({
+        where: { id: contentId },
+        select: { crawlerId: true, openAIFileId: true }
+      });
 
-      const files = await db.$queryRaw`
-        SELECT id, "blobUrl", "openAIFileId"
-        FROM "files"
-        WHERE id = ${contentId} AND "knowledgeSourceId" = ${sourceId}
-      `;
-
-      if (!Array.isArray(files) || files.length === 0) {
-        console.log(`File not found: ${contentId} in source: ${sourceId}`);
-        return new Response(
-          JSON.stringify({ error: "File not found" }),
-          { status: 404, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
-      const file = files[0] as { id: string; blobUrl: string; openAIFileId: string };
-      console.log(`Found file to delete: ${file.id} (${file.openAIFileId})`);
-      
-      // Use getOpenAIKey instead of directly querying for the API key
-      let apiKey: string;
-      try {
-        // Import the getOpenAIKey function
-        const { getOpenAIKey } = await import("@/lib/openai");
-        apiKey = await getOpenAIKey(session.user.id);
+      if (fileDetails?.crawlerId) {
+        console.log(`File has an associated crawler with ID: ${fileDetails.crawlerId}. Deleting crawler too.`);
         
-        if (!apiKey) {
-          console.error("Could not retrieve OpenAI API key");
-          return new Response(
-            JSON.stringify({ error: "Missing OpenAI API key" }),
-            { status: 400, headers: { "Content-Type": "application/json" } }
-          );
-        }
-      } catch (error) {
-        console.error("Error retrieving OpenAI API key:", error);
-        return new Response(
-          JSON.stringify({ error: "Failed to retrieve OpenAI API key" }),
-          { status: 400, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
-      // Handle vector store deletion
-      let vectorStoreSuccess = true;
-      let vectorStoreError = null;
-      
-      // Get vector store ID
-      if (Array.isArray(knowledgeSources) && knowledgeSources.length > 0) {
-        const knowledgeSource = knowledgeSources[0] as { id: string; vectorStoreId: string | null };
-        
-        // If there's a vector store ID, remove the file from it
-        if (knowledgeSource.vectorStoreId && file.openAIFileId) {
-          try {
-            console.log(`Removing file ${file.openAIFileId} from vector store ${knowledgeSource.vectorStoreId}`);
-            
-            // Handle potential format mismatch for file ID
-            let fileIdToDelete = file.openAIFileId;
-            // Convert file_123 to file-123 for OpenAI API if needed
-            if (fileIdToDelete.startsWith('file_')) {
-              fileIdToDelete = fileIdToDelete.replace('file_', 'file-');
-              console.log(`Reformatted file ID for vector store from ${file.openAIFileId} to ${fileIdToDelete}`);
-            }
-            
-            const removed = await removeFileFromVectorStore(knowledgeSource.vectorStoreId, fileIdToDelete);
-            if (removed) {
-              console.log(`Successfully removed file ${fileIdToDelete} from vector store ${knowledgeSource.vectorStoreId}`);
-            } else {
-              console.warn(`Failed to remove file from vector store, continuing with deletion from database`);
-              vectorStoreSuccess = false;
-              vectorStoreError = "File not found in vector store or removal failed";
-            }
-          } catch (vectorError) {
-            console.error("Error removing file from vector store:", vectorError);
-            vectorStoreSuccess = false;
-            vectorStoreError = vectorError instanceof Error ? vectorError.message : "Unknown vector store error";
-            // Continue with deletion even if vector store removal fails
-          }
-        } else {
-          console.log(`No vector store found for knowledge source ${sourceId} or file has no OpenAI ID`);
-        }
-      }
-
-      // Delete the file from Vercel Blob if it has a valid URL
-      let blobSuccess = true;
-      let blobError = null;
-      if (file.blobUrl && file.blobUrl.startsWith('http')) {
         try {
-          console.log(`Deleting file from Blob storage: ${file.blobUrl}`);
-          await del(file.blobUrl);
-          console.log(`Successfully deleted file from Blob storage`);
-        } catch (error) {
-          console.error('Error deleting file from blob storage:', error);
-          blobSuccess = false;
-          blobError = error instanceof Error ? error.message : "Unknown blob error";
-          // Continue with database deletion even if blob deletion fails
+          // Delete the crawler first
+          await db.crawler.delete({
+            where: { id: fileDetails.crawlerId }
+          });
+          console.log(`Successfully deleted crawler: ${fileDetails.crawlerId}`);
+        } catch (crawlerError) {
+          console.error('Error deleting associated crawler:', crawlerError);
+          // Continue with file deletion even if crawler deletion fails
         }
       }
 
-      // Delete the OpenAI file if possible
-      let openaiSuccess = true;
-      let openaiError = null;
-      try {
-        console.log(`Deleting file from OpenAI: ${file.openAIFileId}`);
-        
-        // Get the OpenAI client
-        const openai = getOpenAIClient();
-        
-        // Format the file ID properly for OpenAI
-        // OpenAI expects file IDs to start with 'file-' but they might be stored with 'file_'
-        let openAIFileId = file.openAIFileId;
-        if (openAIFileId.startsWith('file_')) {
-          // Convert file_123 to file-123 for OpenAI API
-          openAIFileId = openAIFileId.replace('file_', 'file-');
-          console.log(`Reformatted file ID from ${file.openAIFileId} to ${openAIFileId}`);
+      // Try to delete the OpenAI file if available
+      if (fileDetails?.openAIFileId && !fileDetails.openAIFileId.startsWith('crawl_')) {
+        try {
+          const openai = getOpenAIClient();
+          await openai.files.del(fileDetails.openAIFileId);
+          console.log(`Deleted OpenAI file: ${fileDetails.openAIFileId}`);
+        } catch (openaiError) {
+          console.error('Error deleting OpenAI file:', openaiError);
+          // Continue with file deletion even if OpenAI file deletion fails
         }
+      }
+
+      // Delete the file from DB
+      try {
+        await db.file.delete({
+          where: {
+            id: contentId,
+            knowledgeSourceId: sourceId,
+          },
+        });
         
-        await openai.files.del(openAIFileId);
-        console.log(`Successfully deleted file from OpenAI`);
+        console.log(`Successfully deleted file content: ${contentId}`);
       } catch (error) {
-        console.error(`Error deleting OpenAI file:`, error);
-        openaiSuccess = false;
-        openaiError = error instanceof Error ? error.message : "Unknown OpenAI error";
-        // Continue with database deletion even if OpenAI deletion fails
-      }
-
-      // Delete the file from the database
-      try {
-        console.log(`Deleting file from database: ${file.id}`);
-        await db.$executeRaw`
-          DELETE FROM "files"
-          WHERE id = ${contentId}
-        `;
-        console.log(`Successfully deleted file from database`);
-        
-        // Return success but include details about partial failures if any
-        if (!vectorStoreSuccess || !blobSuccess || !openaiSuccess) {
-          return new Response(
-            JSON.stringify({
-              message: "File deleted with warnings",
-              details: {
-                database: "success",
-                vectorStore: vectorStoreSuccess ? "success" : `failed: ${vectorStoreError}`,
-                blobStorage: blobSuccess ? "success" : `failed: ${blobError}`,
-                openai: openaiSuccess ? "success" : `failed: ${openaiError}`
-              }
-            }),
-            { 
-              status: 207, // Partial Content
-              headers: { "Content-Type": "application/json" }
-            }
-          );
-        }
-        
-        return new Response(null, { status: 204 });
-      } catch (dbError) {
-        console.error(`Error deleting file from database: ${dbError}`);
+        console.error('Error deleting file content:', error);
         return new Response(
-          JSON.stringify({ error: "Failed to delete file from database", details: String(dbError) }),
+          JSON.stringify({ error: "Failed to delete file content" }),
           { status: 500, headers: { "Content-Type": "application/json" } }
         );
       }

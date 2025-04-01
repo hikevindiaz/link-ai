@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { checkSubscriptionFeatures } from "@/lib/subscription";
 import * as cheerio from 'cheerio';
 import axios from 'axios';
 import { getOpenAIClient } from "@/lib/openai";
@@ -46,12 +45,6 @@ export async function POST(
     
     const file = files[0]; // Use the first file associated with this crawler
 
-    // Check subscription for crawling capabilities
-    const subscriptionFeatures = await checkSubscriptionFeatures(session.user.id);
-    if (!subscriptionFeatures.allowCrawling) {
-      return new NextResponse("Your subscription does not include web crawling", { status: 403 });
-    }
-
     // Start the crawling process
     console.log(`Starting crawl for ${crawler.crawlUrl}`);
     
@@ -92,57 +85,94 @@ export async function POST(
       return new NextResponse("No content extracted from URL", { status: 400 });
     }
     
-    // Update the file with the crawled content
-    const blobUrl = `crawled-content-${Date.now()}.txt`; // In production, save to blob storage
+    // Format into a markdown file for better OpenAI processing
+    const markdownContent = `# Crawled Content from ${crawler.crawlUrl}\n\n${content}`;
     
-    await db.file.update({
-      where: { id: file.id },
-      data: {
-        openAIFileId: `crawl_completed_${Date.now()}`,
-        blobUrl: blobUrl,
-        // Cannot add content as it's not in the schema
-      }
-    });
-    
-    // Add content to vector store
     try {
-      const documents = [{
-        pageContent: content,
-        metadata: {
-          source: crawler.crawlUrl,
-          fileId: file.id,
-          crawlerId: crawler.id
+      // Create an OpenAI file with the content
+      const openai = getOpenAIClient();
+      const fileName = `crawled-content-${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
+      
+      // Create a file with the content
+      const file_blob = new Blob([markdownContent], { type: 'text/markdown' });
+      const openai_file = new File([file_blob], fileName, { type: 'text/markdown' });
+      
+      // Upload the file to OpenAI
+      const uploadedFile = await openai.files.create({
+        file: openai_file,
+        purpose: "assistants",
+      });
+      
+      console.log(`Created OpenAI file: ${uploadedFile.id}`);
+      
+      // Update the file with the crawled content
+      await db.file.update({
+        where: { id: file.id },
+        data: {
+          openAIFileId: uploadedFile.id,
+          blobUrl: crawler.crawlUrl, // Use the crawl URL as the blob URL for now
         }
-      }];
+      });
       
-      await addDocumentsToVectorStore(vectorStoreId, documents);
-      console.log(`Added crawled content to vector store ${vectorStoreId}`);
-      
-      // Update the file to associate it with the vector store
-      // Note: If vectorStoreId isn't in the schema, you'll need to update your Prisma schema
+      // Add content to vector store
       try {
-        // Use raw SQL to update the file if needed
-        await db.$executeRaw`
-          UPDATE "files"
-          SET "vectorStoreId" = ${vectorStoreId}
-          WHERE id = ${file.id}
-        `;
-      } catch (sqlError) {
-        console.error('Error updating file with vector store ID:', sqlError);
-        // Continue even if this fails
+        const documents = [{
+          pageContent: content,
+          metadata: {
+            source: crawler.crawlUrl,
+            fileId: file.id,
+            crawlerId: crawler.id
+          }
+        }];
+        
+        await addDocumentsToVectorStore(vectorStoreId, documents);
+        console.log(`Added crawled content to vector store ${vectorStoreId}`);
+        
+        // Update the knowledge source's vectorStoreUpdatedAt timestamp
+        await db.knowledgeSource.update({
+          where: { id: file.knowledgeSourceId },
+          data: {
+            vectorStoreUpdatedAt: new Date()
+          }
+        });
+        
+        // Try to update the file to associate it with the vector store
+        try {
+          await db.$executeRaw`
+            UPDATE "files"
+            SET "vectorStoreId" = ${vectorStoreId}
+            WHERE id = ${file.id}
+          `;
+        } catch (sqlError) {
+          console.error('Error updating file with vector store ID:', sqlError);
+          // Continue even if this fails
+        }
+      } catch (vectorError) {
+        console.error('Error adding content to vector store:', vectorError);
+        // We'll continue even if vector store update fails, at least content is saved
       }
-    } catch (vectorError) {
-      console.error('Error adding content to vector store:', vectorError);
-      // We'll continue even if vector store update fails, at least content is saved
+      
+      return NextResponse.json({
+        success: true,
+        message: "Content crawled and added to knowledge base successfully",
+        fileId: file.id,
+        openAIFileId: uploadedFile.id,
+        content: content.substring(0, 200) + "..." // Preview of content
+      });
+    } catch (fileError) {
+      console.error('Error creating OpenAI file:', fileError);
+      return NextResponse.json({ 
+        success: false,
+        message: "Error saving content to OpenAI",
+        error: fileError instanceof Error ? fileError.message : "Unknown error"
+      }, { status: 500 });
     }
-    
-    return NextResponse.json({
-      success: true,
-      message: "Content crawled and added to knowledge base",
-      content: content.substring(0, 200) + "..." // Preview of content
-    });
   } catch (error) {
     console.error("[CRAWLING_POST]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return NextResponse.json({ 
+      success: false,
+      message: "Error processing crawler request",
+      error: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 });
   }
 }

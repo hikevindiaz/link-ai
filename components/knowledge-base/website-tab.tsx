@@ -55,6 +55,7 @@ interface WebsiteContent {
   createdAt: string;
   updatedAt: string;
   knowledgeSourceId: string;
+  instructions?: string;
 }
 
 interface CrawlerFile {
@@ -69,11 +70,13 @@ interface PendingWebsiteAction {
   type: 'add' | 'delete';
   url?: string;
   websiteId?: string;
+  instructions?: string;
 }
 
 export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
   // Live Web Searches state
   const [liveSearchUrl, setLiveSearchUrl] = useState('');
+  const [liveSearchInstructions, setLiveSearchInstructions] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -213,7 +216,8 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
     // Add this URL to the pending changes
     const pendingAction: PendingWebsiteAction = {
       type: 'add',
-      url: formattedUrl
+      url: formattedUrl,
+      instructions: liveSearchInstructions.trim() || undefined
     };
 
     // Add to global pending changes
@@ -227,11 +231,13 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       url: formattedUrl,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      knowledgeSourceId: source.id
+      knowledgeSourceId: source.id,
+      instructions: liveSearchInstructions.trim() || undefined
     };
     
     setSavedWebsites(prev => [...prev, tempWebsite]);
     setLiveSearchUrl(''); // Reset the input field
+    setLiveSearchInstructions(''); // Reset instructions field
     
     // Show success message
     toast.success("URL added to changes");
@@ -549,6 +555,21 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                   </Button>
                 </div>
                 
+                <div className="mt-2">
+                  <Input
+                    id="websiteInstructions"
+                    name="websiteInstructions"
+                    placeholder="When should the agent use this URL? (e.g., 'when asked about pricing' or 'for questions about products')"
+                    value={liveSearchInstructions}
+                    onChange={(e) => setLiveSearchInstructions(e.target.value)}
+                    disabled={isSubmitting}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Optional. Provide instructions for when your AI agent should search this specific URL.
+                  </p>
+                </div>
+                
                 <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-md border border-blue-100 dark:border-blue-900">
                   <div className="flex items-start gap-2">
                     <RiInformationLine className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
@@ -583,6 +604,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                     <TableHead>
                       <TableRow>
                         <TableCell className="w-full">URL</TableCell>
+                        <TableCell className="whitespace-nowrap">Instructions</TableCell>
                         <TableCell className="whitespace-nowrap">Added On</TableCell>
                         <TableCell className="w-[100px]">Actions</TableCell>
                       </TableRow>
@@ -591,6 +613,11 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                       {savedWebsites.map((website) => (
                         <TableRow key={website.id}>
                           <TableCell className="font-medium break-all">{website.url}</TableCell>
+                          <TableCell className="max-w-[250px] truncate">
+                            {website.instructions || 
+                              <span className="text-muted-foreground italic text-sm">No instructions</span>
+                            }
+                          </TableCell>
                           <TableCell className="whitespace-nowrap">{formatDate(website.createdAt)}</TableCell>
                           <TableCell>
                             <Button

@@ -325,6 +325,7 @@ model WebsiteContent {
   updatedAt         DateTime        @updatedAt @map("updated_at")
   knowledgeSourceId String
   searchType        String          @default("crawl") // "live" or "crawl"
+  instructions      String?         // Instructions for when the agent should use this URL
   knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
 
   @@map("website_contents")

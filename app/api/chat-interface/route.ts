@@ -58,6 +58,7 @@ export async function POST(req: Request) {
     let vectorStoreIds = [];
     let hasWebsiteUrls = false;
     let websiteUrls: string[] = [];
+    let websiteInstructions: {url: string, instructions?: string}[] = [];
     
     if (knowledgeSourcesResponse.ok) {
       const data = await knowledgeSourcesResponse.json();
@@ -86,11 +87,17 @@ export async function POST(req: Request) {
         if (source.websiteContents && source.websiteContents.length > 0) {
           // Filter for websites marked for live search (no searchType means using the website
           // for crawling, not for live search)
-          const liveSearchUrls = source.websiteContents.map((web: any) => web.url);
+          const liveSearchUrls = source.websiteContents
+            .filter((web: any) => web.searchType === 'live' || !web.searchType)
+            .map((web: any) => ({
+              url: web.url,
+              instructions: web.instructions
+            }));
           
           if (liveSearchUrls.length > 0) {
             hasWebsiteUrls = true;
-            websiteUrls = [...websiteUrls, ...liveSearchUrls];
+            websiteUrls = [...websiteUrls, ...liveSearchUrls.map(w => w.url)];
+            websiteInstructions = [...websiteInstructions, ...liveSearchUrls];
           }
         }
       }
@@ -151,6 +158,22 @@ export async function POST(req: Request) {
       
       // Add instructions for web search
       systemPrompt += `\n\nYou have access to search these specific websites for current information when relevant: ${authorizedDomains}.`;
+      
+      // Add specific instructions for each website if available
+      const sitesWithInstructions = websiteInstructions.filter(site => site.instructions && site.instructions.trim() !== '');
+      
+      if (sitesWithInstructions.length > 0) {
+        systemPrompt += `\n\nWhen searching specific websites, follow these guidelines:`;
+        
+        for (const site of sitesWithInstructions) {
+          try {
+            const domain = new URL(site.url).hostname;
+            systemPrompt += `\n- When searching ${domain}: ${site.instructions}`;
+          } catch (e) {
+            systemPrompt += `\n- When searching ${site.url}: ${site.instructions}`;
+          }
+        }
+      }
     }
     
     // Add context about knowledge base access without mentioning uploads
