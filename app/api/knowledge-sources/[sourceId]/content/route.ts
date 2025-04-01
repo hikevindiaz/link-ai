@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto';
 import { Prisma } from "@prisma/client";
 import { ensureVectorStore, updateChatbotsWithKnowledgeSource } from "@/lib/knowledge-vector-integration";
 import { getOpenAIClient } from "@/lib/openai";
+import { addFileToVectorStore } from "@/lib/vector-store";
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -218,105 +219,125 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
       );
     }
 
+    let fileId: string | undefined;
     try {
-      // Upload file to Vercel Blob
-      const blob = await put(file.name, file, {
-        access: 'public',
-      });
-
-      // Upload file to OpenAI for vector search
-      const openai = getOpenAIClient();
-      const uploadedFile = await openai.files.create({
-        file: file,
-        purpose: "assistants"
-      });
-
       // Generate a file ID
-      const fileId = generateFileId();
+      fileId = generateFileId();
 
-      // Create the file record in the database
+      // Create the file record in the database first
+      await db.$executeRaw`
+        INSERT INTO "files" (
+          "id", 
+          "name", 
+          "userId", 
+          "knowledgeSourceId", 
+          "created_at"
+        ) 
+        VALUES (
+          ${fileId}, 
+          ${file.name}, 
+          ${session.user.id}, 
+          ${sourceId}, 
+          ${new Date()}
+        )
+      `;
+
+      // Upload file to Vercel Blob with timeout
+      const blob = await Promise.race<{ url: string }>([
+        put(file.name, file, {
+          access: 'public',
+        }),
+        new Promise<{ url: string }>((_, reject) => 
+          setTimeout(() => reject(new Error('Blob upload timed out')), 8000)
+        )
+      ]);
+
+      // Update file record with blob URL
+      await db.file.update({
+        where: { id: fileId },
+        data: { blobUrl: blob.url }
+      });
+
+      // Upload file to OpenAI for vector search with timeout
+      const openai = getOpenAIClient();
+      const uploadedFile = await Promise.race<OpenAI.Files.FileObject>([
+        openai.files.create({
+          file: file,
+          purpose: "assistants"
+        }),
+        new Promise<OpenAI.Files.FileObject>((_, reject) => 
+          setTimeout(() => reject(new Error('OpenAI upload timed out')), 8000)
+        )
+      ]);
+
+      // Update file record with OpenAI file ID
+      await db.file.update({
+        where: { id: fileId },
+        data: { openAIFileId: uploadedFile.id }
+      });
+
+      // Ensure the source has a vector store and add the file to it
       try {
-        await db.$executeRaw`
-          INSERT INTO "files" (
-            "id", 
-            "name", 
-            "blobUrl", 
-            "openAIFileId", 
-            "userId", 
-            "knowledgeSourceId", 
-            "created_at"
-          ) 
-          VALUES (
-            ${fileId}, 
-            ${file.name}, 
-            ${blob.url}, 
-            ${uploadedFile.id}, 
-            ${session.user.id}, 
-            ${sourceId}, 
-            ${new Date()}
-          )
-        `;
-
-        // Ensure the source has a vector store and add the file to it
-        try {
-          // Wait for vector store operations to complete (don't use promise chaining)
-          console.log(`Ensuring vector store exists for knowledge source ${sourceId}`);
-          const vectorStoreId = await ensureVectorStore(sourceId);
+        console.log(`Ensuring vector store exists for knowledge source ${sourceId}`);
+        const vectorStoreId = await ensureVectorStore(sourceId);
+        
+        if (vectorStoreId) {
+          console.log(`Vector store ${vectorStoreId} found or created. Adding file ${uploadedFile.id} to vector store.`);
           
-          if (vectorStoreId) {
-            console.log(`Vector store ${vectorStoreId} found or created. Adding file ${uploadedFile.id} to vector store.`);
-            
-            // Add the file explicitly to the vector store
-            const { addFileToVectorStore } = await import('@/lib/vector-store');
-            await addFileToVectorStore(vectorStoreId, uploadedFile.id, 
-              file.type.includes('pdf') ? 'pdf' : 'text');
-            
-            // Update chatbots only after file has been added to vector store
-            console.log(`File added to vector store. Updating chatbots with knowledge source.`);
-            await updateChatbotsWithKnowledgeSource(sourceId);
-            
-            console.log(`Vector store integration complete for file ${fileId} (${file.name})`);
-          } else {
-            console.error(`Failed to create or find vector store for knowledge source ${sourceId}`);
-          }
-        } catch (vectorError) {
-          console.error(`Error integrating file with vector store:`, vectorError);
-          // Even though there was an error with vector store, we'll still return success 
-          // since the file was uploaded successfully
+          // Add the file to vector store with timeout
+          await Promise.race<void>([
+            addFileToVectorStore(vectorStoreId, uploadedFile.id, 
+              file.type.includes('pdf') ? 'pdf' : 'text'),
+            new Promise<void>((_, reject) => 
+              setTimeout(() => reject(new Error('Vector store addition timed out')), 8000)
+            )
+          ]);
+          
+          // Update chatbots only after file has been added to vector store
+          console.log(`File added to vector store. Updating chatbots with knowledge source.`);
+          await updateChatbotsWithKnowledgeSource(sourceId);
+          
+          console.log(`Vector store integration complete for file ${fileId} (${file.name})`);
+        } else {
+          console.error(`Failed to create or find vector store for knowledge source ${sourceId}`);
         }
-
-        // Return the file data
-        return new Response(
-          JSON.stringify({
-            id: fileId,
-            name: file.name,
-            url: blob.url,
-            openAIFileId: uploadedFile.id
-          }),
-          { 
-            status: 200,
-            headers: { "Content-Type": "application/json" }
-          }
-        );
-      } catch (dbError) {
-        console.error("Database error creating file:", dbError);
-        return new Response(
-          JSON.stringify({ 
-            error: "Failed to save file to database", 
-            details: String(dbError) 
-          }),
-          { 
-            status: 500,
-            headers: { "Content-Type": "application/json" }
-          }
-        );
+      } catch (vectorError) {
+        console.error(`Error integrating file with vector store:`, vectorError);
+        // Even though there was an error with vector store, we'll still return success 
+        // since the file was uploaded successfully
       }
-    } catch (blobError) {
-      console.error("Error uploading to Vercel Blob:", blobError);
+
+      // Return the file data
+      return new Response(
+        JSON.stringify({
+          id: fileId,
+          name: file.name,
+          url: blob.url,
+          openAIFileId: uploadedFile.id
+        }),
+        { 
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    } catch (error) {
+      console.error("Error in file upload process:", error);
+      
+      // If we created a file record but failed later, try to clean it up
+      if (fileId) {
+        try {
+          await db.file.delete({
+            where: { id: fileId }
+          });
+        } catch (deleteError) {
+          console.error("Error cleaning up failed file upload:", deleteError);
+        }
+      }
+      
       return new Response(
         JSON.stringify({ 
-          error: "Failed to upload file to storage", 
-          details: String(blobError) 
+          error: error instanceof Error ? error.message : "Failed to upload file",
+          details: error instanceof Error ? error.stack : undefined
         }),
         { 
           status: 500,
