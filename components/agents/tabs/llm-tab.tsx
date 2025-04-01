@@ -23,6 +23,7 @@ interface KnowledgeSource {
   id: string;
   name: string;
   description?: string;
+  vectorStoreId?: string;
 }
 
 interface LLMTabProps {
@@ -79,6 +80,22 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
     progress: 0,
   });
 
+  // Initialize state with agent data on first render
+  useEffect(() => {
+    if (agent) {
+      setSelectedModel(agent.modelId || "");
+      setTemperature(agent.temperature || 0.7);
+      
+      if (agent.knowledgeSources && agent.knowledgeSources.length > 0) {
+        setSelectedKnowledgeSource(agent.knowledgeSources[0].id);
+        console.log("Initial knowledge source set to:", agent.knowledgeSources[0].id, 
+          "with vectorStoreId:", agent.knowledgeSources[0].vectorStoreId);
+      } else {
+        setSelectedKnowledgeSource("none");
+      }
+    }
+  }, []);
+
   // Fetch models and knowledge sources on component mount
   useEffect(() => {
     const fetchData = async () => {
@@ -102,10 +119,15 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
         console.log("Knowledge sources fetched:", knowledgeData);
         setKnowledgeSources(knowledgeData);
 
-        // Set initial selected knowledge source
+        // Set initial selected knowledge source if it exists in the fetched sources
         if (agent.knowledgeSources && agent.knowledgeSources.length > 0) {
-          console.log("Setting initial knowledge source:", agent.knowledgeSources[0].id);
-          setSelectedKnowledgeSource(agent.knowledgeSources[0].id);
+          const sourceId = agent.knowledgeSources[0].id;
+          const sourceExists = knowledgeData.some((source: KnowledgeSource) => source.id === sourceId);
+          
+          if (sourceExists) {
+            console.log("Setting knowledge source from agent data:", sourceId);
+            setSelectedKnowledgeSource(sourceId);
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -116,23 +138,78 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
     };
 
     fetchData();
-  }, [agent]);
+  }, [agent.id]); // Only re-fetch when agent ID changes, not on every agent prop change
+ 
+  // Sync agent props with state when they change
+  useEffect(() => {
+    // Only update if not loading and if the agent has changed
+    if (!isLoading) {
+      // Set model if available
+      if (agent.modelId) {
+        setSelectedModel(agent.modelId);
+      }
+      
+      // Set temperature if available
+      if (agent.temperature !== undefined) {
+        setTemperature(agent.temperature);
+      }
+      
+      // Set knowledge source if available
+      if (agent.knowledgeSources && agent.knowledgeSources.length > 0) {
+        setSelectedKnowledgeSource(agent.knowledgeSources[0].id);
+        console.log("Syncing knowledge source from agent props:", agent.knowledgeSources[0].id, 
+          "vectorStoreId:", agent.knowledgeSources[0].vectorStoreId);
+      } else {
+        setSelectedKnowledgeSource("none");
+      }
+      
+      // Set training status if available
+      if (agent.trainingStatus) {
+        setTrainingStatus({
+          status: agent.trainingStatus,
+          lastTrainedAt: agent.lastTrainedAt ? new Date(agent.lastTrainedAt) : null,
+          message: agent.trainingMessage || "",
+          progress: agent.trainingStatus === "success" ? 100 : 0,
+        });
+      }
+    }
+  }, [agent, isLoading]);
 
   // Check if any values have changed
   useEffect(() => {
-    const hasModelChanged = selectedModel !== agent.modelId;
-    const hasTemperatureChanged = temperature !== agent.temperature;
-    
-    // Check if knowledge source has changed
-    let hasKnowledgeSourceChanged = false;
-    if (agent.knowledgeSources && agent.knowledgeSources.length > 0) {
-      hasKnowledgeSourceChanged = selectedKnowledgeSource !== agent.knowledgeSources[0].id;
-    } else {
-      hasKnowledgeSourceChanged = selectedKnowledgeSource !== "none";
-    }
+    // Only compute isDirty if agent data is loaded and not in loading state
+    if (!isLoading && agent) {
+      const hasModelChanged = selectedModel !== agent.modelId;
+      const hasTemperatureChanged = temperature !== agent.temperature;
+      
+      // Check if knowledge source has changed
+      let hasKnowledgeSourceChanged = false;
+      if (agent.knowledgeSources && agent.knowledgeSources.length > 0) {
+        hasKnowledgeSourceChanged = selectedKnowledgeSource !== agent.knowledgeSources[0].id;
+      } else {
+        hasKnowledgeSourceChanged = selectedKnowledgeSource !== "none";
+      }
 
-    setIsDirty(hasModelChanged || hasTemperatureChanged || hasKnowledgeSourceChanged);
-  }, [selectedModel, temperature, selectedKnowledgeSource, agent]);
+      const newIsDirty = hasModelChanged || hasTemperatureChanged || hasKnowledgeSourceChanged;
+      
+      // Debug logging to help track what's happening
+      if (newIsDirty !== isDirty) {
+        console.log("Setting isDirty:", newIsDirty, {
+          hasModelChanged,
+          hasTemperatureChanged,
+          hasKnowledgeSourceChanged,
+          selectedModel,
+          agentModelId: agent.modelId,
+          temperature,
+          agentTemperature: agent.temperature,
+          selectedKnowledgeSource,
+          agentKnowledgeSource: agent.knowledgeSources?.length ? agent.knowledgeSources[0].id : "none"
+        });
+      }
+      
+      setIsDirty(newIsDirty);
+    }
+  }, [selectedModel, temperature, selectedKnowledgeSource, agent, isLoading, isDirty]);
 
   const handleTemperatureChange = (value: number[]) => {
     setTemperature(Number(value[0].toFixed(1)));
@@ -148,6 +225,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
 
   const handleSaveSettings = async () => {
     try {
+      setIsLoading(true);
       const selectedSource = knowledgeSources.find(ks => ks.id === selectedKnowledgeSource);
       
       const saveData = {
@@ -158,15 +236,26 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
           ? [{ 
               id: selectedSource.id, 
               name: selectedSource.name,
-              description: selectedSource.description 
+              description: selectedSource.description,
+              vectorStoreId: selectedSource.vectorStoreId
             }] 
           : [],
       };
       
-      await onSave(saveData);
+      console.log("Saving LLM settings with data:", JSON.stringify(saveData, null, 2));
+      const response = await onSave(saveData);
+      console.log("Save response:", response);
+      
+      // Explicitly set isDirty to false after saving
+      setIsDirty(false);
+      
+      toast.success("LLM settings saved successfully");
     } catch (error) {
       console.error('Error saving LLM settings:', error);
+      toast.error(`Failed to save settings: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -180,77 +269,17 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
     } else {
       setSelectedKnowledgeSource("none");
     }
+    
+    // Explicitly set isDirty to false
+    setIsDirty(false);
   };
 
-  // Toggle training options
-  const toggleTrainingOptions = () => {
-    setShowTrainingOptions(!showTrainingOptions);
-  };
-
-  // Update training options
-  const updateTrainingOption = (
-    option: keyof TrainingOptions,
-    value: boolean
-  ) => {
-    setTrainingOptions((prev) => ({
-      ...prev,
-      [option]: value,
-    }));
-  };
-
-  // Handle training the agent
-  const handleTrainAgent = async () => {
-    setTrainingStatus({
-      status: "training",
-      message: "Training in progress...",
-      progress: 0,
-    });
-
-    // Simulate progress updates
-    const progressInterval = setInterval(() => {
-      setTrainingStatus((prev) => ({
-        ...prev,
-        progress: Math.min((prev.progress || 0) + 5, 95),
-      }));
-    }, 1000);
-
-    try {
-      const response = await fetch(`/api/chatbots/${agent.id}/train`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(trainingOptions),
-      });
-
-      clearInterval(progressInterval);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to train agent");
-      }
-
-      const data = await response.json();
-
-      setTrainingStatus({
-        status: "success",
-        lastTrainedAt: new Date(),
-        message: data.message || "Training completed successfully",
-        progress: 100,
-      });
-
-      toast.success("Agent trained successfully");
-    } catch (error) {
-      clearInterval(progressInterval);
-      console.error("Error training agent:", error);
-      
-      setTrainingStatus({
-        status: "error",
-        message: error instanceof Error ? error.message : "Failed to train agent",
-        progress: 0,
-      });
-      
-      toast.error("Failed to train agent");
+  // Navigate to knowledge source page
+  const navigateToKnowledgeSource = () => {
+    const sourceId = selectedKnowledgeSource;
+    if (sourceId !== "none") {
+      // Navigate to the knowledge source page
+      window.location.href = `dashboard/knowledge-base/${sourceId}`;
     }
   };
 
@@ -261,7 +290,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
       onSave={handleSaveSettings}
       onCancel={handleCancel}
     >
-      <div className="space-y-6">
+      <div className="space-y-6 pt-4">
         {/* Model Selection */}
         <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
@@ -408,18 +437,23 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
                 Link a knowledge source to enhance your agent with custom data.
               </p>
               {selectedKnowledgeSource !== "none" && (
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="mt-3"
-                  onClick={() => {
-                    // You would implement navigation to knowledge source editing page here
-                    toast.info("This would navigate to edit the selected knowledge source");
-                  }}
-                >
-                  <Database className="mr-2 h-4 w-4" />
-                  Manage Knowledge Source
-                </Button>
+                <>
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="mt-3"
+                    onClick={navigateToKnowledgeSource}
+                  >
+                    <Database className="mr-2 h-4 w-4" />
+                    Manage Knowledge Source
+                  </Button>
+                  
+                  {/* Debug info */}
+                  <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 border-t pt-2">
+                    <p>Selected source: {selectedKnowledgeSource}</p>
+                    <p>Vector Store ID: {knowledgeSources.find(ks => ks.id === selectedKnowledgeSource)?.vectorStoreId || "Not available"}</p>
+                  </div>
+                </>
               )}
             </div>
           </div>

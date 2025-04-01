@@ -4,7 +4,7 @@ import { getThreadMessages } from '@/lib/chat-interface/adapters';
 import { StreamingTextResponse } from '@/lib/chat-interface/ai/compatibility';
 import { db } from '@/lib/db';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 // Create an OpenAI API client (edge-compatible)
 const openai = new OpenAI({
@@ -63,10 +63,23 @@ export async function POST(req: Request) {
       const data = await knowledgeSourcesResponse.json();
       knowledgeSources = Array.isArray(data) ? data : [];
       
+      // Debug log to see what's in the knowledge sources response
+      console.log(`Knowledge sources data:`, JSON.stringify(knowledgeSources.map(ks => ({
+        id: ks.id,
+        name: ks.name,
+        hasVectorStoreId: !!ks.vectorStoreId,
+        vectorStoreId: ks.vectorStoreId
+      }))));
+      
       // Extract vector store IDs
       vectorStoreIds = knowledgeSources
         .filter(source => source.vectorStoreId)
         .map(source => source.vectorStoreId);
+      
+      // Ensure vector store IDs are valid
+      vectorStoreIds = vectorStoreIds.filter(id => id && typeof id === 'string' && id.trim() !== '');
+      
+      console.log(`Found ${vectorStoreIds.length} vector stores for chatbot ${chatbotId}:`, vectorStoreIds);
       
       // Check for website URLs that can be searched live
       for (const source of knowledgeSources) {
@@ -116,17 +129,6 @@ export async function POST(req: Request) {
     // Add general instruction about not mentioning uploads
     systemPrompt = `${systemPrompt}\n\nImportant: You should never mention "uploaded files" or suggest that the user has uploaded any documents. All information in your knowledge base was prepared by administrators, not the current user.`;
     
-    // Add critical instruction for first-person company usage
-    systemPrompt += `\n\n[CRITICAL] YOU ARE THE COMPANY. Always use first person plural ("we", "our", "us") when referring to the company. NEVER say "[Company] is" or "[Company] has" - always say "We are" and "We have".`;
-    
-    // Add guardrail for handling unknown company questions
-    systemPrompt += `\n\n[GUARDRAIL] If someone asks about a company that's not in your knowledge base, DO NOT pretend to be that company or make up information about it. Clearly state that you don't have information about that specific company and can only speak as the company in your knowledge base.`;
-    
-    // Add instructions for speaking in first person and handling missing information
-    systemPrompt += `\n\nYou ARE the company mentioned in the knowledge base - not just representing it. Always speak in first person plural. Say "We are..." or "At [Company Name], we..." instead of "The company is..." or "[Company Name] is...". Never refer to the company in third person. You are speaking as the company itself in all interactions.`;
-    
-    systemPrompt += `\n\nIf you can't find requested information in your knowledge base, never say "I couldn't find this in the provided document" or similar phrases. Instead, respond with something like "This information doesn't appear to be in my knowledge base, but I'll make note of your question so it can be addressed in the future." or "I don't have that specific information available, but I'd be happy to help with what I do know or pass your inquiry along to my creator."`;
-    
     // Create a formatted list of allowed URLs for web search
     let authorizedDomains = '';
     if (useWebSearch && websiteUrls.length > 0) {
@@ -150,25 +152,12 @@ export async function POST(req: Request) {
     
     // Add context about knowledge base access without mentioning uploads
     if (useFileSearch) {
-      systemPrompt += `\n\n[CRITICAL INSTRUCTION] You have access to a knowledge base that contains information about our company. YOU MUST ALWAYS USE THE FILE_SEARCH TOOL BEFORE RESPONDING TO ANY QUESTION. This is absolutely required and non-negotiable.
-
-Step 1: For EVERY user question, first use file_search to look up relevant information in the knowledge base.
-Step 2: ONLY answer based on what you find in the knowledge base. 
-Step 3: If you don't find relevant information in the knowledge base, explicitly say "I don't have information about that in my knowledge base" rather than making up an answer.
-
-Do not rely on your general knowledge to answer questions. Only use information explicitly found in the knowledge base.`;
-      
-      // Log vector store IDs to help with debugging
-      console.log(`[${process.env.VERCEL_ENV || 'local'}] Vector store IDs available: ${JSON.stringify(vectorStoreIds)}`);
+      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. You should ALWAYS search this knowledge base before responding to user questions. Use the file search capability to retrieve relevant information. Important: Never mention "uploaded files" or suggest that the user has uploaded any documents. The knowledge base was prepared by administrators, not the current user.`;
     }
     
     const fullPrompt = !useFileSearch && !useWebSearch && knowledge
       ? `${systemPrompt}\n\nHere is relevant knowledge to help answer questions:\n${knowledge}`
       : systemPrompt;
-      
-    // Add debugging with environment marker
-    console.log(`[${process.env.VERCEL_ENV || 'local'}] Using prompt: ${fullPrompt.substring(0, 200)}...`);
-    console.log(`[${process.env.VERCEL_ENV || 'local'}] Use file search: ${useFileSearch}, Vector stores available: ${vectorStoreIds.length}`);
 
     // Prepare messages for the Responses API - convert format from Chat Completions to Responses
     // The Responses API accepts a string 'input' and a system_prompt parameter instead of messages array
@@ -199,14 +188,12 @@ Do not rely on your general knowledge to answer questions. Only use information 
       const tools = [];
       
       // Add tools based on available knowledge
-      if (useFileSearch && vectorStoreIds.length > 0) {
-        // Log key information for debugging
-        console.log(`[DEBUG] Setting up file_search with vector stores: ${JSON.stringify(vectorStoreIds)}`);
-        
-        // Define file_search tool based on latest OpenAI API format
+      if (useFileSearch) {
+        console.log(`Using file search with vector store IDs:`, vectorStoreIds);
         tools.push({ 
-          type: "file_search" 
-          // Note: Do not include vector_store_ids here, they go in tool_resources
+          type: "file_search",
+          vector_store_ids: vectorStoreIds,
+          max_num_results: 20
         });
       }
       
@@ -217,70 +204,28 @@ Do not rely on your general knowledge to answer questions. Only use information 
         });
       }
       
-      // Set up tool resources for file_search if needed
-      const toolResources = useFileSearch && vectorStoreIds.length > 0 ? {
-        file_search: {
-          vector_store_ids: vectorStoreIds
-        }
-      } : undefined;
+      // Determine tool_choice based on available tools
+      let toolChoice: 'auto' | 'required' | { type: string, function: { name: string } } = 'auto';
       
-      // Log the full configuration for debugging
-      console.log(`[DEBUG] Tools config: ${JSON.stringify(tools)}`);
-      console.log(`[DEBUG] Tool resources: ${JSON.stringify(toolResources)}`);
-      console.log(`[DEBUG] Vector store IDs: ${JSON.stringify(vectorStoreIds)}`);
-      console.log(`[DEBUG] useFileSearch: ${useFileSearch}`);
-      
-      try {
-        // Use the Responses API which properly supports file_search and web_search_preview
-        response = await openai.responses.create({
-          model: modelName,
-          instructions: fullPrompt,
-          input: userInput,
-          temperature: chatbot.temperature || 0.7,
-          max_output_tokens: chatbot.maxCompletionTokens || 1000,
-          stream: true,
-          tools: tools.length > 0 ? tools : undefined,
-          // Explicitly set both tool_choice and tool_resources
-          tool_choice: useFileSearch && vectorStoreIds.length > 0 ? 
-            { type: "function", function: { name: "file_search" } } : 
-            undefined,
-          tool_resources: toolResources,
-          tool_use_instructions: useFileSearch && vectorStoreIds.length > 0 ? 
-            "You MUST ALWAYS use file_search to look up information before responding to ANY question. Never rely on your general knowledge when file_search is available." : 
-            undefined
-        } as any); // Use type assertion to bypass TS errors with the OpenAI SDK
-      } catch (apiError) {
-        console.error("[ERROR] OpenAI API call failed:", apiError);
-        if (apiError instanceof Error) {
-          console.error(`[ERROR] Details: ${apiError.message}`);
-          if ('status' in apiError) {
-            console.error(`[ERROR] Status: ${(apiError as any).status}`);
-          }
-        }
-        
-        // Try a fallback without tool_resources if that was the issue
-        if (useFileSearch && vectorStoreIds.length > 0) {
-          console.log("[DEBUG] Attempting fallback without tool_resources");
-          response = await openai.responses.create({
-            model: modelName,
-            instructions: fullPrompt,
-            input: userInput,
-            temperature: chatbot.temperature || 0.7,
-            max_output_tokens: chatbot.maxCompletionTokens || 1000,
-            stream: true,
-            tools: [{ 
-              type: "file_search",
-              file_search: {
-                vector_store_ids: vectorStoreIds
-              }
-            }],
-            tool_choice: { type: "function", function: { name: "file_search" } }
-          } as any);
-        } else {
-          throw apiError; // Re-throw if we can't handle it
-        }
+      // If we have file search tool and the query seems like it needs knowledge
+      // force the model to use file_search first
+      if (useFileSearch) {
+        toolChoice = 'required';
+        console.log('Forcing file search to be used');
       }
-
+      
+      // Use the Responses API which properly supports file_search and web_search_preview
+      response = await openai.responses.create({
+        model: modelName,
+        instructions: fullPrompt,
+        input: userInput,
+        temperature: chatbot.temperature || 0.7,
+        max_output_tokens: chatbot.maxCompletionTokens || 1000,
+        stream: true,
+        tools: tools.length > 0 ? tools : undefined,
+        tool_choice: tools.length > 0 ? toolChoice : undefined
+      } as any); // Use type assertion to bypass TS errors with the OpenAI SDK
+      
     } catch (error) {
       console.error('Error in OpenAI API call:', error);
       
@@ -329,6 +274,17 @@ Do not rely on your general knowledge to answer questions. Only use information 
           for await (const chunk of response) {
             // Debug response structure
             console.log('Response chunk type:', chunk.type);
+            
+            // Log file search tool use if detected
+            if (chunk.type === 'tool_call_created' && chunk.tool_call?.type === 'file_search') {
+              console.log('File search tool being used!');
+            } else if (chunk.type === 'file_search_call.created') {
+              console.log('File search call created!');
+            } else if (chunk.type === 'file_search_call.completed') {
+              console.log('File search call completed!', chunk.file_search_call?.results?.length || 0, 'results found');
+            } else if (chunk.type === 'response.partial') {
+              console.log('Response partial:', chunk);
+            }
             
             // Handle response.output_text.delta chunks - this is the main content
             if (chunk.type === 'response.output_text.delta') {

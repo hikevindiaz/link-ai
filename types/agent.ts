@@ -25,6 +25,7 @@ export interface Agent {
     id: string;
     name: string;
     description?: string;
+    vectorStoreId?: string;
   }>;
   // Training related fields
   lastTrainedAt?: string;

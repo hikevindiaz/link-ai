@@ -192,6 +192,7 @@ export function AgentSettings({ agent, onSave }: AgentSettingsProps) {
   };
 
   const handleCancel = () => {
+    // Reset the form to its original values without submitting
     form.reset({
       name: agent.name,
       welcomeMessage: agent.welcomeMessage,
@@ -200,7 +201,10 @@ export function AgentSettings({ agent, onSave }: AgentSettingsProps) {
       language: agent.language || 'en',
       secondLanguage: agent.secondLanguage || 'none',
     });
+    
+    // Reset UI state
     setSaveStatus('idle');
+    setErrorMessage('');
   };
 
   return (
@@ -257,14 +261,17 @@ export function AgentSettings({ agent, onSave }: AgentSettingsProps) {
             </div>
           </div>
 
-          <FloatingActionCard 
-            isSaving={isSaving}
-            isDirty={form.formState.isDirty}
-            onSave={form.handleSubmit(handleSave)}
-            onCancel={handleCancel}
-            saveStatus={saveStatus}
-            errorMessage={errorMessage}
-          />
+          {/* Only show the FloatingActionCard when the form is dirty */}
+          {form.formState.isDirty && (
+            <FloatingActionCard 
+              isSaving={isSaving}
+              isDirty={form.formState.isDirty}
+              onSave={form.handleSubmit(handleSave)}
+              onCancel={handleCancel}
+              saveStatus={saveStatus}
+              errorMessage={errorMessage}
+            />
+          )}
         </form>
       </Form>
 

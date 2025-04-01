@@ -66,10 +66,51 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            description: true
+            description: true,
+            vectorStoreId: true
           }
         }
-      } : undefined
+      } : {
+        // Full selection for authenticated users
+        id: true,
+        name: true,
+        modelId: true,
+        model: true,
+        userId: true,
+        openaiId: true,
+        openaiKey: true,
+        prompt: true,
+        welcomeMessage: true,
+        chatbotErrorMessage: true,
+        chatTitle: true,
+        temperature: true,
+        maxPromptTokens: true,
+        maxCompletionTokens: true,
+        allowEveryone: true,
+        knowledgeSources: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            vectorStoreId: true
+          }
+        },
+        // Include other fields needed for admin view
+        phoneNumber: true,
+        responseRate: true,
+        checkUserPresence: true,
+        presenceMessage: true,
+        presenceMessageDelay: true,
+        silenceTimeout: true,
+        hangUpMessage: true,
+        callTimeout: true,
+        language: true,
+        secondLanguage: true,
+        voice: true,
+        trainingStatus: true,
+        trainingMessage: true,
+        lastTrainedAt: true
+      }
     });
 
     if (!chatbot) {
@@ -155,6 +196,9 @@ export async function PATCH(
 
     // Handle knowledge sources if provided
     if (body.knowledgeSources !== undefined) {
+      // Log knowledge sources before processing
+      console.log('Knowledge sources to connect:', JSON.stringify(body.knowledgeSources, null, 2));
+      
       // First, disconnect all existing knowledge sources
       await prisma.chatbot.update({
         where: { id: chatbotId },
@@ -178,6 +222,8 @@ export async function PATCH(
 
       // Then, connect the new knowledge sources if any
       if (body.knowledgeSources.length > 0) {
+        console.log('Connecting knowledge sources with IDs:', body.knowledgeSources.map((ks: any) => ks.id));
+        
         await prisma.chatbot.update({
           where: { id: chatbotId },
           data: {
@@ -195,7 +241,14 @@ export async function PATCH(
       data: updateData,
       include: {
         model: true,
-        knowledgeSources: true,
+        knowledgeSources: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            vectorStoreId: true
+          }
+        }
       },
     });
 

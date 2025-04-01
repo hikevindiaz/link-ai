@@ -67,6 +67,16 @@ function convertToAgent(chatbot: any): Agent {
       id: chatbot.model.id,
       name: chatbot.model.name,
     } : undefined,
+    temperature: chatbot.temperature,
+    maxPromptTokens: chatbot.maxPromptTokens,
+    maxCompletionTokens: chatbot.maxCompletionTokens,
+    // Include knowledge sources if available
+    knowledgeSources: chatbot.knowledgeSources ? chatbot.knowledgeSources.map((source: any) => ({
+      id: source.id,
+      name: source.name,
+      description: source.description,
+      vectorStoreId: source.vectorStoreId
+    })) : []
   };
 }
 
@@ -233,7 +243,24 @@ export default function TestChatbotPage() {
       if (!response.ok) throw new Error('Failed to fetch agent details');
       
       const data = await response.json();
-      return convertToAgent(data);
+      console.log('Fetched agent details:', JSON.stringify(data, null, 2));
+      
+      // Convert the chatbot data to our Agent type
+      const agent = convertToAgent(data);
+      
+      // Ensure knowledgeSources is properly included with vectorStoreId
+      if (data.knowledgeSources && Array.isArray(data.knowledgeSources)) {
+        agent.knowledgeSources = data.knowledgeSources.map(source => ({
+          id: source.id,
+          name: source.name,
+          description: source.description,
+          vectorStoreId: source.vectorStoreId
+        }));
+        
+        console.log('Processed knowledge sources:', JSON.stringify(agent.knowledgeSources, null, 2));
+      }
+      
+      return agent;
     } catch (error) {
       console.error('Error fetching agent details:', error);
       toast.error("Failed to load agent details");
@@ -433,6 +460,8 @@ export default function TestChatbotPage() {
             onSave={async (data) => {
               // Handle saving agent settings
               try {
+                console.log('Saving agent settings:', JSON.stringify(data, null, 2));
+                
                 const response = await fetch(`/api/chatbots/${selectedAgent.id}`, {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
@@ -441,16 +470,29 @@ export default function TestChatbotPage() {
                 
                 if (!response.ok) throw new Error('Failed to update agent');
                 
+                const updatedData = await response.json();
+                console.log('Updated agent response:', JSON.stringify(updatedData, null, 2));
+                
                 toast.success("Settings saved successfully");
                 
-                // Refresh agent details
-                const updatedAgent = await fetchAgentDetails(selectedAgent.id);
-                if (updatedAgent) {
-                  setSelectedAgent(updatedAgent);
-                }
+                // Process the returned data to ensure it has all required fields
+                const updatedAgent = {
+                  ...selectedAgent,
+                  ...data,
+                  // Make sure knowledgeSources is properly included
+                  knowledgeSources: updatedData.knowledgeSources || data.knowledgeSources || []
+                };
+                
+                console.log('Processed updated agent:', JSON.stringify(updatedAgent, null, 2));
+                
+                // Set the selected agent with the complete updated data
+                setSelectedAgent(updatedAgent);
+                
+                return updatedData;
               } catch (error) {
                 console.error('Error updating agent:', error);
                 toast.error("Failed to save settings");
+                throw error;
               }
             }}
           />

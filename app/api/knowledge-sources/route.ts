@@ -69,7 +69,17 @@ export async function GET(req: Request) {
       // Get knowledge sources with their contents
       const knowledgeSources = await db.knowledgeSource.findMany({
         where,
-        include: {
+        // Use select instead of include to get all fields
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          createdAt: true,
+          updatedAt: true,
+          userId: true,
+          vectorStoreId: true, // Explicitly include vectorStoreId
+          catalogMode: true,
+          // Include all relations
           textContents: true,
           websiteContents: true,
           qaContents: true,

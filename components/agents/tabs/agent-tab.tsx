@@ -26,7 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FloatingActionCard } from "@/components/agents/floating-action-card";
+import { SettingsTabWrapper } from "@/components/agents/settings-tab-wrapper";
 
 interface AgentTabProps {
   agent: Agent;
@@ -49,11 +49,9 @@ export function AgentTab({ agent, onSave, form }: AgentTabProps) {
     { label: 'Hindi', value: 'hi' },
   ];
   
-  // State variables for floating action card
+  // State variables for tracking form changes
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
   
   // Track form changes
   useEffect(() => {
@@ -62,50 +60,34 @@ export function AgentTab({ agent, onSave, form }: AgentTabProps) {
     });
     return () => subscription.unsubscribe();
   }, [form, form.watch, form.formState.isDirty]);
-  
-  // Handle form submission
+
   const handleSaveSettings = async () => {
-    setIsSaving(true);
-    setSaveStatus('saving');
-    setErrorMessage('');
-    
     try {
-      // Validate form data
-      const isValid = await form.trigger();
-      if (!isValid) {
-        toast.error('Please fix the form errors before saving');
-        setSaveStatus('error');
-        setErrorMessage('Form validation failed');
-        return;
-      }
+      setIsSaving(true);
+      const values = form.getValues();
       
-      const formValues = form.getValues();
-      await onSave(formValues);
+      const saveData = {
+        name: values.name,
+        welcomeMessage: values.welcomeMessage,
+        prompt: values.prompt,
+        errorMessage: values.errorMessage,
+        language: values.language,
+        secondLanguage: values.secondLanguage === 'none' ? null : values.secondLanguage,
+      };
       
-      // Reset the form dirty state after successful save
-      form.reset(formValues);
+      await onSave(saveData);
       
-      toast.success('Agent settings saved successfully');
-      setSaveStatus('success');
-      
-      // Reset the save status after 3 seconds
-      setTimeout(() => {
-        setSaveStatus('idle');
-      }, 3000);
+      form.reset(values);
+      toast.success("Basic settings saved successfully");
     } catch (error) {
-      console.error('Error saving agent settings:', error);
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      toast.error(`Failed to save agent settings: ${errorMsg}`);
-      setSaveStatus('error');
-      setErrorMessage(errorMsg);
+      console.error("Error saving settings:", error);
+      toast.error("Failed to save settings");
     } finally {
       setIsSaving(false);
     }
   };
   
-  // Cancel handler to revert changes
   const handleCancel = () => {
-    // Reset the form to original values
     form.reset({
       name: agent.name,
       welcomeMessage: agent.welcomeMessage,
@@ -114,12 +96,16 @@ export function AgentTab({ agent, onSave, form }: AgentTabProps) {
       language: agent.language || 'en',
       secondLanguage: agent.secondLanguage || 'none',
     });
-    setSaveStatus('idle');
   };
 
   return (
-    <Form {...form}>
-      <div className="mt-8 space-y-6">
+    <SettingsTabWrapper
+      tabName="Agent"
+      isDirty={isDirty}
+      onSave={handleSaveSettings}
+      onCancel={handleCancel}
+    >
+      <div className="space-y-6 pt-4">
         {/* Basic Info */}
         <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
           <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
@@ -288,19 +274,7 @@ export function AgentTab({ agent, onSave, form }: AgentTabProps) {
             </div>
           </div>
         </Card>
-        
-        {/* Add Floating Action Card for unsaved changes */}
-        {isDirty && (
-          <FloatingActionCard 
-            isSaving={isSaving}
-            isDirty={isDirty}
-            onSave={handleSaveSettings}
-            onCancel={handleCancel}
-            saveStatus={saveStatus}
-            errorMessage={errorMessage}
-          />
-        )}
       </div>
-    </Form>
+    </SettingsTabWrapper>
   );
 } 

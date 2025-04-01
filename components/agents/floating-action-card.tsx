@@ -22,21 +22,25 @@ export function FloatingActionCard({
   isSaving = false,
   errorMessage = "",
 }: FloatingActionCardProps) {
-  const [isVisible, setIsVisible] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
-  // Show the card when isDirty changes to true
+  // Handle visibility based on isDirty flag
   useEffect(() => {
-    if (isDirty) {
-      setIsVisible(true);
+    if (!isDirty) {
+      // When isDirty becomes false, start the animation out
+      setIsAnimatingOut(true);
     } else {
-      // Hide the card after a delay when isDirty changes to false
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-      }, 2000);
-      return () => clearTimeout(timer);
+      setIsAnimatingOut(false);
     }
   }, [isDirty]);
+
+  // Set animation state when status changes to success
+  useEffect(() => {
+    if (saveStatus === "success") {
+      setIsAnimatingOut(true);
+    }
+  }, [saveStatus]);
 
   // Update status message based on saveStatus
   useEffect(() => {
@@ -46,11 +50,7 @@ export function FloatingActionCard({
         break;
       case "success":
         setStatusMessage("Changes saved successfully!");
-        // Hide the card after a delay on success
-        const timer = setTimeout(() => {
-          setIsVisible(false);
-        }, 2000);
-        return () => clearTimeout(timer);
+        break;
       case "error":
         setStatusMessage(errorMessage || "Failed to save changes");
         break;
@@ -59,7 +59,8 @@ export function FloatingActionCard({
     }
   }, [saveStatus, errorMessage]);
 
-  if (!isVisible) {
+  // If we're not dirty, don't show the card
+  if (!isDirty && saveStatus !== "success" && saveStatus !== "saving") {
     return null;
   }
 
@@ -67,16 +68,16 @@ export function FloatingActionCard({
     <div className="fixed inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none">
       <div
         className={cn(
-          "bg-white border-gray-200 rounded-lg shadow-lg p-4 flex items-center gap-4 max-w-md w-full mx-4 pointer-events-auto transition-all duration-300 dark:bg-black dark:text-white dark:border-gray-700",
-          isVisible ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-8",
-          saveStatus === "error" ? "border-destructive" : "border-border"
+          "bg-white border border-gray-200 rounded-lg shadow-lg p-4 flex items-center gap-4 max-w-md w-full mx-4 pointer-events-auto transition-all duration-300 dark:bg-gray-900 dark:text-white dark:border-gray-800",
+          isAnimatingOut ? "opacity-0 transform translate-y-8" : "opacity-100 transform translate-y-0",
+          saveStatus === "error" ? "border-red-500 dark:border-red-600" : "border-gray-200 dark:border-gray-800"
         )}
       >
         <div className="flex-1">
           <p
             className={cn(
               "text-sm font-medium",
-              saveStatus === "error" ? "text-destructive" : "text-foreground"
+              saveStatus === "error" ? "text-red-600 dark:text-red-400" : "text-gray-800 dark:text-gray-200"
             )}
           >
             {statusMessage}
