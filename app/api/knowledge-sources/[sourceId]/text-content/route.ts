@@ -117,10 +117,15 @@ export async function POST(
     // Process to vector store - fully awaited to ensure completion
     try {
       console.log(`Processing text content ${textContent.id} to vector store for knowledge source ${sourceId}`);
-      await processContentToVectorStore(sourceId, {
+      const openAIFileId = await processContentToVectorStore(sourceId, {
         content: body.content
-      }, 'text');
-      console.log(`Successfully processed text content to vector store for knowledge source ${sourceId}`);
+      }, 'text', textContent.id); // Pass textContent.id to track the OpenAI file ID
+      
+      if (openAIFileId) {
+        console.log(`Successfully processed text content to vector store with file ID: ${openAIFileId}`);
+      } else {
+        console.warn(`Text content processed but no OpenAI file ID returned`);
+      }
     } catch (vectorStoreError) {
       console.error(`Error adding text to vector store:`, vectorStoreError);
       // Continue even if vector store processing fails
@@ -184,6 +189,22 @@ export async function PUT(
     const knowledgeSource = await db.knowledgeSource.findUnique({
       where: { id: sourceId }
     });
+    
+    // First, try to find any existing OpenAI file ID for this text content
+    let existingFileId = null;
+    try {
+      const existingContent = await db.$queryRaw`
+        SELECT "openAIFileId" FROM "text_contents"
+        WHERE id = ${body.id} AND "knowledgeSourceId" = ${sourceId}
+      `;
+      
+      if (Array.isArray(existingContent) && existingContent.length > 0 && existingContent[0].openAIFileId) {
+        existingFileId = existingContent[0].openAIFileId;
+        console.log(`Found existing OpenAI file ID ${existingFileId} for text content ${body.id}`);
+      }
+    } catch (queryError) {
+      console.error(`Error querying for existing OpenAI file ID:`, queryError);
+    }
 
     // Update text content
     const textContent = await db.textContent.update({
@@ -202,25 +223,44 @@ export async function PUT(
       
       // If this knowledge source already has a vector store ID, use a different approach
       if (knowledgeSource?.vectorStoreId) {
-        // First, mark the knowledge source so its vector store will be updated
+        // First, if there's an existing file ID, try to remove it
+        if (existingFileId) {
+          const { removeFileFromVectorStore } = await import('@/lib/vector-store');
+          try {
+            console.log(`Removing existing file ${existingFileId} from vector store ${knowledgeSource.vectorStoreId}`);
+            await removeFileFromVectorStore(knowledgeSource.vectorStoreId, existingFileId);
+          } catch (removeError) {
+            console.error(`Error removing existing file from vector store:`, removeError);
+          }
+        }
+        
+        // Mark the knowledge source so its vector store will be updated
         await db.knowledgeSource.update({
           where: { id: sourceId },
           data: { vectorStoreUpdatedAt: new Date() }
         });
         
         // Then process the new content to add it to the vector store
-        await processContentToVectorStore(sourceId, {
+        const openAIFileId = await processContentToVectorStore(sourceId, {
           content: body.content
-        }, 'text');
+        }, 'text', textContent.id); // Pass textContent.id to track the new file ID
+        
+        if (openAIFileId) {
+          console.log(`Added updated content to vector store with file ID: ${openAIFileId}`);
+        }
         
         // Finally update all associated chatbots
         const { updateChatbotsWithKnowledgeSource } = await import('@/lib/knowledge-vector-integration');
         await updateChatbotsWithKnowledgeSource(sourceId);
       } else {
         // No vector store yet, just process normally
-        await processContentToVectorStore(sourceId, {
+        const openAIFileId = await processContentToVectorStore(sourceId, {
           content: body.content
-        }, 'text');
+        }, 'text', textContent.id); // Pass textContent.id to track the file ID
+        
+        if (openAIFileId) {
+          console.log(`Added content to vector store with file ID: ${openAIFileId}`);
+        }
       }
       
       console.log(`Successfully processed updated text content to vector store for knowledge source ${sourceId}`);
@@ -285,7 +325,17 @@ export async function DELETE(
 
     console.log(`Attempting to delete text content: ${contentId} from source: ${sourceId}`);
 
-    // Delete text content
+    // First, handle the vector store cleanup
+    try {
+      const { handleTextContentDeletion } = await import('@/lib/knowledge-vector-integration');
+      await handleTextContentDeletion(sourceId, contentId);
+      console.log(`Successfully handled vector store cleanup for text content ${contentId}`);
+    } catch (vectorError) {
+      console.error(`Error cleaning up vector store:`, vectorError);
+      // Continue with deletion even if vector store cleanup fails
+    }
+
+    // Then delete text content from the database
     await db.textContent.delete({
       where: {
         id: contentId,

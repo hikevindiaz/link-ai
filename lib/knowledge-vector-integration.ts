@@ -58,12 +58,14 @@ export async function ensureVectorStore(knowledgeSourceId: string): Promise<stri
  * @param knowledgeSourceId The ID of the knowledge source
  * @param content The content to process
  * @param type The type of content ('qa' or 'text')
+ * @returns The OpenAI file ID of the created file, or null if unsuccessful
  */
 export async function processContentToVectorStore(
   knowledgeSourceId: string,
   content: any,
-  type: 'qa' | 'text'
-): Promise<void> {
+  type: 'qa' | 'text',
+  contentId?: string
+): Promise<string | null> {
   try {
     // Get knowledge source
     const knowledgeSource = await prisma.knowledgeSource.findUnique({
@@ -72,14 +74,14 @@ export async function processContentToVectorStore(
 
     if (!knowledgeSource) {
       console.error(`Knowledge source with ID ${knowledgeSourceId} not found`);
-      return;
+      return null;
     }
 
     // Ensure vector store exists
     const vectorStoreId = await ensureVectorStore(knowledgeSourceId);
     if (!vectorStoreId) {
       console.error(`Failed to create vector store for knowledge source ${knowledgeSourceId}`);
-      return;
+      return null;
     }
 
     const openai = getOpenAIClient();
@@ -107,6 +109,22 @@ export async function processContentToVectorStore(
 
     // Add the file to vector store
     await addFileToVectorStore(vectorStoreId, uploadedFile.id);
+    
+    // If we have a contentId for text content, store the OpenAI file ID for later reference
+    if (contentId && type === 'text') {
+      try {
+        // Store the OpenAI file ID in the textContent record
+        await prisma.$executeRaw`
+          UPDATE "text_contents"
+          SET "openAIFileId" = ${uploadedFile.id}
+          WHERE id = ${contentId}
+        `;
+        console.log(`Updated text content ${contentId} with OpenAI file ID ${uploadedFile.id}`);
+      } catch (updateError) {
+        console.error(`Failed to update text content ${contentId} with OpenAI file ID:`, updateError);
+        // Continue even if update fails
+      }
+    }
 
     // Update the vector store timestamp
     await prisma.knowledgeSource.update({
@@ -128,8 +146,11 @@ export async function processContentToVectorStore(
     for (const chatbot of chatbots) {
       await updateChatbotVectorStores(chatbot.id, [knowledgeSourceId]);
     }
+    
+    return uploadedFile.id;
   } catch (error) {
     console.error(`Error processing content to vector store for knowledge source ${knowledgeSourceId}:`, error);
+    return null;
   }
 }
 
@@ -194,10 +215,43 @@ export async function handleTextContentDeletion(knowledgeSourceId: string, conte
 
     const vectorStoreId = knowledgeSource.vectorStoreId;
     
-    // Since individual text content pieces can't be directly removed from vector stores
-    // we need to take a different approach. We update the timestamp and force chatbots 
-    // to refresh their connection with the knowledge source
+    // Try to get the OpenAI file ID associated with this text content
+    let openAIFileId: string | null = null;
+    try {
+      // First check if the text content has an OpenAI file ID stored directly
+      const textContentResult = await prisma.$queryRaw`
+        SELECT "openAIFileId" FROM "text_contents"
+        WHERE id = ${contentId} AND "knowledgeSourceId" = ${knowledgeSourceId}
+      `;
+      
+      if (Array.isArray(textContentResult) && textContentResult.length > 0 && textContentResult[0].openAIFileId) {
+        openAIFileId = textContentResult[0].openAIFileId;
+        console.log(`Found OpenAI file ID ${openAIFileId} for text content ${contentId}`);
+      }
+    } catch (queryError) {
+      console.error(`Error querying for text content OpenAI file ID:`, queryError);
+      // Continue even if query fails
+    }
     
+    // If we found an OpenAI file ID, try to delete it from the vector store
+    if (openAIFileId && vectorStoreId) {
+      const { removeFileFromVectorStore } = await import('./vector-store');
+      try {
+        console.log(`Attempting to remove file ${openAIFileId} from vector store ${vectorStoreId}`);
+        const removed = await removeFileFromVectorStore(vectorStoreId, openAIFileId);
+        if (removed) {
+          console.log(`Successfully removed file ${openAIFileId} from vector store ${vectorStoreId}`);
+        } else {
+          console.warn(`Failed to remove file ${openAIFileId} from vector store ${vectorStoreId}`);
+        }
+      } catch (removeError) {
+        console.error(`Error removing file from vector store:`, removeError);
+      }
+    } else {
+      console.log(`No OpenAI file ID found for text content ${contentId}, using fallback update method`);
+    }
+    
+    // Always update the timestamp and chatbots as a fallback
     // 1. Update the vector store timestamp to indicate a change
     await prisma.knowledgeSource.update({
       where: { id: knowledgeSourceId },
