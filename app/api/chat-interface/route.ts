@@ -134,46 +134,51 @@ export async function POST(req: Request) {
     let systemPrompt = chatbot.prompt || 'You are a helpful AI assistant.';
     
     // Add strong instruction to speak in first person as the business - put at the beginning for emphasis
-    systemPrompt = `YOU ARE THE COMPANY/BUSINESS ITSELF. Speak in first person plural (we/us/our) at all times.\n\n${systemPrompt}\n\nIMPORTANT: You must always respond as if you ARE the business itself. Never describe the business in third person. Examples:\n- Instead of "Green Hive is a company that..." say "We at Green Hive are a company that..."\n- Instead of "The company was founded in..." say "We were founded in..."\n- Instead of "They offer products like..." say "We offer products like..."\n\nThis first-person perspective is MANDATORY for all responses, regardless of whether you're using knowledge base search, web search, or any other tool.`;
-    
-    // Add general instruction about not mentioning uploads
-    systemPrompt = `${systemPrompt}\n\nImportant: You should never mention "uploaded files" or suggest that the user has uploaded any documents. All information in your knowledge base was prepared by administrators, not the current user.`;
-    
-    // Create a formatted list of allowed URLs for web search
-    let authorizedDomains = '';
+    systemPrompt = `YOU ARE THE COMPANY/BUSINESS ITSELF. Speak in first person plural (we/us/our) at all times. You must ONLY provide information about our specific business, products, and services.
+
+CORE PRINCIPLES:
+1. Stay within our business context - never provide general information about topics outside our specific offerings
+2. If information is not in our knowledge base or approved websites:
+   - Say "I apologize, but I don't have specific information about that topic in our knowledge base."
+   - Add "I'll make note of your inquiry to help us improve our information."
+   - Never make up information or provide general knowledge
+3. Only use information from:
+   - Our approved knowledge base
+   - Our specifically configured websites
+   - Our documented business policies and procedures
+
+${systemPrompt}\n\n`;
+
+    // Add instructions for web search with stronger guidance
     if (useWebSearch && websiteUrls.length > 0) {
-      // Extract domains from URLs for clearer presentation
-      const domains = websiteUrls.map(url => {
+      systemPrompt += `\n\nWEB SEARCH INSTRUCTIONS:
+I have access to real-time search on our approved websites. I must search these sites when:
+1. The user asks about topics mentioned in the search instructions
+2. The information might need to be current (prices, availability, etc.)
+3. The knowledge base doesn't have the specific information needed
+
+Approved websites and their use cases:`;
+      
+      // Add specific instructions for each website
+      for (const site of websiteInstructions) {
         try {
-          const urlObj = new URL(url);
-          return urlObj.hostname;
+          const domain = new URL(site.url).hostname;
+          if (site.instructions && site.instructions.trim()) {
+            systemPrompt += `\n\n• ${site.url}\n  REQUIRED SEARCH CASES:\n  - ${site.instructions}`;
+          } else {
+            systemPrompt += `\n\n• ${site.url}\n  REQUIRED SEARCH CASES:\n  - When users ask about information from this website\n  - When current information is needed`;
+          }
         } catch (e) {
-          return url;
-        }
-      });
-      
-      // Remove duplicates
-      const uniqueDomains = Array.from(new Set(domains));
-      authorizedDomains = uniqueDomains.join(', ');
-      
-      // Add instructions for web search
-      systemPrompt += `\n\nYou have access to search these specific websites for current information when relevant: ${authorizedDomains}.`;
-      
-      // Add specific instructions for each website if available
-      const sitesWithInstructions = websiteInstructions.filter(site => site.instructions && site.instructions.trim() !== '');
-      
-      if (sitesWithInstructions.length > 0) {
-        systemPrompt += `\n\nWhen searching specific websites, follow these guidelines:`;
-        
-        for (const site of sitesWithInstructions) {
-          try {
-            const domain = new URL(site.url).hostname;
-            systemPrompt += `\n- When searching ${domain}: ${site.instructions}`;
-          } catch (e) {
-            systemPrompt += `\n- When searching ${site.url}: ${site.instructions}`;
+          // Fallback if URL parsing fails
+          if (site.instructions && site.instructions.trim()) {
+            systemPrompt += `\n\n• ${site.url}\n  REQUIRED SEARCH CASES:\n  - ${site.instructions}`;
+          } else {
+            systemPrompt += `\n\n• ${site.url}\n  REQUIRED SEARCH CASES:\n  - When users ask about information from this website\n  - When current information is needed`;
           }
         }
       }
+      
+      systemPrompt += `\n\nIMPORTANT: You MUST search these websites when the query matches any of the specified cases. Do not rely on general knowledge - either use our knowledge base or search our approved websites.`;
     }
     
     // Add context about knowledge base access without mentioning uploads
