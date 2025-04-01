@@ -120,17 +120,30 @@ export async function addFileToVectorStore(
   const openai = getOpenAIClient();
 
   try {
+    // Format the file ID properly for OpenAI
+    // OpenAI expects file IDs to start with 'file-' but they might be stored with 'file_'
+    let openAIFileId = fileId;
+    if (openAIFileId.startsWith('file_')) {
+      // Convert file_123 to file-123 for OpenAI API
+      openAIFileId = openAIFileId.replace('file_', 'file-');
+      console.log(`Reformatted file ID from ${fileId} to ${openAIFileId}`);
+    }
+
     // Get the chunking strategy based on content type
     const chunkingOptions = getChunkingStrategy(contentType);
     
+    console.log(`Adding file ${openAIFileId} to vector store ${vectorStoreId} with content type ${contentType}`);
+    
     // Add the file to the vector store with the appropriate chunking strategy
-    await openai.vectorStores.files.createAndPoll(
+    const result = await openai.vectorStores.files.createAndPoll(
       vectorStoreId, 
       {
-        file_id: fileId,
+        file_id: openAIFileId,
         ...chunkingOptions
       }
     );
+
+    console.log(`Successfully added file ${openAIFileId} to vector store ${vectorStoreId}:`, result);
 
     // Update the timestamp for the vector store in our database
     const knowledgeSource = await prisma.knowledgeSource.findFirst({

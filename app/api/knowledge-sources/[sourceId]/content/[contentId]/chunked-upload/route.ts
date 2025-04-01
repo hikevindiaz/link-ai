@@ -77,17 +77,29 @@ export async function POST(
 
     // Start vector store integration in the background
     console.log(`Starting vector store integration for file ${fileId}`);
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/knowledge-sources/${params.sourceId}/content/${fileId}/vector`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        openAIFileId: uploadedFile.id
-      }),
-    }).catch(error => {
-      console.error('Error in background vector store integration:', error);
-    });
+    try {
+      const vectorResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/knowledge-sources/${params.sourceId}/content/${fileId}/vector`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          openAIFileId: uploadedFile.id
+        }),
+      });
+
+      if (!vectorResponse.ok) {
+        const errorData = await vectorResponse.json();
+        console.error('Vector store integration failed:', errorData);
+        throw new Error(`Vector store integration failed: ${errorData.error || vectorResponse.statusText}`);
+      }
+
+      const vectorResult = await vectorResponse.json();
+      console.log('Vector store integration completed:', vectorResult);
+    } catch (error) {
+      console.error('Error in vector store integration:', error);
+      // Don't throw here, as we want to return success for the upload even if vector store integration fails
+    }
 
     return new Response(JSON.stringify({ 
       success: true,
