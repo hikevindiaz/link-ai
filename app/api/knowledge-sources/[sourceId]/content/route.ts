@@ -230,7 +230,7 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
           access: 'public',
         }),
         new Promise<{ url: string }>((_, reject) => 
-          setTimeout(() => reject(new Error('Blob upload timed out')), 8000)
+          setTimeout(() => reject(new Error('Blob upload timed out')), 30000)
         )
       ]);
 
@@ -246,7 +246,7 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
             purpose: "assistants"
           }),
           new Promise<OpenAI.Files.FileObject>((_, reject) => 
-            setTimeout(() => reject(new Error('OpenAI upload timed out')), 8000)
+            setTimeout(() => reject(new Error('OpenAI upload timed out')), 30000)
           )
         ]);
       } catch (error) {
@@ -334,7 +334,7 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
             addFileToVectorStore(vectorStoreId, uploadedFile.id, 
               file.type.includes('pdf') ? 'pdf' : 'text'),
             new Promise<void>((_, reject) => 
-              setTimeout(() => reject(new Error('Vector store addition timed out')), 8000)
+              setTimeout(() => reject(new Error('Vector store addition timed out')), 30000)
             )
           ]);
           
@@ -371,11 +371,22 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
       // If we created a file record but failed later, try to clean it up
       if (fileId) {
         try {
-          await db.file.delete({
+          // First check if the file exists
+          const existingFile = await db.file.findUnique({
             where: { id: fileId }
           });
+          
+          if (existingFile) {
+            await db.file.delete({
+              where: { id: fileId }
+            });
+            console.log(`Cleaned up file record for ${fileId}`);
+          } else {
+            console.log(`File record ${fileId} does not exist, skipping cleanup`);
+          }
         } catch (deleteError) {
           console.error("Error cleaning up failed file upload:", deleteError);
+          // Don't throw here, we want to return the original error
         }
       }
       

@@ -35,7 +35,13 @@ export async function POST(
     console.log(`Found file record with blob URL: ${fileRecord.blobUrl}`);
 
     // Get the file from the blob URL
-    const blobResponse = await fetch(fileRecord.blobUrl);
+    const blobResponse = await Promise.race([
+      fetch(fileRecord.blobUrl) as Promise<Response>,
+      new Promise<Response>((_, reject) => 
+        setTimeout(() => reject(new Error('Blob fetch timed out')), 30000)
+      )
+    ]);
+
     if (!blobResponse.ok) {
       throw new Error(`Failed to fetch file from blob storage: ${blobResponse.status} ${blobResponse.statusText}`);
     }
@@ -49,10 +55,15 @@ export async function POST(
     // Upload to OpenAI with increased timeout
     console.log('Uploading file to OpenAI...');
     const openai = getOpenAIClient();
-    const uploadedFile = await openai.files.create({
-      file: file,
-      purpose: "assistants"
-    });
+    const uploadedFile = await Promise.race([
+      openai.files.create({
+        file: file,
+        purpose: "assistants"
+      }) as Promise<{ id: string }>,
+      new Promise<{ id: string }>((_, reject) => 
+        setTimeout(() => reject(new Error('OpenAI upload timed out')), 30000)
+      )
+    ]);
 
     console.log(`File uploaded to OpenAI with ID: ${uploadedFile.id}`);
 
@@ -73,11 +84,11 @@ export async function POST(
       
       try {
         // Add the file to vector store with timeout
-        await Promise.race<void>([
+        await Promise.race([
           addFileToVectorStore(vectorStoreId, uploadedFile.id, 
-            fileType.includes('pdf') ? 'pdf' : 'text'),
+            fileType.includes('pdf') ? 'pdf' : 'text') as Promise<void>,
           new Promise<void>((_, reject) => 
-            setTimeout(() => reject(new Error('Vector store addition timed out')), 8000)
+            setTimeout(() => reject(new Error('Vector store addition timed out')), 30000)
           )
         ]);
         
@@ -107,12 +118,22 @@ export async function POST(
     // If we have a fileId, try to clean up the temporary file record
     if (fileId) {
       try {
-        await db.file.delete({
+        // First check if the file exists
+        const existingFile = await db.file.findUnique({
           where: { id: fileId }
         });
-        console.log(`Cleaned up temporary file record for ${fileId}`);
+        
+        if (existingFile) {
+          await db.file.delete({
+            where: { id: fileId }
+          });
+          console.log(`Cleaned up file record for ${fileId}`);
+        } else {
+          console.log(`File record ${fileId} does not exist, skipping cleanup`);
+        }
       } catch (deleteError) {
         console.error('Error cleaning up failed chunked upload:', deleteError);
+        // Don't throw here, we want to return the original error
       }
     }
 
