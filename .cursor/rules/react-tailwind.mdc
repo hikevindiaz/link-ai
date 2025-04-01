@@ -1,0 +1,7 @@
+---
+description: 
+globs: components,ui
+alwaysApply: false
+---
+
+always use functional react and tailwind for designs, always use legacy peers in installation commands, rely on provided information to complete tasks, and when building new features, use components from /components and components/ui/; if a ui element is needed that's not available, first search the tremor library before creating a new one

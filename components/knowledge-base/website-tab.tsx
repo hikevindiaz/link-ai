@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Globe, Plus, Trash2, Loader2, AlertCircle, CheckCircle2, Bug } from "lucide-react";
+import { Globe, Plus, Trash2, Loader2, AlertCircle, CheckCircle2, Bug, RefreshCcw, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { useKnowledgeBase } from '@/app/(dashboard)/dashboard/knowledge-base/layout';
+import { Progress } from "@/components/ui/progress";
 
 interface WebsiteTabProps {
   source?: Source;
@@ -109,39 +110,8 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
     let interval: NodeJS.Timeout;
     
     if (isCrawling) {
-      setCrawlingProgress(0);
-      setCrawlingStatus('Initializing crawler...');
-      
-      // Simulate progress updates
-      interval = setInterval(() => {
-        setCrawlingProgress(prev => {
-          // Update status message based on progress
-          if (prev < 20) {
-            setCrawlingStatus('Initializing crawler...');
-          } else if (prev < 40) {
-            setCrawlingStatus('Scanning website structure...');
-          } else if (prev < 60) {
-            setCrawlingStatus('Extracting content...');
-          } else if (prev < 80) {
-            setCrawlingStatus('Processing extracted content...');
-          } else {
-            setCrawlingStatus('Finalizing and saving content...');
-          }
-          
-          // Increment progress, but don't reach 100% until we're done
-          return prev < 90 ? prev + 5 : prev;
-        });
-      }, 800);
-    } else if (crawlingProgress > 0 && crawlingProgress < 100) {
-      // When crawling is complete, set to 100%
-      setCrawlingProgress(100);
-      setCrawlingStatus('Crawling complete!');
-      
-      // Reset after a delay
-      setTimeout(() => {
-        setCrawlingProgress(0);
-        setCrawlingStatus('');
-      }, 2000);
+      // No need for this effect as we handle progress in handleStartCrawl
+      // The logic there is more comprehensive and handles all the phases
     }
     
     return () => {
@@ -275,26 +245,35 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
   const handleDeleteWebsite = () => {
     if (!websiteToDelete || !source?.id) return;
     
-    // Add delete action to pending changes
-    const pendingAction: PendingWebsiteAction = {
-      type: 'delete',
-      websiteId: websiteToDelete.id
-    };
+    setIsDeletingWebsite(true);
     
-    // Add to global pending changes
-    addPendingChange(source.id, {
-      website: pendingAction
-    });
-    
-    // Update UI by removing from local state
-    setSavedWebsites(prev => prev.filter(website => website.id !== websiteToDelete.id));
-    
-    // Close dialog and reset state
-    setDeleteWebsiteDialogOpen(false);
-    setWebsiteToDelete(null);
-    
-    // Show success message
-    toast.success("Website removal queued for saving");
+    try {
+      // Add delete action to pending changes
+      const pendingAction: PendingWebsiteAction = {
+        type: 'delete',
+        websiteId: websiteToDelete.id
+      };
+      
+      // Add to global pending changes
+      addPendingChange(source.id, {
+        website: pendingAction
+      });
+      
+      // Update UI by removing from local state
+      setSavedWebsites(prev => prev.filter(website => website.id !== websiteToDelete.id));
+      
+      // Close dialog and reset state
+      setDeleteWebsiteDialogOpen(false);
+      setWebsiteToDelete(null);
+      
+      // Show success message
+      toast.success("Website removal queued for saving");
+    } catch (error) {
+      console.error('Error queueing website deletion:', error);
+      toast.error("Failed to queue website for deletion");
+    } finally {
+      setIsDeletingWebsite(false);
+    }
   };
 
   const handleStartCrawl = async () => {
@@ -318,6 +297,8 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
     }
 
     setIsCrawling(true);
+    setCrawlingProgress(5); // Start with initial progress
+    setCrawlingStatus('Initializing crawler...');
 
     try {
       // Extract hostname for the URL match pattern
@@ -357,23 +338,76 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       const data = await response.json();
       console.log('Crawler started:', data);
       
-      // Refresh the file list after a short delay
-      setTimeout(async () => {
-        await fetchCrawlerFiles();
+      // Set progress based on status from response
+      if (data.status) {
+        setCrawlingProgress(10);
+        if (data.status.estimatedTimeMinutes) {
+          setCrawlingStatus(`Estimated time: ${data.status.estimatedTimeMinutes} minutes`);
+        }
+      }
+      
+      // Simulate the crawling progress (in a real implementation this would use WebSockets or polling)
+      let progress = 10;
+      const interval = setInterval(() => {
+        progress += 5;
+        setCrawlingProgress(progress);
         
-        // Show success message
-        setSuccessMessage(data.message || "Crawler started successfully. The crawled content will appear in the files section when complete.");
-        setSuccessDialogOpen(true);
-        toast.success("Crawler completed successfully");
+        // Update status based on progress phases
+        if (progress < 30) {
+          setCrawlingStatus('Scanning website structure...');
+        } else if (progress < 50) {
+          setCrawlingStatus('Extracting content from pages...');
+        } else if (progress < 70) {
+          setCrawlingStatus('Processing content for AI knowledge...');
+        } else if (progress < 90) {
+          setCrawlingStatus('Adding content to knowledge base...');
+        } else {
+          setCrawlingStatus('Finalizing crawl operation...');
+        }
         
-        // Reset form fields
-        setCrawlerUrl('');
-      }, 5000);
+        // When we reach 100%, clear the interval and finish
+        if (progress >= 100) {
+          clearInterval(interval);
+          setCrawlingStatus('Crawl complete! Content added to knowledge base.');
+          
+          // Refresh the file list
+          fetchCrawlerFiles();
+          
+          // Show success message
+          setSuccessMessage(data.message || "Website crawled successfully. The content has been added to your knowledge base and is ready for your agents to use.");
+          setSuccessDialogOpen(true);
+          toast.success("Crawler completed successfully");
+          
+          // Reset form fields and state
+          setCrawlerUrl('');
+          setIsCrawling(false);
+          
+          // Keep the progress UI visible for a moment before resetting
+          setTimeout(() => {
+            setCrawlingProgress(0);
+            setCrawlingStatus('');
+          }, 3000);
+        }
+      }, 1000);
+      
+      // In case of error, make sure to clear the interval
+      setTimeout(() => {
+        clearInterval(interval);
+        // If we're still crawling after 2 minutes, there might be an issue
+        if (isCrawling && progress < 100) {
+          setCrawlingProgress(0);
+          setCrawlingStatus('');
+          setIsCrawling(false);
+          toast.error("Crawler timed out. Please check the files section to see if any content was captured.");
+        }
+      }, 120000); // 2 minute timeout
+      
     } catch (error) {
       console.error('Error starting crawler:', error);
       toast.error(error instanceof Error ? error.message : "Failed to start crawler");
-    } finally {
       setIsCrawling(false);
+      setCrawlingProgress(0);
+      setCrawlingStatus('');
     }
   };
 
@@ -419,6 +453,41 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  // Add this function to handle starting the actual crawl
+  const handleStartActualCrawl = async (crawlerId: string) => {
+    if (!crawlerId) return;
+    
+    toast.info("Starting crawler process...");
+    
+    try {
+      const response = await fetch(`/api/crawlers/${crawlerId}/crawling`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to start crawler: ${response.status} ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success("Crawler executed successfully");
+        setSuccessMessage(data.message || "Content crawled and added to knowledge base. Your agent can now use this information.");
+        setSuccessDialogOpen(true);
+        fetchCrawlerFiles(); // Refresh the file list
+      } else {
+        toast.error(data.message || "Failed to execute crawler");
+      }
+    } catch (error) {
+      console.error('Error executing crawler:', error);
+      toast.error(error instanceof Error ? error.message : "Failed to execute crawler");
+    }
   };
 
   // Render content
@@ -479,6 +548,21 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                     )}
                   </Button>
                 </div>
+                
+                <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-md border border-blue-100 dark:border-blue-900">
+                  <div className="flex items-start gap-2">
+                    <RiInformationLine className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-blue-700 dark:text-blue-300">
+                      <p className="font-medium mb-1">When to use Live Search URLs:</p>
+                      <ul className="list-disc list-inside space-y-1 pl-1">
+                        <li>For frequently updated content like documentation that changes often</li>
+                        <li>When you need the most current information from your website</li>
+                        <li>For content that should be searched when directly mentioned by users</li>
+                      </ul>
+                      <p className="mt-2">For static content that rarely changes, use the <strong>Crawled Content</strong> tab instead.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
               
               {error && (
@@ -524,7 +608,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center p-4 border rounded-md border-dashed border-gray-300 dark:border-gray-700">
+                  <div className="text-center p-4 border rounded-md border-gray-300 dark:border-gray-700">
                     <p className="text-gray-500 dark:text-gray-400">No URLs added yet</p>
                   </div>
                 )}
@@ -582,9 +666,12 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                 </div>
                 
                 {crawlingProgress > 0 && (
-                  <div className="mt-4">
-                    <ProgressBar value={crawlingProgress} />
-                    <p className="text-sm text-gray-500 mt-2">{crawlingStatus}</p>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">{crawlingStatus}</span>
+                      <span className="text-sm font-medium">{crawlingProgress}%</span>
+                    </div>
+                    <Progress value={crawlingProgress} className="h-2" />
                   </div>
                 )}
               </div>
@@ -600,7 +687,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                       <TableRow>
                         <TableCell className="w-full">File Name</TableCell>
                         <TableCell className="whitespace-nowrap">Created On</TableCell>
-                        <TableCell className="w-[100px]">Actions</TableCell>
+                        <TableCell className="w-[180px]">Actions</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -609,15 +696,28 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                           <TableCell className="font-medium break-all">{file.name}</TableCell>
                           <TableCell className="whitespace-nowrap">{formatDate(file.createdAt)}</TableCell>
                           <TableCell>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={() => confirmDeleteFile(file)}
-                              className="flex items-center gap-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
-                            >
-                              <RiDeleteBinLine className="h-4 w-4" />
-                              <span>Delete</span>
-                            </Button>
+                            <div className="flex gap-2">
+                              {file.crawlerId && (
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => handleStartActualCrawl(file.crawlerId)}
+                                  className="flex items-center gap-1"
+                                >
+                                  <Bug className="h-4 w-4" />
+                                  <span>Run Crawler</span>
+                                </Button>
+                              )}
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => confirmDeleteFile(file)}
+                                className="flex items-center gap-1 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950"
+                              >
+                                <RiDeleteBinLine className="h-4 w-4" />
+                                <span>Delete</span>
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

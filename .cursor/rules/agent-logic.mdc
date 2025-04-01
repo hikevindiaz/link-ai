@@ -1,0 +1,37 @@
+---
+description: 
+globs: chat-interface,chat
+alwaysApply: false
+---
+Based on our recent work, here's a summary of our agent approach:
+API Integration
+Successfully migrated to OpenAI's Responses API
+Implemented proper streaming response handling
+Configured file search and web search capabilities
+Used correct parameters: instructions instead of system_prompt, max_output_tokens instead of max_tokens
+Architecture
+Used Vercel AI SDK with streamProtocol: 'text' for client-side handling
+Implemented server-side streaming with proper chunk handling
+Integrated vector stores for knowledge base search
+Maintained compatibility with both file search and web search tools
+Key Components
+Chat Interface (components/chat-interface/chat.tsx)
+API Route Handler (app/api/chat-interface/route.ts)
+Knowledge Base Integration (components/knowledge-base/source-settings.tsx)
+Vector Store Configuration for file search
+Response Handling
+// Key streaming implementation
+if (chunk.type === 'response.output_text.delta') {
+  if (typeof chunk.delta === 'string') {
+    controller.enqueue(encoder.encode(chunk.delta));
+  } 
+  else if (chunk.delta && typeof chunk.delta.text === 'string') {
+    controller.enqueue(encoder.encode(chunk.delta.text));
+  }
+}
+Best Practices
+Proper error handling and logging
+Clean separation of concerns between client and server
+Efficient streaming response processing
+Proper type checking and fallbacks
+This approach successfully combines OpenAI's latest APIs with file search capabilities while maintaining efficient streaming responses for a smooth user experience.

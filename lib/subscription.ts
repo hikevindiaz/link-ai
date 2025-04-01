@@ -53,3 +53,50 @@ export async function getUserSubscriptionPlan(
         stripeCurrentPeriodEnd: user.stripeCurrentPeriodEnd?.getTime(),
     }
 }
+
+/**
+ * Checks what features a user has access to based on their subscription plan
+ * @param userId The ID of the user to check
+ * @returns An object indicating which features are available
+ */
+export async function checkSubscriptionFeatures(userId: string): Promise<{
+  allowCrawling: boolean;
+  allowMultipleKnowledgeSources: boolean;
+  allowCustomModels: boolean;
+  maxFiles: number;
+}> {
+  try {
+    const subscriptionPlan = await getUserSubscriptionPlan(userId);
+    
+    // Default feature set for free plan
+    const features = {
+      allowCrawling: false,
+      allowMultipleKnowledgeSources: false,
+      allowCustomModels: false,
+      maxFiles: subscriptionPlan.maxFiles || 10
+    };
+    
+    // Check plan name to determine features
+    if (subscriptionPlan.name === 'Pro') {
+      features.allowCrawling = true;
+      features.allowMultipleKnowledgeSources = true;
+      features.allowCustomModels = true;
+    } else if (subscriptionPlan.name === 'Hobby' || subscriptionPlan.name === 'Basic') {
+      features.allowCrawling = true;
+      features.allowMultipleKnowledgeSources = true;
+      features.allowCustomModels = false;
+    }
+    
+    return features;
+  } catch (error) {
+    console.error(`Error checking subscription features for user ${userId}:`, error);
+    
+    // Return the most restrictive set of features if there's an error
+    return {
+      allowCrawling: false,
+      allowMultipleKnowledgeSources: false,
+      allowCustomModels: false,
+      maxFiles: 10
+    };
+  }
+}

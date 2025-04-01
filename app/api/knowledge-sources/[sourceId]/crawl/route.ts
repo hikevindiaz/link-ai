@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import * as z from "zod";
+import { ensureVectorStore } from "@/lib/knowledge-vector-integration";
+import { getOpenAIClient } from "@/lib/openai";
 
 // Define the schema for crawler request validation
 const crawlerSchema = z.object({
@@ -41,6 +43,14 @@ export async function POST(
     const json = await req.json();
     const body = crawlerSchema.parse(json);
 
+    // Ensure vector store exists for this knowledge source
+    const vectorStoreId = await ensureVectorStore(sourceId);
+    if (!vectorStoreId) {
+      console.error(`Failed to create or find vector store for knowledge source ${sourceId}`);
+    } else {
+      console.log(`Using vector store ${vectorStoreId} for knowledge source ${sourceId}`);
+    }
+
     // Create a crawler record
     const crawler = await db.crawler.create({
       data: {
@@ -53,12 +63,16 @@ export async function POST(
       }
     });
 
+    // Format hostname for file name
+    const hostname = new URL(body.crawlUrl).hostname;
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    
     // Create a file record that will be populated with the crawled content
     const file = await db.file.create({
       data: {
-        name: `Crawled content from ${new URL(body.crawlUrl).hostname}`,
+        name: `Crawled content from ${hostname} (${timestamp})`,
         userId: session.user.id,
-        openAIFileId: `crawl_${Date.now()}`, // Placeholder ID until actual file is created
+        openAIFileId: `crawl_pending_${Date.now()}`, // Placeholder ID until actual file is created
         blobUrl: "", // Will be populated when crawling is complete
         crawlerId: crawler.id,
         knowledgeSourceId: sourceId
@@ -70,9 +84,15 @@ export async function POST(
     
     return NextResponse.json({
       success: true,
-      message: "Crawler started successfully",
+      message: "Crawler started successfully. The content will be processed and added to your knowledge base.",
       fileId: file.id,
-      crawlerId: crawler.id
+      crawlerId: crawler.id,
+      status: {
+        phase: "initialized",
+        progress: 0,
+        estimatedTimeMinutes: body.maxPagesToCrawl > 10 ? 5 : 2 // Estimate time based on page count
+      },
+      vectorStoreId: vectorStoreId
     });
   } catch (error) {
     console.error("[CRAWLER_POST]", error);

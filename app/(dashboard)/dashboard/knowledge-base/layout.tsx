@@ -87,53 +87,51 @@ export default function KnowledgeBaseLayout({
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error || `Failed to upload file: ${response.status}`);
               }
-            } else if (change.type === 'delete' && change.fileId) {
-              // Check if this is a temporary ID (which shouldn't be sent to the server)
-              if (change.fileId.startsWith('temp-')) {
-                console.log(`Skipping deletion of temporary file: ${change.fileId}`);
-                // Just skip the API call for temporary files as they don't exist on the server yet
-                continue;
-              }
+            }
+          }
+        }
+        
+        // Process website changes (live search URLs)
+        if (data.website) {
+          const websiteChanges = Array.isArray(data.website) ? data.website : [data.website];
+          
+          for (const change of websiteChanges) {
+            // Add new website
+            if (change.type === 'add' && change.url) {
+              const response = await fetch(`/api/knowledge-sources/${sourceId}/website`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  urls: [change.url], // Send as array of URLs to match API schema
+                }),
+              });
               
-              console.log(`Deleting file: ${change.fileId}`);
-              try {
-                const response = await fetch(`/api/knowledge-sources/${sourceId}/content/${change.fileId}?type=file`, {
-                  method: 'DELETE',
-                });
-                
-                // Handle response based on status
-                if (response.status === 207) {
-                  // Partial success - file was deleted but some components failed
-                  const data = await response.json();
-                  console.log(`File ${change.fileId} deleted with warnings:`, data);
-                  // We continue as this is considered successful
-                } else if (!response.ok) {
-                  // If we get a 404, it might be because the file doesn't exist, which is fine
-                  if (response.status === 404) {
-                    console.warn(`File ${change.fileId} not found on server, continuing`);
-                    continue;
-                  }
-                  
-                  const errorText = await response.text();
-                  console.error(`Error deleting file ${change.fileId}:`, errorText);
-                  throw new Error(`Failed to delete file: ${response.status}`);
-                }
-              } catch (error) {
-                if (error instanceof Error && error.message.includes('Failed to fetch')) {
-                  // Network error, but we'll continue with other changes
-                  console.error('Network error during file deletion:', error);
-                  toast.error(`Network error while deleting a file. Please try again.`);
-                  continue;
-                }
-                throw error;
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Failed to save website URL: ${response.status}`);
+              }
+            } 
+            // Delete website
+            else if (change.type === 'delete' && change.websiteId) {
+              // Use the website-specific endpoint for deletion
+              // The API expects the ID as the final path segment
+              const response = await fetch(`/api/knowledge-sources/${sourceId}/website/${change.websiteId}`, {
+                method: 'DELETE',
+              });
+              
+              if (!response.ok) {
+                throw new Error(`Failed to delete website: ${response.status}`);
               }
             }
           }
         }
         
         // Process text content changes
-        if (data.text) {
-          const textChanges = Array.isArray(data.text) ? data.text : [data.text];
+        if (data.textContent) {
+          const textChanges = Array.isArray(data.textContent) ? data.textContent : [data.textContent];
+          
           for (const change of textChanges) {
             if (change.type === 'add' && change.content) {
               const response = await fetch(`/api/knowledge-sources/${sourceId}/text-content`, {
@@ -148,7 +146,7 @@ export default function KnowledgeBaseLayout({
               
               if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || `Failed to add text: ${response.status}`);
+                throw new Error(errorData.error || `Failed to save text: ${response.status}`);
               }
             } else if (change.type === 'update' && change.id && change.content) {
               const response = await fetch(`/api/knowledge-sources/${sourceId}/text-content`, {

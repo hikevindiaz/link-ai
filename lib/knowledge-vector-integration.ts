@@ -269,4 +269,55 @@ export async function handleTextContentDeletion(knowledgeSourceId: string, conte
   } catch (error) {
     console.error(`Error handling text content deletion for knowledge source ${knowledgeSourceId}:`, error);
   }
+}
+
+/**
+ * Adds documents to a vector store
+ * @param vectorStoreId The ID of the vector store
+ * @param documents An array of documents to add, each with pageContent and metadata
+ * @returns boolean indicating success or failure
+ */
+export async function addDocumentsToVectorStore(
+  vectorStoreId: string,
+  documents: Array<{ pageContent: string; metadata: any }>
+): Promise<boolean> {
+  try {
+    if (!vectorStoreId || !documents || documents.length === 0) {
+      console.error('Invalid vectorStoreId or documents');
+      return false;
+    }
+
+    console.log(`Adding ${documents.length} documents to vector store ${vectorStoreId}`);
+
+    const openai = getOpenAIClient();
+    
+    // First, create a file with the documents
+    const fileName = `document_content_${Date.now()}.jsonl`;
+    
+    // Convert documents to JSONL format
+    const jsonlContent = documents.map(doc => 
+      JSON.stringify({
+        text: doc.pageContent,
+        metadata: doc.metadata
+      })
+    ).join('\n');
+    
+    // Create a file with the content
+    const file = new File([jsonlContent], fileName, { type: 'application/jsonl' });
+    
+    // Upload the file to OpenAI
+    const uploadedFile = await openai.files.create({
+      file,
+      purpose: "assistants",
+    });
+    
+    // Add the file to vector store
+    await addFileToVectorStore(vectorStoreId, uploadedFile.id);
+    
+    console.log(`Successfully added documents to vector store ${vectorStoreId} via file ${uploadedFile.id}`);
+    return true;
+  } catch (error) {
+    console.error(`Error adding documents to vector store ${vectorStoreId}:`, error);
+    return false;
+  }
 } 

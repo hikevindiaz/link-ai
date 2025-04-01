@@ -13,7 +13,13 @@ const routeContextSchema = z.object({
 // Schema for website URL validation
 const websiteSchema = z.object({
   urls: z.array(z.string().url("Invalid URL format")).min(1, "At least one URL is required"),
-});
+}).or(
+  // Alternative schema for backward compatibility
+  z.object({
+    url: z.string().url("Invalid URL format"),
+    searchType: z.string().optional()
+  })
+);
 
 // Verify user has access to the knowledge source
 async function verifyUserHasAccessToSource(sourceId: string, userId: string) {
@@ -97,9 +103,19 @@ export async function POST(
     const json = await req.json();
     const body = websiteSchema.parse(json);
 
+    // Determine which URLs to process based on the schema
+    let urlsToProcess: string[] = [];
+    if ('urls' in body && Array.isArray(body.urls)) {
+      urlsToProcess = body.urls;
+    } else if ('url' in body && typeof body.url === 'string') {
+      urlsToProcess = [body.url];
+    } else {
+      throw new Error('Invalid request format - no valid URLs provided');
+    }
+
     // Create website content entries for each URL
     const results = await Promise.all(
-      body.urls.map(async (url) => {
+      urlsToProcess.map(async (url) => {
         try {
           const websiteContent = await db.websiteContent.create({
             data: {
