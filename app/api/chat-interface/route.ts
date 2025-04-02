@@ -114,13 +114,17 @@ export async function POST(req: Request) {
         knowledge = knowledgeSources.map((source: any) => {
           let sourceKnowledge = '';
           if (source.textContents) {
-            sourceKnowledge += source.textContents.map((text: any) => text.content).join('\n');
+            sourceKnowledge += source.textContents.map((text: any) => 
+              `YOU ARE THE COMPANY/BUSINESS ITSELF. The following is our official company information that should be conveyed in first person always and never in the third person (we/us/our) Alwaya begin each response with "As a company, we believe, Our, etc:":\n\n${text.content}`
+            ).join('\n\n---\n\n');
           }
           if (source.websiteContents) {
             sourceKnowledge += source.websiteContents.map((web: any) => `Content from ${web.url}`).join('\n');
           }
           if (source.qaContents) {
-            sourceKnowledge += source.qaContents.map((qa: any) => `Q: ${qa.question}\nA: ${qa.answer}`).join('\n');
+            sourceKnowledge += source.qaContents.map((qa: any) => 
+              `Q: ${qa.question}\nA: As a company, we respond: ${qa.answer}`
+            ).join('\n\n');
           }
           return sourceKnowledge;
         }).join('\n\n');
@@ -146,6 +150,14 @@ CORE PRINCIPLES:
    - Our approved knowledge base
    - Our specifically configured websites
    - Our documented business policies and procedures
+
+IMPORTANT RESPONSE INSTRUCTIONS:
+1. ALL responses must be in FIRST PERSON PLURAL (we/us/our) as the business itself
+2. ANY information retrieved from the knowledge base or file search MUST be reformatted into first person
+3. NEVER quote text directly - always rewrite information as if you (the business) are speaking
+4. For ALL types of content (PDF, text, QA, websites) maintain consistent first-person voice
+5. Begin responses with phrases like "We offer..." or "Our service provides..." rather than "The company offers..."
+6. AVOID phrases like "according to the document" or "the text states" - incorporate information naturally
 
 ${systemPrompt}\n\n`;
 
@@ -183,7 +195,13 @@ Approved websites and their use cases:`;
     
     // Add context about knowledge base access without mentioning uploads
     if (useFileSearch) {
-      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. You should ALWAYS search this knowledge base before responding to user questions. Use the file search capability to retrieve relevant information. Important: Never mention "uploaded files" or suggest that the user has uploaded any documents. The knowledge base was prepared by administrators, not the current user.`;
+      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. You should ALWAYS search this knowledge base before responding to user questions. Use the file search capability to retrieve relevant information. 
+
+KNOWLEDGE BASE INSTRUCTIONS:
+1. When retrieving information from our knowledge base, ALWAYS convert it to first-person plural (we/us/our)
+2. Never present knowledge as "the document says" or "according to the file" - speak as the business directly
+3. Maintain our brand voice consistently regardless of how the information is stored
+4. Important: Never mention "uploaded files" or suggest that the user has uploaded any documents. The knowledge base was prepared by administrators, not the current user.`;
     }
     
     const fullPrompt = !useFileSearch && !useWebSearch && knowledge

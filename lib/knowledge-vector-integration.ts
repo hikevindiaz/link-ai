@@ -90,12 +90,15 @@ export async function processContentToVectorStore(
     let formattedContent: string;
     let fileName: string;
 
+    // Include first-person instructions in all content types
+    const firstPersonInstructions = `IMPORTANT: This is official company information that must be conveyed in first-person plural (we/us/our) voice. Always speak as the company itself, never in third person.`;
+
     if (type === 'qa') {
       fileName = `qa_content_${Date.now()}.md`;
-      formattedContent = `# Question and Answer\n\n## Question\n${content.question}\n\n## Answer\n${content.answer}`;
+      formattedContent = `# Question and Answer\n\n${firstPersonInstructions}\n\n## Question\n${content.question}\n\n## Answer\n${content.answer}\n\nREMINDER: Always rewrite this answer in first-person plural (we/us/our) when responding to users.`;
     } else {
       fileName = `text_content_${Date.now()}.md`;
-      formattedContent = `# Text Content\n\n${content.content || content}`;
+      formattedContent = `# Text Content\n\n${firstPersonInstructions}\n\n${content.content || content}\n\nREMINDER: Always convert this information to first-person plural (we/us/our) when responding to users.`;
     }
 
     // Create a file with the content
@@ -233,16 +236,27 @@ export async function handleTextContentDeletion(knowledgeSourceId: string, conte
       // Continue even if query fails
     }
     
-    // If we found an OpenAI file ID, try to delete it from the vector store
+    // If we found an OpenAI file ID, try to delete it from the vector store and OpenAI
     if (openAIFileId && vectorStoreId) {
       const { removeFileFromVectorStore } = await import('./vector-store');
+      const openai = await import('./openai').then(m => m.getOpenAIClient());
+      
       try {
+        // First remove from vector store
         console.log(`Attempting to remove file ${openAIFileId} from vector store ${vectorStoreId}`);
         const removed = await removeFileFromVectorStore(vectorStoreId, openAIFileId);
         if (removed) {
           console.log(`Successfully removed file ${openAIFileId} from vector store ${vectorStoreId}`);
         } else {
           console.warn(`Failed to remove file ${openAIFileId} from vector store ${vectorStoreId}`);
+        }
+
+        // Then delete the OpenAI file
+        try {
+          await openai.files.del(openAIFileId);
+          console.log(`Successfully deleted OpenAI file ${openAIFileId}`);
+        } catch (deleteError) {
+          console.error(`Error deleting OpenAI file ${openAIFileId}:`, deleteError);
         }
       } catch (removeError) {
         console.error(`Error removing file from vector store:`, removeError);
