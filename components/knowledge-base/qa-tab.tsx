@@ -150,7 +150,19 @@ export function QATab({ source, onSave }: QATabProps) {
   const handleDeletePair = () => {
     if (!pairToDelete?.id || !source?.id) return;
     
-    // Create pending action
+    // Check if this is a temporary ID (not yet saved to database)
+    const isTemporaryItem = pairToDelete.id.startsWith('temp-');
+    
+    if (isTemporaryItem) {
+      // For temporary items, just remove from local state without database operations
+      setPairs(prev => prev.filter(pair => pair.id !== pairToDelete.id));
+      setDeleteDialogOpen(false);
+      setPairToDelete(null);
+      toast.success("QA pair removed");
+      return;
+    }
+    
+    // Create pending action for items that exist in the database
     const pendingAction: PendingQAAction = {
       type: 'delete',
       pairId: pairToDelete.id

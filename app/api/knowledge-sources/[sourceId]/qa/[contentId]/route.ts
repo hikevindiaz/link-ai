@@ -2,6 +2,8 @@ import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { handleQAContentDeletion } from "@/lib/knowledge-vector-integration";
+import { Prisma } from "@prisma/client";
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -42,6 +44,12 @@ export async function DELETE(
     const { params } = routeContextSchema.parse(context);
     const { sourceId, contentId } = params;
 
+    // Check if the contentId starts with 'temp-' (temporary ID)
+    if (contentId.startsWith('temp-')) {
+      console.log(`Skipping deletion of temporary QA content with ID: ${contentId}`);
+      return new Response(null, { status: 204 });
+    }
+
     console.log(`Attempting to delete QA content: ${contentId} from source: ${sourceId}`);
 
     // Verify user has access to the knowledge source
@@ -50,15 +58,33 @@ export async function DELETE(
       return new Response("Unauthorized", { status: 403 });
     }
 
-    // Delete QA content
-    await db.qAContent.delete({
-      where: {
-        id: contentId,
-        knowledgeSourceId: sourceId,
-      },
-    });
+    // First, handle vector store cleanup
+    try {
+      await handleQAContentDeletion(sourceId, contentId);
+      console.log(`Successfully handled vector store cleanup for QA content ${contentId}`);
+    } catch (vectorError) {
+      console.error(`Error cleaning up vector store:`, vectorError);
+      // Continue with deletion even if vector store cleanup fails
+    }
 
-    console.log(`Successfully deleted QA content: ${contentId}`);
+    // Delete QA content
+    try {
+      await db.qAContent.delete({
+        where: {
+          id: contentId,
+          knowledgeSourceId: sourceId,
+        },
+      });
+      console.log(`Successfully deleted QA content: ${contentId}`);
+    } catch (deleteError) {
+      // Handle case where the record doesn't exist
+      if (deleteError instanceof Prisma.PrismaClientKnownRequestError && deleteError.code === 'P2025') {
+        console.log(`QA content ${contentId} not found in database, may have been deleted already`);
+        return new Response(null, { status: 204 });
+      }
+      throw deleteError; // Re-throw other errors
+    }
+
     return new Response(null, { status: 204 });
   } catch (error) {
     console.error("Error in DELETE handler:", error);

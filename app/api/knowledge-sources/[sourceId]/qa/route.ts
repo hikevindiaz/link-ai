@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { NextResponse } from 'next/server';
-import { processContentToVectorStore } from "@/lib/knowledge-vector-integration";
+import { processContentToVectorStore, handleQAContentDeletion } from "@/lib/knowledge-vector-integration";
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -126,13 +126,22 @@ export async function POST(
 
           // Process to vector store
           try {
-            // This is async but we don't need to wait for it to complete
-            processContentToVectorStore(sourceId, {
+            // Process to vector store and get the OpenAI file ID
+            const openAIFileId = await processContentToVectorStore(sourceId, {
               question: qa.question,
               answer: qa.answer
-            }, 'qa').catch(error => {
-              console.error(`Error processing QA to vector store:`, error);
-            });
+            }, 'qa', qaContent.id);
+            
+            if (openAIFileId) {
+              // If we got a file ID back, update the QA content with it using raw SQL
+              // to avoid TypeScript errors with the new field
+              await db.$executeRaw`
+                UPDATE "qa_contents"
+                SET "openAIFileId" = ${openAIFileId}
+                WHERE id = ${qaContent.id}
+              `;
+              console.log(`Updated QA content ${qaContent.id} with OpenAI file ID ${openAIFileId}`);
+            }
           } catch (vectorStoreError) {
             console.error(`Error adding QA to vector store:`, vectorStoreError);
             // Continue even if vector store processing fails
@@ -215,6 +224,46 @@ export async function PUT(
       },
     });
 
+    // Get the current OpenAI file ID (if any)
+    const qaWithFile = await db.$queryRaw`
+      SELECT "openAIFileId" FROM "qa_contents" WHERE id = ${id}
+    `;
+
+    // If there's an existing file, delete it
+    if (qaWithFile && Array.isArray(qaWithFile) && qaWithFile.length > 0 && qaWithFile[0].openAIFileId) {
+      try {
+        const oldFileId = qaWithFile[0].openAIFileId;
+        console.log(`Found existing OpenAI file ID ${oldFileId} for updated QA content ${id}`);
+        
+        // Clean up the old file
+        await handleQAContentDeletion(sourceId, id);
+      } catch (cleanupError) {
+        console.error(`Error cleaning up old OpenAI file for QA content ${id}:`, cleanupError);
+        // Continue even if cleanup fails
+      }
+    }
+
+    // Create a new file in the vector store
+    try {
+      const newOpenAIFileId = await processContentToVectorStore(sourceId, {
+        question: data.question,
+        answer: data.answer
+      }, 'qa', id);
+      
+      if (newOpenAIFileId) {
+        // Update the QA record with the new file ID
+        await db.$executeRaw`
+          UPDATE "qa_contents"
+          SET "openAIFileId" = ${newOpenAIFileId}
+          WHERE id = ${id}
+        `;
+        console.log(`Updated QA content ${id} with new OpenAI file ID ${newOpenAIFileId}`);
+      }
+    } catch (vectorStoreError) {
+      console.error(`Error updating QA in vector store:`, vectorStoreError);
+      // Continue even if vector store processing fails
+    }
+
     return new Response(JSON.stringify(qaContent), {
       headers: { "Content-Type": "application/json" },
     });
@@ -269,17 +318,41 @@ export async function DELETE(
       });
     }
 
+    // Check if the contentId starts with 'temp-' (temporary ID)
+    if (contentId.startsWith('temp-')) {
+      console.log(`Skipping deletion of temporary QA content with ID: ${contentId}`);
+      return new Response(null, { status: 204 });
+    }
+
     console.log(`Attempting to delete QA content: ${contentId} from source: ${sourceId}`);
 
-    // Delete QA content
-    await db.qAContent.delete({
-      where: {
-        id: contentId,
-        knowledgeSourceId: sourceId,
-      },
-    });
+    // First, handle vector store cleanup
+    try {
+      await handleQAContentDeletion(sourceId, contentId);
+      console.log(`Successfully handled vector store cleanup for QA content ${contentId}`);
+    } catch (vectorError) {
+      console.error(`Error cleaning up vector store:`, vectorError);
+      // Continue with deletion even if vector store cleanup fails
+    }
 
-    console.log(`Successfully deleted QA content: ${contentId}`);
+    // Then delete QA content from the database
+    try {
+      await db.qAContent.delete({
+        where: {
+          id: contentId,
+          knowledgeSourceId: sourceId,
+        },
+      });
+      console.log(`Successfully deleted QA content: ${contentId}`);
+    } catch (deleteError) {
+      // Handle case where the record doesn't exist
+      if (deleteError instanceof Prisma.PrismaClientKnownRequestError && deleteError.code === 'P2025') {
+        console.log(`QA content ${contentId} not found in database, may have been deleted already`);
+        return new Response(null, { status: 204 });
+      }
+      throw deleteError; // Re-throw other errors
+    }
+
     return new Response(null, { status: 204 });
   } catch (error) {
     console.error("Error in DELETE handler:", error);

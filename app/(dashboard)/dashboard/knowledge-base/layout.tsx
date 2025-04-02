@@ -247,6 +247,36 @@ export default function KnowledgeBaseLayout({
             }
           }
         }
+        
+        // Process QA content changes
+        if (data.qa) {
+          const qaChanges = Array.isArray(data.qa) ? data.qa : [data.qa];
+          
+          for (const change of qaChanges) {
+            if (change.type === 'add' && change.pair) {
+              const response = await fetch(`/api/knowledge-sources/${sourceId}/qa`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify([change.pair]), // API expects an array of QA pairs
+              });
+              
+              if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || `Failed to save QA pair: ${response.status}`);
+              }
+            } else if (change.type === 'delete' && change.pairId) {
+              const response = await fetch(`/api/knowledge-sources/${sourceId}/qa/${change.pairId}`, {
+                method: 'DELETE',
+              });
+              
+              if (!response.ok) {
+                throw new Error(`Failed to delete QA pair: ${response.status}`);
+              }
+            }
+          }
+        }
       }
       
       toast.success('All changes saved successfully');
