@@ -1,13 +1,14 @@
-:3000/api/knowledge-sources/cm8z5x9jh002eernw73r2k7cw/catalog:1 
+page-40f0a4a68a846d8c.js:1 Login successful: WyIweDUxNjllYzczMGEwZmFlZDIzODdlNzVkZWI0MTU5MmFmMDExNzYxNzViMTI2Zjk3NjliZWYxMTMyMGMzZTE4NGMxM2Y5MWU1YzM1OTE4MjM1OTMxZDk0YmI3Yzg2ZWMwNTIxNmRkZjI3ZDkyZGUxMzc4MWIxNGEyMDJmZjZmZGY1MWMiLCJ7XCJpYXRcIjoxNzQ0MTIwMzAwLFwiZXh0XCI6MTc0NDEyMTIwMCxcImlzc1wiOlwiZGlkOmV0aHI6MHhkNUMwRGNFZjliOUQxM2IwZDdFRTVkNzAyN2JCQzU5ZDY1NzIyNTMwXCIsXCJzdWJcIjpcIk9sNWk1NklCWlpnZEs1QWFtZXcwR2VBejBFVXFtNHctQldibkliMEhMOGs9XCIsXCJhdWRcIjpcImd6U0h6ZGFJNUVvWVFtdGVnQVlIdWROSjBQdkxWRTF6T2c4d2ZjWTdXRDA9XCIsXCJuYmZcIjoxNzQ0MTIwMzAwLFwidGlkXCI6XCJjNWUzYTNlNC1hMDE4LTQ4NmQtYjdhMC00ZDk5M2FhZjM3YTdcIixcImFkZFwiOlwiMHgzZjkzOTI3M2I0Mjc5YTBjNjgwZWM5YzEzZjMwODIwOGMzMTVhNzFhNTJhMmQ3YWNmZGRhMTBiNmUwMGZlNTZlNGFhZWMxMDYzYzBhZWEzODY3NDFjMzJkOTQ2NTZjMWRlMDAzMTZmZGI1MGZmYzQxM2UwOWMyOWM3ZjMyMTMwNTFjXCJ9Il0=
+6The resource <URL> was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.Understand this warningAI
+/api/auth/callback/credentials:1 
             
             
-           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
-app-index.js:33 Error fetching catalog content: Error: Failed to fetch catalog content: 404 Not Found
-    at fetchCatalogContent (catalog-tab.tsx:66:15)
-window.console.error @ app-index.js:33Understand this errorAI
-:3000/api/knowledge-sources/cm8z5x9jh002eernw73r2k7cw/catalog:1 
-            
-            
-           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
-app-index.js:33 Error uploading file: Error: Failed to upload file: 404
-    at handleFileUpload (document-mode.tsx:80:15)
+           Failed to load resource: the server responded with a status of 401 ()Understand this errorAI
+2117-4d438d943338c2d2.js:1 Auth error: CredentialsSignin
+window.console.error @ 2117-4d438d943338c2d2.js:1Understand this errorAI
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warningAI
