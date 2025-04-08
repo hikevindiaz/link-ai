@@ -49,11 +49,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Set the allowed request size (10MB)
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-}; 
+// Replace with new App Router configuration
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+// Set max duration to handle large file uploads - 30 seconds
+export const maxDuration = 30; 
