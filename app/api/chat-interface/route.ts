@@ -2,25 +2,26 @@ import OpenAI from 'openai';
 import { NextRequest, NextResponse } from 'next/server';
 import { getThreadMessages } from '@/lib/chat-interface/adapters';
 import { StreamingTextResponse } from '@/lib/chat-interface/ai/compatibility';
-import { db } from '@/lib/db';
+import prisma from '@/lib/prisma'; // Import shared instance
 
-export const runtime = 'edge';
-
-// Create an OpenAI API client (edge-compatible)
+// Create an OpenAI API client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 export async function POST(req: Request) {
   try {
-    const { messages, chatbotId, userLocation } = await req.json();
+    // Get chatbotId from request body temporarily for fetching chatbot details
+    // We will properly destructure messages, userLocation, and threadId later
+    const bodyForIdCheck = await req.json();
+    const tempChatbotId = bodyForIdCheck.chatbotId;
 
-    if (!messages || !chatbotId) {
-      return new Response('Missing messages or chatbotId', { status: 400 });
+    if (!tempChatbotId) {
+      return new Response('Missing chatbotId', { status: 400 });
     }
 
     // Fetch chatbot details using REST API
-    const chatbotResponse = await fetch(`${req.headers.get('origin')}/api/chatbots/${chatbotId}`, {
+    const chatbotResponse = await fetch(`${req.headers.get('origin')}/api/chatbots/${tempChatbotId}`, {
       headers: {
         'Cookie': req.headers.get('cookie') || '',
         'Referer': req.headers.get('referer') || '',
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
 
     // Fetch knowledge sources
     const knowledgeSourcesResponse = await fetch(
-      `${req.headers.get('origin')}/api/knowledge-sources?chatbotId=${chatbotId}`,
+      `${req.headers.get('origin')}/api/knowledge-sources?chatbotId=${tempChatbotId}`,
       {
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +81,7 @@ export async function POST(req: Request) {
       // Ensure vector store IDs are valid
       vectorStoreIds = vectorStoreIds.filter(id => id && typeof id === 'string' && id.trim() !== '');
       
-      console.log(`Found ${vectorStoreIds.length} vector stores for chatbot ${chatbotId}:`, vectorStoreIds);
+      console.log(`Found ${vectorStoreIds.length} vector stores for chatbot ${tempChatbotId}:`, vectorStoreIds);
       
       // Check for website URLs that can be searched live
       for (const source of knowledgeSources) {
@@ -231,16 +232,16 @@ KNOWLEDGE BASE INSTRUCTIONS:
       ? `${systemPrompt}\n\nHere is relevant knowledge to help answer questions:\n${knowledge}`
       : systemPrompt;
 
-    // Prepare messages for the Responses API - convert format from Chat Completions to Responses
-    // The Responses API accepts a string 'input' and a system_prompt parameter instead of messages array
-    const userInput = messages.filter((msg: any) => msg.role === 'user').pop()?.content || "";
-    
+    // --- MOVE webSearchOptions DEFINITION EARLIER --- 
     // Configure web search options
     let webSearchOptions = {};
     if (useWebSearch) {
       webSearchOptions = {
         search_context_size: "medium" // Could be "low", "medium", or "high"
       };
+      
+      // Extract userLocation from the request body (need bodyForIdCheck here)
+      const { userLocation } = bodyForIdCheck;
       
       // If user location is provided, add it to the web search options
       if (userLocation) {
@@ -253,155 +254,143 @@ KNOWLEDGE BASE INSTRUCTIONS:
         };
       }
     }
+    // --- END MOVED BLOCK --- 
 
-    let response;
+    // Define tools specifically for the Responses API (Restored)
+    const toolsForResponsesApi = [];
+    if (useFileSearch && vectorStoreIds.length > 0) {
+      console.log(`[Responses API] Using file_search with vector store IDs:`, vectorStoreIds);
+      toolsForResponsesApi.push({ 
+        type: "file_search",
+        vector_store_ids: vectorStoreIds,
+      });
+    }
+    // Restore web_search_preview tool 
+    if (useWebSearch) {
+      console.log(`[Responses API] Using web_search_preview with options:`, webSearchOptions);
+      toolsForResponsesApi.push({ 
+        type: "web_search_preview",
+        ...webSearchOptions // webSearchOptions is defined earlier
+      });
+    }
     
+    // Extract messages, threadId correctly here
+    const { messages, id: threadId } = bodyForIdCheck; 
+    const userInput = messages?.filter((msg: any) => msg.role === 'user').pop()?.content || ""; 
+    const userId = chatbot.userId;
+    const chatbotId = tempChatbotId;
+
+    // Ensure messages are present 
+    if (!messages) {
+       return new Response('Missing messages', { status: 400 });
+    }
+
+    // Construct the payload for the Responses API call (Restore TOOLS)
+    const responsesPayload = {
+      model: modelName,
+      instructions: fullPrompt,
+      input: userInput,
+      temperature: chatbot.temperature || 0.7,
+      max_output_tokens: chatbot.maxCompletionTokens || 1000,
+      stream: true,
+      tools: toolsForResponsesApi.length > 0 ? toolsForResponsesApi : undefined, // Restore TOOLS
+      // user: `chatbot-interface-user-${chatbotId}`, // Keep user commented out for now
+    };
+
+    let responseStream;
     try {
-      const tools = [];
-      
-      // Add tools based on available knowledge
-      if (useFileSearch) {
-        console.log(`Using file search with vector store IDs:`, vectorStoreIds);
-        tools.push({ 
-          type: "file_search",
-          vector_store_ids: vectorStoreIds,
-          max_num_results: 20
-        });
-      }
-      
-      if (useWebSearch) {
-        tools.push({ 
-          type: "web_search_preview",
-          ...webSearchOptions
-        });
-      }
-      
-      // Determine tool_choice based on available tools
-      let toolChoice: 'auto' | 'required' | { type: string, function: { name: string } } = 'auto';
-      
-      // If we have file search tool and the query seems like it needs knowledge
-      // force the model to use file_search first
-      if (useFileSearch) {
-        toolChoice = 'required';
-        console.log('Forcing file search to be used');
-      }
-      
-      // Use the Responses API which properly supports file_search and web_search_preview
-      response = await openai.responses.create({
-        model: modelName,
-        instructions: fullPrompt,
-        input: userInput,
-        temperature: chatbot.temperature || 0.7,
-        max_output_tokens: chatbot.maxCompletionTokens || 1000,
-        stream: true,
-        tools: tools.length > 0 ? tools : undefined,
-        tool_choice: tools.length > 0 ? toolChoice : undefined
-      } as any); // Use type assertion to bypass TS errors with the OpenAI SDK
-      
+      console.log("[Responses API] Calling openai.responses.create with full toolset");
+      responseStream = await openai.responses.create(responsesPayload as any); 
+
+      // Stream handling - ADD DETAILED LOGGING
+      let completion = '';
+      const readableStream = new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          try {
+            console.log("[Responses API] Starting stream processing - LOGGING ALL CHUNKS");
+            for await (const chunk of responseStream) {
+              // Log the raw chunk structure
+              console.log('[Responses API Chunk]', JSON.stringify(chunk)); 
+
+              let chunkText = '';
+              // Extract text based on known chunk types
+              if (chunk.type === 'response.output_text.delta') {
+                if (typeof chunk.delta === 'string') chunkText = chunk.delta;
+                else if (chunk.delta?.text) chunkText = chunk.delta.text;
+                else if (chunk.delta?.value) chunkText = chunk.delta.value;
+              } 
+              else if (chunk.type === 'message_delta' && chunk.delta?.content?.[0]?.text) {
+                 chunkText = chunk.delta.content[0].text;
+              } else if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
+                 chunkText = chunk.delta.text;
+              }
+              
+              // Enqueue only text parts for the client UI
+              if (chunkText) {
+                completion += chunkText;
+                controller.enqueue(encoder.encode(chunkText));
+              }
+              
+              // No explicit action needed on tool events for now, just logging above
+            }
+             console.log("[Responses API] Stream processing finished");
+          } catch (streamError) {
+            console.error("[Responses API] Error reading stream:", streamError);
+            controller.error(streamError);
+          } finally {
+            controller.close();
+            // ---- DB Save Logic ---- 
+            console.log('[DB SAVE] Attempting to save message pair.');
+            console.log(`[DB SAVE] Thread ID: ${threadId}`);
+            console.log(`[DB SAVE] User ID: ${userId}`);
+            console.log(`[DB SAVE] Chatbot ID: ${chatbotId}`);
+            console.log(`[DB SAVE] User Input Length: ${userInput?.length || 0}`);
+            console.log(`[DB SAVE] Completion Length: ${completion?.length || 0}`);
+            console.log(`[DB SAVE] Completion Start: ${completion?.substring(0, 50) || 'EMPTY'}`); 
+
+            if (userId && threadId && userInput && completion) {
+              try {
+                await prisma.message.create({ 
+                  data: { 
+                     message: userInput,
+                     response: completion,
+                     threadId: threadId,
+                     from: 'user',
+                     userId: userId,
+                     chatbotId: chatbotId,
+                     read: false,
+                  } 
+                });
+                console.log(`[DB SAVE] Successfully saved message and response for thread ${threadId}`);
+              } catch (dbError) {
+                console.error(`[DB SAVE ERROR] Failed to save message for thread ${threadId}:`, dbError);
+              }
+            } else {
+              console.warn(`[DB SAVE WARN] Missing data for saving message: userId=${!!userId}, threadId=${!!threadId}, userInput=${!!userInput}, completion=${!!completion}`);
+            }
+            // -------------------------
+          }
+        },
+        cancel(reason) {
+          console.log('[Responses API] Stream cancelled:', reason);
+        }
+      });
+      return new Response(readableStream, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          'X-Content-Type-Options': 'nosniff'
+        }
+      });
+
     } catch (error) {
-      console.error('Error in OpenAI API call:', error);
-      
-      // Check if it's a tool-related error
-      if (error instanceof OpenAI.APIError) {
-        const { message, status } = error;
-        
-        // Specific handling for web search errors
-        if (message.includes('web_search') || message.includes('search')) {
-          return new Response(
-            JSON.stringify({ 
-              error: 'Web Search Error',
-              message: 'There was an issue with the web search functionality. Trying again without web search.',
-              status
-            }), 
-            { status: 500 }
-          );
-        }
-        
-        // Specific handling for file search errors
-        if (message.includes('file_search') || message.includes('vector_store')) {
-          return new Response(
-            JSON.stringify({ 
-              error: 'Knowledge Base Error',
-              message: 'There was an issue accessing the knowledge base. Trying again with standard response.',
-              status
-            }), 
-            { status: 500 }
-          );
-        }
-      }
-      
-      // Re-throw for general error handling
+      console.error('[Responses API] Error in OpenAI API call:', error);
+      // ... existing error handling ...
       throw error;
     }
 
-    // Convert the response to a stream
-    const stream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-
-        // When using the Vercel AI SDK with streamProtocol: 'text',
-        // we need to format the response as raw text with no JSON structures
-        try {
-          // Handle streaming from the Responses API
-          for await (const chunk of response) {
-            // Debug response structure
-            console.log('Response chunk type:', chunk.type);
-            
-            // Log file search tool use if detected
-            if (chunk.type === 'tool_call_created' && chunk.tool_call?.type === 'file_search') {
-              console.log('File search tool being used!');
-            } else if (chunk.type === 'file_search_call.created') {
-              console.log('File search call created!');
-            } else if (chunk.type === 'file_search_call.completed') {
-              console.log('File search call completed!', chunk.file_search_call?.results?.length || 0, 'results found');
-            } else if (chunk.type === 'response.partial') {
-              console.log('Response partial:', chunk);
-            }
-            
-            // Handle response.output_text.delta chunks - this is the main content
-            if (chunk.type === 'response.output_text.delta') {
-              // For direct string values in the delta property
-              if (typeof chunk.delta === 'string') {
-                controller.enqueue(encoder.encode(chunk.delta));
-              } 
-              // Object with text property (less common)
-              else if (chunk.delta && typeof chunk.delta.text === 'string') {
-                controller.enqueue(encoder.encode(chunk.delta.text));
-              }
-              // Object with value property (some versions)
-              else if (chunk.delta && chunk.delta.value) {
-                controller.enqueue(encoder.encode(chunk.delta.value));
-              }
-            } 
-            // Handle other chunk types as fallbacks
-            else if (chunk.type === 'message_delta' && chunk.delta?.content?.[0]?.text) {
-              controller.enqueue(encoder.encode(chunk.delta.content[0].text));
-            } else if (chunk.type === 'message' && chunk.content?.[0]?.text) {
-              controller.enqueue(encoder.encode(chunk.content[0].text));
-            } else if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
-              controller.enqueue(encoder.encode(chunk.delta.text));
-            } else if (chunk.delta?.text) {
-              controller.enqueue(encoder.encode(chunk.delta.text));
-            }
-          }
-        } catch (error) {
-          console.error('Error in stream processing:', error);
-          controller.error(error);
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    // Return the stream with appropriate headers for SSE
-    return new Response(stream, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        'X-Content-Type-Options': 'nosniff'
-      }
-    });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in chat completion:', error);
     if (error instanceof OpenAI.APIError) {
       const { name, status, headers, message } = error;

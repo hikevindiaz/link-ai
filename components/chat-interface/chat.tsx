@@ -35,6 +35,7 @@ export interface ChatProps {
   chatbotLogoURL?: string | null;
   chatTitle?: string | null;
   testKnowledge?: string;
+  welcomeMessage?: string | null;
 }
 
 export function Chat({
@@ -47,6 +48,7 @@ export function Chat({
   chatbotLogoURL,
   chatTitle,
   testKnowledge,
+  welcomeMessage,
 }: ChatProps) {
   const [currentThreadId] = useState(id.startsWith('thread_') ? id : `thread_${id}`);
   const [votes, setVotes] = useState<any[]>([]);
@@ -82,7 +84,11 @@ export function Chat({
       console.error('Chat error:', error);
       toast.error('An error occurred, please try again!');
     },
-    streamProtocol: 'text'
+    streamProtocol: 'text',
+    onFinish: () => {
+      console.log('[Chat Interface] Response finished, dispatching newChatMessageSaved event.');
+      window.dispatchEvent(new CustomEvent('newChatMessageSaved'));
+    }
   });
 
   // Create a wrapper around append that returns void and handles role type correctly
@@ -129,12 +135,13 @@ export function Chat({
     })) as ChatMessage[];
 
   return (
-    <div className="flex flex-col min-w-0 h-dvh bg-white dark:bg-black">
+    <div className="chat-interface-container flex flex-col min-w-0 h-dvh bg-white dark:bg-gray-950">
       <ChatHeader
         chatId={currentThreadId}
         selectedModelId={selectedChatModel}
         selectedVisibilityType={selectedVisibilityType}
         isReadonly={isReadonly}
+        chatTitle={chatTitle}
       />
 
       <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
@@ -148,7 +155,7 @@ export function Chat({
           isReadonly={isReadonly}
           isArtifactVisible={isArtifactVisible}
           chatbotLogoURL={chatbotLogoURL}
-          chatbotName={chatTitle}
+          welcomeMessage={welcomeMessage}
         />
       </div>
 
@@ -169,6 +176,7 @@ export function Chat({
         {!isReadonly && (
           <FixedChatInput
             chatId={currentThreadId}
+            chatbotId={chatbotId}
             input={input}
             setInput={setInput}
             handleSubmit={handleSubmit}

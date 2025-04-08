@@ -3,6 +3,7 @@ import React, { memo } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from './code-block';
+import Image from 'next/image';
 
 const components: Partial<Components> = {
   // @ts-expect-error
@@ -38,9 +39,8 @@ const components: Partial<Components> = {
   },
   a: ({ node, children, ...props }) => {
     return (
-      // @ts-expect-error
       <Link
-        className="text-blue-500 hover:underline"
+        className="text-blue-600 hover:underline dark:text-blue-400 dark:hover:underline"
         target="_blank"
         rel="noreferrer"
         {...props}
@@ -89,6 +89,21 @@ const components: Partial<Components> = {
       <h6 className="text-sm font-semibold mt-6 mb-2" {...props}>
         {children}
       </h6>
+    );
+  },
+  img: ({ node, src, alt, ...props }) => {
+    const width = 300;
+    const height = 200;
+
+    return (
+      <Image
+        src={src || ""}
+        alt={alt || "Markdown image content"}
+        width={width}
+        height={height}
+        className="rounded-md my-2 max-w-xs h-auto object-contain block"
+        {...props}
+      />
     );
   },
 };

@@ -20,13 +20,13 @@
   --chat-input-background: #ffffff;
   --chat-input-foreground: #000000;
   --chat-input-border: #e5e7eb;
-  --chat-input-focus-border: #000000;
-  --chat-input-placeholder: #6b7280;
+  --chat-input-placeholder: #8d8d8d;
   
   /* Button styling */
   --chat-button-background: #000000;
   --chat-button-foreground: #ffffff;
-  --chat-attachment-color: #000000;
+  --chat-attachment-color: #cccccc;
+  --chat-attachment-disabled-color: var(--muted-foreground);
   --chat-hover-background: #F5F5F5;
   
   /* Thinking state styling - ensure visibility */
@@ -50,21 +50,21 @@
     --chat-background: #0c0c0c;
     --chat-bot-reply-background: #1e1e1e;
     --chat-bot-reply-foreground: #ffffff;
-    --chat-user-reply-background: #3b3b3b;
-    --chat-user-reply-foreground: #ffffff;
+    --chat-user-reply-background: #ffffff;
+    --chat-user-reply-foreground: #000000;
     --chat-border-color: #2e2e2e;
     
     /* Input area styling for dark mode - improved contrast */
     --chat-input-background: #1e1e1e;
     --chat-input-foreground: #ffffff;
     --chat-input-border: #2e2e2e;
-    --chat-input-focus-border: #ffffff;
     --chat-input-placeholder: #9ca3af;
     
     /* Button styling for dark mode */
     --chat-button-background: #ffffff;
     --chat-button-foreground: #000000;
-    --chat-attachment-color: #ffffff;
+    --chat-attachment-color: #868686;
+    --chat-attachment-disabled-color: var(--muted-foreground);
     --chat-hover-background: #2A2A2A;
     
     /* Thinking state styling for dark mode - ensure it's white */
@@ -87,21 +87,26 @@
   font-family: var(--font-geist-mono), monospace;
 }
 
-/* Input area specific styling to ensure proper light/dark mode */
+/* REMOVE Overriding input area styling */
+/* 
 .chat-interface-container textarea,
 .chat-interface-container .Textarea {
   background-color: var(--chat-input-background) !important;
   border-color: var(--chat-input-border) !important;
   color: var(--chat-input-foreground) !important;
 }
+*/
 
-/* Override any default dark styling that might be leaking through */
+/* REMOVE Override for specific Tailwind class */
+/*
 .chat-interface-container textarea.bg-gray-900\/50,
 .chat-interface-container .Textarea.bg-gray-900\/50 {
   background-color: var(--chat-input-background) !important;
 }
+*/
 
-/* Make sure background specifically maintains light/dark mode colors */
+/* REMOVE Specific light/dark overrides for textarea */
+/*
 .chat-interface-container.light textarea,
 .chat-interface-container.light .Textarea {
   background-color: #ffffff !important;
@@ -113,8 +118,10 @@
   background-color: #1e1e1e !important;
   color: #ffffff !important;
 }
+*/
 
-/* Force the proper text color for thinking state based on mode */
+/* REMOVE Force thinking state color (can be handled by utilities) */
+/*
 .chat-interface-container.light [data-thinking="true"],
 .chat-interface-container.light .text-zinc-500 {
   color: #000000 !important;
@@ -124,25 +131,33 @@
 .chat-interface-container.dark .text-zinc-500 {
   color: #ffffff !important;
 }
+*/
 
+/* Keep placeholder styling */
 .chat-interface-container textarea::placeholder,
 .chat-interface-container .Textarea::placeholder {
   color: var(--chat-input-placeholder);
 }
 
-.chat-interface-container textarea:focus,
-.chat-interface-container .Textarea:focus {
-  border-color: var(--chat-input-focus-border);
-  box-shadow: 0 0 0 1px var(--chat-input-focus-border);
+/* Remove custom focus styling rule again */
+/*
+.chat-interface-container form textarea:focus,
+.chat-interface-container form .Textarea:focus {
+  outline: none; 
+  border-color: var(--chat-input-focus-border); 
+  box-shadow: 0 0 0 1px var(--chat-input-focus-border); 
 }
+*/
 
-/* Thinking state styling for both modes */
+/* REMOVE General thinking state override (use utilities) */
+/*
 .chat-interface-container .text-zinc-500,
 .chat-interface-container [data-thinking="true"] {
   color: var(--chat-thinking-text) !important;
 }
+*/
 
-/* Button styling */
+/* Keep Button styling (or simplify if Base Button handles themes) */
 .chat-interface-container button[data-testid="send-button"],
 .chat-interface-container button[data-testid="stop-button"] {
   background-color: var(--chat-button-background);

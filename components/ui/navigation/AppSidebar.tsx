@@ -34,13 +34,7 @@ import { LinkAIAgentIcon } from "@/components/icons/LinkAIAgentIcon";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/Button";
 
-// Define thread interface for type safety
-interface Thread {
-  threadId: string;
-  messageCount: number;
-}
-
-// Main navigation items
+// Main navigation items (Mutable - directly updated)
 const navigation = [
   {
     name: "Home",
@@ -53,7 +47,7 @@ const navigation = [
     name: "Inbox",
     href: "/dashboard/inbox",
     icon: Icons.mail,
-    notifications: 0, // We'll update this dynamically
+    notifications: 0 as number | false, // Initialize with type
     active: false,
   },
 ];
@@ -106,11 +100,9 @@ const navigation2 = [
 ];
 
 export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  const pathname = usePathname();  // Initialize first
+  const pathname = usePathname();
   const { toast } = useToast();
-  // State to track sidebar collapsed state
   const [collapsed, setCollapsed] = useState(false);
-
   const [openMenus, setOpenMenus] = React.useState<string[]>(() =>
   navigation2
     .filter((item) =>
@@ -118,15 +110,13 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
     )
     .map((item) => item.name)
 );
-
-  const { theme, resolvedTheme } = useTheme();  // Access resolvedTheme for more accurate theme detection
+  const { theme, resolvedTheme } = useTheme();
   const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined);
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [searchResults, setSearchResults] = React.useState<any[]>([]);
+  // State for the unread count itself
   const [inboxUnreadCount, setInboxUnreadCount] = useState(0);
-  const [knownThreadIds, setKnownThreadIds] = useState<string[]>([]);
-  const [lastFetchTime, setLastFetchTime] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   
   // Set mounted state and initialize currentTheme
@@ -163,164 +153,71 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  // Fetch unread count on initial mount and when events trigger it
+  // Simplified effect for fetching count and handling events
   useEffect(() => {
-    // Set mounted flag for cleanup
-    setIsMounted(true);
+    // Ensure component is mounted before running fetch or adding listeners
+    if (!isMounted) return;
     
+    // Define fetch function within the effect's scope
     const fetchUnreadCount = async () => {
       try {
-        const now = Date.now();
-        
-        // Only fetch if:
-        // 1. This is the initial load (lastFetchTime is 0)
-        // 2. OR it's been at least 5 minutes since the last fetch
-        // 3. OR we're responding to a specific event (handled by event listeners)
-        if (lastFetchTime === 0 || now - lastFetchTime > 300000) {
           const response = await fetch('/api/inbox/unread');
-          setLastFetchTime(now);
+        if (!isMounted) return; // Check mount status after async call
           
           if (response.ok) {
             const data = await response.json();
-            
-            // Update the navigation array with the new count
-            navigation.forEach(item => {
-              if (item.name === "Inbox") {
-                // Only show notifications when there are unread messages
-                item.notifications = data.count > 0 ? data.count : false;
-              }
-            });
-            
-            // Set the unread count state
-            setInboxUnreadCount(data.count);
-            
-            // Update known thread IDs if needed
-            if (data.threads && data.threads.length > 0) {
-              const currentThreadIds = data.threads.map((thread: Thread) => thread.threadId);
-              if (knownThreadIds.length === 0 || JSON.stringify(currentThreadIds) !== JSON.stringify(knownThreadIds)) {
-                setKnownThreadIds(currentThreadIds);
-              }
-            }
-          }
+          const count = data.count > 0 ? data.count : 0;
+          setInboxUnreadCount(count);
+          // Update the mutable navigation object directly
+          navigation[1].notifications = count > 0 ? count : false;
+          // Force a re-render if direct mutation doesn't trigger update (usually state update is enough)
+          // Consider using state for navigation if direct mutation is unreliable
+        } else {
+          console.error('[AppSidebar] Failed to fetch unread count:', response.status);
+          setInboxUnreadCount(0);
+          navigation[1].notifications = false;
         }
       } catch (error) {
-        console.error('Error fetching unread count:', error);
+        if (!isMounted) return; // Check mount status after async error
+        console.error('[AppSidebar] Error fetching unread count:', error);
+        setInboxUnreadCount(0);
+        navigation[1].notifications = false;
       }
     };
     
-    // Initial fetch when component mounts
+    // Initial fetch
     fetchUnreadCount();
     
-    // Set up event listeners for real-time updates
+    // Event handler for when a user reads a thread in the inbox page
     const handleThreadRead = () => {
+      if (!isMounted) return;
+      console.log('[AppSidebar] inboxThreadRead event received, fetching count.');
       fetchUnreadCount();
     };
     
-    const handleNewInboxMessage = () => {
+    // Event handler for when a new message is likely saved (from chat interface)
+    const handleNewMessageSaved = () => {
+      if (!isMounted) return;
+      console.log('[AppSidebar] newChatMessageSaved event received, fetching count with delay.');
+      // Fetch after a short delay to allow DB save to complete
+      setTimeout(() => {
+        if (isMounted) { // Check mount status again before fetching in timeout
       fetchUnreadCount();
-    };
-    
-    // Listen for thread read events
-    window.addEventListener('inboxThreadRead', handleThreadRead);
-    
-    // Listen for new message events 
-    window.addEventListener('newInboxMessage', handleNewInboxMessage);
-    
-    // Listen for route changes - only fetch when navigating to the dashboard
-    const handleRouteChange = (url: string) => {
-      // Only fetch unread count when navigating to the dashboard
-      if (url.startsWith('/dashboard') && !url.includes('/dashboard/inbox')) {
-        fetchUnreadCount();
-      }
-    };
-    
-    // Add route change listener (Next.js router events)
-    if (typeof window !== 'undefined') {
-      window.addEventListener('routeChangeComplete', handleRouteChange as any);
-    }
-    
-    return () => {
-      // Clean up event listeners
-      window.removeEventListener('inboxThreadRead', handleThreadRead);
-      window.removeEventListener('newInboxMessage', handleNewInboxMessage);
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('routeChangeComplete', handleRouteChange as any);
-      }
-      setIsMounted(false);
-    };
-  }, [knownThreadIds, lastFetchTime]);
-
-  // Additional useEffect to refresh data periodically when user is active
-  useEffect(() => {
-    // Only set up very infrequent refresh when mounted
-    if (!isMounted) return;
-    
-    // User activity detection variables
-    let userIsActive = true;
-    let activityTimeout: NodeJS.Timeout;
-    
-    const refreshIfUserActive = async () => {
-      if (userIsActive) {
-        try {
-          const now = Date.now();
-          // Only fetch if it's been at least 5 minutes since the last fetch
-          if (now - lastFetchTime > 300000) {
-            const response = await fetch('/api/inbox/unread');
-            setLastFetchTime(now);
-            
-            if (response.ok) {
-              const data = await response.json();
-              
-              navigation.forEach(item => {
-                if (item.name === "Inbox") {
-                  item.notifications = data.count > 0 ? data.count : false;
-                }
-              });
-              
-              setInboxUnreadCount(data.count);
-              
-              if (data.threads && data.threads.length > 0) {
-                const currentThreadIds = data.threads.map((thread: Thread) => thread.threadId);
-                if (JSON.stringify(currentThreadIds) !== JSON.stringify(knownThreadIds)) {
-                  setKnownThreadIds(currentThreadIds);
-                }
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error in periodic refresh:', error);
         }
-      }
+      }, 1500); // 1.5 second delay
     };
     
-    // Track user activity
-    const handleUserActivity = () => {
-      userIsActive = true;
-      clearTimeout(activityTimeout);
-      activityTimeout = setTimeout(() => {
-        userIsActive = false;
-      }, 300000); // Consider user inactive after 5 minutes of no activity
-    };
-    
-    // Set up user activity listeners
-    window.addEventListener('mousemove', handleUserActivity);
-    window.addEventListener('keydown', handleUserActivity);
-    window.addEventListener('click', handleUserActivity);
-    
-    // Set initial activity state
-    handleUserActivity();
-    
-    // Set up a very infrequent polling - every 10 minutes
-    const intervalId = setInterval(refreshIfUserActive, 600000); // 10 minutes
-    
+    // Add listeners
+    window.addEventListener('inboxThreadRead', handleThreadRead);
+    window.addEventListener('newChatMessageSaved', handleNewMessageSaved);
+
+    // Cleanup function
     return () => {
-      clearInterval(intervalId);
-      clearTimeout(activityTimeout);
-      window.removeEventListener('mousemove', handleUserActivity);
-      window.removeEventListener('keydown', handleUserActivity);
-      window.removeEventListener('click', handleUserActivity);
+      window.removeEventListener('inboxThreadRead', handleThreadRead);
+      window.removeEventListener('newChatMessageSaved', handleNewMessageSaved);
     };
-  }, [isMounted, lastFetchTime, knownThreadIds]);
+    // Dependency array includes isMounted to re-run when it becomes true
+  }, [isMounted]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();

@@ -29,7 +29,7 @@ interface MessagesProps {
   isReadonly: boolean;
   isArtifactVisible: boolean;
   chatbotLogoURL?: string | null;
-  chatbotName?: string | null;
+  welcomeMessage?: string | null;
 }
 
 function PureMessages({
@@ -41,7 +41,7 @@ function PureMessages({
   reload,
   isReadonly,
   chatbotLogoURL,
-  chatbotName,
+  welcomeMessage,
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
@@ -77,7 +77,7 @@ function PureMessages({
       ref={messagesContainerRef}
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
-      {messages.length === 0 && <Overview chatbotLogoURL={chatbotLogoURL} chatbotName={chatbotName} />}
+      {messages.length === 0 && <Overview chatbotLogoURL={chatbotLogoURL} welcomeMessage={welcomeMessage} />}
 
       {messages.map((message, index) => (
         <PreviewMessage
@@ -117,7 +117,7 @@ export const Messages = memo(PureMessages, (prevProps, nextProps) => {
   if (!equal(prevProps.messages, nextProps.messages)) return false;
   if (!equal(prevProps.votes, nextProps.votes)) return false;
   if (prevProps.chatbotLogoURL !== nextProps.chatbotLogoURL) return false;
-  if (prevProps.chatbotName !== nextProps.chatbotName) return false;
+  if (prevProps.welcomeMessage !== nextProps.welcomeMessage) return false;
 
   return true;
 });

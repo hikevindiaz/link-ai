@@ -1,9 +1,6 @@
 'use client';
 
 import type {
-  Attachment,
-  ChatRequestOptions,
-  CreateMessage,
   Message,
 } from 'ai';
 import cx from 'classnames';
@@ -20,6 +17,7 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { sanitizeUIMessages } from '@/lib/utils';
 
@@ -31,8 +29,17 @@ import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
 import { UseChatHelpers, UseChatOptions } from '@ai-sdk/react';
 
+// Define Attachment locally
+interface Attachment {
+  name?: string;
+  type?: string;
+  url: string;
+  contentType?: string;
+}
+
 interface MultimodalInputProps {
   chatId: string;
+  chatbotId: string;
   input: string;
   setInput: (input: string) => void;
   handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
@@ -48,6 +55,7 @@ interface MultimodalInputProps {
 
 function PureMultimodalInput({
   chatId,
+  chatbotId,
   input,
   setInput,
   handleSubmit,
@@ -113,22 +121,11 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
-    // Either method signature should work with this approach
-    try {
-      // @ts-ignore - Ignore type checking for this call as we're handling different API versions
-      handleSubmit({
-        preventDefault: () => {},
-        stopPropagation: () => {},
-      }, {
-        experimental_attachments: attachments,
-      });
-    } catch (error) {
-      // Fallback to simpler version if the above signature doesn't work
-      handleSubmit({
-        preventDefault: () => {},
-        stopPropagation: () => {},
-      } as React.FormEvent<HTMLFormElement>);
-    }
+    // Simplify handleSubmit call based on error
+    handleSubmit({
+      preventDefault: () => {},
+      stopPropagation: () => {},
+    } as React.FormEvent<HTMLFormElement>);
 
     setAttachments([]);
     setLocalStorageInput('');
@@ -138,7 +135,6 @@ function PureMultimodalInput({
       textareaRef.current?.focus();
     }
   }, [
-    attachments,
     handleSubmit,
     setAttachments,
     setLocalStorageInput,
@@ -189,7 +185,7 @@ function PureMultimodalInput({
 
         setAttachments((currentAttachments) => [
           ...currentAttachments,
-          ...successfullyUploadedAttachments,
+          ...successfullyUploadedAttachments as Attachment[],
         ]);
       } catch (error) {
         console.error('Error uploading files!', error);
@@ -201,7 +197,7 @@ function PureMultimodalInput({
   );
 
   // Map the status from useChat to what's used internally
-  const mappedStatus = 
+  const mappedStatus =
     status === 'streaming' ? 'streaming' :
     status === 'submitted' ? 'submitted' :
     status === 'error' ? 'error' :
@@ -212,7 +208,7 @@ function PureMultimodalInput({
       {messages.length === 0 &&
         attachments.length === 0 &&
         uploadQueue.length === 0 && (
-          <SuggestedActions append={append} chatId={chatId} />
+          <SuggestedActions append={append} chatId={chatId} chatbotId={chatbotId} />
         )}
 
       <input
@@ -248,31 +244,33 @@ function PureMultimodalInput({
       )}
 
       <Textarea
-        data-testid="multimodal-input"
         ref={textareaRef}
-        placeholder="Send a message..."
+        data-testid="chat-input"
         value={input}
-        onChange={handleInput}
+        onInput={handleInput}
+        placeholder="Send a message..."
         className={cx(
-          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-gray-100 dark:bg-gray-900/50 pb-10 dark:border-zinc-700',
+          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base ',
+          'bg-zinc-100 dark:bg-gray-900 border border-zinc-300 dark:border-gray-800 placeholder:text-gray-500 dark:placeholder:text-gray-600',
+          'pb-10',
+          'focus-visible:outline-none',
           className,
         )}
-        rows={2}
-        autoFocus
-        onKeyDown={(event) => {
+        onKeyDown={(e) => {
           if (
-            event.key === 'Enter' &&
-            !event.shiftKey &&
-            !event.nativeEvent.isComposing &&
+            e.key === 'Enter' && 
+            !e.shiftKey && 
+            !e.nativeEvent.isComposing &&
             input.trim().length > 0
-          ) {
-            event.preventDefault();
-            event.stopPropagation();
+            ) {
+            e.preventDefault();
+            e.stopPropagation();
             submitForm();
           }
         }}
+        autoFocus
+        rows={2}
       />
-
       <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
         <AttachmentsButton fileInputRef={fileInputRef} status={mappedStatus} />
       </div>
@@ -282,8 +280,8 @@ function PureMultimodalInput({
           <StopButton stop={stop} setMessages={setMessages} />
         ) : (
           <SendButton
-            input={input}
             submitForm={submitForm}
+            input={input}
             uploadQueue={uploadQueue}
           />
         )}
@@ -298,6 +296,7 @@ export const MultimodalInput = memo(
     if (prevProps.input !== nextProps.input) return false;
     if (prevProps.status !== nextProps.status) return false;
     if (!equal(prevProps.attachments, nextProps.attachments)) return false;
+    if (prevProps.chatbotId !== nextProps.chatbotId) return false;
 
     return true;
   },
@@ -311,18 +310,25 @@ function PureAttachmentsButton({
   status: 'error' | 'submitted' | 'streaming' | 'ready';
 }) {
   return (
-    <Button
-      data-testid="attachments-button"
-      className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
-      onClick={(event) => {
-        event.preventDefault();
-        fileInputRef.current?.click();
-      }}
-      disabled={status !== 'ready'}
-      variant="ghost"
-    >
-      <PaperclipIcon size={14} />
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          data-testid="attachments-button"
+          variant="ghost"
+          className="rounded-full p-1.5 h-fit"
+          onClick={(event) => {
+            event.preventDefault();
+          }}
+          disabled
+        >
+          <PaperclipIcon size={14} />
+          <span className="sr-only">Attach files (coming soon)</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Attach files (coming soon)</p>
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -338,7 +344,8 @@ function PureStopButton({
   return (
     <Button
       data-testid="stop-button"
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      variant="default"
+      className="rounded-full p-1.5 h-fit"
       onClick={(event) => {
         event.preventDefault();
         stop();
@@ -364,7 +371,8 @@ function PureSendButton({
   return (
     <Button
       data-testid="send-button"
-      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      variant="default"
+      className="rounded-full p-1.5 h-fit"
       onClick={(event) => {
         event.preventDefault();
         submitForm();

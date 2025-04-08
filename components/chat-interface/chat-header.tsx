@@ -12,6 +12,7 @@ interface ChatHeaderProps {
   selectedModelId: string;
   selectedVisibilityType: any;
   isReadonly: boolean;
+  chatTitle?: string | null;
 }
 
 export function ChatHeader({
@@ -19,6 +20,7 @@ export function ChatHeader({
   selectedModelId,
   selectedVisibilityType,
   isReadonly,
+  chatTitle,
 }: ChatHeaderProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -34,16 +36,26 @@ export function ChatHeader({
   };
 
   return (
-    <header className="flex sticky top-0 bg-background py-1.5 items-center px-2 md:px-2 gap-2">
+    <header className="flex sticky top-0 bg-background py-1.5 items-center px-4 md:px-4 h-12 border-b border-gray-200 dark:border-gray-800">
+      <div className="flex w-full items-center justify-between">
+        <div className="w-8"></div>
+        <div className="flex-1 text-center">
+          {chatTitle && (
+            <span className="text-base font-semibold text-gray-900 dark:text-gray-50">
+              {chatTitle}
+            </span>
+          )}
+        </div>
       <Button 
         onClick={handleNewChat}
         variant="outline" 
         size="icon" 
-        className="size-8 rounded-sm dark:black dark:text-gray-100 dark:hover:bg-gray-800"
+          className="size-8 rounded-sm border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
       >
         <PlusIcon className="size-4" />
         <span className="sr-only">New Chat</span>
       </Button>
+      </div>
     </header>
   );
 }

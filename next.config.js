@@ -16,12 +16,40 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: [
-      'avatars.githubusercontent.com',
-      'lh3.googleusercontent.com',
-      'vercel.com',
-      'avatar.vercel.sh',
-      'gwetfkan2dovfoiz.public.blob.vercel-storage.com',
+    // Replace domains with remotePatterns for better flexibility
+    // domains: [
+    //   'avatars.githubusercontent.com',
+    //   'lh3.googleusercontent.com',
+    //   'vercel.com',
+    //   'avatar.vercel.sh',
+    //   'gwetfkan2dovfoiz.public.blob.vercel-storage.com',
+    // ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'vercel.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatar.vercel.sh',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gwetfkan2dovfoiz.public.blob.vercel-storage.com',
+      },
+      {
+        // Add Supabase hostname
+        protocol: 'https',
+        hostname: 'ugnyocjdcpdlneirkfiq.supabase.co',
+      },
     ],
   },
   transpilePackages: ['ai'],

@@ -95,6 +95,7 @@ export default function AgentChatPage({ params }: ChatPageProps) {
           isReadonly={false}
           chatbotLogoURL={agent?.chatbotLogoURL}
           chatTitle={agent?.name}
+          welcomeMessage={agent?.welcomeMessage}
         />
       </div>
     </ChatContainer>

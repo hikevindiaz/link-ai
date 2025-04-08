@@ -1,6 +1,6 @@
 'use client';
 
-import type { ChatRequestOptions, Message } from 'ai';
+import type { Message } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useState } from 'react';
@@ -36,7 +36,7 @@ const PurePreviewMessage = ({
     messages: Message[] | ((messages: Message[]) => Message[]),
   ) => void;
   reload: (
-    chatRequestOptions?: ChatRequestOptions,
+    options?: any
   ) => Promise<string | null | undefined>;
   isReadonly: boolean;
 }) => {
@@ -101,7 +101,7 @@ const PurePreviewMessage = ({
                       <Button
                         data-testid={`message-edit`}
                         variant="secondary"
-                        className="px-2 h-fit rounded-full text-muted-foreground opacity-0 group-hover/message:opacity-100 dark:text-gray-100 bg-gray-100 dark:bg-white"
+                        className="px-2 h-fit rounded-full text-gray-500 dark:text-gray-400 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 opacity-0 group-hover/message:opacity-100"
                         onClick={() => {
                           setMode('edit');
                         }}
@@ -114,10 +114,13 @@ const PurePreviewMessage = ({
                 )}
 
                 <div
-                  className={cn('flex flex-col gap-4', {
-                    'bg-black text-primary-foreground px-3 py-2 rounded-xl dark:bg-white dark:text-black':
-                      message.role === 'user',
-                  })}
+                  className={cn(
+                    'flex flex-col gap-4',
+                    'px-3 py-2 rounded-xl max-w-full break-words',
+                    message.role === 'user'
+                      ? 'bg-black text-white dark:bg-white dark:text-black'
+                      : 'bg-white-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
+                  )}
                 >
                   <Markdown>{message.content as string}</Markdown>
                 </div>

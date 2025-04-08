@@ -6,10 +6,10 @@ import { ChatLogo } from '@/components/chat-interface/chat-logo';
 
 interface OverviewProps {
   chatbotLogoURL?: string | null;
-  chatbotName?: string | null;
+  welcomeMessage?: string | null;
 }
 
-export const Overview = ({ chatbotLogoURL, chatbotName }: OverviewProps) => {
+export const Overview = ({ chatbotLogoURL, welcomeMessage }: OverviewProps) => {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -20,7 +20,7 @@ export const Overview = ({ chatbotLogoURL, chatbotName }: OverviewProps) => {
 
   if (!mounted) return null;
   
-  const displayName = chatbotName || "Link AI";
+  const displayMessage = welcomeMessage || "Hello! How can I assist you today?";
   
   return (
     <motion.div
@@ -31,10 +31,12 @@ export const Overview = ({ chatbotLogoURL, chatbotName }: OverviewProps) => {
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ delay: 0.5 }}
     >
-      <div className="rounded-xl p-6 flex flex-col gap-6 leading-relaxed text-center max-w-xl">
+      <div className="rounded-xl p-6 flex flex-col gap-6 leading-relaxed text-center max-w-xl mx-auto">
         <div className="flex flex-col items-center space-y-3">
           <ChatLogo chatbotLogoURL={chatbotLogoURL} />
-          <h2 className="text-xl font-semibold dark:text-white">{displayName}</h2>
+          <p className="text-base dark:text-gray-200 text-gray-700 mt-2 font-semibold">
+            {displayMessage}
+          </p>
         </div>
         <p className="text-xs dark:text-gray-300 text-gray-500">
           By using this chatbot, you agree to our{' '}
@@ -42,7 +44,7 @@ export const Overview = ({ chatbotLogoURL, chatbotName }: OverviewProps) => {
             href="https://getlinkai.com/legal"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-gray-900 hover:text-gray-700"
+            className="text-xs text-gray-900 hover:text-gray-700 dark:text-gray-100 dark:hover:text-gray-300"
           >
             Terms of Service 
           </a>
@@ -51,7 +53,7 @@ export const Overview = ({ chatbotLogoURL, chatbotName }: OverviewProps) => {
             href="https://getlinkai.com/legal"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-gray-900 hover:text-gray-700"
+            className="text-xs text-gray-900 hover:text-gray-700 dark:text-gray-100 dark:hover:text-gray-300"
           >
             Privacy Policy
           </a>
