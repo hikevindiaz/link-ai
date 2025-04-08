@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL")
-  directUrl = env("POSTGRES_DIRECT_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model OpenAIConfig {
@@ -102,17 +102,17 @@ model Chatbot {
   lastTrainedAt                   DateTime?
   trainingMessage                 String?
   trainingStatus                  String                  @default("idle")
+  assistantSettings               AssistantSettings?
   ChatbotErrors                   ChatbotErrors[]
   ChatbotFiles                    ChatbotFiles[]
   ChatbotMessagesExport           ChatbotMessagesExport[]
   ClientInquiries                 ClientInquiries[]
   forms                           ChatbotForm[]
   model                           ChatbotModel?           @relation(fields: [modelId], references: [id])
-  formSubmissions                 FormSubmission[]
-  knowledgeSources                KnowledgeSource[]       @relation("ChatbotToKnowledgeSource")
   user                            User                    @relation(fields: [userId], references: [id])
+  formSubmissions                 FormSubmission[]
   twilioPhoneNumber               TwilioPhoneNumber?
-  assistantSettings               AssistantSettings?
+  knowledgeSources                KnowledgeSource[]       @relation("ChatbotToKnowledgeSource")
 
   @@map("chatbots")
 }
@@ -126,6 +126,8 @@ model File {
   blobUrl           String
   crawlerId         String?
   knowledgeSourceId String?
+  storageProvider   String           @default("vercel")
+  storageUrl        String?
   ChatbotFiles      ChatbotFiles[]
   CatalogContent    CatalogContent[]
   crawler           Crawler?         @relation(fields: [crawlerId], references: [id], onDelete: Cascade)
@@ -191,8 +193,8 @@ model Crawler {
   urlMatch        String
   selector        String
   maxPagesToCrawl Int
-  File            File[]
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  File            File[]
 
   @@map("crawlers")
 }
@@ -230,27 +232,6 @@ model User {
   emailVerified            DateTime?
   image                    String?
   createdAt                DateTime              @default(now()) @map("created_at")
-  
-  // Add new fields for onboarding
-  addressLine1             String?
-  addressLine2             String?
-  city                     String?
-  state                    String?
-  postalCode               String?
-  country                  String?
-  
-  // Company information
-  companyName              String?
-  companySize              String?
-  businessWebsite          String?
-  industryType             String?
-  businessTasks            String[]              @default([])
-  communicationChannels    String[]              @default([])
-  
-  // Onboarding status
-  onboardingCompleted      Boolean               @default(false)
-  
-  // Existing fields
   inquiryEmailEnabled      Boolean               @default(true)
   marketingEmailEnabled    Boolean               @default(true)
   stripeSubscriptionStatus String?
@@ -259,21 +240,32 @@ model User {
   stripePriceId            String?               @map("stripe_price_id")
   stripeSubscriptionId     String?               @unique @map("stripe_subscription_id")
   twilioSubaccountSid      String?               @unique @map("twilio_subaccount_sid")
-  
-  // Relations
+  addressLine1             String?
+  addressLine2             String?
+  businessTasks            String[]              @default([])
+  businessWebsite          String?
+  city                     String?
+  communicationChannels    String[]              @default([])
+  companyName              String?
+  companySize              String?
+  country                  String?
+  industryType             String?
+  onboardingCompleted      Boolean               @default(false)
+  postalCode               String?
+  state                    String?
   accounts                 Account[]
+  openAIConfig             OpenAIConfig?
   sessions                 Session[]
   chatbots                 Chatbot[]
+  conversationSummaries    ConversationSummary[]
   crawlers                 Crawler[]
   files                    File[]
-  messages                 Message[]
-  conversationSummaries    ConversationSummary[]
-  openAIConfig             OpenAIConfig?
   forms                    Form[]
+  invoices                 Invoice[]
   knowledgeSources         KnowledgeSource[]
+  messages                 Message[]
   paymentMethods           PaymentMethod[]
   phoneNumbers             TwilioPhoneNumber[]
-  invoices                 Invoice[]
   voices                   UserVoice[]
 }
 
@@ -286,22 +278,22 @@ model VerificationToken {
 }
 
 model KnowledgeSource {
-  id                String           @id @default(cuid())
-  name              String
-  description       String?
-  createdAt         DateTime         @default(now()) @map("created_at")
-  updatedAt         DateTime         @updatedAt @map("updated_at")
-  userId            String
-  catalogMode       String?
-  vectorStoreId     String?          // OpenAI Vector Store ID
-  vectorStoreUpdatedAt DateTime?     // Last time the vector store was updated
-  catalogContents   CatalogContent[]
-  files             File[]
-  qaContents        QAContent[]
-  textContents      TextContent[]
-  websiteContents   WebsiteContent[]
-  chatbots          Chatbot[]        @relation("ChatbotToKnowledgeSource")
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String           @id @default(cuid())
+  name                 String
+  description          String?
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+  userId               String
+  catalogMode          String?
+  vectorStoreId        String?
+  vectorStoreUpdatedAt DateTime?
+  catalogContents      CatalogContent[]
+  files                File[]
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qaContents           QAContent[]
+  textContents         TextContent[]
+  websiteContents      WebsiteContent[]
+  chatbots             Chatbot[]        @relation("ChatbotToKnowledgeSource")
 
   @@map("knowledge_sources")
 }
@@ -309,10 +301,10 @@ model KnowledgeSource {
 model TextContent {
   id                String          @id @default(cuid())
   content           String
-  openAIFileId      String?         // Add this field to track the file ID in the vector store
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt         DateTime        @updatedAt @map("updated_at")
   knowledgeSourceId String
+  openAIFileId      String?
   knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
 
   @@map("text_contents")
@@ -324,8 +316,8 @@ model WebsiteContent {
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt         DateTime        @updatedAt @map("updated_at")
   knowledgeSourceId String
-  searchType        String          @default("crawl") // "live" or "crawl"
-  instructions      String?         // Instructions for when the agent should use this URL
+  searchType        String          @default("crawl")
+  instructions      String?
   knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
 
   @@map("website_contents")
@@ -336,9 +328,9 @@ model QAContent {
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt         DateTime        @updatedAt @map("updated_at")
   knowledgeSourceId String
-  openAIFileId      String?         // Add this field to track the file ID in the vector store
   answer            String
   question          String
+  openAIFileId      String?
   knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
 
   @@map("qa_contents")
@@ -351,6 +343,8 @@ model CatalogContent {
   instructions      String?
   knowledgeSourceId String
   fileId            String?
+  extractedContent  String?         @map("extracted_content")
+  openAIFileId      String?
   file              File?           @relation(fields: [fileId], references: [id])
   knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
   products          Product[]
@@ -368,6 +362,7 @@ model Product {
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
   catalogContentId String
+  imageUrl         String?
   catalogContent   CatalogContent @relation(fields: [catalogContentId], references: [id], onDelete: Cascade)
 
   @@map("products")
@@ -449,80 +444,79 @@ model PaymentMethod {
   expYear               Int
   isDefault             Boolean  @default(false)
   userId                String
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("payment_methods")
 }
 
 model TwilioPhoneNumber {
-  id               String    @id @default(cuid())
-  phoneNumber      String    @unique
-  twilioSid        String    @unique
-  country          String
-  monthlyPrice     Decimal   @db.Decimal(10, 2)
-  status           String    @default("active") // active, pending, suspended
-  purchasedAt      DateTime  @default(now())
-  renewalDate      DateTime
-  userId           String
-  chatbotId        String?   @unique
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chatbot          Chatbot?  @relation(fields: [chatbotId], references: [id])
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  invoices         Invoice[]
+  id           String    @id @default(cuid())
+  phoneNumber  String    @unique
+  twilioSid    String    @unique
+  country      String
+  monthlyPrice Decimal   @db.Decimal(10, 2)
+  status       String    @default("active")
+  purchasedAt  DateTime  @default(now())
+  renewalDate  DateTime
+  userId       String
+  chatbotId    String?   @unique
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  invoices     Invoice[]
+  chatbot      Chatbot?  @relation(fields: [chatbotId], references: [id])
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("twilio_phone_numbers")
 }
 
 model UserVoice {
-  id              String   @id @default(cuid())
-  voiceId         String   // ElevenLabs voice ID
-  name            String
-  language        String?
-  labels          Json?    // Store labels as JSON
-  addedOn         DateTime @default(now())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id        String   @id @default(cuid())
+  voiceId   String
+  name      String
+  language  String?
+  labels    Json?
+  addedOn   DateTime @default(now())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, voiceId])
   @@map("user_voices")
 }
 
 model Invoice {
-  id                 String             @id @default(cuid())
-  stripeInvoiceId    String?            @unique
+  id                    String             @id @default(cuid())
+  stripeInvoiceId       String?            @unique
   stripePaymentIntentId String?
-  amount             Decimal            @db.Decimal(10, 2)
-  status             String             @default("pending") // pending, paid, failed
-  description        String
-  type               String             // purchase, renewal, subscription
-  userId             String
-  twilioPhoneNumberId String?
-  pdfUrl             String?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  twilioPhoneNumber  TwilioPhoneNumber? @relation(fields: [twilioPhoneNumberId], references: [id])
+  amount                Decimal            @db.Decimal(10, 2)
+  status                String             @default("pending")
+  description           String
+  type                  String
+  userId                String
+  twilioPhoneNumberId   String?
+  pdfUrl                String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  twilioPhoneNumber     TwilioPhoneNumber? @relation(fields: [twilioPhoneNumberId], references: [id])
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("invoices")
 }
 
-// AssistantSettings model for OpenAI Assistants API integration
 model AssistantSettings {
-  id                 String   @id @default(cuid())
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  chatbotId          String   @unique
-  openaiAssistantId  String?
-  openaiThreadId     String?
-  instructions       String?  @default("You are a helpful AI assistant.")
-  tools              Json?    @default("[]")
-  retrievalSettings  Json?    @default("{}")
-  chatbot            Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+  id                String   @id @default(cuid())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  chatbotId         String   @unique
+  openaiAssistantId String?
+  openaiThreadId    String?
+  instructions      String?  @default("You are a helpful AI assistant.")
+  tools             Json?    @default("[]")
+  retrievalSettings Json?    @default("{}")
+  chatbot           Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
 
   @@map("AssistantSettings")
 }

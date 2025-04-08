@@ -1,16 +1,13 @@
-Fetched websites: Array(0)
-website-tab.tsx:328 Sending crawler request: ObjectcrawlUrl: "https://prconvention.com/"maxPagesToCrawl: 10selector: "body"sourceId: "cm8nncw8m0001ugjiuness8cu"urlMatch: "prconvention.com"[[Prototype]]: Object
-website-tab.tsx:345 Crawler started: ObjectcrawlerId: "cm8yw7a28001nernwn6m1wy2r"fileId: "cm8yw7a29001pernwdy0b4ngc"message: "Crawler started successfully. The content will be processed and added to your knowledge base."status: {phase: 'initialized', progress: 0, estimatedTimeMinutes: 2}success: true[[Prototype]]: Object
-crawling:1 
+:3000/api/knowledge-sources/cm8z5x9jh002eernw73r2k7cw/catalog:1 
             
             
-           Failed to load resource: the server responded with a status of 500 (Internal Server Error)Understand this errorAI
-website-tab.tsx:355 Crawling API response (500): {"error":"Connection error.","details":{"cause":{"message":"request to https://api.openai.com/v1/files failed, reason: read ECONNRESET","type":"system","errno":"ECONNRESET","code":"ECONNRESET"}}}
-window.console.error @ app-index.js:33
-console.error @ hydration-error-info.js:63
-handleStartCrawl @ website-tab.tsx:355Understand this errorAI
-website-tab.tsx:437 Error starting crawler: Error: Failed to start crawling: 500 Internal Server Error
-    at handleStartCrawl (website-tab.tsx:356:17)
-window.console.error @ app-index.js:33
-console.error @ hydration-error-info.js:63
-handleStartCrawl @ website-tab.tsx:437Understand this errorAI
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
+app-index.js:33 Error fetching catalog content: Error: Failed to fetch catalog content: 404 Not Found
+    at fetchCatalogContent (catalog-tab.tsx:66:15)
+window.console.error @ app-index.js:33Understand this errorAI
+:3000/api/knowledge-sources/cm8z5x9jh002eernw73r2k7cw/catalog:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 (Not Found)Understand this errorAI
+app-index.js:33 Error uploading file: Error: Failed to upload file: 404
+    at handleFileUpload (document-mode.tsx:80:15)

@@ -1,4 +1,3 @@
-import { put } from '@vercel/blob';
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next"
 
@@ -9,6 +8,7 @@ import { getUserSubscriptionPlan } from '@/lib/subscription';
 import { RequiresHigherPlanError } from '@/lib/exceptions';
 import { fileTypes as codeTypes } from '@/lib/validations/codeInterpreter';
 import { fileTypes as searchTypes } from '@/lib/validations/fileSearch';
+import { uploadToSupabase, ensureRequiredBuckets } from '@/lib/supabase';
 
 export const maxDuration = 60;
 
@@ -49,9 +49,24 @@ export async function POST(request: Request) {
             return new Response('Missing body', { status: 400 });
         }
 
-        const blob = await put(filename, request.body, {
-            access: 'public',
-        });
+        // Ensure required buckets exist
+        await ensureRequiredBuckets();
+
+        // Get the file as a blob
+        const fileBlob = await request.blob();
+
+        // Upload to Supabase
+        const uploadResult = await uploadToSupabase(
+            fileBlob,
+            'files',  // bucket
+            '',       // folder
+            user.id,  // userId
+            filename  // fileName
+        );
+
+        if (!uploadResult) {
+            return new Response('Failed to upload file to storage', { status: 500 });
+        }
 
         const openAIConfig = await db.openAIConfig.findUnique({
             select: {
@@ -71,26 +86,46 @@ export async function POST(request: Request) {
             apiKey: openAIConfig?.globalAPIKey
         })
 
-        const file = await openai.files.create(
-            { file: await fetch(blob.url), purpose: 'assistants' }
-        )
+        // Fetch the file from Supabase
+        const response = await fetch(uploadResult.url);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch file from storage: ${response.statusText}`);
+        }
 
+        const fileContent = await response.blob();
+
+        // Upload to OpenAI
+        const file = await openai.files.create({
+            file: new File([fileContent], filename),
+            purpose: 'assistants'
+        });
+
+        // Create file record
         await db.file.create({
             data: {
                 name: filename,
-                blobUrl: blob.url,
+                blobUrl: uploadResult.url, // Keep for backward compatibility
+                // @ts-ignore - storageUrl and storageProvider exist in the schema but TypeScript doesn't recognize them
+                storageUrl: uploadResult.url,
+                storageProvider: 'supabase',
                 openAIFileId: file.id,
                 userId: session?.user?.id,
             }
-        })
+        });
 
-        return NextResponse.json({ url: blob.url }, { status: 201 });
+        return NextResponse.json({ url: uploadResult.url }, { status: 201 });
     } catch (error) {
         if (error instanceof RequiresHigherPlanError) {
             return new Response("Requires Higher plan", { status: 402 })
         }
 
-        console.error(error);
-        return new Response(null, { status: 500 })
+        console.error('Error in file upload:', error);
+        return new Response(
+            JSON.stringify({ 
+                error: 'Failed to upload file',
+                message: error instanceof Error ? error.message : String(error)
+            }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
     }
 }

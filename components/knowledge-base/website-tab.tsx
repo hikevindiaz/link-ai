@@ -41,12 +41,12 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { useKnowledgeBase } from '@/app/(dashboard)/dashboard/knowledge-base/layout';
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface WebsiteTabProps {
   source?: Source;
-  onSave: (data: any) => Promise<void>;
 }
 
 interface WebsiteContent {
@@ -66,6 +66,16 @@ interface CrawlerFile {
   crawlerId?: string; // To identify crawler-generated files
 }
 
+// Status tracking for website operations
+interface WebsiteOperationStatus {
+  id: string;
+  url: string;
+  status: 'saving' | 'processing' | 'complete' | 'error' | 'deleting' | 'training';
+  progress: number;
+  error?: string;
+  instructions?: string;
+}
+
 interface PendingWebsiteAction {
   type: 'add' | 'delete';
   url?: string;
@@ -73,7 +83,9 @@ interface PendingWebsiteAction {
   instructions?: string;
 }
 
-export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
+type WebsiteStatusType = 'saving' | 'processing' | 'complete' | 'error' | 'deleting' | 'training';
+
+export function WebsiteTab({ source }: WebsiteTabProps) {
   // Live Web Searches state
   const [liveSearchUrl, setLiveSearchUrl] = useState('');
   const [liveSearchInstructions, setLiveSearchInstructions] = useState('');
@@ -87,6 +99,30 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
   const [websiteToDelete, setWebsiteToDelete] = useState<WebsiteContent | null>(null);
   const [isDeletingWebsite, setIsDeletingWebsite] = useState(false);
   
+  // Progress status tracking
+  const [processingWebsites, setProcessingWebsites] = useState<WebsiteOperationStatus[]>([]);
+  
+  // Helper function to update the progress of a website with a delay
+  const progressStep = async (
+    websiteId: string, 
+    status: 'saving' | 'processing' | 'complete' | 'error' | 'deleting' | 'training',
+    progress: number
+  ) => {
+    return new Promise<void>(resolve => {
+      setTimeout(() => {
+        setProcessingWebsites(prev => {
+          const newState = prev.map(item => 
+            item.id === websiteId
+              ? { ...item, status, progress } 
+              : item
+          );
+          return [...newState];
+        });
+        resolve();
+      }, 500);
+    });
+  };
+  
   // Crawler state
   const [crawlerUrl, setCrawlerUrl] = useState('');
   const [isCrawling, setIsCrawling] = useState(false);
@@ -96,9 +132,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [crawlingProgress, setCrawlingProgress] = useState(0);
   const [crawlingStatus, setCrawlingStatus] = useState('');
-  
-  // Global save state
-  const { addPendingChange } = useKnowledgeBase();
+  const [deleteProgress, setDeleteProgress] = useState<number>(0);
   
   // Fetch existing websites and crawler files when component mounts or source changes
   useEffect(() => {
@@ -193,7 +227,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
     }
   };
 
-  const handleAddLiveSearchUrl = () => {
+  const handleAddLiveSearchUrl = async () => {
     if (!source?.id) return;
 
     // Validate URL
@@ -213,34 +247,117 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       return;
     }
 
-    // Add this URL to the pending changes
-    const pendingAction: PendingWebsiteAction = {
-      type: 'add',
-      url: formattedUrl,
-      instructions: liveSearchInstructions.trim() || undefined
-    };
-
-    // Add to global pending changes
-    addPendingChange(source.id, {
-      website: pendingAction
-    });
+    // Create a temporary ID to track this operation
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     
-    // Add to local state for immediate UI update
-    const tempWebsite: WebsiteContent = {
-      id: `temp-${Date.now()}`,
-      url: formattedUrl,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      knowledgeSourceId: source.id,
-      instructions: liveSearchInstructions.trim() || undefined
-    };
+    // Set submission state
+    setIsSubmitting(true);
     
-    setSavedWebsites(prev => [...prev, tempWebsite]);
-    setLiveSearchUrl(''); // Reset the input field
-    setLiveSearchInstructions(''); // Reset instructions field
+    // Add to processing with status tracking
+    setProcessingWebsites(prev => [
+      ...prev,
+      {
+        id: tempId,
+        url: formattedUrl,
+        status: 'saving',
+        progress: 10,
+        instructions: liveSearchInstructions.trim() || undefined
+      }
+    ]);
     
-    // Show success message
-    toast.success("URL added to changes");
+    try {
+      // Step 1: Initial progress
+      await progressStep(tempId, 'saving', 10);
+      
+      // Step 2: Saving to database (40%)
+      await progressStep(tempId, 'saving', 40);
+      
+      // Prepare payload
+      const payload = {
+        urls: [formattedUrl],
+      };
+      
+      // Only add instructions if they exist and aren't empty
+      if (liveSearchInstructions && liveSearchInstructions.trim() !== '') {
+        payload['instructions'] = liveSearchInstructions.trim();
+      }
+      
+      // Make API call to save the website
+      const response = await fetch(`/api/knowledge-sources/${source.id}/website`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      // Step 3: Processing (70%)
+      await progressStep(tempId, 'processing', 70);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        
+        // Try to parse the error as JSON
+        let errorMessage = `Failed to save website URL: ${response.status}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          }
+        } catch (e) {
+          // If it's not valid JSON, use the raw text
+          if (errorText) {
+            errorMessage = errorText;
+          }
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      // Get the response data
+      const data = await response.json();
+      
+      // Step 4: Complete (100%)
+      await progressStep(tempId, 'complete', 100);
+      
+      // If successful, refresh the website list
+      fetchWebsites();
+      
+      // Clear form fields
+      setLiveSearchUrl('');
+      setLiveSearchInstructions('');
+      
+      // Show success message
+      toast.success("URL added successfully");
+      
+      // Remove from processing after delay
+      setTimeout(() => {
+        setProcessingWebsites(prev => prev.filter(item => item.id !== tempId));
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error adding website URL:', error);
+      
+      // Update status to error
+      setProcessingWebsites(prev => {
+        const newState = prev.map(item => 
+          item.id === tempId
+            ? { 
+                ...item, 
+                status: 'error' as const, 
+                progress: 100,
+                error: error instanceof Error ? error.message : 'Failed to add website URL' 
+              } 
+            : item
+        );
+        return [...newState];
+      });
+      
+      toast.error(error instanceof Error ? error.message : "Failed to add website URL");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const confirmDeleteWebsite = (website: WebsiteContent) => {
@@ -248,35 +365,99 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
     setDeleteWebsiteDialogOpen(true);
   };
 
-  const handleDeleteWebsite = () => {
+  const handleDeleteWebsite = async () => {
     if (!websiteToDelete || !source?.id) return;
+    
+    const websiteId = websiteToDelete.id;
+    const websiteUrl = websiteToDelete.url; // For status tracking
+    
+    // Add to processing websites with status tracking
+    setProcessingWebsites(prev => [
+      ...prev,
+      {
+        id: websiteId,
+        url: websiteUrl,
+        status: 'deleting',
+        progress: 10
+      }
+    ]);
     
     setIsDeletingWebsite(true);
     
+    // We won't close the dialog immediately to show the progress animation
+    // setDeleteWebsiteDialogOpen(false);
+    
     try {
-      // Add delete action to pending changes
-      const pendingAction: PendingWebsiteAction = {
-        type: 'delete',
-        websiteId: websiteToDelete.id
-      };
+      // Step 1: Start deleting (10%)
+      await progressStep(websiteId, 'deleting', 10);
       
-      // Add to global pending changes
-      addPendingChange(source.id, {
-        website: pendingAction
+      // Step 2: Removing from database (40%)
+      await progressStep(websiteId, 'deleting', 40);
+      
+      // Call the API to delete the website
+      const response = await fetch(`/api/knowledge-sources/${source.id}/website/${websiteId}`, {
+        method: 'DELETE',
       });
       
-      // Update UI by removing from local state
-      setSavedWebsites(prev => prev.filter(website => website.id !== websiteToDelete.id));
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error deleting website:', errorText);
+        throw new Error(`Failed to delete website: ${response.status}`);
+      }
       
-      // Close dialog and reset state
-      setDeleteWebsiteDialogOpen(false);
-      setWebsiteToDelete(null);
+      // Actual deletion happened, but we'll continue animating the progress
+      
+      // Step 3: Processing completion (70%)
+      await progressStep(websiteId, 'processing', 70);
+      
+      // Update UI by removing from local state
+      setSavedWebsites(prev => prev.filter(website => website.id !== websiteId));
+      
+      // Step 4: Complete (100%) - slow this down for effect
+      await progressStep(websiteId, 'complete', 85);
+      await new Promise(resolve => setTimeout(resolve, 700));
+      await progressStep(websiteId, 'complete', 100);
       
       // Show success message
-      toast.success("Website removal queued for saving");
+      toast.success("Website removed successfully");
+      
+      // Added artificial delay before closing the dialog
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Now close the dialog
+      setDeleteWebsiteDialogOpen(false);
+      
+      // Remove from processing after delay
+      setTimeout(() => {
+        setProcessingWebsites(prev => prev.filter(item => item.id !== websiteId));
+      }, 3000);
+      
+      // Reset state
+      setWebsiteToDelete(null);
     } catch (error) {
-      console.error('Error queueing website deletion:', error);
-      toast.error("Failed to queue website for deletion");
+      console.error('Error deleting website:', error);
+      
+      // Update status to error
+      setProcessingWebsites(prev => {
+        const newState = prev.map(item => 
+          item.id === websiteId
+            ? { 
+                ...item, 
+                status: 'error' as const, 
+                progress: 100,
+                error: error instanceof Error ? error.message : 'Failed to delete website' 
+              } 
+            : item
+        );
+        return [...newState];
+      });
+      
+      toast.error(error instanceof Error ? error.message : "Failed to delete website");
+      
+      // Close dialog after error too, but with a delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setDeleteWebsiteDialogOpen(false);
+      
     } finally {
       setIsDeletingWebsite(false);
     }
@@ -346,34 +527,99 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       
       if (data.success) {
         // Start the crawling process
-        const crawlResponse = await fetch(`/api/crawlers/${data.crawlerId}/crawling`, {
-          method: 'POST'
-        });
-
-        if (!crawlResponse.ok) {
-          const errorText = await crawlResponse.text();
-          console.error(`Crawling API response (${crawlResponse.status}):`, errorText);
-          throw new Error(`Failed to start crawling: ${crawlResponse.status} ${crawlResponse.statusText}`);
-        }
-
-        const crawlData = await crawlResponse.json();
-        console.log('Crawling process started:', crawlData);
-        
-        // Add the crawled file to pending changes
-        if (source?.id && crawlData.fileId) {
-          addPendingChange(source.id, {
-            crawledFile: {
-              type: 'add',
-              fileId: crawlData.fileId,
-              openAIFileId: crawlData.openAIFileId
-            }
+        try {
+          const crawlResponse = await fetch(`/api/crawlers/${data.crawlerId}/crawling`, {
+            method: 'POST'
           });
-        }
-        
-        // Set progress based on status from response
-        setCrawlingProgress(10);
-        if (data.status?.estimatedTimeMinutes) {
-          setCrawlingStatus(`Estimated time: ${data.status.estimatedTimeMinutes} minutes`);
+
+          if (!crawlResponse.ok) {
+            const errorText = await crawlResponse.text();
+            console.error(`Crawling API response (${crawlResponse.status}):`, errorText);
+            
+            // Parse the error response if possible
+            let errorData: any = {};
+            try {
+              errorData = JSON.parse(errorText);
+            } catch (e) {
+              // If we can't parse JSON, use the raw text
+              errorData = { error: errorText };
+            }
+            
+            // Check for SSL certificate errors
+            if (errorData?.cause?.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' || 
+                errorText.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE') ||
+                errorText.includes('certificate') ||
+                errorText.includes('SSL')) {
+              toast.error(
+                "SSL Certificate Error: The website has an invalid certificate. Please try again - the system will attempt to bypass certificate verification.", 
+                { duration: 6000 }
+              );
+              
+              // Wait a moment and try again with a different approach
+              setTimeout(async () => {
+                try {
+                  toast.info("Retrying with relaxed security settings...");
+                  const retryResponse = await fetch(`/api/crawlers/${data.crawlerId}/crawling`, {
+                    method: 'POST',
+                    headers: {
+                      'X-Bypass-SSL-Verification': 'true'
+                    }
+                  });
+                  
+                  if (retryResponse.ok) {
+                    const retryData = await retryResponse.json();
+                    console.log('Retry was successful:', retryData);
+                    
+                    // Update the file list
+                    fetchCrawlerFiles();
+                    
+                    // Show success message
+                    setSuccessMessage("Website was crawled successfully with relaxed security verification. Content has been added to your knowledge base.");
+                    setSuccessDialogOpen(true);
+                  } else {
+                    throw new Error(`Retry attempt failed: ${retryResponse.status}`);
+                  }
+                } catch (retryError) {
+                  console.error('Retry attempt failed:', retryError);
+                  toast.error("Could not crawl this website, even with relaxed security. Please try a different website.");
+                } finally {
+                  setIsCrawling(false);
+                  setCrawlingProgress(0);
+                  setCrawlingStatus('');
+                }
+              }, 2000);
+              
+              return;
+            }
+            
+            throw new Error(`Failed to start crawling: ${crawlResponse.status} ${crawlResponse.statusText}`);
+          }
+
+          const crawlData = await crawlResponse.json();
+          console.log('Crawling process started:', crawlData);
+          
+          // Set progress based on status from response
+          setCrawlingProgress(10);
+          if (data.status?.estimatedTimeMinutes) {
+            setCrawlingStatus(`Estimated time: ${data.status.estimatedTimeMinutes} minutes`);
+          }
+        } catch (crawlError) {
+          console.error('Error starting crawler:', crawlError);
+          
+          // Show a more helpful error message for SSL certificate issues
+          if (crawlError instanceof Error && 
+              (crawlError.message.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE') || 
+               crawlError.message.includes('certificate') ||
+               crawlError.message.includes('SSL'))) {
+            toast.error("SSL Certificate Error: The website has an invalid or expired SSL certificate. Try again - the system will attempt to crawl with relaxed security settings.");
+          } else {
+            toast.error(crawlError instanceof Error ? crawlError.message : "Failed to start crawler");
+          }
+          
+          setIsCrawling(false);
+          setCrawlingProgress(0);
+          setCrawlingStatus('');
+          return;
         }
       }
       
@@ -389,7 +635,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
         } else if (progress < 50) {
           setCrawlingStatus('Extracting content from pages...');
         } else if (progress < 70) {
-          setCrawlingStatus('Processing content for AI knowledge...');
+          setCrawlingStatus('Processing content for Agent knowledge...');
         } else if (progress < 90) {
           setCrawlingStatus('Adding content to knowledge base...');
         } else {
@@ -435,7 +681,17 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       
     } catch (error) {
       console.error('Error starting crawler:', error);
-      toast.error(error instanceof Error ? error.message : "Failed to start crawler");
+      
+      // Show a more helpful error message for SSL certificate issues
+      if (error instanceof Error && 
+          (error.message.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE') || 
+           error.message.includes('certificate') ||
+           error.message.includes('SSL'))) {
+        toast.error("SSL Certificate Error: The website has an invalid or expired SSL certificate. We're attempting to crawl it with reduced security verification. Try again or use a different website.");
+      } else {
+        toast.error(error instanceof Error ? error.message : "Failed to start crawler");
+      }
+      
       setIsCrawling(false);
       setCrawlingProgress(0);
       setCrawlingStatus('');
@@ -451,9 +707,18 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
     if (!fileToDelete || !source?.id) return;
 
     setIsDeleting(true);
+    setDeleteProgress(0);
     const toastId = toast.loading("Deleting file and cleaning up resources...");
 
     try {
+      // Simulate progress during deletion
+      const progressInterval = setInterval(() => {
+        setDeleteProgress(prev => {
+          const newProgress = prev + Math.floor(Math.random() * 10) + 5;
+          return newProgress > 95 ? 95 : newProgress;
+        });
+      }, 800);
+      
       // Make API call to delete file
       const response = await fetch(`/api/knowledge-sources/${source.id}/content/${fileToDelete.id}`, {
         method: 'DELETE',
@@ -468,13 +733,23 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       // Update UI by removing deleted file
       setCrawlerFiles(prev => prev.filter(file => file.id !== fileToDelete.id));
       
-      // Close dialog and reset state
-      setDeleteDialogOpen(false);
-      setFileToDelete(null);
+      // Clear the progress interval
+      clearInterval(progressInterval);
       
-      // Show success message
+      // Set to 100% when complete
+      setDeleteProgress(100);
+      
+      // Add artificial delay to show the progress animation
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      
+      // Close dialog and reset state (delayed)
       toast.dismiss(toastId);
       toast.success(data.message || "File deleted successfully");
+      
+      // Added artificial delay before closing the dialog
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setDeleteDialogOpen(false);
+      setFileToDelete(null);
     } catch (error) {
       console.error('Error deleting file:', error);
       toast.dismiss(toastId);
@@ -484,17 +759,27 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
         if (error.message.includes('not found')) {
           // If file is not found, we can consider it deleted
           setCrawlerFiles(prev => prev.filter(file => file.id !== fileToDelete?.id));
+          
+          // Added artificial delay before closing the dialog
+          await new Promise(resolve => setTimeout(resolve, 1000));
           setDeleteDialogOpen(false);
           setFileToDelete(null);
           toast.success("File has been removed from your knowledge base");
         } else {
           toast.error(`Error: ${error.message}`);
+          // Added artificial delay before closing the dialog
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          setDeleteDialogOpen(false);
         }
       } else {
         toast.error("An unexpected error occurred while deleting the file");
+        // Added artificial delay before closing the dialog
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setDeleteDialogOpen(false);
       }
     } finally {
       setIsDeleting(false);
+      setDeleteProgress(0);
     }
   };
 
@@ -505,6 +790,50 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const renderWebsiteProgress = (website: WebsiteOperationStatus) => {
+    const getStatusText = () => {
+      switch (website.status) {
+        case 'saving': 
+          if (website.progress < 20) return 'Initializing website capture...';
+          if (website.progress < 40) return 'Saving website content...';
+          if (website.progress < 60) return 'Processing website content...';
+          return 'Finalizing website data...';
+        case 'processing': 
+          if (website.progress < 30) return 'Crawling website content...';
+          if (website.progress < 60) return 'Extracting valuable information...';
+          if (website.progress < 85) return 'Organizing website data...';
+          return 'Final processing steps...';
+        case 'training': 
+          if (website.progress < 25) return 'Starting Agent training...';
+          if (website.progress < 50) return 'Teaching Agent about website content...';
+          if (website.progress < 75) return 'Agent is learning website information...';
+          return 'Finalizing website knowledge...';
+        case 'complete': return 'Operation completed successfully';
+        case 'error': return website.error || 'Error occurred';
+        case 'deleting':
+          if (website.progress < 25) return 'Beginning website deletion...';
+          if (website.progress < 50) return 'Removing website from knowledge base...';
+          if (website.progress < 75) return 'Cleansing Agent memory...';
+          return 'Almost done with removal...';
+        default: return 'Processing...';
+      }
+    };
+    
+    return (
+      <div className="flex justify-between items-center text-sm">
+        <div className="flex items-center gap-1.5">
+          <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+          <span className="font-medium text-indigo-600 dark:text-indigo-400">
+            {getStatusText()}
+          </span>
+        </div>
+        <Badge variant="secondary" className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+          {website.progress}%
+        </Badge>
+      </div>
+    );
   };
 
   // Render content
@@ -524,7 +853,19 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
 
         <TabsContent value="liveSearch" className="space-y-4 pt-4">
           <Card className="p-6">
-            <div className="space-y-4">
+            <div className="space-y-8">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Globe className="h-5 w-5 text-indigo-500" />
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
+                    Add Website Content
+                  </h2>
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Add website content to this knowledge source. Your Agent will be able to reference information from these websites when responding to queries.
+                </p>
+              </div>
+              
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="websiteUrl">Add URL for Live Search</Label>
@@ -551,7 +892,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                     disabled={isSubmitting}
                     className="flex-1"
                   />
-                  <Button onClick={handleAddLiveSearchUrl} disabled={isSubmitting} className="whitespace-nowrap">
+                  <Button onClick={handleAddLiveSearchUrl} disabled={isSubmitting} className="whitespace-nowrap bg-black hover:bg-gray-800 text-white">
                     {isSubmitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -577,7 +918,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                     className="w-full"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Optional. Provide instructions for when your AI agent should search this specific URL.
+                    Optional. Provide instructions for when your Agent should search this specific URL.
                   </p>
                 </div>
                 
@@ -646,8 +987,16 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center p-4 border rounded-md border-gray-300 dark:border-gray-700">
-                    <p className="text-gray-500 dark:text-gray-400">No URLs added yet</p>
+                  <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+                    <div className="text-center">
+                      <RiGlobalLine className="h-12 w-12 text-indigo-300 dark:text-indigo-700 mx-auto mb-3" />
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                        No URLs added yet
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 max-w-xs mx-auto">
+                        Add URLs for your Agent to search when answering questions
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -657,14 +1006,33 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
 
         <TabsContent value="crawler" className="space-y-4 pt-4">
           <Card className="p-6">
-            <div className="space-y-4">
-              <Alert>
-                <RiInformationLine className="h-4 w-4" />
-                <AlertTitle>Remember to Save Changes</AlertTitle>
-                <AlertDescription>
-                  After crawling a website, click the "Save Changes" button to add the content to your knowledge base and make it available to your agents.
-                </AlertDescription>
-              </Alert>
+            <div className="space-y-8">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Globe className="h-5 w-5 text-indigo-500" />
+                  <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
+                    Add Website Content
+                  </h2>
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Add website content to this knowledge source. Your Agent will be able to reference information from these websites when responding to queries.
+                </p>
+              </div>
+              
+              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-md border border-gray-200 dark:border-gray-800">
+                <div className="flex items-start gap-2">
+                  <RiInformationLine className="h-5 w-5 text-indigo-500 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                    <p className="font-medium mb-1">About Website Crawling</p>
+                    <ul className="list-disc list-inside space-y-1 pl-1">
+                      <li>The crawler will extract content from the website and add it to your knowledge base</li>
+                      <li>Crawled content is processed automatically and immediately available to your Agent</li>
+                      <li>For best results, crawl specific pages rather than entire sites</li>
+                      <li>Use this for static content that doesn't change frequently</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
               
               <div className="flex flex-col space-y-2">
                 <div className="flex justify-between items-center">
@@ -695,7 +1063,7 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                   <Button 
                     onClick={handleStartCrawl} 
                     disabled={isCrawling}
-                    className="whitespace-nowrap"
+                    className="whitespace-nowrap bg-black hover:bg-gray-800 text-white"
                   >
                     {isCrawling ? (
                       <>
@@ -759,8 +1127,16 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="text-center p-4 border rounded-md border-dashed border-gray-300 dark:border-gray-700">
-                    <p className="text-gray-500 dark:text-gray-400">No crawled website files</p>
+                  <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+                    <div className="text-center">
+                      <RiGlobalLine className="h-12 w-12 text-indigo-300 dark:text-indigo-700 mx-auto mb-3" />
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                        No crawled website files
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 max-w-xs mx-auto">
+                        Crawl a website to add content to your knowledge base
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -781,8 +1157,21 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
           <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-md overflow-hidden text-ellipsis">
             {websiteToDelete?.url}
           </div>
+          
+          {isDeletingWebsite && (
+            <div className="mt-2 space-y-3 pb-4">
+              {renderWebsiteProgress(processingWebsites.find(w => w.id === websiteToDelete?.id) as WebsiteOperationStatus)}
+            </div>
+          )}
+          
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setDeleteWebsiteDialogOpen(false)}>Cancel</Button>
+            <Button 
+              variant="secondary" 
+              onClick={() => setDeleteWebsiteDialogOpen(false)}
+              disabled={isDeletingWebsite}
+            >
+              Cancel
+            </Button>
             <Button variant="destructive" onClick={handleDeleteWebsite} disabled={isDeletingWebsite}>
               {isDeletingWebsite ? (
                 <>
@@ -820,8 +1209,41 @@ export function WebsiteTab({ source, onSave }: WebsiteTabProps) {
               )}
             </div>
           </div>
+          
+          {isDeleting && (
+            <div className="mt-3 space-y-3 pb-4">
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-1.5">
+                  <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+                  <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                    {deleteProgress < 25 
+                      ? "Starting content deletion process..." 
+                      : deleteProgress < 50
+                        ? "Removing content from knowledge base..."
+                        : deleteProgress < 75
+                          ? "Cleansing vector embeddings..."
+                          : "Finalizing cleanup operations..."}
+                  </span>
+                </div>
+                <Badge variant="secondary" className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                  {deleteProgress}%
+                </Badge>
+              </div>
+              <Progress 
+                value={deleteProgress} 
+                className="h-2 bg-indigo-100 text-indigo-600"
+              />
+            </div>
+          )}
+          
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button 
+              variant="secondary" 
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
             <Button 
               variant="destructive" 
               onClick={handleDeleteFile} 

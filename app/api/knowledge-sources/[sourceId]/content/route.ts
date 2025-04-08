@@ -158,225 +158,157 @@ export async function GET(
 
 // Handle file uploads
 async function handleFileUpload(req: Request, context: z.infer<typeof routeContextSchema>) {
+  let fileId: string | undefined;
+
   try {
+    console.log("Starting file upload handling");
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return new Response("Unauthorized", { status: 403 });
     }
 
-    // Validate route params
-    const { params } = routeContextSchema.parse(context);
-    const { sourceId } = params;
-
-    // Verify user has access to the knowledge source
-    const hasAccess = await verifyUserHasAccessToSource(sourceId, session.user.id);
-    if (!hasAccess) {
-      return new Response("Unauthorized", { status: 403 });
-    }
-
-    // Parse the multipart form data
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
+    const { sourceId } = context.params;
+    console.log(`Processing file upload for knowledge source: ${sourceId}`);
     
-    if (!file) {
-      return new Response("No file provided", { status: 400 });
-    }
-
-    // Check file type
-    const allowedTypes = [
-      'application/pdf', // PDF
-      'text/csv', // CSV
-      'text/plain', // TXT
-      'application/vnd.ms-excel', // XLS
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
-      'application/msword', // DOC
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      return new Response(
-        JSON.stringify({ 
-          error: `File type not supported. Allowed types: PDF, CSV, TXT, XLS, XLSX, DOC, DOCX` 
-        }),
-        { 
-          status: 400,
-          headers: { "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    // Check file size (10MB limit)
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-    if (file.size > MAX_SIZE) {
-      return new Response(
-        JSON.stringify({ 
-          error: `File size exceeds the 10MB limit` 
-        }),
-        { 
-          status: 400,
-          headers: { "Content-Type": "application/json" }
-        }
-      );
-    }
-
-    let fileId: string | undefined;
     try {
-      // Generate a file ID
-      fileId = generateFileId();
+      const formData = await req.formData();
+      const file = formData.get('file') as File;
 
-      // For files larger than 5MB, use chunked upload
-      if (file.size > 5 * 1024 * 1024) {
-        console.log('File too large, using chunked upload...');
-        
-        // Upload to Vercel Blob with timeout
-        const blob = await Promise.race<{ url: string }>([
-          put(file.name, file, {
-            access: 'public',
-          }),
-          new Promise<{ url: string }>((_, reject) => 
-            setTimeout(() => reject(new Error('Blob upload timed out')), 30000)
-          )
-        ]);
-
-        // Create a temporary file record
-        await db.file.create({
-          data: {
-            id: fileId,
-            name: file.name,
-            userId: session.user.id,
-            knowledgeSourceId: sourceId,
-            blobUrl: blob.url,
-            openAIFileId: `temp_${fileId}`, // Temporary OpenAI file ID
-            createdAt: new Date()
-          }
-        });
-
-        // Start chunked upload process
-        console.log(`Initiating chunked upload for file ${fileId}`);
-        const chunkResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/knowledge-sources/${sourceId}/content/${fileId}/chunked-upload`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            fileId: fileId,
-            fileName: file.name,
-            fileType: file.type,
-            fileSize: file.size
-          }),
-        });
-
-        if (!chunkResponse.ok) {
-          const errorData = await chunkResponse.json();
-          throw new Error(`Failed to initiate chunked upload: ${errorData.error || chunkResponse.statusText}`);
-        }
-
-        // Return success with a message about background processing
+      if (!file) {
+        console.error("No file provided in form data");
         return new Response(
-          JSON.stringify({
-            id: fileId,
-            name: file.name,
-            url: blob.url,
-            message: 'File upload started in background. The file will be processed and added to the vector store shortly.'
-          }),
+          JSON.stringify({ error: "No file provided" }),
           { 
-            status: 202,
+            status: 400,
             headers: { "Content-Type": "application/json" }
           }
         );
       }
 
-      // For smaller files, proceed with direct upload
-      console.log('Processing file with direct upload...');
-      
-      // Upload to Vercel Blob with timeout
-      const blob = await Promise.race<{ url: string }>([
-        put(file.name, file, {
-          access: 'public',
-        }),
-        new Promise<{ url: string }>((_, reject) => 
-          setTimeout(() => reject(new Error('Blob upload timed out')), 30000)
-        )
-      ]);
+      console.log(`Received file: ${file.name}, Type: ${file.type}, Size: ${file.size} bytes`);
 
-      // Upload to OpenAI with timeout
+      // Check file type
+      const allowedTypes = [
+        'application/pdf', // PDF
+        'text/csv', // CSV
+        'text/plain', // TXT
+        'application/vnd.ms-excel', // XLS
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // XLSX
+        'application/msword', // DOC
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
+      ];
+
+      if (!allowedTypes.includes(file.type)) {
+        console.error(`Unsupported file type: ${file.type}`);
+        return new Response(
+          JSON.stringify({ 
+            error: `File type not supported. Allowed types: PDF, CSV, TXT, XLS, XLSX, DOC, DOCX` 
+          }),
+          { 
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // Check file size (10MB limit)
+      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+      if (file.size > MAX_SIZE) {
+        return new Response(
+          JSON.stringify({ 
+            error: `File size exceeds the 10MB limit` 
+          }),
+          { 
+            status: 400,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
+
+      // Import the uploadToSupabase function and ensure required buckets exist
+      const { uploadToSupabase, ensureRequiredBuckets } = await import('@/lib/supabase');
+      await ensureRequiredBuckets();
+
+      // Upload to Supabase
+      const uploadResult = await uploadToSupabase(
+        file,
+        'files',  // bucket
+        'knowledge',  // folder
+        session.user.id,  // userId
+        file.name  // fileName
+      );
+
+      if (!uploadResult) {
+        throw new Error('Failed to upload file to storage');
+      }
+
+      // Upload to OpenAI
       const openai = getOpenAIClient();
-      const uploadedFile = await Promise.race<OpenAI.Files.FileObject>([
-        openai.files.create({
-          file: file,
-          purpose: "assistants"
-        }),
-        new Promise<OpenAI.Files.FileObject>((_, reject) => 
-          setTimeout(() => reject(new Error('OpenAI upload timed out')), 30000)
-        )
-      ]);
+      const uploadedFile = await openai.files.create({
+        file,
+        purpose: "assistants"
+      });
 
-      // Create the file record in the database
+      // Create the file record with the actual OpenAI file ID
+      fileId = crypto.randomUUID();
       await db.file.create({
         data: {
           id: fileId,
-          name: file.name,
           userId: session.user.id,
-          knowledgeSourceId: sourceId,
-          blobUrl: blob.url,
+          name: file.name,
           openAIFileId: uploadedFile.id,
-          createdAt: new Date()
+          blobUrl: uploadResult.url, // Keep for backwards compatibility
+          // @ts-ignore - storageUrl and storageProvider exist in the schema but TypeScript doesn't recognize them
+          storageUrl: uploadResult.url,
+          storageProvider: 'supabase',
+          createdAt: new Date(),
+          knowledgeSourceId: sourceId
         }
       });
 
-      // Start vector store integration in the background
-      console.log(`Starting vector store integration for file ${fileId}`);
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/knowledge-sources/${sourceId}/content/${fileId}/vector`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          openAIFileId: uploadedFile.id
-        }),
-      }).catch(error => {
-        console.error('Error in background vector store integration:', error);
-      });
+      // Ensure vector store exists and add file to it
+      const vectorStoreId = await ensureVectorStore(sourceId);
+      if (!vectorStoreId) {
+        throw new Error('Failed to create or get vector store');
+      }
 
-      // Return success immediately
+      // Add file to vector store
+      try {
+        await addFileToVectorStore(vectorStoreId, uploadedFile.id);
+        console.log(`Successfully added file ${uploadedFile.id} to vector store ${vectorStoreId}`);
+      } catch (vectorError) {
+        console.error('Error adding file to vector store:', vectorError);
+        // Clean up the OpenAI file since vector store integration failed
+        try {
+          await openai.files.del(uploadedFile.id);
+          console.log(`Cleaned up OpenAI file ${uploadedFile.id} after vector store integration failed`);
+        } catch (deleteError) {
+          console.error('Error cleaning up OpenAI file:', deleteError);
+        }
+        throw vectorError;
+      }
+
+      // Return success response
       return new Response(
         JSON.stringify({
           id: fileId,
           name: file.name,
-          url: blob.url,
           openAIFileId: uploadedFile.id,
-          message: 'File uploaded successfully. Vector store integration is processing in the background.'
+          blobUrl: uploadResult.url,
+          storageUrl: uploadResult.url,
+          message: 'File uploaded and added to vector store successfully'
         }),
         { 
           status: 200,
           headers: { "Content-Type": "application/json" }
         }
       );
-    } catch (error) {
-      console.error("Error in file upload process:", error);
-      
-      // Clean up any temporary file records
-      if (fileId) {
-        try {
-          const existingFile = await db.file.findUnique({
-            where: { id: fileId }
-          });
-          
-          if (existingFile) {
-            await db.file.delete({
-              where: { id: fileId }
-            });
-            console.log(`Cleaned up file record for ${fileId}`);
-          }
-        } catch (deleteError) {
-          console.error("Error cleaning up failed file upload:", deleteError);
-        }
-      }
-      
+    } catch (formDataError) {
+      console.error("Error processing form data:", formDataError);
       return new Response(
         JSON.stringify({ 
-          error: error instanceof Error ? error.message : "Failed to upload file",
-          details: error instanceof Error ? error.stack : undefined
+          error: "Error processing upload data",
+          details: formDataError instanceof Error ? formDataError.message : "Unknown error"
         }),
         { 
           status: 500,
@@ -385,10 +317,11 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
       );
     }
   } catch (error) {
-    console.error("Error handling file upload:", error);
+    console.error("Error in handleFileUpload:", error);
     return new Response(
       JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Failed to upload file" 
+        error: "Failed to process file upload", 
+        details: error instanceof Error ? error.message : "Unknown error"
       }),
       { 
         status: 500,

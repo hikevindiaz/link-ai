@@ -397,7 +397,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col items-left">
                         <span>None (Base model only)</span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
                           Agent will only use its built-in knowledge

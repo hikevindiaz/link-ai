@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { RiAddLine, RiMoreLine, RiDeleteBinLine, RiAlertLine } from '@remixicon/react';
+import { RiAddLine, RiMoreLine, RiDeleteBinLine, RiAlertLine, RiClipboardLine, RiEdit2Line } from '@remixicon/react';
 import { Button } from '@/components/ui/button';
 import { 
   DropdownMenu, 
@@ -31,6 +31,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { Divider } from "@/components/Divider";
+import { useSession } from 'next-auth/react';
+import { KnowledgeSourceBadge } from './source-settings';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export interface Source {
   id: string;
@@ -39,6 +42,7 @@ export interface Source {
   createdAt: string;
   updatedAt: string;
   catalogMode?: string;
+  userId?: string; // User ID for file uploads
 }
 
 // Color combinations for source icons
@@ -62,6 +66,13 @@ const getInitials = (name: string) => {
     .slice(0, 2);
 };
 
+// Type for source status information
+interface SourceStatus {
+  hasContent: boolean;
+  isAssigned: boolean;
+  isLoading: boolean;
+}
+
 export function SourceSidebar() {
   const router = useRouter();
   const pathname = usePathname() || '';
@@ -72,7 +83,14 @@ export function SourceSidebar() {
   const [newSourceDescription, setNewSourceDescription] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [sourceToDelete, setSourceToDelete] = useState<Source | null>(null);
+  const [sourceToEdit, setSourceToEdit] = useState<Source | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editSourceName, setEditSourceName] = useState('');
+  const [editSourceDescription, setEditSourceDescription] = useState('');
+  const { data: session } = useSession();
+  const [sourceStatuses, setSourceStatuses] = useState<Record<string, SourceStatus>>({});
+  const [copyTooltip, setCopyTooltip] = useState<Record<string, string>>({});
 
   // Fetch sources from the API
   useEffect(() => {
@@ -85,6 +103,25 @@ export function SourceSidebar() {
         }
         const data = await response.json();
         setSources(data);
+        
+        // Initialize source statuses
+        const initialStatuses: Record<string, SourceStatus> = {};
+        const initialTooltips: Record<string, string> = {};
+        data.forEach((source: Source) => {
+          initialStatuses[source.id] = {
+            hasContent: false,
+            isAssigned: false,
+            isLoading: true
+          };
+          initialTooltips[source.id] = "Copy ID";
+        });
+        setSourceStatuses(initialStatuses);
+        setCopyTooltip(initialTooltips);
+        
+        // Check status for each source
+        data.forEach((source: Source) => {
+          checkSourceStatus(source.id);
+        });
       } catch (error) {
         console.error('Error fetching sources:', error);
         toast.error('Failed to load knowledge sources');
@@ -95,14 +132,161 @@ export function SourceSidebar() {
 
     fetchSources();
   }, []);
+  
+  // Check if source has content and if it's assigned to any agent
+  const checkSourceStatus = async (sourceId: string) => {
+    try {
+      // Set initial loading state
+      setSourceStatuses(prev => ({
+        ...prev,
+        [sourceId]: { ...prev[sourceId], isLoading: true }
+      }));
+      
+      // Initialize with defaults in case of errors
+      let hasFiles = false;
+      let hasText = false;
+      let hasQA = false;
+      let hasWebsite = false;
+      let hasProducts = false;
+      let isAssigned = false;
+      
+      // Check if source has content - handle each API call separately to prevent one failure from breaking all
+      try {
+        const filesRes = await fetch(`/api/knowledge-sources/${sourceId}/files`);
+        if (filesRes.ok) {
+          const filesData = await filesRes.json();
+          hasFiles = Array.isArray(filesData) && filesData.length > 0;
+        }
+      } catch (error) {
+        console.error(`Error fetching files for source ${sourceId}:`, error);
+      }
+      
+      try {
+        const textRes = await fetch(`/api/knowledge-sources/${sourceId}/text-content`);
+        if (textRes.ok) {
+          const textData = await textRes.json();
+          hasText = Array.isArray(textData) && textData.length > 0;
+        }
+      } catch (error) {
+        console.error(`Error fetching text content for source ${sourceId}:`, error);
+      }
+      
+      try {
+        const qaRes = await fetch(`/api/knowledge-sources/${sourceId}/qa`);
+        if (qaRes.ok) {
+          const qaData = await qaRes.json();
+          hasQA = Array.isArray(qaData) && qaData.length > 0;
+        }
+      } catch (error) {
+        console.error(`Error fetching QA content for source ${sourceId}:`, error);
+      }
+      
+      try {
+        const websiteRes = await fetch(`/api/knowledge-sources/${sourceId}/websites`);
+        if (websiteRes.ok) {
+          const websiteData = await websiteRes.json();
+          hasWebsite = Array.isArray(websiteData) && websiteData.length > 0;
+        }
+      } catch (error) {
+        console.error(`Error fetching website content for source ${sourceId}:`, error);
+      }
+      
+      try {
+        const catalogRes = await fetch(`/api/knowledge-sources/${sourceId}/catalog`);
+        if (catalogRes.ok) {
+          const catalogData = await catalogRes.json();
+          // Check if catalog has products
+          if (catalogData && typeof catalogData === 'object') {
+            if (catalogData.products && Array.isArray(catalogData.products)) {
+              hasProducts = catalogData.products.length > 0;
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching catalog content for source ${sourceId}:`, error);
+      }
+      
+      try {
+        const assignedRes = await fetch(`/api/knowledge-sources/${sourceId}/assigned-agents`);
+        if (assignedRes.ok) {
+          const assignedData = await assignedRes.json();
+          isAssigned = Array.isArray(assignedData) && assignedData.length > 0;
+        }
+      } catch (error) {
+        console.error(`Error fetching assigned agents for source ${sourceId}:`, error);
+      }
+      
+      // Determine if source has any content
+      const hasContent = hasFiles || hasText || hasQA || hasWebsite || hasProducts;
+      
+      // Log status info for debugging
+      console.log(`Source ${sourceId} status:`, { 
+        hasContent, 
+        isAssigned, 
+        hasFiles,
+        hasText,
+        hasQA,
+        hasWebsite,
+        hasProducts
+      });
+      
+      // Update the status
+      setSourceStatuses(prev => ({
+        ...prev,
+        [sourceId]: {
+          hasContent,
+          isAssigned,
+          isLoading: false
+        }
+      }));
+    } catch (error) {
+      console.error(`Error checking status for source ${sourceId}:`, error);
+      setSourceStatuses(prev => ({
+        ...prev,
+        [sourceId]: {
+          hasContent: false,
+          isAssigned: false,
+          isLoading: false
+        }
+      }));
+    }
+  };
 
   // Handle source selection
   const handleSourceClick = (sourceId: string) => {
     router.push(`/dashboard/knowledge-base/${sourceId}`);
   };
+  
+  // Handle source ID copy
+  const handleCopySourceId = (sourceId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(sourceId)
+      .then(() => {
+        toast.success('Source ID copied to clipboard');
+        setCopyTooltip(prev => ({
+          ...prev,
+          [sourceId]: "Copied!"
+        }));
+        setTimeout(() => {
+          setCopyTooltip(prev => ({
+            ...prev,
+            [sourceId]: "Copy ID"
+          }));
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error('Could not copy ID: ', err);
+        toast.error('Failed to copy ID');
+      });
+  };
 
   // Handle source creation
   const handleCreateSource = async () => {
+    if (!session?.user?.id) {
+      toast.error('You must be logged in to create a knowledge source');
+      return;
+    }
+
     if (!newSourceName.trim()) {
       toast.error('Please enter a name for the source');
       return;
@@ -111,6 +295,11 @@ export function SourceSidebar() {
     setIsCreating(true);
 
     try {
+      console.log('Creating knowledge source with data:', {
+        name: newSourceName.trim(),
+        description: newSourceDescription.trim() || undefined
+      });
+
       const response = await fetch('/api/knowledge-sources', {
         method: 'POST',
         headers: {
@@ -118,31 +307,26 @@ export function SourceSidebar() {
         },
         body: JSON.stringify({
           name: newSourceName.trim(),
-          description: newSourceDescription.trim() || undefined,
+          description: newSourceDescription.trim() || undefined
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to create source');
+        throw new Error(data.error || `Failed to create source: ${response.status}`);
       }
 
-      const newSource = await response.json();
-      
-      // Add the new source to the list
-      setSources(prev => [...prev, newSource]);
-      
-      // Reset form
       setIsCreateDialogOpen(false);
       setNewSourceName('');
       setNewSourceDescription('');
-      
       toast.success('Knowledge source created successfully');
       
       // Navigate to the new source
-      router.push(`/dashboard/knowledge-base/${newSource.id}`);
+      router.push(`/dashboard/knowledge-base/${data.id}`);
     } catch (error) {
       console.error('Error creating source:', error);
-      toast.error('Failed to create knowledge source');
+      toast.error(error instanceof Error ? error.message : 'Failed to create knowledge source');
     } finally {
       setIsCreating(false);
     }
@@ -178,6 +362,52 @@ export function SourceSidebar() {
     } finally {
       setIsDeleting(false);
       setSourceToDelete(null);
+    }
+  };
+
+  // Handle source update
+  const handleUpdateSource = async () => {
+    if (!sourceToEdit) return;
+    
+    if (!editSourceName.trim()) {
+      toast.error('Please enter a name for the source');
+      return;
+    }
+    
+    setIsEditing(true);
+    
+    try {
+      const response = await fetch(`/api/knowledge-sources/${sourceToEdit.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editSourceName.trim(),
+          description: editSourceDescription.trim() || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update source');
+      }
+
+      const updatedSource = await response.json();
+      
+      // Update the source in the list
+      setSources(prev => prev.map(source => 
+        source.id === sourceToEdit.id 
+          ? { ...source, name: updatedSource.name, description: updatedSource.description } 
+          : source
+      ));
+      
+      toast.success('Knowledge source updated successfully');
+      setSourceToEdit(null);
+    } catch (error) {
+      console.error('Error updating source:', error);
+      toast.error('Failed to update knowledge source');
+    } finally {
+      setIsEditing(false);
     }
   };
 
@@ -245,22 +475,42 @@ export function SourceSidebar() {
                       {getInitials(source.name)}
                     </span>
                     <div className="truncate min-w-0">
-                      <p className={cn(
-                        "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
-                        currentSourceId === source.id && "text-indigo-600 dark:text-indigo-400"
-                      )}>
-                        <button 
-                          onClick={() => handleSourceClick(source.id)}
-                          className="focus:outline-none hover:no-underline no-underline"
-                          type="button"
-                        >
-                          <span className="absolute inset-0" aria-hidden="true" />
-                          {source.name}
-                        </button>
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline mt-0.5">
-                        ID: {source.id.slice(0, 12)}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className={cn(
+                          "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
+                          currentSourceId === source.id && "text-indigo-600 dark:text-indigo-400"
+                        )}>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSourceClick(source.id);
+                            }}
+                            className="focus:outline-none hover:no-underline no-underline"
+                            type="button"
+                          >
+                            <span className="absolute inset-0" aria-hidden="true" />
+                            {source.name}
+                          </button>
+                        </p>
+                        
+                        {/* Status dot */}
+                        {sourceStatuses[source.id] && (
+                          <div className="ml-0.5 z-10">
+                            <KnowledgeSourceBadge 
+                              hasContent={sourceStatuses[source.id].hasContent}
+                              isAssigned={sourceStatuses[source.id].isAssigned}
+                              isLoading={sourceStatuses[source.id].isLoading}
+                              needsSaving={false}
+                              compact={true}
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline mt-0.5">
+                          ID: {source.id.slice(0, 12)}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -281,6 +531,22 @@ export function SourceSidebar() {
                         <DropdownMenuSeparator />
                         
                         <DropdownMenuGroup>
+                          <DropdownMenuItem 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSourceToEdit(source);
+                              setEditSourceName(source.name);
+                              setEditSourceDescription(source.description || '');
+                            }}
+                          >
+                            <span className="flex items-center gap-x-2">
+                              <DropdownMenuIconWrapper>
+                                <RiEdit2Line className="size-4" />
+                              </DropdownMenuIconWrapper>
+                              <span>Edit</span>
+                            </span>
+                          </DropdownMenuItem>
+                          
                           <DropdownMenuItem 
                             onClick={(e) => {
                               e.stopPropagation();
@@ -358,6 +624,47 @@ export function SourceSidebar() {
             </Button>
             <Button onClick={handleCreateSource} disabled={isCreating || !newSourceName.trim()}>
               {isCreating ? 'Creating...' : 'Create Source'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Source Dialog */}
+      <Dialog open={!!sourceToEdit} onOpenChange={(open) => !open && setSourceToEdit(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Knowledge Source</DialogTitle>
+            <DialogDescription>
+              Update the details of your knowledge source.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                placeholder="Enter source name"
+                value={editSourceName}
+                onChange={(e) => setEditSourceName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description (optional)</Label>
+              <Textarea
+                id="edit-description"
+                placeholder="Enter a description for this knowledge source"
+                value={editSourceDescription}
+                onChange={(e) => setEditSourceDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setSourceToEdit(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateSource} disabled={isEditing || !editSourceName.trim()}>
+              {isEditing ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>

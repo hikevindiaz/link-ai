@@ -54,16 +54,16 @@ export async function ensureVectorStore(knowledgeSourceId: string): Promise<stri
 }
 
 /**
- * Processes a QA or text content item into a file and adds it to the vector store
+ * Processes a QA, text, or catalog content item into a file and adds it to the vector store
  * @param knowledgeSourceId The ID of the knowledge source
  * @param content The content to process
- * @param type The type of content ('qa' or 'text')
+ * @param type The type of content ('qa', 'text', or 'catalog')
  * @returns The OpenAI file ID of the created file, or null if unsuccessful
  */
 export async function processContentToVectorStore(
   knowledgeSourceId: string,
   content: any,
-  type: 'qa' | 'text',
+  type: 'qa' | 'text' | 'catalog',
   contentId?: string
 ): Promise<string | null> {
   try {
@@ -96,6 +96,66 @@ export async function processContentToVectorStore(
     if (type === 'qa') {
       fileName = `qa_content_${Date.now()}.md`;
       formattedContent = `# Question and Answer\n\n${firstPersonInstructions}\n\n## Question\n${content.question}\n\n## Answer\n${content.answer}\n\nREMINDER: Always rewrite this answer in first-person plural (we/us/our) when responding to users.`;
+    } else if (type === 'catalog') {
+      fileName = `catalog_${Date.now()}.md`;
+      formattedContent = `# Product Catalog\n\n${firstPersonInstructions}\n\n`;
+      
+      // Check if it has products
+      const hasProducts = content.products && Array.isArray(content.products) && content.products.length > 0;
+      
+      // If it has extracted content or products, use that
+      if (hasProducts) {
+        // Format the products as markdown
+        formattedContent += `## Our Products\n\n`;
+        
+        content.products.forEach((product: any, index: number) => {
+          formattedContent += `### ${product.title}\n\n`;
+          
+          if (product.description) {
+            formattedContent += `${product.description}\n\n`;
+          }
+          
+          formattedContent += `**Price:** $${product.price.toFixed(2)}\n\n`;
+          
+          if (product.categories && product.categories.length > 0) {
+            formattedContent += `**Categories:** ${product.categories.join(', ')}\n\n`;
+          }
+          
+          if (product.imageUrl) {
+            formattedContent += `**Image URL:** ${product.imageUrl}\n`;
+            formattedContent += `NOTE: You can display this image by including this URL in your responses\n\n`;
+          } else {
+            formattedContent += `*No image available for this product*\n\n`;
+          }
+          
+          // Add separator between products except for the last one
+          if (index < content.products.length - 1) {
+            formattedContent += `---\n\n`;
+          }
+        });
+        
+        if (content.instructions) {
+          formattedContent += `## Custom Instructions\n\n${content.instructions}\n\n`;
+        }
+      }
+      else {
+        // If no products, but we have instructions, emphasize the instructions
+        if (content.instructions) {
+          formattedContent += `## Product Information Guidelines\n\n${content.instructions}\n\n`;
+          formattedContent += `Note: No specific products are currently available in the catalog.\n\n`;
+        } else {
+          formattedContent += `No products are currently available in the catalog.\n\n`;
+        }
+      }
+      
+      // Add reminder about first-person response and image display
+      formattedContent += `\nREMINDER: Always present product information in first-person plural (we/us/our) when responding to users. For example, "We offer this product at $X" rather than "The company sells this at $X".\n\n`;
+      formattedContent += `IMPORTANT IMAGE DISPLAY INSTRUCTIONS:\n`;
+      formattedContent += `- When a user first asks about a specific product, proactively include the image URL in your response\n`;
+      formattedContent += `- Only share a product's image URL once per conversation unless specifically asked again\n`;
+      formattedContent += `- If a user asks to see the product or image again, include the URL in your response\n`;
+      formattedContent += `- Simply insert the full image URL in your response text and it will render as an image automatically\n`;
+      formattedContent += `- Example: "We offer our Premium Widget for $99. Here's what it looks like: [image URL]"`;
     } else {
       fileName = `text_content_${Date.now()}.md`;
       formattedContent = `# Text Content\n\n${firstPersonInstructions}\n\n${content.content || content}\n\nREMINDER: Always convert this information to first-person plural (we/us/our) when responding to users.`;
@@ -113,7 +173,7 @@ export async function processContentToVectorStore(
     // Add the file to vector store
     await addFileToVectorStore(vectorStoreId, uploadedFile.id);
     
-    // If we have a contentId for text content, store the OpenAI file ID for later reference
+    // Update the appropriate record with the OpenAI file ID for later reference
     if (contentId) {
       try {
         if (type === 'text') {
@@ -132,6 +192,17 @@ export async function processContentToVectorStore(
             WHERE id = ${contentId}
           `;
           console.log(`Updated QA content ${contentId} with OpenAI file ID ${uploadedFile.id}`);
+        } else if (type === 'catalog') {
+          // For catalog content, update the associated file record
+          // since CatalogContent doesn't have a direct openAIFileId field
+          if (content.file?.id) {
+            await prisma.$executeRaw`
+              UPDATE "files"
+              SET "openAIFileId" = ${uploadedFile.id}
+              WHERE id = ${content.file.id}
+            `;
+            console.log(`Updated catalog file ${content.file.id} with OpenAI file ID ${uploadedFile.id}`);
+          }
         }
       } catch (updateError) {
         console.error(`Failed to update content ${contentId} with OpenAI file ID:`, updateError);
@@ -146,19 +217,7 @@ export async function processContentToVectorStore(
     });
 
     // Update all associated chatbots
-    const chatbots = await prisma.chatbot.findMany({
-      where: {
-        knowledgeSources: {
-          some: {
-            id: knowledgeSourceId,
-          },
-        },
-      },
-    });
-
-    for (const chatbot of chatbots) {
-      await updateChatbotVectorStores(chatbot.id, [knowledgeSourceId]);
-    }
+    await updateChatbotsWithKnowledgeSource(knowledgeSourceId);
     
     return uploadedFile.id;
   } catch (error) {
@@ -359,6 +418,132 @@ export async function handleQAContentDeletion(
   } catch (error) {
     console.error(`Error handling QA content deletion:`, error);
     return false;
+  }
+}
+
+/**
+ * Updates the vector store for catalog content, ensuring only one file exists
+ * @param sourceId The ID of the knowledge source
+ * @param catalogContentId The ID of the catalog content
+ * @returns The OpenAI file ID of the created file, or null if unsuccessful
+ */
+export async function updateCatalogContentVector(
+  sourceId: string,
+  catalogContentId: string
+): Promise<string | null> {
+  console.log(`Updating vector store for catalog content ${catalogContentId} in knowledge source ${sourceId}`);
+  try {
+    // Get the knowledge source to verify vectorStoreId
+    const knowledgeSource = await prisma.knowledgeSource.findUnique({
+      where: { id: sourceId },
+    });
+
+    if (!knowledgeSource) {
+      console.error(`Knowledge source with ID ${sourceId} not found`);
+      return null;
+    }
+
+    // Ensure vector store exists
+    const vectorStoreId = await ensureVectorStore(sourceId);
+    if (!vectorStoreId) {
+      console.error(`Failed to create vector store for knowledge source ${sourceId}`);
+      return null;
+    }
+
+    // Get the catalog content with current products
+    const catalogContent = await prisma.catalogContent.findUnique({
+      where: { id: catalogContentId },
+      include: {
+        products: true,
+      },
+    });
+
+    if (!catalogContent) {
+      console.error(`Catalog content with ID ${catalogContentId} not found`);
+      return null;
+    }
+
+    // First, remove any existing file for this catalog content from the vector store
+    try {
+      // Check if we have an OpenAI file ID stored in the database
+      const catalogContentData = await prisma.$queryRaw`
+        SELECT * FROM "catalog_contents" WHERE id = ${catalogContentId}
+      `;
+      
+      // Get the existing file ID if available
+      const existingOpenAIFileId = catalogContentData?.[0]?.openAIFileId;
+      
+      if (existingOpenAIFileId) {
+        console.log(`Found existing OpenAI file ID ${existingOpenAIFileId} for catalog content ${catalogContentId}`);
+        
+        // Get OpenAI client
+        const openai = getOpenAIClient();
+        
+        // Remove from vector store
+        try {
+          await removeFileFromVectorStore(vectorStoreId, existingOpenAIFileId);
+          console.log(`Removed file ${existingOpenAIFileId} from vector store ${vectorStoreId}`);
+        } catch (removeError) {
+          console.error(`Error removing file from vector store:`, removeError);
+          // Continue even if removal fails
+        }
+        
+        // Delete the file from OpenAI
+        try {
+          await openai.files.del(existingOpenAIFileId);
+          console.log(`Deleted OpenAI file ${existingOpenAIFileId}`);
+        } catch (deleteError) {
+          console.error(`Error deleting OpenAI file ${existingOpenAIFileId}:`, deleteError);
+          // Continue even if deletion fails
+        }
+      }
+    } catch (error) {
+      console.error(`Error handling existing file cleanup:`, error);
+      // Continue with creating a new file even if cleanup fails
+    }
+
+    // Now create a new file with all current products
+    const openAIFileId = await processContentToVectorStore(
+      sourceId,
+      {
+        instructions: catalogContent.instructions || '',
+        products: catalogContent.products,
+      },
+      'catalog',
+      catalogContentId
+    );
+
+    if (!openAIFileId) {
+      console.error(`Failed to create vector store file for catalog content ${catalogContentId}`);
+      return null;
+    }
+
+    // Store the OpenAI file ID directly on the catalog content
+    try {
+      await prisma.$executeRaw`
+        UPDATE "catalog_contents"
+        SET "openAIFileId" = ${openAIFileId}
+        WHERE id = ${catalogContentId}
+      `;
+      console.log(`Updated catalog content ${catalogContentId} with OpenAI file ID ${openAIFileId}`);
+    } catch (updateError) {
+      console.error(`Failed to update catalog content with OpenAI file ID:`, updateError);
+      // Continue even if update fails
+    }
+
+    // Update the vector store timestamp
+    await prisma.knowledgeSource.update({
+      where: { id: sourceId },
+      data: { vectorStoreUpdatedAt: new Date() },
+    });
+
+    // Update all associated chatbots
+    await updateChatbotsWithKnowledgeSource(sourceId);
+
+    return openAIFileId;
+  } catch (error) {
+    console.error(`Error updating catalog content vector:`, error);
+    return null;
   }
 }
 

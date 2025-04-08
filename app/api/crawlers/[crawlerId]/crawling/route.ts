@@ -30,17 +30,97 @@ async function retryWithBackoff<T>(
 }
 
 // Function to fetch and process content with timeout
-async function fetchWithTimeout(url: string, timeout = 5000) {
+async function fetchWithTimeout(url: string, timeout = 5000, bypassSSL = false) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   
   try {
-    const response = await fetch(url, { signal: controller.signal });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    const text = await response.text();
-    return text;
+    // If bypassSSL is true, use the Node https module directly with disabled cert verification
+    if (bypassSSL) {
+      const https = await import('https');
+      
+      return new Promise<string>((resolve, reject) => {
+        const req = https.get(url, { 
+          rejectUnauthorized: false, // Bypass certificate verification
+          timeout: timeout 
+        }, (res) => {
+          if (res.statusCode !== 200) {
+            reject(new Error(`HTTP error! status: ${res.statusCode}`));
+            return;
+          }
+          
+          let data = '';
+          res.on('data', (chunk) => { data += chunk; });
+          res.on('end', () => { resolve(data); });
+        });
+        
+        req.on('error', (e) => {
+          reject(e);
+        });
+        
+        req.on('timeout', () => {
+          req.destroy();
+          reject(new Error('Request timed out'));
+        });
+      });
+    }
+    
+    // Standard approach with fetch
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const text = await response.text();
+      return text;
+    } catch (error) {
+      // If we get an SSL error, try with relaxed verification
+      if (error instanceof Error && 
+          (error.message.includes('SSL') || 
+           error.message.includes('certificate') || 
+           error.message.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE') ||
+           error.message.includes('CERT_HAS_EXPIRED') ||
+           error.message.includes('ECONNRESET'))) {
+        
+        console.log('SSL certificate error detected, retrying with relaxed verification...');
+        
+        // Use Node's https module with relaxed security options
+        const https = await import('https');
+        
+        return new Promise<string>((resolve, reject) => {
+          const req = https.get(url, { 
+            rejectUnauthorized: false, // Bypass certificate verification
+            timeout: timeout 
+          }, (res) => {
+            if (res.statusCode !== 200) {
+              reject(new Error(`HTTP error! status: ${res.statusCode}`));
+              return;
+            }
+            
+            let data = '';
+            res.on('data', (chunk) => { data += chunk; });
+            res.on('end', () => { resolve(data); });
+          });
+          
+          req.on('error', (e) => {
+            reject(e);
+          });
+          
+          req.on('timeout', () => {
+            req.destroy();
+            reject(new Error('Request timed out'));
+          });
+        });
+      }
+      
+      // If it's not an SSL error, rethrow
+      throw error;
+    }
   } finally {
     clearTimeout(timeoutId);
+    // Reset NODE_TLS_REJECT_UNAUTHORIZED to default value if we're using bypassSSL
+    // This is important to prevent security issues in other parts of the application
+    if (bypassSSL && process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1';
+    }
   }
 }
 
@@ -55,6 +135,14 @@ export async function POST(
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check if we should bypass SSL verification
+    const bypassSSLVerification = req.headers.get('X-Bypass-SSL-Verification') === 'true';
+    if (bypassSSLVerification) {
+      console.log('SSL verification bypass requested - using relaxed security settings');
+      // In Node.js environment, we can set this env variable to disable SSL verification
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     }
 
     // Get crawler details with associated file
@@ -103,9 +191,9 @@ export async function POST(
 
       // Fetch the webpage content with timeout
       console.log('Fetching content from URL:', crawler.crawlUrl);
-      const html = await fetchWithTimeout(crawler.crawlUrl);
+      const html = await fetchWithTimeout(crawler.crawlUrl, 5000, bypassSSLVerification);
       
-      const $ = cheerio.load(html);
+      const $ = cheerio.load(html as string);
       
       // Extract text content from the body or specified selector
       const selector = crawler.selector || 'body';
@@ -170,7 +258,7 @@ export async function POST(
       // Update the knowledge source's vectorStoreUpdatedAt timestamp
       await db.knowledgeSource.update({
         where: { id: knowledgeSourceId },
-        data: {
+            data: {
           vectorStoreId: vectorStoreId,
           vectorStoreUpdatedAt: new Date()
         }
@@ -186,6 +274,35 @@ export async function POST(
       });
     } catch (error) {
       console.error('Error in crawling process:', error);
+      
+      // Handle specific SSL/certificate errors more gracefully
+      if (error instanceof Error && 
+          (error.message.includes('SSL') || 
+           error.message.includes('certificate') || 
+           error.message.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE') ||
+           error.message.includes('CERT_HAS_EXPIRED') ||
+           error.message.includes('ECONNRESET'))) {
+        console.log('SSL certificate error detected:', error.message);
+        
+        // If this was already a bypass attempt, report failure
+        if (bypassSSLVerification) {
+          return NextResponse.json({ 
+            error: "SSL certificate error persists even with relaxed security settings.",
+            details: { message: error.message },
+            status: "failed",
+            fileId: createdFile?.id
+          }, { status: 500 });
+        }
+        
+        // Otherwise suggest retrying with bypass
+        return NextResponse.json({ 
+          error: "SSL certificate error. Please try again with relaxed security settings.",
+          details: { message: error.message },
+          status: "retry_needed",
+          cause: { code: "UNABLE_TO_VERIFY_LEAF_SIGNATURE" },
+          fileId: createdFile?.id
+        }, { status: 500 }); 
+      }
       
       // If we hit a timeout, return a specific status code
       if (error instanceof Error && error.message.includes('timed out')) {
@@ -230,5 +347,5 @@ export async function POST(
       error: error instanceof Error ? error.message : "Failed to crawl website",
       details: error
     }, { status: 500 });
-  }
+    }
 }

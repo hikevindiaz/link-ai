@@ -5,6 +5,35 @@ const next = require('next');
 const path = require('path');
 const fs = require('fs');
 
+// Import supabase utilities
+try {
+  // Only import in server environment to avoid issues with browser/edge runtime
+  if (typeof window === 'undefined') {
+    const { ensureRequiredBuckets } = require('./lib/supabase');
+    const { syncSchemaToSupabase } = require('./lib/supabase-db');
+    
+    // Initialize Supabase storage buckets
+    ensureRequiredBuckets()
+      .then(() => {
+        console.log('Supabase storage buckets initialized');
+      })
+      .catch(error => {
+        console.error('Error initializing Supabase buckets:', error);
+      });
+
+    // Sync database schema
+    syncSchemaToSupabase()
+      .then(() => {
+        console.log('Supabase database schema synchronized');
+      })
+      .catch(error => {
+        console.error('Error synchronizing Supabase database schema:', error);
+      });
+  }
+} catch (error) {
+  console.error('Error initializing Supabase:', error);
+}
+
 // Create a Next.js app instance
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';

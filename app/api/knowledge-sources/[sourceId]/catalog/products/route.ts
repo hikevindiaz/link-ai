@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { updateCatalogContentVector } from '@/lib/knowledge-vector-integration';
 
 // Schema for route parameters
 const routeParamsSchema = z.object({
@@ -17,6 +18,7 @@ const productSchema = z.object({
   taxRate: z.number().min(0, "Tax rate must be a positive number"),
   description: z.string().optional(),
   categories: z.array(z.string()),
+  imageUrl: z.string().optional(),
 });
 
 // Schema for request body
@@ -129,6 +131,7 @@ export async function POST(
           taxRate: product.taxRate,
           description: product.description || "",
           categories: product.categories,
+          imageUrl: product.imageUrl,
         },
       });
     } else {
@@ -140,9 +143,21 @@ export async function POST(
           taxRate: product.taxRate,
           description: product.description || "",
           categories: product.categories,
+          imageUrl: product.imageUrl,
           catalogContentId: catalogContent.id,
         },
       });
+    }
+
+    // Process the content to the vector store
+    try {
+      // Update the vector store with the latest product information
+      await updateCatalogContentVector(sourceId, catalogContent.id);
+      
+      console.log(`Updated vector store for catalog content ${catalogContent.id} after product update`);
+    } catch (vectorError) {
+      console.error(`Error updating vector store:`, vectorError);
+      // Continue even if vector store processing fails
     }
 
     return NextResponse.json({ 
@@ -206,7 +221,24 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    // Update the vector store to reflect the deletion
+    try {
+      // Get the catalog content id
+      const catalogContentId = product.catalogContentId;
+      
+      // Update vector store with current products (now excluding the deleted one)
+      await updateCatalogContentVector(sourceId, catalogContentId);
+      
+      console.log(`Updated vector store for catalog content ${catalogContentId} after product deletion`);
+    } catch (vectorError) {
+      console.error(`Error updating vector store after product deletion:`, vectorError);
+      // Continue even if vector store processing fails
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      message: 'Product deleted successfully' 
+    });
   } catch (error) {
     console.error('Error deleting product:', error);
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });

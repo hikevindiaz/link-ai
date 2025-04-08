@@ -168,6 +168,7 @@ I have access to real-time search on our approved websites. I must search these 
 1. The user asks about topics mentioned in the search instructions
 2. The information might need to be current (prices, availability, etc.)
 3. The knowledge base doesn't have the specific information needed
+4. Search the specific websites for the most current information, do not use general web search.
 
 Approved websites and their use cases:`;
       
@@ -202,6 +203,28 @@ KNOWLEDGE BASE INSTRUCTIONS:
 2. Never present knowledge as "the document says" or "according to the file" - speak as the business directly
 3. Maintain our brand voice consistently regardless of how the information is stored
 4. Important: Never mention "uploaded files" or suggest that the user has uploaded any documents. The knowledge base was prepared by administrators, not the current user.`;
+
+      // Add special handling for catalog data
+      systemPrompt += `\n\nCATALOG DATA INSTRUCTIONS:
+1. Our product catalog contains manually entered product information including names, descriptions, pricing, and images
+2. When working with product data from our catalog:
+   - Present the information as if you are a salesperson knowledgeable about our offerings
+   - Format prices, descriptions, and other details in a conversational, helpful way
+   - ALWAYS use first-person plural - "We offer this product at $X" not "The product costs $X"
+   - If a product has an image, you can share it by including the imageUrl in your response
+3. For product images:
+   - When a user first asks about a specific product or ask for pricing, proactively include the image URL in your response
+   - Only share a product's image URL once per conversation unless specifically asked again
+   - If a user asks to see the product or image again, include the URL in your response
+   - Simply insert the full image URL in your response text and it will render as an image
+   - Example: "We offer our Premium Widget for $99. Here's what it looks like: https://example.com/image.jpg"
+   - If a product doesn't have an image, you can mention this: "We don't currently have an image for this product" or something simple and friendly.
+4. For any product inquiry:
+   - Search thoroughly through our product catalog before responding
+   - Present product information clearly, accurately, and conversationally
+   - Include product images where available by sharing the image URL
+   - NEVER say you can't find information without searching the knowledge base first
+   - If multiple products match, present options clearly to help the user choose`;
     }
     
     const fullPrompt = !useFileSearch && !useWebSearch && knowledge

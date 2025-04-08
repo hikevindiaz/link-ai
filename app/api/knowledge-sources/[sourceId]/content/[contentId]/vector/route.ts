@@ -17,6 +17,9 @@ export async function POST(
     }
 
     const { sourceId, contentId } = params;
+    const { openAIFileId } = await req.json(); // Get the OpenAI file ID from request body
+    
+    console.log(`Starting vector store integration for file ${contentId} with OpenAI ID ${openAIFileId}`);
 
     // Get the file details
     const file = await db.file.findUnique({
@@ -30,17 +33,37 @@ export async function POST(
     });
 
     if (!file) {
+      console.error(`File ${contentId} not found in source ${sourceId}`);
       return NextResponse.json({ error: "File not found" }, { status: 404 });
+    }
+
+    // Use the OpenAI file ID from the request body instead of the database
+    if (!openAIFileId) {
+      console.error(`No OpenAI file ID provided for file ${contentId}`);
+      return NextResponse.json({ error: "No OpenAI file ID provided" }, { status: 400 });
     }
 
     // Ensure vector store exists
     const vectorStoreId = await ensureVectorStore(sourceId);
     if (!vectorStoreId) {
+      console.error(`Failed to create/get vector store for source ${sourceId}`);
       return NextResponse.json({ error: "Failed to create vector store" }, { status: 500 });
     }
 
+    console.log(`Using vector store: ${vectorStoreId} for file ${openAIFileId}`);
+
     // Add file to vector store
-    await addFileToVectorStore(vectorStoreId, file.openAIFileId);
+    try {
+      console.log(`Adding file ${openAIFileId} to vector store ${vectorStoreId}`);
+      await addFileToVectorStore(vectorStoreId, openAIFileId);
+      console.log(`Successfully added file ${openAIFileId} to vector store ${vectorStoreId}`);
+    } catch (vectorError) {
+      console.error(`Error adding file ${openAIFileId} to vector store ${vectorStoreId}:`, vectorError);
+      return NextResponse.json({
+        error: vectorError instanceof Error ? vectorError.message : "Failed to add file to vector store",
+        details: vectorError instanceof Error ? vectorError.stack : undefined
+      }, { status: 500 });
+    }
 
     // Update the knowledge source's vectorStoreUpdatedAt timestamp
     await db.knowledgeSource.update({
@@ -53,11 +76,17 @@ export async function POST(
     return NextResponse.json({
       success: true,
       message: "File added to vector store successfully",
+      details: {
+        fileId: contentId,
+        openAIFileId: openAIFileId,
+        vectorStoreId
+      }
     });
   } catch (error) {
     console.error("[VECTOR_POST]", error);
     return NextResponse.json({
       error: error instanceof Error ? error.message : "Failed to add file to vector store",
+      details: error instanceof Error ? error.stack : undefined
     }, { status: 500 });
   }
 } 

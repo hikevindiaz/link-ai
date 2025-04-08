@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { processContentToVectorStore } from '@/lib/knowledge-vector-integration';
 
 // Schema for route parameters
 const routeParamsSchema = z.object({
@@ -71,6 +72,43 @@ export async function DELETE(
         id: productId,
       },
     });
+
+    // Update the vector store to reflect the catalog change
+    try {
+      // Get remaining products for this catalog content
+      const remainingProducts = await db.product.findMany({
+        where: {
+          catalogContentId: catalogContent.id
+        }
+      });
+      
+      if (knowledgeSource.vectorStoreId) {
+        console.log(`Updating vector store ${knowledgeSource.vectorStoreId} after deleting product ${productId}`);
+        
+        // Process to vector store with all remaining products
+        await processContentToVectorStore(
+          sourceId,
+          {
+            instructions: catalogContent.instructions || '',
+            products: remainingProducts,
+            file: null // No file in manual mode
+          },
+          'catalog',
+          catalogContent.id
+        );
+        
+        console.log(`Updated vector store after product ${productId} deletion with ${remainingProducts.length} remaining products`);
+        
+        // Update the knowledge source timestamp
+        await db.knowledgeSource.update({
+          where: { id: sourceId },
+          data: { vectorStoreUpdatedAt: new Date() },
+        });
+      }
+    } catch (vectorError) {
+      console.error(`Error updating vector store after product deletion:`, vectorError);
+      // Continue even if vector store processing fails
+    }
 
     return NextResponse.json({ 
       success: true,

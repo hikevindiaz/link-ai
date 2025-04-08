@@ -64,7 +64,7 @@ export function ProgressDialog({
               {messages.map((message, index) => (
                 <div key={index} className="flex items-start text-sm">
                   <span className="mr-2 flex-shrink-0">
-                    {message.type === 'info' && <Info className="h-4 w-4 text-blue-500" />}
+                    {message.type === 'info' && <Info className="h-4 w-4 text-indigo-500" />}
                     {message.type === 'success' && <CheckCircle className="h-4 w-4 text-green-500" />}
                     {message.type === 'error' && <XCircle className="h-4 w-4 text-red-500" />}
                   </span>

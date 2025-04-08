@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { NextResponse } from 'next/server';
+import { createVectorStore } from '@/lib/vector-store';
 
 // Schema for creating a new knowledge source
 const createSourceSchema = z.object({
@@ -141,51 +142,88 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return new Response("Unauthorized", { status: 403 });
+    if (!session?.user?.id) {
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
+    // Parse and validate the request body
     const json = await req.json();
     const body = createSourceSchema.parse(json);
 
+    console.log('Creating knowledge source with data:', {
+      name: body.name,
+      description: body.description,
+      userId: session.user.id
+    });
+
+    // Create the knowledge source
+    const knowledgeSource = await db.knowledgeSource.create({
+      data: {
+        name: body.name,
+        description: body.description,
+        userId: session.user.id,
+      },
+    });
+
+    console.log('Created knowledge source:', knowledgeSource);
+
+    // Create a vector store for this knowledge source
     try {
-      // @ts-ignore - The knowledgeSource model exists in the schema but TypeScript doesn't know about it yet
-      const source = await db.knowledgeSource.create({
-        data: {
-          name: body.name,
-          description: body.description,
-          userId: session.user.id,
-        },
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          createdAt: true,
-          updatedAt: true,
-        },
+      const vectorStore = await createVectorStore(
+        `Vector Store for ${body.name}`,
+        body.description || '',
+        knowledgeSource.id
+      );
+      
+      // Update the knowledge source with the vector store ID
+      await db.knowledgeSource.update({
+        where: { id: knowledgeSource.id },
+        data: { vectorStoreId: vectorStore.id }
       });
 
-      return new Response(JSON.stringify(source), {
-        status: 201,
-        headers: { "Content-Type": "application/json" },
+      console.log(`Created and linked vector store ${vectorStore.id} for knowledge source ${knowledgeSource.id}`);
+    } catch (error) {
+      console.error('Error creating vector store:', error);
+      // If vector store creation fails, delete the knowledge source
+      await db.knowledgeSource.delete({
+        where: { id: knowledgeSource.id }
       });
-    } catch (dbError: unknown) {
-      // Check if the error is because the table doesn't exist
-      if (dbError instanceof Prisma.PrismaClientKnownRequestError && dbError.code === 'P2021') {
-        console.error("Database table does not exist:", dbError);
-        return new Response("Database tables not created. Please run 'npx prisma db push'", { status: 500 });
-      }
-      throw dbError;
+      throw new Error('Failed to create vector store for knowledge source');
     }
+
+    return NextResponse.json(knowledgeSource);
   } catch (error) {
+    console.error('Error creating knowledge source:', error);
+    
+    // Handle validation errors
     if (error instanceof z.ZodError) {
-      return new Response(JSON.stringify(error.errors), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new NextResponse(
+        JSON.stringify({ 
+          error: 'Validation error',
+          details: error.errors 
+        }),
+        { status: 400 }
+      );
     }
 
-    console.error("Error creating knowledge source:", error);
-    return new Response(`Internal Server Error: ${error instanceof Error ? error.message : 'Unknown error'}`, { status: 500 });
+    // Handle database errors
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2021') {
+        return new NextResponse(
+          JSON.stringify({ 
+            error: 'Database tables not created. Please run prisma db push' 
+          }),
+          { status: 500 }
+        );
+      }
+    }
+
+    return new NextResponse(
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Failed to create knowledge source',
+        details: error instanceof Error ? error.stack : undefined
+      }),
+      { status: 500 }
+    );
   }
 } 
