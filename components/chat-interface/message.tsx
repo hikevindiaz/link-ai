@@ -95,24 +95,6 @@ const PurePreviewMessage = ({
                 data-testid="message-content"
                 className="flex flex-row gap-2 items-start"
               >
-                {message.role === 'user' && !isReadonly && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        data-testid={`message-edit`}
-                        variant="secondary"
-                        className="px-2 h-fit rounded-full text-gray-500 dark:text-gray-400 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 opacity-0 group-hover/message:opacity-100"
-                        onClick={() => {
-                          setMode('edit');
-                        }}
-                      >
-                        <PencilEditIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Edit message</TooltipContent>
-                  </Tooltip>
-                )}
-
                 <div
                   className={cn(
                     'flex flex-col gap-4',
@@ -122,23 +104,18 @@ const PurePreviewMessage = ({
                       : 'bg-white-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
                   )}
                 >
-                  <Markdown>{message.content as string}</Markdown>
+                  <Markdown>{message.content}</Markdown>
                 </div>
               </div>
             )}
 
             {message.content && mode === 'edit' && (
-              <div className="flex flex-row gap-2 items-start">
-                <div className="size-8" />
-
-                <MessageEditor
-                  key={message.id}
-                  message={message}
-                  setMode={setMode}
-                  setMessages={setMessages}
-                  reload={reload}
-                />
-              </div>
+              <MessageEditor
+                message={message}
+                setMessages={setMessages}
+                reload={reload}
+                setMode={setMode}
+              />
             )}
 
             {message.toolInvocations && message.toolInvocations.length > 0 && (
