@@ -58,9 +58,10 @@ export default function ChatWindow({ params, searchParams }: ChatWindowProps) {
       <Chat
         id={params.id}
         chatbotId={chatbot.id}
-        selectedChatModel={chatbot.modelId}
+        selectedChatModel={chatbot.model?.name || chatbot.modelId}
         chatbotLogoURL={chatbot.chatbotLogoURL || undefined}
         chatTitle={chatbot.chatTitle || undefined}
+        welcomeMessage={chatbot.welcomeMessage || undefined}
       />
     </div>
   );
