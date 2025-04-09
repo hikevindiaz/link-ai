@@ -57,6 +57,7 @@ export async function GET(
             name: true
           }
         },
+        userId: true,
         chatbotLogoURL: true,
         chatTitle: true,
         prompt: true,
