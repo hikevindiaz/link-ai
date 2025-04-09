@@ -1,183 +1,230 @@
-/api/inbox/unread:1 
-            
-            
-           Failed to load resource: the server responded with a status of 500 ()Understand this errorAI
-2117-4d438d943338c2d2.js:1 [AppSidebar] Failed to fetch unread count: 500
-window.console.error @ 2117-4d438d943338c2d2.js:1Understand this errorAI
-/api/knowledge-sources:1 
-            
-            
-           Failed to load resource: the server responded with a status of 500 ()Understand this errorAI
-2117-4d438d943338c2d2.js:1 Error fetching sources: Error: Failed to fetch sources
-    at 513-bd190734647b28b0.js:1:1595
+Okay, let's create a reusable React component called Typewriter that uses Tailwind CSS for styling and implements the requested typing/deleting effect for a list of questions.
+
+1. Set up your Project:
+
+Make sure you have a React project set up with Tailwind CSS configured. If not, follow the official Tailwind documentation for installing it with your framework (like Create React App, Next.js, Vite, etc.).
+
+2. Create the Typewriter Component:
+
+Create a new file (e.g., src/components/Typewriter.js or similar).
+
+JavaScript
+
+// src/components/Typewriter.js
+import React, { useState, useEffect, useRef } from 'react';
+
+const Typewriter = ({
+  texts, // Array of strings to type
+  typingSpeed = 100, // Milliseconds per character typed
+  deletingSpeed = 50, // Milliseconds per character deleted
+  pauseDuration = 1500, // Milliseconds to pause after typing/deleting
+  loop = true, // Whether to loop through the texts indefinitely
+  cursorClassName = 'inline-block w-1 h-5 md:h-6 bg-current animate-blink ml-1', // Tailwind classes for the cursor
+  textClassName = '', // Optional additional classes for the text itself
+}) => {
+  const [textIndex, setTextIndex] = useState(0); // Index of the current text in the array
+  const [charIndex, setCharIndex] = useState(0); // Index of the current character being typed/deleted
+  const [currentText, setCurrentText] = useState(''); // The text currently displayed
+  const [isDeleting, setIsDeleting] = useState(false); // State flag for deleting mode
+  const timerRef = useRef(null); // Ref to store the timeout ID
+
+  useEffect(() => {
+    // Clear any existing timer when dependencies change or component unmounts
+    const clearTimer = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+
+    const handleTyping = () => {
+      const fullText = texts[textIndex];
+
+      if (isDeleting) {
+        // --- Deleting ---
+        if (charIndex > 0) {
+          setCurrentText(fullText.substring(0, charIndex - 1));
+          setCharIndex(charIndex - 1);
+          timerRef.current = setTimeout(handleTyping, deletingSpeed);
+        } else {
+          // Finished deleting
+          setIsDeleting(false);
+          const nextIndex = textIndex + 1;
+          if (nextIndex < texts.length) {
+            setTextIndex(nextIndex);
+            // Pause before typing next text
+            timerRef.current = setTimeout(handleTyping, pauseDuration / 2); // Shorter pause before typing next
+          } else if (loop) {
+            setTextIndex(0); // Loop back to the start
+             // Pause before typing next text
+            timerRef.current = setTimeout(handleTyping, pauseDuration / 2);
+          }
+          // If not looping and it was the last text, it will just stop here
+        }
+      } else {
+        // --- Typing ---
+        if (charIndex < fullText.length) {
+          setCurrentText(fullText.substring(0, charIndex + 1));
+          setCharIndex(charIndex + 1);
+          timerRef.current = setTimeout(handleTyping, typingSpeed);
+        } else {
+          // Finished typing, pause then start deleting
+          timerRef.current = setTimeout(() => {
+             // Only start deleting if there's more text or loop is enabled
+             if (loop || textIndex < texts.length - 1) {
+                 setIsDeleting(true);
+                 handleTyping(); // Start deleting immediately after pause
+             }
+          }, pauseDuration);
+        }
+      }
+    };
+
+    // Start the effect
+    timerRef.current = setTimeout(handleTyping, typingSpeed); // Initial delay
+
+    // Cleanup function
+    return clearTimer;
+
+  }, [
+    charIndex,
+    isDeleting,
+    textIndex,
+    texts,
+    typingSpeed,
+    deletingSpeed,
+    pauseDuration,
+    loop,
+  ]);
+
+  // Define blink animation in your global CSS or tailwind.config.js if it doesn't exist
+  // Example for tailwind.config.js (ensure you have `@keyframes blink` defined):
+  /*
+  theme: {
+    extend: {
+      keyframes: {
+        blink: {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: 0 },
+        },
+      },
+      animation: {
+        blink: 'blink 1s step-end infinite',
+      },
+    },
+  },
+  */
+
+  return (
+    <span className={`inline ${textClassName}`}>
+      {currentText}
+      <span aria-hidden="true" className={cursorClassName}></span>
+    </span>
+  );
+};
+
+export default Typewriter;
+3. Add Blink Animation (if needed):
+
+Tailwind CSS doesn't have a built-in animate-blink utility by default (as of older versions, check your current version). You might need to define it.
+
+Option A: tailwind.config.js (Recommended)
+Open your tailwind.config.js file and add the keyframes and animation:
+
+JavaScript
+
+// tailwind.config.js
+module.exports = {
+  // ... other config
+  theme: {
+    extend: {
+      keyframes: {
+        blink: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0' },
+        },
+      },
+      animation: {
+        blink: 'blink 1s step-end infinite',
+      },
+    },
+  },
+  // ... other config
+}
+Option B: Global CSS
+Add this to your main CSS file (e.g., src/index.css):
+
+CSS
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .animate-blink {
+    animation: blink 1s step-end infinite;
+  }
+}
+4. Use the Component:
+
+Import and use the Typewriter component in any other component or page.
+
+JavaScript
+
+// Example Usage in another component (e.g., App.js)
+import React from 'react';
+import Typewriter from './components/Typewriter'; // Adjust path if needed
+
+function App() {
+  const questions = [
+    "What is your favorite color?",
+    "How can AI help businesses grow?",
+    "Where should I travel next?",
+    "Can you explain quantum computing simply?"
+  ];
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="p-8 bg-white rounded shadow-md">
+        <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">
+          <Typewriter
+            texts={questions}
+            typingSpeed={80}
+            deletingSpeed={40}
+            pauseDuration={2000}
+            textClassName="text-blue-600" // Example: Add text color
+            // cursorClassName="inline-block w-1 h-6 bg-blue-600 animate-blink ml-1" // Example: Customize cursor
+          />
+        </h1>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+Explanation:
+
+Props: The component takes the array of texts, speeds, pause duration, and optional CSS classes as props for customization.
+State:
+textIndex: Tracks which string in the texts array is currently active.
+charIndex: Tracks the current character position within the active string.
+currentText: Holds the string currently rendered on the screen.
+isDeleting: A boolean flag to switch between typing and deleting modes.
+useRef: timerRef holds the ID returned by setTimeout. This is crucial for clearing the timeout in the useEffect cleanup function, preventing memory leaks and unwanted behavior if the component re-renders or unmounts.
+useEffect:
+This hook contains the core logic for the typewriter effect.
+It runs whenever any of its dependencies (like isDeleting, charIndex, etc.) change.
+It sets up a setTimeout to schedule the next action (add/remove character).
+Typing: If isDeleting is false, it adds characters one by one until the fullText is displayed. Then, it pauses and sets isDeleting to true.
+Deleting: If isDeleting is true, it removes characters one by one until currentText is empty. Then, it pauses briefly, increments textIndex (looping if necessary), and sets isDeleting back to false to start typing the next string.
+Cleanup: The return function inside useEffect clears the timeout when the component unmounts or before the effect runs again.
+Rendering: It renders the currentText followed by a span styled to look like a blinking cursor using Tailwind classes (including the custom animate-blink). aria-hidden="true" is added to the cursor for better accessibility, as it's purely decorative.
+Tailwind: Classes like inline-block, w-1, h-5, bg-current (uses the current text color), ml-1, and animate-blink are used for the cursor. You can customize these via the cursorClassName prop or add classes to the text itself via textClassName.
+This component provides a flexible and reusable way to implement the desired typewriter effect in your React/Tailwind project.
 
 
-    _____
-
-   
-Apr 09 12:52:17.38
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-6
-Error in JWT callback: PrismaClientInitializationError: Invalid `prisma.user.findFirst()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async Object.jwt (/var/task/.next/server/app/api/user/voices/route.js:1:10008) at async Object.i (/var/task/.next/server/chunks/6862.js:26:6957) at async y (/var/task/.next/server/chunks/6862.js:2:210191) at async s (/var/task/.next/server/chunks/6862.js:26:18493) at async e.length.t (/var/task/.next/server/chunks/6862.js:26:19983) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:52:17.38
-GET
-500
-dashboard.getlinkai.com
-/api/chatbots
-7
-Error fetching chatbots: PrismaClientInitializationError: Invalid `prisma.chatbot.findMany()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async p (/var/task/.next/server/app/api/chatbots/route.js:1:1924) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880) at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943) at async en (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:16:25516) at async ea.responseCache.get.routeKind (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:1028) { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:52:16.71
-GET
-500
-dashboard.getlinkai.com
-/api/inbox/unread
-7
-Error fetching unread count: PrismaClientInitializationError: Invalid `prisma.message.findMany()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async d (/var/task/.next/server/app/api/inbox/unread/route.js:1:1868) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880) at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943) at async en (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:16:25516) at async ea.responseCache.get.routeKind (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:1028) { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:52:16.70
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-6
-Error in JWT callback: PrismaClientInitializationError: Invalid `prisma.user.findFirst()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async Object.jwt (/var/task/.next/server/app/api/user/voices/route.js:1:10008) at async Object.i (/var/task/.next/server/chunks/6862.js:26:6957) at async y (/var/task/.next/server/chunks/6862.js:2:210191) at async s (/var/task/.next/server/chunks/6862.js:26:18493) at async e.length.t (/var/task/.next/server/chunks/6862.js:26:19983) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:52:16.43
-GET
-200
-dashboard.getlinkai.com
-/dashboard/inbox
-Apr 09 12:51:53.11
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-6
-Error in JWT callback: PrismaClientInitializationError: Invalid `prisma.user.findFirst()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async Object.jwt (/var/task/.next/server/app/api/user/voices/route.js:1:10008) at async Object.i (/var/task/.next/server/chunks/6862.js:26:6957) at async y (/var/task/.next/server/chunks/6862.js:2:210191) at async s (/var/task/.next/server/chunks/6862.js:26:18493) at async e.length.t (/var/task/.next/server/chunks/6862.js:26:19983) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:51:52.44
-GET
-500
-dashboard.getlinkai.com
-/api/chatbots
-14
-Error fetching chatbots: PrismaClientInitializationError: Invalid `prisma.chatbot.findMany()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async p (/var/task/.next/server/app/api/chatbots/route.js:1:1924) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880) at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943) at async en (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:16:25516) at async ea.responseCache.get.routeKind (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:1028) { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:51:52.44
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-6
-Error in JWT callback: PrismaClientInitializationError: Invalid `prisma.user.findFirst()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async Object.jwt (/var/task/.next/server/app/api/user/voices/route.js:1:10008) at async Object.i (/var/task/.next/server/chunks/6862.js:26:6957) at async y (/var/task/.next/server/chunks/6862.js:2:210191) at async s (/var/task/.next/server/chunks/6862.js:26:18493) at async e.length.t (/var/task/.next/server/chunks/6862.js:26:19983) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:51:51.47
-GET
-500
-dashboard.getlinkai.com
-/api/inbox/unread
-7
-Error fetching unread count: PrismaClientInitializationError: Invalid `prisma.message.findMany()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async d (/var/task/.next/server/app/api/inbox/unread/route.js:1:1868) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880) at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943) at async en (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:16:25516) at async ea.responseCache.get.routeKind (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:1028) { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:51:51.47
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-6
-Error in JWT callback: PrismaClientInitializationError: Invalid `prisma.user.findFirst()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async Object.jwt (/var/task/.next/server/app/api/user/voices/route.js:1:10008) at async Object.i (/var/task/.next/server/chunks/6862.js:26:6957) at async y (/var/task/.next/server/chunks/6862.js:2:210191) at async s (/var/task/.next/server/chunks/6862.js:26:18493) at async e.length.t (/var/task/.next/server/chunks/6862.js:26:19983) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:51:51.22
-GET
-200
-dashboard.getlinkai.com
-/dashboard/agents
-Apr 09 12:51:05.28
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-6
-Session callback completed
-Apr 09 12:51:05.11
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-6
-Session callback completed
-Apr 09 12:51:05.11
-GET
-200
-dashboard.getlinkai.com
-/api/knowledge-sources
-9
-[KnowledgeSource] Found 1 sources
-Apr 09 12:51:04.84
-GET
-500
-dashboard.getlinkai.com
-/api/knowledge-sources
-10
-[KnowledgeSource] Error fetching knowledge sources: PrismaClientInitializationError: Invalid `prisma.knowledgeSource.findMany()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async x (/var/task/.next/server/app/api/knowledge-sources/route.js:1:2774) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880) at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943) at async en (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:16:25516) at async ea.responseCache.get.routeKind (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:1028) { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:51:04.84
-GET
-500
-dashboard.getlinkai.com
-/api/inbox/unread
-7
-Error fetching unread count: PrismaClientInitializationError: Invalid `prisma.message.findMany()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async d (/var/task/.next/server/app/api/inbox/unread/route.js:1:1868) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880) at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943) at async en (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:16:25516) at async ea.responseCache.get.routeKind (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:1028) { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:51:04.83
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-6
-Session callback completed
-Apr 09 12:51:04.63
-GET
-200
-dashboard.getlinkai.com
-/dashboard/knowledge-base
-Apr 09 12:50:58.51
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-6
-Session callback completed
-Apr 09 12:50:56.08
-GET
-200
-dashboard.getlinkai.com
-/api/auth/session
-13
-Error in JWT callback: PrismaClientInitializationError: Invalid `prisma.user.findFirst()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async Object.jwt (/var/task/.next/server/app/api/auth/[...nextauth]/route.js:1:8118) at async Object.i (/var/task/.next/server/chunks/6862.js:26:6957) at async y (/var/task/.next/server/chunks/6862.js:2:210191) at async s (/var/task/.next/server/chunks/6862.js:26:18493) at async e.length.t (/var/task/.next/server/chunks/6862.js:26:19983) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:50:55.91
-GET
-200
-dashboard.getlinkai.com
-/api/elevenlabs/voices
-6
-Session callback completed
-Apr 09 12:50:55.91
-GET
-500
-dashboard.getlinkai.com
-/api/user/voices
-14
-Error fetching user voices: PrismaClientInitializationError: Invalid `prisma.user.findUnique()` invocation: Too many database connections opened: FATAL: remaining connection slots are reserved for non-replication superuser connections at $n.handleRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:7615) at $n.handleAndLogRequestError (/var/task/node_modules/@prisma/client/runtime/library.js:121:6623) at $n.request (/var/task/node_modules/@prisma/client/runtime/library.js:121:6307) at async l (/var/task/node_modules/@prisma/client/runtime/library.js:130:9633) at async d (/var/task/.next/server/app/api/user/voices/route.js:1:1862) at async /var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411 at async e_.execute (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880) at async e_.handle (/var/task/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943) at async en (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:16:25516) at async ea.responseCache.get.routeKind (/var/task/node_modules/next/dist/compiled/next-server/server.runtime.prod.js:17:1028) { clientVersion: '5.22.0', errorCode: undefined }
-Apr 09 12:50:55.91
-GET
-200
-dashboard.getlinka
-
-
-
-
-
-______________________
-
-Failed to load schemas
-Error: remaining connection slots are reserved for non-replication superuser connections
-
-Failed to retrieve tables
-Error: remaining connection slots are reserved for non-replication superuser connections
-
-Try refreshing your browser, but if the issue persists, please reach out to us via support.
+Sources and related content

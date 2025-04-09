@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/chat-interface/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { generateUUID } from '@/lib/chat-interface/utils';
+import { ChatLogo } from '@/components/chat-interface/chat-logo';
 
 interface ChatHeaderProps {
   chatId: string;
@@ -13,6 +14,7 @@ interface ChatHeaderProps {
   selectedVisibilityType: any;
   isReadonly: boolean;
   chatTitle?: string | null;
+  chatbotLogoURL?: string | null;
 }
 
 export function ChatHeader({
@@ -21,6 +23,7 @@ export function ChatHeader({
   selectedVisibilityType,
   isReadonly,
   chatTitle,
+  chatbotLogoURL,
 }: ChatHeaderProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,9 +39,11 @@ export function ChatHeader({
   };
 
   return (
-    <header className="flex sticky top-0 bg-background py-1.5 items-center px-4 md:px-4 h-12 border-b border-gray-200 dark:border-gray-800">
+    <header className="flex sticky top-0 bg-background py-1.5 items-center px-4 md:px-4 h-12">
       <div className="flex w-full items-center justify-between">
-        <div className="w-8"></div>
+        <div className="w-8 h-8 flex items-center justify-center">
+          <ChatLogo chatbotLogoURL={chatbotLogoURL} size={32} />
+        </div>
         <div className="flex-1 text-center">
           {chatTitle && (
             <span className="text-base font-semibold text-gray-900 dark:text-gray-50">
@@ -46,15 +51,15 @@ export function ChatHeader({
             </span>
           )}
         </div>
-      <Button 
-        onClick={handleNewChat}
-        variant="outline" 
-        size="icon" 
+        <Button 
+          onClick={handleNewChat}
+          variant="outline" 
+          size="icon" 
           className="size-8 rounded-sm border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-      >
-        <PlusIcon className="size-4" />
-        <span className="sr-only">New Chat</span>
-      </Button>
+        >
+          <PlusIcon className="size-4" />
+          <span className="sr-only">New Chat</span>
+        </Button>
       </div>
     </header>
   );

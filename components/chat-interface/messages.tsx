@@ -28,6 +28,7 @@ interface MessagesProps {
   reload: (options?: any) => Promise<string>;
   isReadonly: boolean;
   isArtifactVisible: boolean;
+  chatbotId: string;
   chatbotLogoURL?: string | null;
   welcomeMessage?: string | null;
 }
@@ -40,6 +41,7 @@ function PureMessages({
   setMessages,
   reload,
   isReadonly,
+  chatbotId,
   chatbotLogoURL,
   welcomeMessage,
 }: MessagesProps) {
@@ -77,7 +79,12 @@ function PureMessages({
       ref={messagesContainerRef}
       className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"
     >
-      {messages.length === 0 && <Overview chatbotLogoURL={chatbotLogoURL} welcomeMessage={welcomeMessage} />}
+      {messages.length === 0 && 
+        <Overview 
+          chatbotId={chatbotId} 
+          chatbotLogoURL={chatbotLogoURL} 
+          welcomeMessage={welcomeMessage} 
+        />}
 
       {messages.map((message, index) => (
         <PreviewMessage

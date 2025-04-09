@@ -261,15 +261,15 @@ KNOWLEDGE BASE INSTRUCTIONS:
     if (useFileSearch && vectorStoreIds.length > 0) {
       console.log(`[Responses API] Using file_search with vector store IDs:`, vectorStoreIds);
       toolsForResponsesApi.push({ 
-        type: "file_search",
-        vector_store_ids: vectorStoreIds,
-      });
-    }
+          type: "file_search",
+          vector_store_ids: vectorStoreIds,
+        });
+      }
     // Restore web_search_preview tool 
-    if (useWebSearch) {
+      if (useWebSearch) {
       console.log(`[Responses API] Using web_search_preview with options:`, webSearchOptions);
       toolsForResponsesApi.push({ 
-        type: "web_search_preview",
+          type: "web_search_preview",
         ...webSearchOptions // webSearchOptions is defined earlier
       });
     }
@@ -283,16 +283,16 @@ KNOWLEDGE BASE INSTRUCTIONS:
     // Ensure messages are present 
     if (!messages) {
        return new Response('Missing messages', { status: 400 });
-    }
-
+      }
+      
     // Construct the payload for the Responses API call (Restore TOOLS)
     const responsesPayload = {
-      model: modelName,
-      instructions: fullPrompt,
-      input: userInput,
-      temperature: chatbot.temperature || 0.7,
-      max_output_tokens: chatbot.maxCompletionTokens || 1000,
-      stream: true,
+        model: modelName,
+        instructions: fullPrompt,
+        input: userInput,
+        temperature: chatbot.temperature || 0.7,
+        max_output_tokens: chatbot.maxCompletionTokens || 1000,
+        stream: true,
       tools: toolsForResponsesApi.length > 0 ? toolsForResponsesApi : undefined, // Restore TOOLS
       // user: `chatbot-interface-user-${chatbotId}`, // Keep user commented out for now
     };
@@ -305,8 +305,8 @@ KNOWLEDGE BASE INSTRUCTIONS:
       // Stream handling - ADD DETAILED LOGGING
       let completion = '';
       const readableStream = new ReadableStream({
-        async start(controller) {
-          const encoder = new TextEncoder();
+      async start(controller) {
+        const encoder = new TextEncoder();
           try {
             console.log("[Responses API] Starting stream processing - LOGGING ALL CHUNKS");
             for await (const chunk of responseStream) {
@@ -315,11 +315,11 @@ KNOWLEDGE BASE INSTRUCTIONS:
 
               let chunkText = '';
               // Extract text based on known chunk types
-              if (chunk.type === 'response.output_text.delta') {
+            if (chunk.type === 'response.output_text.delta') {
                 if (typeof chunk.delta === 'string') chunkText = chunk.delta;
                 else if (chunk.delta?.text) chunkText = chunk.delta.text;
                 else if (chunk.delta?.value) chunkText = chunk.delta.value;
-              } 
+              }
               else if (chunk.type === 'message_delta' && chunk.delta?.content?.[0]?.text) {
                  chunkText = chunk.delta.content[0].text;
               } else if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
@@ -338,8 +338,8 @@ KNOWLEDGE BASE INSTRUCTIONS:
           } catch (streamError) {
             console.error("[Responses API] Error reading stream:", streamError);
             controller.error(streamError);
-          } finally {
-            controller.close();
+        } finally {
+          controller.close();
             // ---- DB Save Logic ---- 
             console.log('[DB SAVE] Attempting to save message pair.');
             console.log(`[DB SAVE] Thread ID: ${threadId}`);
@@ -377,14 +377,14 @@ KNOWLEDGE BASE INSTRUCTIONS:
         }
       });
       return new Response(readableStream, {
-        headers: {
-          'Content-Type': 'text/plain; charset=utf-8',
-          'Cache-Control': 'no-cache, no-transform',
-          'X-Content-Type-Options': 'nosniff'
-        }
-      });
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'X-Content-Type-Options': 'nosniff'
+      }
+    });
 
-    } catch (error) {
+  } catch (error) {
       console.error('[Responses API] Error in OpenAI API call:', error);
       // ... existing error handling ...
       throw error;

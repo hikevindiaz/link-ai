@@ -82,10 +82,9 @@ module.exports = {
           "0%": { opacity: 0 },
           "100%": { opacity: 1 },
         },
-        gradient: {  // New block for gradient animation
+        gradient: {  
           "0%": { backgroundPosition: "0% 50%" },
-          "50%": { backgroundPosition: "100% 50%" },
-          "100%": { backgroundPosition: "0% 50%" },
+          "100%": { backgroundPosition: "200% 50%" },
         },
         gradientPulse: {
           "0%": { backgroundPosition: "0% 50%", transform: "scale(1)" },
@@ -186,7 +185,7 @@ module.exports = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         fadeIn: "fadeIn 0.3s ease-in-out",
-        gradient: "gradient 3s infinite linear",
+        gradient: "gradient 15s linear infinite",
         gradientPulse: "gradientPulse 3s ease-in-out infinite",
         orbit: "orbit 2s infinite ease-in-out",
         ripple: "ripple 2.5s infinite",

@@ -142,9 +142,10 @@ export function Chat({
         selectedVisibilityType={selectedVisibilityType}
         isReadonly={isReadonly}
         chatTitle={chatTitle}
+        chatbotLogoURL={chatbotLogoURL}
       />
 
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto flex flex-col">
         <Messages
           chatId={currentThreadId}
           status={status}
@@ -154,6 +155,7 @@ export function Chat({
           reload={reload}
           isReadonly={isReadonly}
           isArtifactVisible={isArtifactVisible}
+          chatbotId={chatbotId}
           chatbotLogoURL={chatbotLogoURL}
           welcomeMessage={welcomeMessage}
         />
@@ -190,6 +192,30 @@ export function Chat({
           />
         )}
       </form>
+
+      {/* Add legal text below the input form */}
+      <div className="px-4 pb-2 text-center">
+        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+          By using this chatbot, you agree to our{' '}
+          <a
+            href="https://getlinkai.com/legal"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+          >
+            Terms of Service
+          </a>
+          {' and '}
+          <a
+            href="https://getlinkai.com/legal"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+          >
+            Privacy Policy
+          </a>.
+        </p>
+      </div>
     </div>
   );
 }
