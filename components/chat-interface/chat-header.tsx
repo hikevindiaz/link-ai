@@ -1,12 +1,11 @@
 'use client';
 
-import { useRouter, usePathname } from 'next/navigation';
-import { useWindowSize } from 'usehooks-ts';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/chat-interface/ui/button';
 import { PlusIcon } from 'lucide-react';
-import { generateUUID } from '@/lib/chat-interface/utils';
-import { ChatLogo } from '@/components/chat-interface/chat-logo';
+import { RiVoiceAiLine, RiChatAiLine } from '@remixicon/react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ChatHeaderProps {
   chatId: string;
@@ -15,6 +14,8 @@ interface ChatHeaderProps {
   isReadonly: boolean;
   chatTitle?: string | null;
   chatbotLogoURL?: string | null;
+  currentMode: 'text' | 'voice';
+  onModeChange: (mode: 'text' | 'voice') => void;
 }
 
 export function ChatHeader({
@@ -24,33 +25,49 @@ export function ChatHeader({
   isReadonly,
   chatTitle,
   chatbotLogoURL,
+  currentMode,
+  onModeChange,
 }: ChatHeaderProps) {
   const router = useRouter();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
-  const [isVisibilityMenuOpen, setIsVisibilityMenuOpen] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const [exportDays, setExportDays] = useState(7);
 
   const handleNewChat = () => {
-    // Simply refresh the page to start a new chat
     window.location.reload();
   };
 
+  const handleModeToggle = () => {
+    onModeChange(currentMode === 'text' ? 'voice' : 'text');
+  };
+
   return (
-    <header className="flex sticky top-0 bg-background py-1.5 items-center px-4 md:px-4 h-12">
-      <div className="flex w-full items-center justify-between">
-        <div className="w-8 h-8 flex items-center justify-center">
-          <ChatLogo chatbotLogoURL={chatbotLogoURL} size={32} />
+    <header className="flex sticky top-0 bg-background py-1.5 items-center px-4 h-12 z-10">
+      <div className="flex w-full items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                onClick={handleModeToggle}
+                variant="ghost"
+                size="icon" 
+                className="size-8 rounded-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                {currentMode === 'text' ? <RiVoiceAiLine className="size-5" /> : <RiChatAiLine className="size-5" />}
+                <span className="sr-only">Switch to {currentMode === 'text' ? 'Voice' : 'Text'} Mode</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Switch to {currentMode === 'text' ? 'Voice' : 'Text'} Mode</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
-        <div className="flex-1 text-center">
+        
+        <div className="flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis">
           {chatTitle && (
             <span className="text-base font-semibold text-gray-900 dark:text-gray-50">
               {chatTitle}
             </span>
           )}
         </div>
+        
         <Button 
           onClick={handleNewChat}
           variant="outline" 

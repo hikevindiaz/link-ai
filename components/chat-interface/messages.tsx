@@ -19,7 +19,8 @@ interface ChatMessage extends Message {
   id: string;
 }
 
-interface MessagesProps {
+// Export the interface
+export interface MessagesProps {
   chatId: string;
   status: 'error' | 'submitted' | 'streaming' | 'ready';
   votes: Array<Vote> | undefined;

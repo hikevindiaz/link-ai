@@ -1,8 +1,6 @@
 "use client";
 
-import { SidebarProvider } from "@/components/Sidebar";
 import { AppSidebar } from "@/components/ui/navigation/AppSidebar";
-import { Breadcrumbs } from "@/components/ui/navigation/Breadcrumbs";
 import { Toaster } from "@/components/Toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 

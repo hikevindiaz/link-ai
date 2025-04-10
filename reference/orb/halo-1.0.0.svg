@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="256" height="256">
+  <rect width="256" height="256"></rect>
+  <clipPath id="cl_3">
+    <rect width="256" height="256"></rect>
+  </clipPath>
+  <g clip-path="url(#cl_3)">
+    <defs>
+      <radialGradient id="gradient_0" gradientUnits="userSpaceOnUse" cx="0" cy="0" fx="0" fy="0" r="128" fr="0">
+        <stop offset="0" stop-color="white" stop-opacity="0"></stop>
+        <stop offset="0.25160435" stop-color="white" stop-opacity="0"></stop>
+        <stop offset="0.39236885" stop-color="white" stop-opacity="0.031372551"></stop>
+        <stop offset="0.49242002" stop-color="white" stop-opacity="0.10588235"></stop>
+        <stop offset="0.60121375" stop-color="white" stop-opacity="0.031372551"></stop>
+        <stop offset="0.714495" stop-color="white" stop-opacity="0"></stop>
+        <stop offset="1" stop-color="white" stop-opacity="0"></stop>
+      </radialGradient>
+    </defs>
+    <path fill="none" stroke="url(#gradient_0)" stroke-width="128" stroke-miterlimit="4" transform="translate(128 128)" d="M0 -64C35.3462 -64 64 -35.3462 64 0C64 35.3462 35.3462 64 0 64C-35.3462 64 -64 35.3462 -64 0C-64 -35.3462 -35.3462 -64 0 -64Z"></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" transform="translate(128 128)" d="M0 -64C35.3462 -64 64 -35.3462 64 0C64 35.3462 35.3462 64 0 64C-35.3462 64 -64 35.3462 -64 0C-64 -35.3462 -35.3462 -64 0 -64Z"></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" transform="matrix(-0.707107 0.707107 -0.707107 -0.707107 128 128)" d="M0 -64C35.3462 -64 64 -35.3462 64 0C64 35.3462 35.3462 64 0 64C-35.3462 64 -64 35.3462 -64 0C-64 -35.3462 -35.3462 -64 0 -64Z"></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.50196081" transform="matrix(-4.37114e-08 -1 1 -4.37114e-08 128 128)" d="M0 -64C35.3462 -64 64 -35.3462 64 0C64 35.3462 35.3462 64 0 64C-35.3462 64 -64 35.3462 -64 0C-64 -35.3462 -35.3462 -64 0 -64Z"></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.80000001" transform="translate(128 128)" d="M0 -64C35.3462 -64 64 -35.3462 64 0C64 35.3462 35.3462 64 0 64C-35.3462 64 -64 35.3462 -64 0C-64 -35.3462 -35.3462 -64 0 -64Z"></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.60000002" transform="translate(128 128)" d="M0 -64C35.3462 -64 64 -35.3462 64 0C64 35.3462 35.3462 64 0 64C-35.3462 64 -64 35.3462 -64 0C-64 -35.3462 -35.3462 -64 0 -64Z"></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" stroke-opacity="0.40000001" transform="translate(128 128)" d="M0 -64C35.3462 -64 64 -35.3462 64 0C64 35.3462 35.3462 64 0 64C-35.3462 64 -64 35.3462 -64 0C-64 -35.3462 -35.3462 -64 0 -64Z"></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(128 128)" d=""></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="matrix(-1 -8.74228e-08 8.74228e-08 -1 128 128)" d=""></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="translate(128 128)" d=""></path>
+    <path fill="none" stroke="white" stroke-width="1" stroke-miterlimit="4" transform="matrix(-1 -8.74228e-08 8.74228e-08 -1 128 128)" d=""></path>
+    <path fill="none" stroke="white" stroke-width="2" stroke-miterlimit="4" transform="translate(128 128)" d="M0 -64C35.3462 -64 64 -35.3462 64 0C64 35.3462 35.3462 64 0 64C-35.3462 64 -64 35.3462 -64 0C-64 -35.3462 -35.3462 -64 0 -64Z"></path>
+  </g>
+</svg>

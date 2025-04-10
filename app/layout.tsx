@@ -2,6 +2,9 @@ import { Analytics } from '@vercel/analytics/react';
 import "@/styles/globals.css";
 import "@/styles/chat-interface.css";
 import localFont from "next/font/local";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "remixicon/fonts/remixicon.css";
 
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -10,6 +13,7 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 import { AOSInit } from '@/components/aos-init';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { constructMetadata } from '@/lib/construct-metadata';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 import { SessionWrapper } from "@/components/providers/SessionWrapper";  // ✅ Import the wrapper
 
@@ -40,7 +44,12 @@ const geistMonoFont = localFont({
   variable: '--font-geist-mono',
 });
 
-export const metadata = constructMetadata();
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Link AI",
+  description: "Human First, AI Powered",
+};
 
 export default function RootLayout({
   children,
@@ -49,6 +58,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${geistFont.variable} ${geistMonoFont.variable}`}>
+      <head>
+        {/* Removed Remix Icon CDN Link */}
+      </head>
       <AOSInit />
       <body
         id='root'
@@ -58,13 +70,13 @@ export default function RootLayout({
           fontHeading.variable
         )}
       >
-        {/* ✅ Wrap with SessionWrapper */}
         <SessionWrapper>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <TooltipProvider>
               {children}
               <Toaster />
               {process.env.VERCEL_ENV === "production" ? <Analytics /> : null}
+              <SpeedInsights/>
             </TooltipProvider>
           </ThemeProvider>
         </SessionWrapper>

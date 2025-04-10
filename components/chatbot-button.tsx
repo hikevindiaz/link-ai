@@ -5,8 +5,6 @@ import { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import Image from 'next/image';
 import GradientAgentSphere from './gradientagentsphere';
-import ChatOptionsDialog from './chat-options-dialog';
-import VoiceChatInterface from './voice-chat-interface';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export interface ChatbotButtonComponentProps {
@@ -17,14 +15,12 @@ export interface ChatbotButtonComponentProps {
     title?: string;
     message?: string;
     waveEmoji?: boolean;
-    onToggleChat?: (isOpen: boolean, chatType?: 'text' | 'voice') => void;
+    onToggleChat?: (isOpen: boolean) => void;
     gradientColors?: string[];
     logoUrl?: string;
     chatbotName?: string;
     maxButtonWidth?: number;
     minButtonWidth?: number;
-    termsUrl?: string;
-    privacyUrl?: string;
     icon?: React.ReactNode;
 }
 
@@ -43,23 +39,19 @@ export default function ChatbotButton({
     textColor = "#000000", 
     backgroundColor = "#FFFFFF",
     borderGradient = true,
-    borderGradientColors = ["#2563EB", "#7E22CE", "#F97316"], // Blue, Purple, Orange for the border
+    borderGradientColors = ["#2563EB", "#7E22CE", "#F97316"],
     title,
     message = "Hi, let's talk",
     waveEmoji = true,
     onToggleChat,
-    gradientColors = ["#022597", "#000001", "#1a56db"], // Default colors for the sphere
+    gradientColors = ["#022597", "#000001", "#1a56db"],
     logoUrl,
     chatbotName,
     maxButtonWidth = 320,
     minButtonWidth = 180,
-    termsUrl = "https://getlinkai.com/legal",
-    privacyUrl = "https://getlinkai.com/legal",
     icon = defaultIcon
 }: ChatbotButtonComponentProps) {
     const [isChatVisible, setIsChatVisible] = useState(false);
-    const [isOptionsVisible, setIsOptionsVisible] = useState(false);
-    const [isVoiceChatVisible, setIsVoiceChatVisible] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -67,13 +59,10 @@ export default function ChatbotButton({
     const [buttonWidth, setButtonWidth] = useState<number | undefined>(undefined);
     const [displayedMessage, setDisplayedMessage] = useState(message);
     
-    // Use chatbot name as title if provided, otherwise use default
     const displayTitle = chatbotName || title || "Link AI Smart Agent";
 
-    // Calculate button width based on text content and update displayed message if needed
     useEffect(() => {
         if (messageRef.current) {
-            // Create a temporary span to measure the full text width
             const tempSpan = document.createElement('span');
             tempSpan.style.visibility = 'hidden';
             tempSpan.style.position = 'absolute';
@@ -82,44 +71,27 @@ export default function ChatbotButton({
             tempSpan.style.fontWeight = 'bold';
             tempSpan.textContent = message;
             document.body.appendChild(tempSpan);
-            
             const fullTextWidth = tempSpan.offsetWidth;
             document.body.removeChild(tempSpan);
-            
-            const logoWidth = 36; // w-9 = 36px
-            const padding = 24; // px-3 = 12px * 2
-            const gap = 8; // gap-2 = 8px
-            const emojiWidth = waveEmoji ? 20 : 0; // Approximate width of emoji
-            const margin = 24; // Extra margin for safety
-            
+            const logoWidth = 36; const padding = 24; const gap = 8; const emojiWidth = waveEmoji ? 20 : 0; const margin = 24;
             const requiredWidth = fullTextWidth + logoWidth + padding + gap + emojiWidth + margin;
-            
-            // If the text fits within maxButtonWidth, show it all
             if (requiredWidth <= maxButtonWidth) {
                 setDisplayedMessage(message);
                 setButtonWidth(Math.max(requiredWidth, minButtonWidth));
             } else {
-                // Otherwise, we need to truncate
-                // Find the maximum number of characters that can fit
-                let maxChars = message.length;
-                let truncatedMessage = message;
-                
+                let maxChars = message.length; let truncatedMessage = message;
                 while (maxChars > 0) {
                     truncatedMessage = message.substring(0, maxChars) + "...";
                     tempSpan.textContent = truncatedMessage;
                     document.body.appendChild(tempSpan);
-                    
                     const truncatedWidth = tempSpan.offsetWidth;
                     document.body.removeChild(tempSpan);
-                    
                     const truncatedRequiredWidth = truncatedWidth + logoWidth + padding + gap + emojiWidth + margin;
-                    
                     if (truncatedRequiredWidth <= maxButtonWidth) {
                         setDisplayedMessage(truncatedMessage);
                         setButtonWidth(Math.max(truncatedRequiredWidth, minButtonWidth));
                         break;
                     }
-                    
                     maxChars--;
                 }
             }
@@ -127,33 +99,41 @@ export default function ChatbotButton({
     }, [message, waveEmoji, maxButtonWidth, minButtonWidth]);
 
     useEffect(() => {
-        // For compatibility with iframe messaging if still needed
         const handleMessage = (event: MessageEvent) => {
             if (event.data === 'openChat') {
-                // Don't automatically set chat visible, wait for user selection
-                setIsOptionsVisible(true);
+                if (!isChatVisible) {
+                    console.log("Button received 'openChat' message");
+                    setIsChatVisible(true);
+                    setIsTransitioning(false);
+                }
             }
 
             if (event.data === 'closeChat') {
-                closeAllInterfaces();
+                if (isChatVisible) {
+                    console.log("Button received 'closeChat' message");
+                    setIsChatVisible(false);
+                    setIsTransitioning(false);
+                }
             }
         };
 
         window.addEventListener('message', handleMessage);
 
+        const handleParentReady = () => {
+            console.log("Parent frame ready, posting initial state");
+            window.parent.postMessage(isChatVisible ? 'chatOpen' : 'chatClosed', '*');
+        };
+        window.addEventListener('parentReady', handleParentReady);
+
         return () => {
             window.removeEventListener('message', handleMessage);
+            window.removeEventListener('parentReady', handleParentReady);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
-    }, []);
+    }, [isChatVisible]);
 
     function toggleChatVisibility() {
-        console.log("Toggle chat visibility, current states:", { 
-            isChatVisible, 
-            isOptionsVisible, 
-            isVoiceChatVisible, 
-            isTransitioning 
-        });
+        console.log("Button toggling chat visibility, current state:", isChatVisible);
         
         if (isTransitioning) {
             console.log("Ignoring click during transition");
@@ -161,100 +141,27 @@ export default function ChatbotButton({
         }
         
         setIsTransitioning(true);
+        const nextVisibility = !isChatVisible;
         
-        if (isChatVisible || isOptionsVisible || isVoiceChatVisible) {
-            // Close everything
-            closeAllInterfaces();
-        } else {
-            // Show options dialog
-            showOptionsDialog();
-        }
-    }
-    
-    function showOptionsDialog() {
-        console.log("Showing options dialog");
-        setIsOptionsVisible(true);
-        
-        // Call the callback if provided, but don't specify chat type yet
-        if (onToggleChat) {
-            onToggleChat(true);
-        }
-        
+        window.parent.postMessage(nextVisibility ? 'openChat' : 'closeChat', '*');
+
         timeoutRef.current = setTimeout(() => {
             setIsTransitioning(false);
-        }, 300);
-    }
-    
-    function closeAllInterfaces() {
-        console.log("Closing all interfaces");
-        setIsOptionsVisible(false);
-        setIsVoiceChatVisible(false);
-        
-        // Call the callback if provided
-        if (onToggleChat) {
-            onToggleChat(false);
-        }
-        
-        // For backward compatibility with iframe approach
-        window.parent.postMessage('closeChat', '*');
-        
-        // Delay the state change to allow for animation
-        timeoutRef.current = setTimeout(() => {
-            setIsChatVisible(false);
-            timeoutRef.current = setTimeout(() => {
-                setIsTransitioning(false);
-            }, 300);
-        }, 150);
-    }
-    
-    function handleOptionSelect(option: 'text' | 'voice') {
-        console.log("Option selected:", option);
-        // Immediately hide the options dialog to prevent it from showing again
-        setIsOptionsVisible(false);
-        
-        if (option === 'text') {
-            // Open text chat
-            setIsChatVisible(true);
-            
-            // Call the callback with the chat type
-            if (onToggleChat) {
-                onToggleChat(true, 'text');
-            }
-            
-            // Now send the message to open the chat iframe
-            window.parent.postMessage('openChat', '*');
-        } else {
-            // Open voice chat
-            setIsVoiceChatVisible(true);
-            
-            // Call the callback with the chat type
-            if (onToggleChat) {
-                onToggleChat(true, 'voice');
-            }
-        }
-    }
-    
-    function handleVoiceChatClose() {
-        console.log("Voice chat closed");
-        setIsVoiceChatVisible(false);
-        setIsTransitioning(false);
-        
-        // Call the callback if provided
-        if (onToggleChat) {
-            onToggleChat(false);
-        }
+            console.log("Button transition finished, posted message:", nextVisibility ? 'openChat' : 'closeChat');
+        }, 300); 
     }
 
-    // Create gradient colors for conic gradient (border)
     const [color1, color2, color3] = borderGradientColors;
 
+    const chatButtonVisibilityClass = isChatVisible ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100';
+    const closeButtonVisibilityClass = !isChatVisible ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100';
+
     return (
-        <div ref={containerRef} className="relative" style={{ height: (isChatVisible || isOptionsVisible || isVoiceChatVisible) ? '48px' : 'auto' }}>
-            {/* Chat Button */}
+        <div ref={containerRef} className="relative" style={{ height: 'auto' }}>
             <div 
                 className={`
                     transition-all duration-300 cursor-pointer overflow-hidden
-                    ${(isChatVisible || isOptionsVisible || isVoiceChatVisible) ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100'}
+                    ${chatButtonVisibilityClass}
                     ${isTransitioning ? 'transform' : ''}
                     ${borderGradient ? 'animate-border' : ''}
                 `}
@@ -268,7 +175,7 @@ export default function ChatbotButton({
                         `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})` : 'transparent',
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
                     transformOrigin: 'right bottom',
-                    position: (isChatVisible || isOptionsVisible || isVoiceChatVisible) ? 'absolute' : 'relative',
+                    position: 'relative',
                     right: 0,
                     bottom: 0
                 }}
@@ -311,100 +218,56 @@ export default function ChatbotButton({
                 </div>
             </div>
 
-            {/* X Button */}
-            <div 
-                className={`
-                    transition-all duration-300 cursor-pointer overflow-hidden
-                    ${!(isChatVisible || isOptionsVisible || isVoiceChatVisible) ? 'opacity-0 scale-0 absolute pointer-events-none' : 'opacity-100 scale-100'}
-                    ${isTransitioning ? 'transform' : ''}
-                    ${borderGradient ? 'animate-border' : ''}
-                `}
-                style={{ 
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '50%',
-                    padding: borderGradient ? '1px' : '0',
-                    background: borderGradient ? 
-                        `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})` : 'transparent',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                    transformOrigin: 'center',
-                    position: 'absolute',
-                    right: 0,
-                    bottom: 0,
-                    zIndex: 60 // Ensure it's above other elements
-                }}
-                onClick={!isTransitioning ? toggleChatVisibility : undefined}
-            >
-                <div 
-                    className="flex items-center justify-center w-full h-full rounded-full"
-                    style={{ backgroundColor }}
+            {isChatVisible && (
+                 <div 
+                    className={`
+                        transition-all duration-300 cursor-pointer overflow-hidden
+                        ${closeButtonVisibilityClass} 
+                        ${isTransitioning ? 'transform' : ''}
+                        ${borderGradient ? 'animate-border' : ''}
+                    `}
+                    style={{ 
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '50%',
+                        padding: borderGradient ? '1px' : '0',
+                        background: borderGradient ? 
+                            `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})` : 'transparent',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        transformOrigin: 'center',
+                        position: 'absolute',
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 60 
+                    }}
+                    onClick={!isTransitioning ? toggleChatVisibility : undefined}
                 >
-                    <X 
-                        size={20} 
-                        color={textColor} 
-                        className={`transition-transform duration-300 ${isTransitioning && !(isChatVisible || isOptionsVisible || isVoiceChatVisible) ? 'rotate-90' : 'rotate-0'}`}
-                    />
+                    <div 
+                        className="flex items-center justify-center w-full h-full rounded-full"
+                        style={{ backgroundColor }}
+                    >
+                        <X 
+                            size={20} 
+                            color={textColor} 
+                            className={`transition-transform duration-300 ${isTransitioning && !isChatVisible ? 'rotate-90' : 'rotate-0'}`}
+                        />
+                    </div>
                 </div>
-            </div>
-            
-            {/* Options Dialog */}
-            {isOptionsVisible && (
-                <ChatOptionsDialog 
-                    onClose={closeAllInterfaces}
-                    onSelectOption={handleOptionSelect}
-                    textColor={textColor === "#000000" ? "#FFFFFF" : textColor}
-                    backgroundColor={backgroundColor === "#FFFFFF" ? "#000000" : backgroundColor}
-                    borderGradientColors={borderGradientColors}
-                    gradientColors={gradientColors}
-                    termsUrl={termsUrl}
-                    privacyUrl={privacyUrl}
-                />
             )}
             
-            {/* Voice Chat Interface */}
-            {isVoiceChatVisible && (
-                <VoiceChatInterface 
-                    onClose={handleVoiceChatClose}
-                    textColor={textColor === "#000000" ? "#FFFFFF" : textColor}
-                    backgroundColor={backgroundColor === "#FFFFFF" ? "#000000" : backgroundColor}
-                    borderGradientColors={borderGradientColors}
-                    gradientColors={gradientColors}
-                    chatbotName={displayTitle}
-                />
-            )}
-
-            {/* CSS for border animation */}
             <style jsx global>{`
                 @property --border-angle {
                     syntax: '<angle>';
                     initial-value: 0deg;
                     inherits: false;
                 }
-                
-                @keyframes border {
-                    to {
-                        --border-angle: 360deg;
-                    }
-                }
-                
-                .animate-border {
-                    animation: border 4s linear infinite;
-                }
-                
+                @keyframes border { to { --border-angle: 360deg; } }
+                .animate-border { animation: border 4s linear infinite; }
                 @keyframes slideUpFade {
-                    from {
-                        opacity: 0;
-                        transform: translateY(20px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
-                
-                .animate-slideUpFade {
-                    animation: slideUpFade 0.3s ease-out forwards;
-                }
+                .animate-slideUpFade { animation: slideUpFade 0.3s ease-out forwards; }
             `}</style>
         </div>
     );

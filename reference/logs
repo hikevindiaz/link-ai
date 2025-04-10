@@ -1,230 +1,33 @@
-Okay, let's create a reusable React component called Typewriter that uses Tailwind CSS for styling and implements the requested typing/deleting effect for a list of questions.
-
-1. Set up your Project:
-
-Make sure you have a React project set up with Tailwind CSS configured. If not, follow the official Tailwind documentation for installing it with your framework (like Create React App, Next.js, Vite, etc.).
-
-2. Create the Typewriter Component:
-
-Create a new file (e.g., src/components/Typewriter.js or similar).
-
-JavaScript
-
-// src/components/Typewriter.js
-import React, { useState, useEffect, useRef } from 'react';
-
-const Typewriter = ({
-  texts, // Array of strings to type
-  typingSpeed = 100, // Milliseconds per character typed
-  deletingSpeed = 50, // Milliseconds per character deleted
-  pauseDuration = 1500, // Milliseconds to pause after typing/deleting
-  loop = true, // Whether to loop through the texts indefinitely
-  cursorClassName = 'inline-block w-1 h-5 md:h-6 bg-current animate-blink ml-1', // Tailwind classes for the cursor
-  textClassName = '', // Optional additional classes for the text itself
-}) => {
-  const [textIndex, setTextIndex] = useState(0); // Index of the current text in the array
-  const [charIndex, setCharIndex] = useState(0); // Index of the current character being typed/deleted
-  const [currentText, setCurrentText] = useState(''); // The text currently displayed
-  const [isDeleting, setIsDeleting] = useState(false); // State flag for deleting mode
-  const timerRef = useRef(null); // Ref to store the timeout ID
-
-  useEffect(() => {
-    // Clear any existing timer when dependencies change or component unmounts
-    const clearTimer = () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-
-    const handleTyping = () => {
-      const fullText = texts[textIndex];
-
-      if (isDeleting) {
-        // --- Deleting ---
-        if (charIndex > 0) {
-          setCurrentText(fullText.substring(0, charIndex - 1));
-          setCharIndex(charIndex - 1);
-          timerRef.current = setTimeout(handleTyping, deletingSpeed);
-        } else {
-          // Finished deleting
-          setIsDeleting(false);
-          const nextIndex = textIndex + 1;
-          if (nextIndex < texts.length) {
-            setTextIndex(nextIndex);
-            // Pause before typing next text
-            timerRef.current = setTimeout(handleTyping, pauseDuration / 2); // Shorter pause before typing next
-          } else if (loop) {
-            setTextIndex(0); // Loop back to the start
-             // Pause before typing next text
-            timerRef.current = setTimeout(handleTyping, pauseDuration / 2);
-          }
-          // If not looping and it was the last text, it will just stop here
-        }
-      } else {
-        // --- Typing ---
-        if (charIndex < fullText.length) {
-          setCurrentText(fullText.substring(0, charIndex + 1));
-          setCharIndex(charIndex + 1);
-          timerRef.current = setTimeout(handleTyping, typingSpeed);
-        } else {
-          // Finished typing, pause then start deleting
-          timerRef.current = setTimeout(() => {
-             // Only start deleting if there's more text or loop is enabled
-             if (loop || textIndex < texts.length - 1) {
-                 setIsDeleting(true);
-                 handleTyping(); // Start deleting immediately after pause
-             }
-          }, pauseDuration);
-        }
-      }
-    };
-
-    // Start the effect
-    timerRef.current = setTimeout(handleTyping, typingSpeed); // Initial delay
-
-    // Cleanup function
-    return clearTimer;
-
-  }, [
-    charIndex,
-    isDeleting,
-    textIndex,
-    texts,
-    typingSpeed,
-    deletingSpeed,
-    pauseDuration,
-    loop,
-  ]);
-
-  // Define blink animation in your global CSS or tailwind.config.js if it doesn't exist
-  // Example for tailwind.config.js (ensure you have `@keyframes blink` defined):
-  /*
-  theme: {
-    extend: {
-      keyframes: {
-        blink: {
-          '0%, 100%': { opacity: 1 },
-          '50%': { opacity: 0 },
-        },
-      },
-      animation: {
-        blink: 'blink 1s step-end infinite',
-      },
-    },
-  },
-  */
-
-  return (
-    <span className={`inline ${textClassName}`}>
-      {currentText}
-      <span aria-hidden="true" className={cursorClassName}></span>
-    </span>
-  );
-};
-
-export default Typewriter;
-3. Add Blink Animation (if needed):
-
-Tailwind CSS doesn't have a built-in animate-blink utility by default (as of older versions, check your current version). You might need to define it.
-
-Option A: tailwind.config.js (Recommended)
-Open your tailwind.config.js file and add the keyframes and animation:
-
-JavaScript
-
-// tailwind.config.js
-module.exports = {
-  // ... other config
-  theme: {
-    extend: {
-      keyframes: {
-        blink: {
-          '0%, 100%': { opacity: '1' },
-          '50%': { opacity: '0' },
-        },
-      },
-      animation: {
-        blink: 'blink 1s step-end infinite',
-      },
-    },
-  },
-  // ... other config
-}
-Option B: Global CSS
-Add this to your main CSS file (e.g., src/index.css):
-
-CSS
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer utilities {
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-  }
-  .animate-blink {
-    animation: blink 1s step-end infinite;
-  }
-}
-4. Use the Component:
-
-Import and use the Typewriter component in any other component or page.
-
-JavaScript
-
-// Example Usage in another component (e.g., App.js)
-import React from 'react';
-import Typewriter from './components/Typewriter'; // Adjust path if needed
-
-function App() {
-  const questions = [
-    "What is your favorite color?",
-    "How can AI help businesses grow?",
-    "Where should I travel next?",
-    "Can you explain quantum computing simply?"
-  ];
-
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded shadow-md">
-        <h1 className="text-2xl md:text-3xl font-semibold text-gray-800">
-          <Typewriter
-            texts={questions}
-            typingSpeed={80}
-            deletingSpeed={40}
-            pauseDuration={2000}
-            textClassName="text-blue-600" // Example: Add text color
-            // cursorClassName="inline-block w-1 h-6 bg-blue-600 animate-blink ml-1" // Example: Customize cursor
-          />
-        </h1>
-      </div>
-    </div>
-  );
-}
-
-export default App;
-Explanation:
-
-Props: The component takes the array of texts, speeds, pause duration, and optional CSS classes as props for customization.
-State:
-textIndex: Tracks which string in the texts array is currently active.
-charIndex: Tracks the current character position within the active string.
-currentText: Holds the string currently rendered on the screen.
-isDeleting: A boolean flag to switch between typing and deleting modes.
-useRef: timerRef holds the ID returned by setTimeout. This is crucial for clearing the timeout in the useEffect cleanup function, preventing memory leaks and unwanted behavior if the component re-renders or unmounts.
-useEffect:
-This hook contains the core logic for the typewriter effect.
-It runs whenever any of its dependencies (like isDeleting, charIndex, etc.) change.
-It sets up a setTimeout to schedule the next action (add/remove character).
-Typing: If isDeleting is false, it adds characters one by one until the fullText is displayed. Then, it pauses and sets isDeleting to true.
-Deleting: If isDeleting is true, it removes characters one by one until currentText is empty. Then, it pauses briefly, increments textIndex (looping if necessary), and sets isDeleting back to false to start typing the next string.
-Cleanup: The return function inside useEffect clears the timeout when the component unmounts or before the effect runs again.
-Rendering: It renders the currentText followed by a span styled to look like a blinking cursor using Tailwind classes (including the custom animate-blink). aria-hidden="true" is added to the cursor for better accessibility, as it's purely decorative.
-Tailwind: Classes like inline-block, w-1, h-5, bg-current (uses the current text color), ml-1, and animate-blink are used for the cursor. You can customize these via the cursorClassName prop or add classes to the text itself via textClassName.
-This component provides a flexible and reusable way to implement the desired typewriter effect in your React/Tailwind project.
-
-
-Sources and related content
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+script.debug.js:1 [Vercel Speed Insights] Debug mode is enabled by default in development. No requests will be sent to the server.
+overview.tsx:77 [Overview] Fetched chatbot config: Object
+chat.tsx:194 Switching mode to: voice
+rive-voice-orb.tsx:59 Setting orb color for light theme: Value=0
+chat.tsx:217 Starting voice call manually...
+use-elevenlabs-realtime.ts:436 Starting ElevenLabs session...
+use-elevenlabs-realtime.ts:444 AudioContext created/recreated. Object
+use-elevenlabs-realtime.ts:219 Setting up STT WebSocket...
+use-elevenlabs-realtime.ts:220 [Debug] Attempting STT connection with key: sk_f...
+use-elevenlabs-realtime.ts:329 Setting up TTS WebSocket...
+use-elevenlabs-realtime.ts:330 [Debug] Attempting TTS connection with key: sk_f...
+use-elevenlabs-realtime.ts:507 useElevenlabsRealtime unmounting. Cleaning up.
+use-elevenlabs-realtime.ts:93 Stopping ElevenLabs session (Cleanup)... Object
+use-elevenlabs-realtime.ts:116 Closing STT WebSocket.
+use-elevenlabs-realtime.ts:117 WebSocket connection to 'wss://api.elevenlabs.io/v1/speech-to-text/stream?model_id=eleven_multilingual_v2&sample_rate=16000&xi_api_key=sk_f44ff67f7469e238edce0b9a9637e2d0537c665a2ce88fb7' failed: WebSocket is closed before the connection is established.
+closeWebSocket @ use-elevenlabs-realtime.ts:117Understand this warningAI
+use-elevenlabs-realtime.ts:116 Closing TTS WebSocket.
+use-elevenlabs-realtime.ts:117 WebSocket connection to 'wss://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream-input?model_id=eleven_turbo_v2&xi_api_key=sk_f44ff67f7469e238edce0b9a9637e2d0537c665a2ce88fb7' failed: WebSocket is closed before the connection is established.
+closeWebSocket @ use-elevenlabs-realtime.ts:117Understand this warningAI
+use-elevenlabs-realtime.ts:151 ElevenLabs session stopped.
+use-elevenlabs-realtime.ts:507 useElevenlabsRealtime unmounting. Cleaning up.
+app-index.js:33 STT WebSocket error: Event
+window.console.error @ app-index.js:33Understand this errorAI
+app-index.js:33 ElevenLabs Hook Error: Speech-to-text connection error.
+window.console.error @ app-index.js:33Understand this errorAI
+use-elevenlabs-realtime.ts:314 STT WebSocket closed: 1006 
+app-index.js:33 TTS WebSocket error: Event
+window.console.error @ app-index.js:33Understand this errorAI
+app-index.js:33 ElevenLabs Hook Error: Text-to-speech connection error.
+window.console.error @ app-index.js:33Understand this errorAI
+use-elevenlabs-realtime.ts:395 TTS WebSocket closed: 1006 
+use-elevenlabs-realtime.ts:507 useElevenlabsRealtime unmounting. Cleaning up.
