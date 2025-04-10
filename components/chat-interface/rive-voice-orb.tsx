@@ -8,7 +8,10 @@ interface RiveVoiceOrbProps {
   isListening: boolean;
   isThinking: boolean;
   isSpeaking: boolean;
+  isWaiting?: boolean;
   isAsleep?: boolean;
+  isUserSpeaking?: boolean;
+  audioLevel?: number;
   onClick?: () => void;
 }
 
@@ -17,7 +20,9 @@ const LISTENING_INPUT_NAME = 'listening';
 const THINKING_INPUT_NAME = 'thinking';
 const SPEAKING_INPUT_NAME = 'speaking';
 const ASLEEP_INPUT_NAME = 'asleep';
+const USER_SPEAKING_INPUT_NAME = 'user_speaking';
 const COLOR_INPUT_NAME = 'color';
+const VOLUME_INPUT_NAME = 'volume';
 
 const RIVE_COLOR = {
     BLACK: 0,
@@ -28,7 +33,10 @@ const RiveVoiceOrb: React.FC<RiveVoiceOrbProps> = ({
   isListening,
   isThinking,
   isSpeaking,
+  isWaiting = false,
   isAsleep = false,
+  isUserSpeaking = false,
+  audioLevel = 0.5,
   onClick 
 }) => {
   const { resolvedTheme } = useTheme(); 
@@ -43,12 +51,33 @@ const RiveVoiceOrb: React.FC<RiveVoiceOrbProps> = ({
   const thinkingInput = useStateMachineInput(rive, STATE_MACHINE_NAME, THINKING_INPUT_NAME);
   const speakingInput = useStateMachineInput(rive, STATE_MACHINE_NAME, SPEAKING_INPUT_NAME);
   const asleepInput = useStateMachineInput(rive, STATE_MACHINE_NAME, ASLEEP_INPUT_NAME);
+  const userSpeakingInput = useStateMachineInput(rive, STATE_MACHINE_NAME, USER_SPEAKING_INPUT_NAME);
   const colorInput = useStateMachineInput(rive, STATE_MACHINE_NAME, COLOR_INPUT_NAME);
+  const volumeInput = useStateMachineInput(rive, STATE_MACHINE_NAME, VOLUME_INPUT_NAME);
 
-  useEffect(() => { if (listeningInput) listeningInput.value = isListening; }, [isListening, listeningInput]);
+  useEffect(() => { 
+    if (listeningInput) listeningInput.value = isListening && !isUserSpeaking; 
+  }, [isListening, isUserSpeaking, listeningInput]);
+  
   useEffect(() => { if (thinkingInput) thinkingInput.value = isThinking; }, [isThinking, thinkingInput]);
   useEffect(() => { if (speakingInput) speakingInput.value = isSpeaking; }, [isSpeaking, speakingInput]);
-  useEffect(() => { if (asleepInput) asleepInput.value = isAsleep; }, [isAsleep, asleepInput]);
+  
+  useEffect(() => {
+    if (userSpeakingInput) userSpeakingInput.value = isUserSpeaking;
+  }, [isUserSpeaking, userSpeakingInput]);
+  
+  useEffect(() => { 
+    if (asleepInput) {
+      asleepInput.value = isAsleep || isWaiting;
+    }
+  }, [isAsleep, isWaiting, asleepInput]);
+
+  useEffect(() => {
+    if (volumeInput) {
+      const scaledLevel = Math.max(0.2, Math.min(1.0, audioLevel));
+      volumeInput.value = scaledLevel;
+    }
+  }, [audioLevel, volumeInput]);
 
   useEffect(() => {
     if (!rive || !resolvedTheme || !colorInput) return;

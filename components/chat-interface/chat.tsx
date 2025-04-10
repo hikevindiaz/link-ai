@@ -2,7 +2,7 @@
 
 import { Message } from 'ai';
 import { useChat, type CreateMessage } from 'ai/react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { ChatHeader } from '@/components/chat-interface/chat-header';
 import { fetcher } from '@/lib/chat-interface/utils';
 import { FixedChatInput } from '@/components/chat-interface/fixed-chat-input';
@@ -69,6 +69,8 @@ export function Chat({
   const [currentMode, setCurrentMode] = useState<'text' | 'voice'>(initialMode);
   const [isCallActive, setIsCallActive] = useState(false);
   const lastSpokenMessageRef = useRef<string | null>(null);
+  const messageBeingSpokenRef = useRef<string | null>(null);
+  const previousElevenLabsState = useRef<string>('idle');
 
   const { data: chatbotData } = useSWR<Chatbot>(chatbotId ? `/api/chatbots/${chatbotId}` : null, fetcher);
   const elevenLabsVoiceId = chatbotData?.voice || '21m00Tcm4TlvDq8ikWAM';
@@ -104,15 +106,31 @@ export function Chat({
     streamProtocol: 'text',
     onFinish: (message) => {
       console.log('[Chat Interface] Response finished, dispatching event.');
-      if (currentMode === 'voice' && message.role === 'assistant' && message.content && message.content !== lastSpokenMessageRef.current) {
-        console.log("Speaking full finished message:", message.content.substring(0, 50) + "...");
+      
+      // Only speak if in voice mode, message is from assistant, and it hasn't been spoken already
+      if (currentMode === 'voice' && 
+          message.role === 'assistant' && 
+          message.content && 
+          message.content !== lastSpokenMessageRef.current &&
+          // Only try to speak if we're not already speaking (prevents duplicate messages)
+          elevenLabsState !== 'speaking' && 
+          // Also don't speak if we're in the middle of processing speech
+          elevenLabsState !== 'processing') {
+        
+        console.log("Speaking finished message:", message.content.substring(0, 50) + "...");
+        
         if (typeof sendTextToSpeak === 'function') {
-             sendTextToSpeak(message.content);
-             lastSpokenMessageRef.current = message.content;
+          // Update both references to track what's being spoken
+          messageBeingSpokenRef.current = message.content;
+          lastSpokenMessageRef.current = message.content;
+          
+          // Send the text to speak
+          sendTextToSpeak(message.content);
         } else {
-             console.warn("sendTextToSpeak is not available when trying to speak finished message.");
+          console.warn("sendTextToSpeak is not available when trying to speak finished message.");
         }
       }
+      
       window.dispatchEvent(new CustomEvent('newChatMessageSaved'));
     },
   });
@@ -144,18 +162,29 @@ export function Chat({
     setIsCallActive(false);
   }, []);
 
+  // Add a state for audio level
+  const [audioLevel, setAudioLevel] = useState<number>(0);
+
+  const handleAudioLevelChange = useCallback((level: number) => {
+    setAudioLevel(level);
+  }, []);
+
   const {
     currentState: elevenLabsState,
     isApiKeyLoading,
     startSession: startElevenLabsSession,
     stopSession: stopElevenLabsSession,
+    stopRecording: stopElevenLabsRecording,
     sendTextToSpeak,
     userTranscript: elevenLabsUserTranscript,
+    audioLevel: rawAudioLevel,
   } = useElevenlabsRealtime({
     chatbotId: chatbotId,
     voiceId: elevenLabsVoiceId,
     onTranscriptReceived: handleTranscriptReceived,
     onError: handleElevenLabsError,
+    welcomeMessage: welcomeMessage || undefined,
+    onAudioLevelChange: handleAudioLevelChange,
   });
 
   useEffect(() => {
@@ -217,22 +246,118 @@ export function Chat({
       console.log("Starting voice call manually...");
       startElevenLabsSession();
       setIsCallActive(true);
-      if (welcomeMessage) {
-          setTimeout(() => {
-             if (elevenLabsState !== 'idle' && elevenLabsState !== 'error') {
-                 console.log("Speaking welcome message.");
-                 sendTextToSpeak(welcomeMessage);
-                 lastSpokenMessageRef.current = welcomeMessage;
-             }
-          }, 500);
-      }
     }
-  }, [isCallActive, startElevenLabsSession, stopElevenLabsSession, welcomeMessage, sendTextToSpeak, isApiKeyLoading, elevenLabsState]);
+  }, [isCallActive, startElevenLabsSession, stopElevenLabsSession, isApiKeyLoading]);
 
-  const orbIsListening = isCallActive && elevenLabsState === 'listening';
+  // Add an effect to automatically update the call active status based on the current state
+  useEffect(() => {
+    // If state becomes 'idle' or 'error', we should update the call active status
+    if (isCallActive && (elevenLabsState === 'idle' || elevenLabsState === 'error')) {
+      console.log(`ElevenLabs state changed to ${elevenLabsState}, updating call status`);
+      setIsCallActive(false);
+    }
+  }, [elevenLabsState, isCallActive]);
+
+  // Update the orb state variables with more accurate state mapping
+  const orbIsListening = isCallActive && (
+    elevenLabsState === 'listening' && !elevenLabsUserTranscript.length
+  );
+  
+  const orbIsUserSpeaking = isCallActive && (
+    elevenLabsState === 'listening' && elevenLabsUserTranscript.length > 0
+  );
+  
+  const orbIsProcessing = isCallActive && (
+    elevenLabsState === 'processing'
+  );
+
+  // When in connecting state, show as processing
+  const orbIsConnecting = isCallActive && (
+    elevenLabsState === 'connecting'
+  );
+
+  // Speaking state should be pure - only when we're actually speaking
   const orbIsSpeaking = isCallActive && elevenLabsState === 'speaking';
-  const orbIsProcessing = isCallActive && (elevenLabsState === 'processing' || elevenLabsState === 'connecting');
-  const orbIsUserSpeaking = isCallActive && elevenLabsUserTranscript.length > 0 && elevenLabsState === 'listening';
+
+  // Waiting is now a rarely used transitional state
+  const orbIsWaiting = isCallActive && elevenLabsState === 'waiting';
+
+  // Improve audio level calculation for better visualization
+  const orbAudioLevel = useMemo(() => {
+    // When user is speaking, use actual audio level (amplified for visual feedback)
+    if (orbIsUserSpeaking) {
+      return Math.min(1, audioLevel * 1.5); 
+    } 
+    // When system is speaking, use moderate pulsing
+    else if (orbIsSpeaking) {
+      return 0.6;
+    } 
+    // When processing, use subtle pulsing
+    else if (orbIsProcessing || orbIsConnecting) {
+      return 0.3;
+    } 
+    // When waiting for user to speak, use very subtle animation
+    else if (orbIsListening || orbIsWaiting) {
+      return 0.2;
+    }
+    // Default minimal animation
+    return 0.1;
+  }, [
+    orbIsUserSpeaking, 
+    orbIsSpeaking, 
+    orbIsProcessing, 
+    orbIsConnecting,
+    orbIsWaiting, 
+    orbIsListening, 
+    audioLevel
+  ]);
+
+  // Add debug information if needed
+  useEffect(() => {
+    console.log(`Voice Orb State Update:
+      - Current ElevenLabs State: ${elevenLabsState}
+      - isCallActive: ${isCallActive}
+      - Has User Transcript: ${elevenLabsUserTranscript.length > 0}
+      - Resulting States:
+        · Listening: ${orbIsListening}
+        · User Speaking: ${orbIsUserSpeaking}
+        · Processing: ${orbIsProcessing}
+        · Speaking: ${orbIsSpeaking}
+        · Waiting: ${orbIsWaiting}
+        · Audio Level: ${orbAudioLevel.toFixed(2)}
+    `);
+  }, [elevenLabsState, isCallActive, elevenLabsUserTranscript, orbAudioLevel]);
+
+  // Add better state transition debugging and handle speech ending
+  useEffect(() => {
+    console.log(`[Voice State] Changed from ${previousElevenLabsState.current} to ${elevenLabsState}`);
+    console.log(`[Voice UI] Current state: ${
+      elevenLabsState === 'listening' && elevenLabsUserTranscript.length > 0 ? 'User Speaking' :
+      elevenLabsState === 'listening' ? 'Listening (waiting for user)' :
+      elevenLabsState === 'speaking' ? 'System Speaking' :
+      elevenLabsState === 'processing' ? 'Processing Speech' :
+      elevenLabsState === 'connecting' ? 'Connecting' :
+      elevenLabsState === 'waiting' ? 'Transitioning' :
+      elevenLabsState === 'idle' ? 'Idle' : 'Unknown'
+    }`);
+    
+    // When speech ends (state changes from speaking to something else)
+    if (previousElevenLabsState.current === 'speaking' && 
+        elevenLabsState !== 'speaking' && 
+        messageBeingSpokenRef.current) {
+      
+      console.log("Speech finished, clearing message being spoken reference");
+      messageBeingSpokenRef.current = null;
+    }
+    
+    // Keep track of previous state
+    previousElevenLabsState.current = elevenLabsState;
+  }, [elevenLabsState, elevenLabsUserTranscript.length]);
+
+  // When the orb state changes, log the change
+  useEffect(() => {
+    console.log(`[Orb State] isListening=${orbIsListening}, isUserSpeaking=${orbIsUserSpeaking}, isSpeaking=${orbIsSpeaking}, isProcessing=${orbIsProcessing}, isConnecting=${orbIsConnecting}, isWaiting=${orbIsWaiting}, audioLevel=${orbAudioLevel.toFixed(2)}`);
+  }, [orbIsListening, orbIsUserSpeaking, orbIsSpeaking, orbIsProcessing, orbIsConnecting, orbIsWaiting, orbAudioLevel]);
 
   let statusText = "Ready for voice call";
   if (isApiKeyLoading) {
@@ -240,28 +365,33 @@ export function Chat({
   } else if (isCallActive) {
     switch (elevenLabsState) {
       case 'connecting':
-        statusText = "Connecting...";
+        statusText = "Connecting to voice service...";
+        break;
+      case 'waiting':
+        statusText = "Getting ready to listen...";
         break;
       case 'listening':
-        statusText = orbIsUserSpeaking ? "User Speaking..." : "Listening...";
+        statusText = orbIsUserSpeaking 
+          ? "I hear you speaking..." 
+          : "I'm listening. Please say something...";
         break;
       case 'processing':
-        statusText = "Processing...";
+        statusText = "Processing what you said...";
         break;
       case 'speaking':
-        statusText = "Speaking...";
+        statusText = "I'm speaking...";
         break;
       case 'error':
-        statusText = "Error - check console";
+        statusText = "There was an error with the voice service";
         break;
       case 'idle':
-        statusText = "Call ended.";
+        statusText = "Voice call ended";
         break;
       default:
-        statusText = "Initializing...";
+        statusText = "Initializing voice...";
     }
   } else {
-    statusText = "Ready for voice call";
+    statusText = "Click 'Voice Call' to start a conversation";
   }
 
   return (
@@ -329,26 +459,37 @@ export function Chat({
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center p-4 relative bg-background">
           <RiveVoiceOrb
-            isListening={orbIsListening || orbIsUserSpeaking}
-            isThinking={orbIsProcessing}
+            isListening={orbIsListening}
+            isUserSpeaking={orbIsUserSpeaking}
+            isThinking={orbIsProcessing || orbIsConnecting}
             isSpeaking={orbIsSpeaking}
+            isWaiting={orbIsWaiting}
+            audioLevel={orbAudioLevel}
           />
-          <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
-             {statusText}
+          
+          <p className="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+            {statusText}
           </p>
+          
           {elevenLabsUserTranscript && (
-             <p className="mt-2 text-xs text-center text-gray-500 dark:text-gray-400 italic h-4 overflow-hidden">
-               {elevenLabsUserTranscript}
-             </p>
+            <div className="mt-4 max-w-md w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-800">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="font-medium text-indigo-600 dark:text-indigo-400">You: </span>
+                {elevenLabsUserTranscript}
+              </p>
+            </div>
           )}
-          <Button 
-            onClick={handleCallToggle}
-            variant={isCallActive ? "destructive" : "primary"}
-            className="mt-6 rounded-full px-6 py-3"
-            disabled={isApiKeyLoading || elevenLabsState === 'connecting'}
-          >
-            {isCallActive ? "End Call" : "Voice Call"}
-          </Button>
+          
+          <div className="flex flex-col gap-2 mt-6">
+            <Button 
+              onClick={handleCallToggle}
+              variant={isCallActive ? "destructive" : "primary"}
+              className="rounded-full px-6 py-3"
+              disabled={isApiKeyLoading || elevenLabsState === 'connecting'}
+            >
+              {isCallActive ? "End Call" : "Voice Call"}
+            </Button>
+          </div>
         </div>
       )}
     </div>
