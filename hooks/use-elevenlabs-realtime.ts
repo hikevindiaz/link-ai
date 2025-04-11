@@ -9,11 +9,15 @@ const STT_MODEL = 'scribe_v1'; // ElevenLabs STT model - only scribe_v1 or scrib
 const MIN_AUDIO_SIZE_BYTES = 10000; // Minimum audio size before sending to STT API (10KB)
 const MIN_RECORDING_TIME_MS = 2000; // Minimum recording time in milliseconds (2 seconds)
 
-// Add constants for silence detection
-const SILENCE_THRESHOLD = 0.03; // Increase threshold to reduce background noise sensitivity (was 0.01)
-const SILENCE_DURATION_MS = 1500; // Duration of silence to trigger auto-stop (1.5 seconds)
-const SPEECH_TIMEOUT_MS = 15000; // Maximum duration for a single speech recording (15 seconds)
+// Adjust constants for silence detection to be more aggressive
+const SILENCE_THRESHOLD = 0.01; // Even lower threshold to catch more silence (was 0.015)
+const SILENCE_DURATION_MS = 600; // Shorter silence duration for faster termination (was 800ms)
+const MIN_SPEECH_DURATION_MS = 300; // Shorter minimum speech duration (was 500ms)
+const SPEECH_TIMEOUT_MS = 8000; // Shorter maximum recording duration (was 10000ms)
 const RETURN_TO_WAIT_DELAY = 500; // Delay before returning to waiting state after speaking
+
+// Add a new constant for the audio isolation endpoint
+const AUDIO_ISOLATION_URL = '/api/elevenlabs/audio-isolation'; // We'll create this proxy endpoint
 
 // --- Types ---
 type ProcessingState = 'idle' | 'connecting' | 'waiting' | 'listening' | 'processing' | 'speaking' | 'error';
@@ -76,6 +80,7 @@ export const useElevenlabsRealtime = ({
   const currentStateRef = useRef<ProcessingState>('idle'); // <-- Add direct state ref to bypass React's async updates
   const wsHealthCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasPlayedWelcomeMessageRef = useRef<boolean>(false);
+  const isAgentSpeakingRef = useRef<boolean>(false);
   
   // Create a synchronized setState function that updates both the React state and our ref
   const setSyncedState = useCallback((newState: ProcessingState) => {
@@ -139,6 +144,12 @@ export const useElevenlabsRealtime = ({
 
     // Reset welcome message played flag
     hasPlayedWelcomeMessageRef.current = false;
+
+    // Clear WebSocket health check interval FIRST
+    if (wsHealthCheckIntervalRef.current) {
+      clearInterval(wsHealthCheckIntervalRef.current);
+      wsHealthCheckIntervalRef.current = null;
+    }
 
     // Stop MediaRecorder & release mic
     if (mediaRecorderRef.current) {
@@ -217,12 +228,6 @@ export const useElevenlabsRealtime = ({
     // Reset cleanup flag slightly later to ensure state update propagates
     setTimeout(() => { cleanupCalledRef.current = false; }, 100);
 
-    // Clear WebSocket health check interval
-    if (wsHealthCheckIntervalRef.current) {
-      clearInterval(wsHealthCheckIntervalRef.current);
-      wsHealthCheckIntervalRef.current = null;
-    }
-
     console.log("ElevenLabs session stopped.");
   }, [currentState, setSyncedState]);
 
@@ -295,14 +300,19 @@ export const useElevenlabsRealtime = ({
       if (isPlayingRef.current) {
         // If the queue just became empty and we were playing, mark as no longer playing
         isPlayingRef.current = false;
+        isAgentSpeakingRef.current = false; // Reset the speaking flag
+
+        // Add a small delay before transitioning state to ensure all audio is finished
+        console.log("[Audio Playback] Queue empty, delaying state transition to ensure audio finishes playing");
         
-        console.log("[Audio Playback] Speech finished, FORCE transition to listening mode");
-        
-        // Force transition directly to listening state (skip waiting)
-        setSyncedState('listening');
-        
-        // Add log
-        console.log("[Audio Playback] Queue empty, finished playing. Now in LISTENING mode.");
+        setTimeout(() => {
+          console.log("[Audio Playback] Transition delay complete, transitioning to WAITING mode");
+          
+          // Go to waiting state and stay there until user interacts
+          setSyncedState('waiting');
+          
+          console.log("[Audio Playback] State transition complete - now in neutral waiting state");
+        }, 300); // Small delay to ensure audio fully finishes
       }
       return;
     }
@@ -316,6 +326,7 @@ export const useElevenlabsRealtime = ({
     // Reaching here means we're good to play audio
     console.log("[Audio Playback] Starting playback - Current state:", currentStateRef.current);
     isPlayingRef.current = true;
+    isAgentSpeakingRef.current = true; // Set the speaking flag to prevent feedback
     setSyncedState('speaking');
     const audioChunk = audioQueueRef.current.shift();
     
@@ -520,7 +531,7 @@ export const useElevenlabsRealtime = ({
     try {
       // Connect directly to ElevenLabs using standard parameters 
       // (not using raw format to ensure compatibility)
-      const ttsUrl = `wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-input?model_id=eleven_turbo_v2&output_format=mp3_44100_128`;
+      const ttsUrl = `wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-input?model_id=eleven_flash_v2_5&output_format=mp3_44100_128`;
       
       // Create the WebSocket
       const ttsSocket = new WebSocket(ttsUrl);
@@ -557,12 +568,13 @@ export const useElevenlabsRealtime = ({
         if (welcomeMessage && !hasPlayedWelcomeMessageRef.current) {
           console.log("Sending welcome message now");
           try {
-            // Mark welcome message as played
+            // Mark welcome message as played FIRST to prevent repeat plays
             hasPlayedWelcomeMessageRef.current = true;
             
             // Send the welcome message immediately without a timeout
             ttsSocket.send(JSON.stringify({
               text: welcomeMessage + " ",
+              voice_settings: { stability: 0.5, similarity_boost: 0.75 },
               xi_api_key: apiKey  // Include auth
             }));
             
@@ -574,11 +586,11 @@ export const useElevenlabsRealtime = ({
             
             // Set speaking state
             setSyncedState('speaking');
-            console.log("Welcome message sent successfully - will transition to listening when done");
+            console.log("Welcome message sent successfully - will transition to neutral waiting state when done");
           } catch (err) {
             console.error("Error sending welcome message:", err);
-            // On error, transition to listening state anyway
-            setSyncedState('listening');
+            // On error, transition to waiting state, NOT listening
+            setSyncedState('waiting');
           }
         } else if (textToSendBuffer.current.length > 0) {
           // If we have buffered text, send it now
@@ -603,7 +615,8 @@ export const useElevenlabsRealtime = ({
             }));
           }, 200);
         } else {
-          // If no welcome message or buffered text, go directly to waiting state
+          // If no welcome message or buffered text, go to waiting state
+          // But skip the transition to listening unless user interacts
           setTimeout(() => {
             setSyncedState('waiting');
           }, 300);
@@ -694,8 +707,12 @@ export const useElevenlabsRealtime = ({
         ttsSocketRef.current = null;
         
         // Don't try to recover if we're not in an active state that needs recovery
-        if (currentStateRef.current === 'idle' || currentStateRef.current === 'error' || cleanupCalledRef.current) {
-          console.log("WebSocket closed while in inactive state - not attempting to recover");
+        if (currentStateRef.current === 'idle' || 
+            currentStateRef.current === 'error' || 
+            cleanupCalledRef.current ||
+            // Add this check to prevent automatic reconnections
+            hasPlayedWelcomeMessageRef.current) {
+          console.log("WebSocket closed, not reconnecting automatically");
           return;
         }
         
@@ -774,15 +791,49 @@ export const useElevenlabsRealtime = ({
       sttRequestInProgressRef.current = true;
       setSyncedState('processing');
       
-      // Create form data with the audio
+      // First, use audio isolation to clean up the audio
+      console.log('Applying audio isolation to filter background noise...');
+      let cleanedAudioBlob = audioBlob;
+      
+      try {
+        // Create form data for the isolation request
+        const isolationForm = new FormData();
+        isolationForm.append('audio', audioBlob, 'recording.webm');
+        
+        // Send to our audio isolation proxy endpoint
+        const isolationResponse = await fetch(AUDIO_ISOLATION_URL, {
+          method: 'POST',
+          body: isolationForm,
+        });
+        
+        if (isolationResponse.ok) {
+          // Get the isolated audio back as a blob
+          const isolatedAudioBuffer = await isolationResponse.arrayBuffer();
+          cleanedAudioBlob = new Blob([isolatedAudioBuffer], { type: 'audio/webm;codecs=opus' });
+          console.log('Successfully isolated voice from background noise', {
+            originalSize: audioBlob.size,
+            cleanedSize: cleanedAudioBlob.size
+          });
+        } else {
+          // If isolation fails, just use the original audio
+          console.warn('Audio isolation failed, using original audio:', await isolationResponse.text());
+        }
+      } catch (isolationError) {
+        console.error('Error during audio isolation:', isolationError);
+        // Continue with original audio if isolation fails
+      }
+      
+      // Create form data with the cleaned audio
       const formData = new FormData();
       
       // Use a proper audio/webm MIME type - important for server handling
-      const blobWithType = new Blob([audioBlob], { type: 'audio/webm;codecs=opus' });
-      formData.append('file', blobWithType, 'audio.webm');
+      formData.append('file', cleanedAudioBlob, 'audio.webm');
       formData.append('model_id', STT_MODEL);
       
-      console.log('Sending audio for STT processing...', { size: blobWithType.size, type: blobWithType.type });
+      console.log('Sending isolated audio for STT processing...', { 
+        size: cleanedAudioBlob.size, 
+        type: cleanedAudioBlob.type 
+      });
       
       // Send to our proxy endpoint
       const response = await fetch(STT_REST_API_URL, {
@@ -876,16 +927,43 @@ export const useElevenlabsRealtime = ({
       const checkAudioLevels = () => {
         analyser.getByteFrequencyData(dataArray);
         let sum = 0;
+        // Emphasize frequencies in human speech range (approximately 300Hz to 3400Hz)
+        // Given FFT size of 256, we'll focus on a subset of the frequency bins
+        const startBin = Math.floor(300 / (audioContext.sampleRate / analyser.fftSize));
+        const endBin = Math.floor(3400 / (audioContext.sampleRate / analyser.fftSize));
+        
+        // Calculate weighted average with emphasis on speech frequencies
+        let weightedSum = 0;
+        let totalWeight = 0;
         for (let i = 0; i < bufferLength; i++) {
+          // Apply higher weight to speech frequencies
+          const weight = (i >= startBin && i <= endBin) ? 2.0 : 0.5;
+          weightedSum += dataArray[i] * weight;
+          totalWeight += weight;
+          
+          // Also calculate regular sum for comparison
           sum += dataArray[i];
         }
+        
+        // Calculate both normalized averages
         const average = sum / bufferLength;
-        const normalized = average / 255; // Normalize to 0-1
+        const normalizedRegular = average / 255; // Regular normalize to 0-1
+        
+        const weightedAverage = weightedSum / totalWeight;
+        const normalizedWeighted = weightedAverage / 255; // Weighted normalize to 0-1
+        
+        // Use the weighted version which should be more sensitive to speech
+        const finalLevel = normalizedWeighted;
         
         // Send the audio level update
-        setAudioLevel(normalized);
+        setAudioLevel(finalLevel);
         if (onAudioLevelChange) {
-          onAudioLevelChange(normalized);
+          onAudioLevelChange(finalLevel);
+        }
+        
+        // Occasionally log detailed audio analysis for debugging
+        if (Math.random() < 0.01) { // Log roughly 1% of the time
+          console.log(`[Audio Analysis] Regular: ${normalizedRegular.toFixed(3)}, Weighted: ${normalizedWeighted.toFixed(3)}, Final: ${finalLevel.toFixed(3)}`);
         }
         
         // Schedule the next check
@@ -895,25 +973,109 @@ export const useElevenlabsRealtime = ({
       // Start checking audio levels
       checkAudioLevels();
       
-      // Function to check if audio is silent
+      // Function to check if audio is silent - improved version with speech detection
       const checkSilence = () => {
+        // If agent is speaking, don't process audio to prevent feedback
+        if (isAgentSpeakingRef.current) return;
+        
+        // If we're in waiting state and detect audio, transition to listening
+        if (currentStateRef.current === 'waiting') {
+          // Analyze audio to see if user might be speaking
+          analyser.getByteFrequencyData(dataArray);
+          
+          // Apply frequency weighting for human speech (focus on 300Hz-3400Hz range)
+          const startBin = Math.floor(300 / (audioContext.sampleRate / analyser.fftSize));
+          const endBin = Math.floor(3400 / (audioContext.sampleRate / analyser.fftSize));
+          
+          // Calculate weighted average with emphasis on speech frequencies
+          let weightedSum = 0;
+          let totalWeight = 0;
+          
+          for (let i = 0; i < bufferLength; i++) {
+            // Apply higher weight to speech frequencies
+            const weight = (i >= startBin && i <= endBin) ? 2.5 : 0.2;
+            weightedSum += dataArray[i] * weight;
+            totalWeight += weight;
+          }
+          
+          const weightedAverage = weightedSum / totalWeight;
+          const normalizedLevel = weightedAverage / 255; // Normalize to 0-1
+          
+          // If audio level exceeds threshold in waiting state, transition to listening
+          if (normalizedLevel > SILENCE_THRESHOLD * 1.5) { // Use higher threshold for initial detection
+            console.log(`Detected initial user audio (${normalizedLevel.toFixed(3)}) while in waiting state, transitioning to LISTENING`);
+            setSyncedState('listening');
+            return; // Exit after state change to allow next cycle to handle listening state properly
+          }
+          
+          return; // Don't continue processing if still in waiting state
+        }
+        
+        // Only process further silence detection in listening state
         if (currentStateRef.current !== 'listening') return;
         
         analyser.getByteFrequencyData(dataArray);
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) {
-          sum += dataArray[i];
-        }
-        const average = sum / bufferLength;
-        const normalized = average / 255; // Normalize to 0-1
         
+        // Apply frequency weighting for human speech (focus on 300Hz-3400Hz range)
+        const startBin = Math.floor(300 / (audioContext.sampleRate / analyser.fftSize));
+        const endBin = Math.floor(3400 / (audioContext.sampleRate / analyser.fftSize));
+        
+        // Calculate weighted average with emphasis on speech frequencies
+        let weightedSum = 0;
+        let totalWeight = 0;
+        
+        for (let i = 0; i < bufferLength; i++) {
+          // Apply higher weight to speech frequencies
+          const weight = (i >= startBin && i <= endBin) ? 2.5 : 0.2; // More emphasis on speech frequencies
+          weightedSum += dataArray[i] * weight;
+          totalWeight += weight;
+        }
+        
+        const weightedAverage = weightedSum / totalWeight;
+        const normalizedLevel = weightedAverage / 255; // Normalize to 0-1
+        
+        // Use running average with exponential decay for smoother transitions
+        if (!silenceDetectionRef.levels) {
+          silenceDetectionRef.levels = [];
+        }
+        
+        // Add current level and keep only last 3
+        silenceDetectionRef.levels.push(normalizedLevel);
+        if (silenceDetectionRef.levels.length > 3) {
+          silenceDetectionRef.levels.shift();
+        }
+        
+        // Calculate average level with more weight on recent samples
+        const weights = [0.2, 0.3, 0.5]; // More weight to recent samples
+        let weightedSum2 = 0;
+        let totalWeight2 = 0;
+        for (let i = 0; i < silenceDetectionRef.levels.length; i++) {
+          const idx = silenceDetectionRef.levels.length - 1 - i; // Start from most recent
+          const weight = weights[i] || 0;
+          weightedSum2 += silenceDetectionRef.levels[idx] * weight;
+          totalWeight2 += weight;
+        }
+        const avgLevel = totalWeight2 > 0 ? weightedSum2 / totalWeight2 : normalizedLevel;
+        
+        // Debug log (occasionally)
+        if (Math.random() < 0.01) {
+          console.log(`Silence detection: level=${avgLevel.toFixed(3)}, ` +
+                      `threshold=${SILENCE_THRESHOLD}, ` +
+                      `isSpeaking=${isSpeakingRef.current}`);
+        }
+
         // If audio is silent and we were speaking, start silence timer
-        if (normalized < SILENCE_THRESHOLD && isSpeakingRef.current) {
+        if (avgLevel < SILENCE_THRESHOLD && isSpeakingRef.current) {
           if (silenceStartTime === null) {
             silenceStartTime = Date.now();
+            console.log('Silence detected, starting silence timer');
           } else if (Date.now() - silenceStartTime > SILENCE_DURATION_MS) {
             // Silence longer than threshold, stop recording
-            console.log('Auto-stopping recording due to silence', { silenceDuration: Date.now() - silenceStartTime });
+            console.log('Auto-stopping recording due to silence duration reached', { 
+              silenceDuration: Date.now() - silenceStartTime,
+              avgLevel,
+              threshold: SILENCE_THRESHOLD
+            });
             silenceStartTime = null;
             isSpeakingRef.current = false;
             
@@ -922,29 +1084,54 @@ export const useElevenlabsRealtime = ({
               speechTimeoutId = null;
             }
             
-            // Only stop if we are recording and have enough audio
+            // Force stop recording
             if (mediaRecorderRef.current?.state === 'recording') {
+              console.log('Stopping recording due to silence');
               mediaRecorderRef.current.stop();
             }
           }
         } 
-        // If audio is not silent, reset silence timer and set speaking flag
-        else if (normalized >= SILENCE_THRESHOLD) {
-          silenceStartTime = null;
+        // If audio is not silent, reset silence timer
+        else if (avgLevel >= SILENCE_THRESHOLD) {
+          // If we were tracking silence, reset it
+          if (silenceStartTime !== null) {
+            console.log('Speech resumed, resetting silence timer');
+            silenceStartTime = null;
+          }
           
-          // If we weren't speaking before, start speech timeout
+          // Only count as speaking if level is consistently above threshold
           if (!isSpeakingRef.current) {
-            isSpeakingRef.current = true;
-            console.log('Voice activity detected, auto-starting recording');
-            
-            // Set speech timeout (max duration of a single utterance)
-            if (speechTimeoutId) clearTimeout(speechTimeoutId);
-            speechTimeoutId = setTimeout(() => {
-              console.log('Auto-stopping recording due to maximum speech duration', { maxDuration: SPEECH_TIMEOUT_MS });
-              if (mediaRecorderRef.current?.state === 'recording') {
-                mediaRecorderRef.current.stop();
-              }
-            }, SPEECH_TIMEOUT_MS);
+            if (!silenceDetectionRef.speakingStartTime) {
+              silenceDetectionRef.speakingStartTime = Date.now();
+            } else if (Date.now() - silenceDetectionRef.speakingStartTime > MIN_SPEECH_DURATION_MS) {
+              // Sustained speech detected
+              isSpeakingRef.current = true;
+              silenceDetectionRef.speakingStartTime = null;
+              console.log('Voice activity confirmed, marking as speaking', { 
+                level: avgLevel,
+                threshold: SILENCE_THRESHOLD
+              });
+              
+              // Set speech timeout (max duration of a single utterance)
+              if (speechTimeoutId) clearTimeout(speechTimeoutId);
+              speechTimeoutId = setTimeout(() => {
+                console.log('Auto-stopping recording due to maximum speech duration reached', { 
+                  maxDuration: SPEECH_TIMEOUT_MS 
+                });
+                if (mediaRecorderRef.current?.state === 'recording') {
+                  mediaRecorderRef.current.stop();
+                }
+              }, SPEECH_TIMEOUT_MS);
+            }
+          } else {
+            // Already speaking, reset speaking start time
+            silenceDetectionRef.speakingStartTime = null;
+          }
+        } else {
+          // Between thresholds, continue what we were doing
+          // but reset speech start time if we weren't already speaking
+          if (!isSpeakingRef.current) {
+            silenceDetectionRef.speakingStartTime = null;
           }
         }
       };
@@ -961,7 +1148,9 @@ export const useElevenlabsRealtime = ({
             window.clearTimeout(audioLevelTimeout);
             audioLevelTimeout = null;
           }
-        }
+        },
+        levels: [] as number[], // Store recent audio levels for average calculation
+        speakingStartTime: null as number | null // Track when speech potentially started
       };
       
       // Create media recorder
@@ -976,9 +1165,12 @@ export const useElevenlabsRealtime = ({
       
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-          totalAudioSize += event.data.size;
-          console.log(`Received audio chunk: ${event.data.size} bytes (total: ${totalAudioSize} bytes)`);
+          // Only accumulate chunks if not agent speaking (prevents feedback)
+          if (!isAgentSpeakingRef.current) {
+            audioChunksRef.current.push(event.data);
+            totalAudioSize += event.data.size;
+            console.log(`Received audio chunk: ${event.data.size} bytes (total: ${totalAudioSize} bytes)`);
+          }
         }
       };
       
@@ -1002,6 +1194,13 @@ export const useElevenlabsRealtime = ({
         if (speechTimeoutId) {
           clearTimeout(speechTimeoutId);
           speechTimeoutId = null;
+        }
+        
+        // Don't process audio if agent is speaking (prevents feedback)
+        if (isAgentSpeakingRef.current) {
+          console.log('Agent is speaking, ignoring recorded audio to prevent feedback');
+          audioChunksRef.current = []; // Clear the audio chunks
+          return;
         }
         
         if (audioChunksRef.current.length > 0) {
@@ -1119,14 +1318,14 @@ export const useElevenlabsRealtime = ({
     // Set up TTS WebSocket
     setupTtsWebSocket();
     
-    // Start WebSocket health check interval
+    // Start WebSocket health check interval with a longer delay
     if (wsHealthCheckIntervalRef.current) {
       clearInterval(wsHealthCheckIntervalRef.current);
     }
     
     wsHealthCheckIntervalRef.current = setInterval(() => {
       checkWebSocketHealth();
-    }, 3000); // Check every 3 seconds
+    }, 10000); // Check every 10 seconds instead of 3
     
     // Then set up audio recording with a slight delay
     setTimeout(() => {
@@ -1244,34 +1443,36 @@ export const useElevenlabsRealtime = ({
       return;
     }
     
-    // Don't reconnect if we're in speaking state with no text to send
-    // This prevents reconnections that would trigger welcome message again
-    if (currentStateRef.current === 'speaking' && textToSendBuffer.current.length === 0) {
-      return;
+    // IMPORTANT: Only reconnect in very specific situations to avoid loops
+    // 1. Never reconnect during speaking or processing states
+    // 2. Only reconnect when we need to send text but can't
+    if (currentStateRef.current === 'speaking' || currentStateRef.current === 'processing') {
+      return; // Don't reconnect during these states
     }
     
-    const needsConnection = 
-      (currentStateRef.current === 'waiting' || 
-       currentStateRef.current === 'processing') && 
-      textToSendBuffer.current.length === 0 && // No pending text to send
-      !ttsSocketRef.current; // Socket doesn't exist
+    // Only reconnect if we have text to send but no socket
+    const hasTextToSend = textToSendBuffer.current.length > 0;
+    const socketNotAvailable = !ttsSocketRef.current || ttsSocketRef.current.readyState !== WebSocket.OPEN;
     
-    const wsState = ttsSocketRef.current?.readyState;
+    // Log the check with detailed state (but less frequently)
+    if (Math.random() < 0.1) { // Only log 10% of checks to reduce noise
+      const checkDetails = {
+        textBufferSize: textToSendBuffer.current.length,
+        state: currentStateRef.current,
+        socketExists: !!ttsSocketRef.current,
+        socketState: ttsSocketRef.current?.readyState !== undefined ? 
+          ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][ttsSocketRef.current.readyState] : 
+          undefined
+      };
+      console.log("WebSocket health check ran", checkDetails);
+    }
     
-    // Log the check with detailed state
-    const checkDetails = {
-      textBufferSize: textToSendBuffer.current.length,
-      state: currentStateRef.current,
-      socketExists: !!ttsSocketRef.current,
-      socketState: wsState !== undefined ? 
-        ['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'][wsState] : 
-        undefined
-    };
-    
-    // If we need a connection and don't have one, reconnect
-    if (needsConnection) {
-      console.log("WebSocket health check: Connection needed, reconnecting...", checkDetails);
-      // Reconnect the WebSocket
+    // Only reconnect if we need to send text
+    if (hasTextToSend && socketNotAvailable) {
+      console.log("WebSocket health check: Text to send but no socket - reconnecting", {
+        textBufferSize: textToSendBuffer.current.length,
+        state: currentStateRef.current
+      });
       setupTtsWebSocket();
     }
   }, [currentStateRef, cleanupCalledRef, setupTtsWebSocket]);

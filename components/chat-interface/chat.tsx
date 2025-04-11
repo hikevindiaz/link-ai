@@ -71,6 +71,8 @@ export function Chat({
   const lastSpokenMessageRef = useRef<string | null>(null);
   const messageBeingSpokenRef = useRef<string | null>(null);
   const previousElevenLabsState = useRef<string>('idle');
+  // Track if welcome message has been played
+  const [hasPlayedWelcomeMessage, setHasPlayedWelcomeMessage] = useState(false);
 
   const { data: chatbotData } = useSWR<Chatbot>(chatbotId ? `/api/chatbots/${chatbotId}` : null, fetcher);
   const elevenLabsVoiceId = chatbotData?.voice || '21m00Tcm4TlvDq8ikWAM';
@@ -258,18 +260,34 @@ export function Chat({
     }
   }, [elevenLabsState, isCallActive]);
 
-  // Update the orb state variables with more accurate state mapping
-  const orbIsListening = isCallActive && (
-    elevenLabsState === 'listening' && !elevenLabsUserTranscript.length
-  );
-  
-  const orbIsUserSpeaking = isCallActive && (
-    elevenLabsState === 'listening' && elevenLabsUserTranscript.length > 0
-  );
-  
-  const orbIsProcessing = isCallActive && (
-    elevenLabsState === 'processing'
-  );
+  // Modify the orbIsReady state to create a distinct neutral/idle state after welcome message
+  const orbIsReady = useMemo(() => {
+    // This is the neutral "ready for interaction" state after welcome message
+    // where the orb is just waiting for user action (not actively listening yet)
+    return isCallActive && 
+      elevenLabsState === 'waiting' && 
+      hasPlayedWelcomeMessage;
+  }, [isCallActive, elevenLabsState, hasPlayedWelcomeMessage]);
+
+  // Listening should only be when we're actively listening but not speaking yet
+  const orbIsListening = useMemo(() => {
+    return isCallActive && 
+      elevenLabsState === 'listening' && 
+      !elevenLabsUserTranscript.length;
+  }, [isCallActive, elevenLabsState, elevenLabsUserTranscript.length]);
+
+  // Improved user speaking detection - consider both transcript and audio level
+  const orbIsUserSpeaking = useMemo(() => {
+    // Detect user speaking when:
+    // 1. Call is active and in listening state
+    // 2. Either we have transcript text OR the audio level is above threshold (indicating speech)
+    return isCallActive && 
+      elevenLabsState === 'listening' && 
+      (elevenLabsUserTranscript.length > 0 || audioLevel > 0.15);
+  }, [isCallActive, elevenLabsState, elevenLabsUserTranscript.length, audioLevel]);
+
+  // Processing speech to text
+  const orbIsProcessing = isCallActive && elevenLabsState === 'processing';
 
   // When in connecting state, show as processing
   const orbIsConnecting = isCallActive && (
@@ -279,67 +297,26 @@ export function Chat({
   // Speaking state should be pure - only when we're actually speaking
   const orbIsSpeaking = isCallActive && elevenLabsState === 'speaking';
 
-  // Waiting is now a rarely used transitional state
+  // Base waiting state
   const orbIsWaiting = isCallActive && elevenLabsState === 'waiting';
 
-  // Improve audio level calculation for better visualization
-  const orbAudioLevel = useMemo(() => {
-    // When user is speaking, use actual audio level (amplified for visual feedback)
-    if (orbIsUserSpeaking) {
-      return Math.min(1, audioLevel * 1.5); 
-    } 
-    // When system is speaking, use moderate pulsing
-    else if (orbIsSpeaking) {
-      return 0.6;
-    } 
-    // When processing, use subtle pulsing
-    else if (orbIsProcessing || orbIsConnecting) {
-      return 0.3;
-    } 
-    // When waiting for user to speak, use very subtle animation
-    else if (orbIsListening || orbIsWaiting) {
-      return 0.2;
+  // Reset hasPlayedWelcomeMessage when ending a call
+  useEffect(() => {
+    if (!isCallActive) {
+      setHasPlayedWelcomeMessage(false);
     }
-    // Default minimal animation
-    return 0.1;
-  }, [
-    orbIsUserSpeaking, 
-    orbIsSpeaking, 
-    orbIsProcessing, 
-    orbIsConnecting,
-    orbIsWaiting, 
-    orbIsListening, 
-    audioLevel
-  ]);
+  }, [isCallActive]);
 
-  // Add debug information if needed
+  // Update effect to track when welcome message is played
   useEffect(() => {
-    console.log(`Voice Orb State Update:
-      - Current ElevenLabs State: ${elevenLabsState}
-      - isCallActive: ${isCallActive}
-      - Has User Transcript: ${elevenLabsUserTranscript.length > 0}
-      - Resulting States:
-        · Listening: ${orbIsListening}
-        · User Speaking: ${orbIsUserSpeaking}
-        · Processing: ${orbIsProcessing}
-        · Speaking: ${orbIsSpeaking}
-        · Waiting: ${orbIsWaiting}
-        · Audio Level: ${orbAudioLevel.toFixed(2)}
-    `);
-  }, [elevenLabsState, isCallActive, elevenLabsUserTranscript, orbAudioLevel]);
-
-  // Add better state transition debugging and handle speech ending
-  useEffect(() => {
-    console.log(`[Voice State] Changed from ${previousElevenLabsState.current} to ${elevenLabsState}`);
-    console.log(`[Voice UI] Current state: ${
-      elevenLabsState === 'listening' && elevenLabsUserTranscript.length > 0 ? 'User Speaking' :
-      elevenLabsState === 'listening' ? 'Listening (waiting for user)' :
-      elevenLabsState === 'speaking' ? 'System Speaking' :
-      elevenLabsState === 'processing' ? 'Processing Speech' :
-      elevenLabsState === 'connecting' ? 'Connecting' :
-      elevenLabsState === 'waiting' ? 'Transitioning' :
-      elevenLabsState === 'idle' ? 'Idle' : 'Unknown'
-    }`);
+    // When state transitions from speaking to waiting or listening
+    // and we haven't set hasPlayedWelcomeMessage yet
+    if (!hasPlayedWelcomeMessage && 
+        previousElevenLabsState.current === 'speaking' && 
+        (elevenLabsState === 'waiting' || elevenLabsState === 'listening')) {
+      console.log("Welcome message seems to have finished, marking as played");
+      setHasPlayedWelcomeMessage(true);
+    }
     
     // When speech ends (state changes from speaking to something else)
     if (previousElevenLabsState.current === 'speaking' && 
@@ -350,49 +327,100 @@ export function Chat({
       messageBeingSpokenRef.current = null;
     }
     
-    // Keep track of previous state
+    // Keep track of previous state transitions
+    console.log(`[Voice State] Changed from ${previousElevenLabsState.current} to ${elevenLabsState}`);
     previousElevenLabsState.current = elevenLabsState;
-  }, [elevenLabsState, elevenLabsUserTranscript.length]);
+  }, [elevenLabsState, hasPlayedWelcomeMessage]);
 
-  // When the orb state changes, log the change
-  useEffect(() => {
-    console.log(`[Orb State] isListening=${orbIsListening}, isUserSpeaking=${orbIsUserSpeaking}, isSpeaking=${orbIsSpeaking}, isProcessing=${orbIsProcessing}, isConnecting=${orbIsConnecting}, isWaiting=${orbIsWaiting}, audioLevel=${orbAudioLevel.toFixed(2)}`);
-  }, [orbIsListening, orbIsUserSpeaking, orbIsSpeaking, orbIsProcessing, orbIsConnecting, orbIsWaiting, orbAudioLevel]);
+  // Update audio level calculation for more natural animation
+  const orbAudioLevel = useMemo(() => {
+    // When user is speaking, use actual audio level with dynamic amplification
+    if (orbIsUserSpeaking) {
+      const amplifiedLevel = Math.pow(audioLevel, 0.7) * 1.8;
+      return Math.min(1, amplifiedLevel); 
+    } 
+    // When system is speaking, use moderate pulsing with slight randomness
+    else if (orbIsSpeaking) {
+      // Use more dynamic randomness for speaking to appear more natural
+      return 0.5 + (Math.sin(Date.now() / 150) * 0.15); 
+    } 
+    // When processing, use subtle pulsing
+    else if (orbIsProcessing || orbIsConnecting) {
+      return 0.3 + (Math.sin(Date.now() / 300) * 0.05); // Gentle pulse
+    } 
+    // When ready for interaction (after welcome message), very subtle animation
+    else if (orbIsReady) {
+      return 0.1 + (Math.sin(Date.now() / 1500) * 0.05); // Very subtle breathing
+    }
+    // When in base listening mode, subtle animation
+    else if (orbIsListening) {
+      return 0.2 + (Math.sin(Date.now() / 800) * 0.05); // Subtle listening pulse
+    }
+    // When in explicit waiting state, minimal animation
+    else if (orbIsWaiting && !hasPlayedWelcomeMessage) {
+      return 0.15; // Less animation during initial setup
+    }
+    // Default minimal animation
+    return 0.1;
+  }, [
+    orbIsUserSpeaking,
+    orbIsSpeaking,
+    orbIsProcessing,
+    orbIsConnecting,
+    orbIsWaiting,
+    orbIsListening,
+    orbIsReady,
+    hasPlayedWelcomeMessage,
+    audioLevel
+  ]);
 
+  // Improved status text to match desired flow
   let statusText = "Ready for voice call";
   if (isApiKeyLoading) {
-    statusText = "Initializing voice system...";
+    statusText = "Initializing...";
   } else if (isCallActive) {
     switch (elevenLabsState) {
       case 'connecting':
-        statusText = "Connecting to voice service...";
+        statusText = "Connecting...";
         break;
       case 'waiting':
-        statusText = "Getting ready to listen...";
+        statusText = hasPlayedWelcomeMessage 
+          ? "I'm ready. What would you like to know?" 
+          : "Getting ready...";
         break;
       case 'listening':
         statusText = orbIsUserSpeaking 
-          ? "I hear you speaking..." 
-          : "I'm listening. Please say something...";
+          ? "I'm listening..." 
+          : "How can I help you?";
         break;
       case 'processing':
-        statusText = "Processing what you said...";
+        statusText = "Processing...";
         break;
       case 'speaking':
         statusText = "I'm speaking...";
         break;
       case 'error':
-        statusText = "There was an error with the voice service";
+        statusText = "Error with voice service";
         break;
       case 'idle':
         statusText = "Voice call ended";
         break;
       default:
-        statusText = "Initializing voice...";
+        statusText = "Initializing...";
     }
   } else {
-    statusText = "Click 'Voice Call' to start a conversation";
+    statusText = "Click 'Voice Call' to start";
   }
+
+  // Update the RiveVoiceOrb component props
+  <RiveVoiceOrb
+    isListening={orbIsListening}
+    isUserSpeaking={orbIsUserSpeaking}
+    isThinking={orbIsProcessing || orbIsConnecting}
+    isSpeaking={orbIsSpeaking}
+    isWaiting={orbIsWaiting || orbIsReady}
+    audioLevel={orbAudioLevel}
+  />
 
   return (
     <div className="chat-interface-container flex flex-col min-w-0 h-dvh bg-white dark:bg-gray-950">
@@ -463,7 +491,7 @@ export function Chat({
             isUserSpeaking={orbIsUserSpeaking}
             isThinking={orbIsProcessing || orbIsConnecting}
             isSpeaking={orbIsSpeaking}
-            isWaiting={orbIsWaiting}
+            isWaiting={orbIsWaiting || orbIsReady}
             audioLevel={orbAudioLevel}
           />
           

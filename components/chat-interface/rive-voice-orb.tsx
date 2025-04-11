@@ -31,11 +31,11 @@ const RIVE_COLOR = {
 
 const RiveVoiceOrb: React.FC<RiveVoiceOrbProps> = ({ 
   isListening,
+  isUserSpeaking,
   isThinking,
   isSpeaking,
   isWaiting = false,
   isAsleep = false,
-  isUserSpeaking = false,
   audioLevel = 0.5,
   onClick 
 }) => {
@@ -63,8 +63,14 @@ const RiveVoiceOrb: React.FC<RiveVoiceOrbProps> = ({
   useEffect(() => { if (speakingInput) speakingInput.value = isSpeaking; }, [isSpeaking, speakingInput]);
   
   useEffect(() => {
-    if (userSpeakingInput) userSpeakingInput.value = isUserSpeaking;
-  }, [isUserSpeaking, userSpeakingInput]);
+    if (userSpeakingInput) {
+      userSpeakingInput.value = isUserSpeaking;
+      
+      if (isUserSpeaking && speakingInput) {
+        speakingInput.value = true;
+      }
+    }
+  }, [isUserSpeaking, userSpeakingInput, speakingInput]);
   
   useEffect(() => { 
     if (asleepInput) {
@@ -74,10 +80,17 @@ const RiveVoiceOrb: React.FC<RiveVoiceOrbProps> = ({
 
   useEffect(() => {
     if (volumeInput) {
-      const scaledLevel = Math.max(0.2, Math.min(1.0, audioLevel));
+      const scaledLevel = isUserSpeaking 
+        ? Math.max(0.3, Math.min(1.0, audioLevel * 2))
+        : Math.max(0.2, Math.min(1.0, audioLevel));
+          
       volumeInput.value = scaledLevel;
+      
+      if (isUserSpeaking) {
+        console.log(`[Orb Audio] User speaking level: ${scaledLevel.toFixed(2)} (raw: ${audioLevel.toFixed(2)})`);
+      }
     }
-  }, [audioLevel, volumeInput]);
+  }, [audioLevel, volumeInput, isUserSpeaking]);
 
   useEffect(() => {
     if (!rive || !resolvedTheme || !colorInput) return;

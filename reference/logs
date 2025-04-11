@@ -1,554 +1,231 @@
 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
 script.debug.js:1 [Vercel Speed Insights] Debug mode is enabled by default in development. No requests will be sent to the server.
-use-elevenlabs-realtime.ts:127 Initial state sync: Object
-use-elevenlabs-realtime.ts:1294 Strict Mode second mount detected Object
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: idle
-      - isCallActive: false
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: false
-        · Waiting: false
-        · Audio Level: 0.10
-    
-chat.tsx:333 [Voice State] Changed from idle to idle
-chat.tsx:334 [Voice UI] Current state: Idle
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=false, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.10
-chat.tsx:223 Switching mode to: voice
+VM460768 use-elevenlabs-realtime.ts:103 Initial state sync: Object
+VM460768 use-elevenlabs-realtime.ts:1340 Strict Mode second mount detected Object
+VM459918 chat.tsx:262 [Voice State] Changed from idle to idle
 overview.tsx:77 [Overview] Fetched chatbot config: Object
-rive-voice-orb.tsx:88 Setting orb color for light theme: Value=0
-chat.tsx:246 Starting voice call manually...
-use-elevenlabs-realtime.ts:1065 Starting ElevenLabs session...
-use-elevenlabs-realtime.ts:1081 Starting ElevenLabs session...
-use-elevenlabs-realtime.ts:84 State changed from idle to connecting (ref updated immediately)
-use-elevenlabs-realtime.ts:1087 Audio unlocked via user interaction
-use-elevenlabs-realtime.ts:1093 AudioContext created/recreated. AudioContext
-use-elevenlabs-realtime.ts:84 State changed from idle to connecting (ref updated immediately)
-use-elevenlabs-realtime.ts:517 Setting up TTS WebSocket...
-use-elevenlabs-realtime.ts:518 [Debug] Attempting direct connection to ElevenLabs
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: connecting
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: false
-        · Waiting: false
-        · Audio Level: 0.30
-    
-chat.tsx:333 [Voice State] Changed from idle to connecting
-chat.tsx:334 [Voice UI] Current state: Connecting
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=false, isProcessing=false, isConnecting=true, isWaiting=false, audioLevel=0.30
-use-elevenlabs-realtime.ts:542 TTS WebSocket opened.
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:558 Sending welcome message now
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:577 Welcome message sent successfully - will transition to listening when done
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: speaking
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: true
-        · Waiting: false
-        · Audio Level: 0.60
-    
-chat.tsx:333 [Voice State] Changed from connecting to speaking
-chat.tsx:334 [Voice UI] Current state: System Speaking
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=true, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.60
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 1
-use-elevenlabs-realtime.ts:644 Starting audio playback from base64 chunk
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 1
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 0, chunk size: 23868 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 1
-use-elevenlabs-realtime.ts:652 Received text message from WebSocket: Object
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:849 Setting up audio recording...
-use-elevenlabs-realtime.ts:84 State changed from idle to listening (ref updated immediately)
-use-elevenlabs-realtime.ts:1052 Audio recording started immediately after setup.
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: listening
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: true
-        · User Speaking: false
-        · Processing: false
-        · Speaking: false
-        · Waiting: false
-        · Audio Level: 0.20
-    
-chat.tsx:333 [Voice State] Changed from speaking to listening
-chat.tsx:334 [Voice UI] Current state: Listening (waiting for user)
-chat.tsx:359 [Orb State] isListening=true, isUserSpeaking=false, isSpeaking=false, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.20
-use-elevenlabs-realtime.ts:986 MediaRecorder started - FORCING state to listening.
-use-elevenlabs-realtime.ts:84 State changed from idle to listening (ref updated immediately)
-use-elevenlabs-realtime.ts:938 Voice activity detected, auto-starting recording
-use-elevenlabs-realtime.ts:981 Received audio chunk: 6130 bytes (total: 6130 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:691 TTS WebSocket closed: 1005 (no reason)
-use-elevenlabs-realtime.ts:704 WebSocket closed but audio queue not empty (1 chunks) - continuing playback
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 15040 bytes)
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 1
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 0, chunk size: 10031 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: speaking
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: true
-        · Waiting: false
-        · Audio Level: 0.60
-    
-chat.tsx:333 [Voice State] Changed from listening to speaking
-chat.tsx:334 [Voice UI] Current state: System Speaking
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=true, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.60
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8957 bytes (total: 23997 bytes)
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 0
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8915 bytes (total: 32912 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 41822 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 9285 bytes (total: 51107 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8619 bytes (total: 59726 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 9290 bytes (total: 69016 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8612 bytes (total: 77628 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 86538 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 95448 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 104358 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 113268 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 122178 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 131088 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 139998 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 148908 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 157818 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 166728 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 175638 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8966 bytes (total: 184604 bytes)
-use-elevenlabs-realtime.ts:1364 WebSocket check interval: Connection needed, reconnecting...
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8951 bytes (total: 193555 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8945 bytes (total: 202500 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8902 bytes (total: 211402 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 220312 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 229222 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8915 bytes (total: 238137 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8964 bytes (total: 247101 bytes)
-use-elevenlabs-realtime.ts:943 Auto-stopping recording due to maximum speech duration Object
-use-elevenlabs-realtime.ts:981 Received audio chunk: 3945 bytes (total: 251046 bytes)
-use-elevenlabs-realtime.ts:997 MediaRecorder stopped.
-use-elevenlabs-realtime.ts:1009 Total audio collected: 251046 bytes
-use-elevenlabs-realtime.ts:1017 Audio meets requirements: size=251046B, duration=15151ms
-use-elevenlabs-realtime.ts:84 State changed from idle to processing (ref updated immediately)
-use-elevenlabs-realtime.ts:785 Sending audio for STT processing... Object
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: processing
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: true
-        · Speaking: false
-        · Waiting: false
-        · Audio Level: 0.30
-    
-chat.tsx:333 [Voice State] Changed from speaking to processing
-chat.tsx:334 [Voice UI] Current state: Processing Speech
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=false, isProcessing=true, isConnecting=false, isWaiting=false, audioLevel=0.30
-use-elevenlabs-realtime.ts:808 STT API Result: ...off. That's it. Hi, there. How are you doing today? (music)
-chat.tsx:154 Final transcript received, appending: ...off. That's it. Hi, there. How are you doing today? (music)
-use-elevenlabs-realtime.ts:813 Staying in PROCESSING state until AI responds
-use-elevenlabs-realtime.ts:823 After STT: TTS WebSocket not ready, reconnecting...
-use-elevenlabs-realtime.ts:517 Setting up TTS WebSocket...
-use-elevenlabs-realtime.ts:518 [Debug] Attempting direct connection to ElevenLabs
-use-elevenlabs-realtime.ts:542 TTS WebSocket opened.
-use-elevenlabs-realtime.ts:84 State changed from idle to waiting (ref updated immediately)
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: waiting
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: false
-        · Waiting: true
-        · Audio Level: 0.20
-    
-chat.tsx:333 [Voice State] Changed from processing to waiting
-chat.tsx:334 [Voice UI] Current state: Transitioning
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=false, isProcessing=false, isConnecting=false, isWaiting=true, audioLevel=0.20
-chat.tsx:108 [Chat Interface] Response finished, dispatching event.
-chat.tsx:120 Speaking finished message: We appreciate your message! How can we assist you ...
-use-elevenlabs-realtime.ts:1160 Request to speak text received, current state: waiting
-use-elevenlabs-realtime.ts:1173 State is waiting but transitioning to speaking for TTS
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:1180 WebSocket is open, sending text directly
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:732 Attempting to send text to TTS: "We appreciate your message! Ho..."
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:752 Text sent to TTS WebSocket successfully
-use-elevenlabs-realtime.ts:1222 After sending text, will automatically transition to listening when audio finishes
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: speaking
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: true
-        · Waiting: false
-        · Audio Level: 0.60
-    
-chat.tsx:333 [Voice State] Changed from waiting to speaking
-chat.tsx:334 [Voice UI] Current state: System Speaking
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=true, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.60
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 1
-use-elevenlabs-realtime.ts:644 Starting audio playback from base64 chunk
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 1
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 0, chunk size: 26376 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 1
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 2
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 3
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 4
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 5
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 6
-use-elevenlabs-realtime.ts:652 Received text message from WebSocket: Object
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 6
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 5, chunk size: 27585 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:691 TTS WebSocket closed: 1005 (no reason)
-use-elevenlabs-realtime.ts:704 WebSocket closed but audio queue not empty (5 chunks) - continuing playback
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 5
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 4, chunk size: 25078 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 4
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 3, chunk size: 27585 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:1364 WebSocket check interval: Connection needed, reconnecting...
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 3
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 2, chunk size: 27585 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 2
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 1, chunk size: 1672 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 1
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 0, chunk size: 10449 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 0
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-chat.tsx:242 Ending voice call manually...
-use-elevenlabs-realtime.ts:135 Stopping ElevenLabs session (Cleanup)... Object
-use-elevenlabs-realtime.ts:84 State changed from speaking to idle (ref updated immediately)
-use-elevenlabs-realtime.ts:226 ElevenLabs session stopped.
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: idle
-      - isCallActive: false
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: false
-        · Waiting: false
-        · Audio Level: 0.10
-    
-chat.tsx:333 [Voice State] Changed from speaking to idle
-chat.tsx:334 [Voice UI] Current state: Idle
-chat.tsx:349 Speech finished, clearing message being spoken reference
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=false, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.10
-chat.tsx:246 Starting voice call manually...
-use-elevenlabs-realtime.ts:1065 Starting ElevenLabs session...
-use-elevenlabs-realtime.ts:1081 Starting ElevenLabs session...
-use-elevenlabs-realtime.ts:84 State changed from idle to connecting (ref updated immediately)
-use-elevenlabs-realtime.ts:1087 Audio unlocked via user interaction
-use-elevenlabs-realtime.ts:84 State changed from idle to connecting (ref updated immediately)
-use-elevenlabs-realtime.ts:517 Setting up TTS WebSocket...
-use-elevenlabs-realtime.ts:518 [Debug] Attempting direct connection to ElevenLabs
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: connecting
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: false
-        · Waiting: false
-        · Audio Level: 0.30
-    
-chat.tsx:333 [Voice State] Changed from idle to connecting
-chat.tsx:334 [Voice UI] Current state: Connecting
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=false, isProcessing=false, isConnecting=true, isWaiting=false, audioLevel=0.30
-use-elevenlabs-realtime.ts:542 TTS WebSocket opened.
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:558 Sending welcome message now
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:577 Welcome message sent successfully - will transition to listening when done
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: speaking
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: true
-        · Waiting: false
-        · Audio Level: 0.60
-    
-chat.tsx:333 [Voice State] Changed from connecting to speaking
-chat.tsx:334 [Voice UI] Current state: System Speaking
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=true, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.60
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 1
-use-elevenlabs-realtime.ts:644 Starting audio playback from base64 chunk
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 1
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 0, chunk size: 26376 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 1
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:622 Received base64 audio from ElevenLabs [object Object]
-use-elevenlabs-realtime.ts:640 Added audio to queue. Current queue length: 2
-use-elevenlabs-realtime.ts:652 Received text message from WebSocket: Object
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:849 Setting up audio recording...
-use-elevenlabs-realtime.ts:84 State changed from idle to listening (ref updated immediately)
-use-elevenlabs-realtime.ts:1052 Audio recording started immediately after setup.
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: listening
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: true
-        · User Speaking: false
-        · Processing: false
-        · Speaking: false
-        · Waiting: false
-        · Audio Level: 0.20
-    
-chat.tsx:333 [Voice State] Changed from speaking to listening
-chat.tsx:334 [Voice UI] Current state: Listening (waiting for user)
-chat.tsx:359 [Orb State] isListening=true, isUserSpeaking=false, isSpeaking=false, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.20
-use-elevenlabs-realtime.ts:986 MediaRecorder started - FORCING state to listening.
-use-elevenlabs-realtime.ts:84 State changed from idle to listening (ref updated immediately)
-use-elevenlabs-realtime.ts:938 Voice activity detected, auto-starting recording
-use-elevenlabs-realtime.ts:691 TTS WebSocket closed: 1005 (no reason)
-use-elevenlabs-realtime.ts:704 WebSocket closed but audio queue not empty (2 chunks) - continuing playback
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8110 bytes (total: 8110 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 2
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 1, chunk size: 418 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: speaking
-      - isCallActive: true
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: true
-        · Waiting: false
-        · Audio Level: 0.60
-    
-chat.tsx:333 [Voice State] Changed from listening to speaking
-chat.tsx:334 [Voice UI] Current state: System Speaking
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=true, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.60
-app-index.js:33 [Audio Playback] Error decoding audio data as-is: EncodingError: Unable to decode audio data
-window.console.error @ app-index.js:33Understand this errorAI
-use-elevenlabs-realtime.ts:381 [Audio Playback] Attempting to decode audio with alternative method
-window:1 Uncaught (in promise) EncodingError: Unable to decode audio dataUnderstand this errorAI
-blob:http://localhost:3000/a0b9e81d-10c5-4689-bc3a-a04651e8639a:1 
-            
-            
-           Failed to load resource: net::ERR_REQUEST_RANGE_NOT_SATISFIABLEUnderstand this errorAI
-app-index.js:33 [Audio Playback] Audio element error: Event
-window.console.error @ app-index.js:33Understand this errorAI
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 1
-use-elevenlabs-realtime.ts:237 [Audio Playback] Queue has audio, setting state to speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:317 [Audio Playback] Starting playback - Current state: speaking
-use-elevenlabs-realtime.ts:84 State changed from idle to speaking (ref updated immediately)
-use-elevenlabs-realtime.ts:323 [Audio Playback] Playing chunk. Queue size: 0, chunk size: 10449 bytes
-use-elevenlabs-realtime.ts:366 [Audio Playback] Decoding audio data...
-use-elevenlabs-realtime.ts:374 [Audio Playback] Successfully decoded audio buffer
-use-elevenlabs-realtime.ts:465 [Audio Playback] Audio decoded successfully: Object
-use-elevenlabs-realtime.ts:487 [Audio Playback] Starting audio source...
-use-elevenlabs-realtime.ts:490 [Audio Playback] Audio source started successfully
-use-elevenlabs-realtime.ts:981 Received audio chunk: 9093 bytes (total: 17203 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8782 bytes (total: 25985 bytes)
-use-elevenlabs-realtime.ts:479 [Audio Playback] Source node ended.
-use-elevenlabs-realtime.ts:232 [Audio Playback] playNextChunk called with queue size: 0
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 34895 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 43805 bytes)
-use-elevenlabs-realtime.ts:1334 WebSocket health check: Connection needed, reconnecting... Object
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 52715 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 61625 bytes)
-use-elevenlabs-realtime.ts:981 Received audio chunk: 8910 bytes (total: 70535 bytes)
-chat.tsx:242 Ending voice call manually...
-use-elevenlabs-realtime.ts:135 Stopping ElevenLabs session (Cleanup)... Object
-use-elevenlabs-realtime.ts:84 State changed from speaking to idle (ref updated immediately)
-use-elevenlabs-realtime.ts:226 ElevenLabs session stopped.
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: idle
-      - isCallActive: false
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: false
-        · Waiting: false
-        · Audio Level: 0.10
-    
-chat.tsx:333 [Voice State] Changed from speaking to idle
-chat.tsx:334 [Voice UI] Current state: Idle
-chat.tsx:359 [Orb State] isListening=false, isUserSpeaking=false, isSpeaking=false, isProcessing=false, isConnecting=false, isWaiting=false, audioLevel=0.10
-use-elevenlabs-realtime.ts:981 Received audio chunk: 4141 bytes (total: 74676 bytes)
-use-elevenlabs-realtime.ts:997 MediaRecorder stopped.
-use-elevenlabs-realtime.ts:1009 Total audio collected: 4141 bytes
-use-elevenlabs-realtime.ts:1020 Audio too short, returning to waiting state Object
-use-elevenlabs-realtime.ts:84 State changed from idle to waiting (ref updated immediately)
-chat.tsx:317 Voice Orb State Update:
-      - Current ElevenLabs State: waiting
-      - isCallActive: false
-      - Has User Transcript: false
-      - Resulting States:
-        · Listening: false
-        · User Speaking: false
-        · Processing: false
-        · Speaking: false
-        · Waiting: false
-        · Audio Level: 0.10
-    
-chat.tsx:333 [Voice State] Changed from idle to waiting
-chat.tsx:334 [Voice UI] Current state: Transitioning
+VM459918 chat.tsx:164 Switching mode to: voice
+rive-voice-orb.tsx:101 Setting orb color for light theme: Value=0
+VM459918 chat.tsx:189 Starting voice call manually...
+VM460768 use-elevenlabs-realtime.ts:1116 Starting ElevenLabs session...
+VM460768 use-elevenlabs-realtime.ts:1129 Starting ElevenLabs session...
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to connecting (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:1134 Audio unlocked via user interaction
+VM460768 use-elevenlabs-realtime.ts:1139 AudioContext created/recreated. AudioContext
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to connecting (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:471 Setting up TTS WebSocket...
+VM460768 use-elevenlabs-realtime.ts:472 [Debug] Attempting direct connection to ElevenLabs
+VM459918 chat.tsx:262 [Voice State] Changed from idle to connecting
+VM460768 use-elevenlabs-realtime.ts:492 TTS WebSocket opened.
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to speaking (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:508 Sending welcome message now
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to speaking (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:528 Welcome message sent successfully - will transition to waiting when done
+VM459918 chat.tsx:262 [Voice State] Changed from connecting to speaking
+VM460768 use-elevenlabs-realtime.ts:583 Received base64 audio from ElevenLabs [object Object]
+VM460768 use-elevenlabs-realtime.ts:600 Added audio to queue. Current queue length: 1
+VM460768 use-elevenlabs-realtime.ts:603 Starting audio playback from base64 chunk
+VM460768 use-elevenlabs-realtime.ts:204 [Audio Playback] playNextChunk called with queue size: 1
+VM460768 use-elevenlabs-realtime.ts:209 [Audio Playback] Queue has audio, setting state to speaking
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to speaking (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:288 [Audio Playback] Starting playback - Current state: speaking
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to speaking (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:295 [Audio Playback] Playing chunk. Queue size: 0, chunk size: 6732 bytes
+VM460768 use-elevenlabs-realtime.ts:334 [Audio Playback] Decoding audio data...
+VM460768 use-elevenlabs-realtime.ts:339 [Audio Playback] Successfully decoded audio buffer
+VM460768 use-elevenlabs-realtime.ts:421 [Audio Playback] Audio decoded successfully: Object
+VM460768 use-elevenlabs-realtime.ts:441 [Audio Playback] Starting audio source...
+VM460768 use-elevenlabs-realtime.ts:444 [Audio Playback] Audio source started successfully
+VM460768 use-elevenlabs-realtime.ts:583 Received base64 audio from ElevenLabs [object Object]
+VM460768 use-elevenlabs-realtime.ts:600 Added audio to queue. Current queue length: 1
+VM460768 use-elevenlabs-realtime.ts:583 Received base64 audio from ElevenLabs [object Object]
+VM460768 use-elevenlabs-realtime.ts:600 Added audio to queue. Current queue length: 2
+VM460768 use-elevenlabs-realtime.ts:608 Received text message from WebSocket: Object
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to speaking (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:828 Setting up audio recording...
+VM460768 use-elevenlabs-realtime.ts:434 [Audio Playback] Source node ended.
+VM460768 use-elevenlabs-realtime.ts:204 [Audio Playback] playNextChunk called with queue size: 2
+VM460768 use-elevenlabs-realtime.ts:209 [Audio Playback] Queue has audio, setting state to speaking
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to speaking (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:288 [Audio Playback] Starting playback - Current state: speaking
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to speaking (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:295 [Audio Playback] Playing chunk. Queue size: 1, chunk size: 14210 bytes
+VM460768 use-elevenlabs-realtime.ts:334 [Audio Playback] Decoding audio data...
+VM460768 use-elevenlabs-realtime.ts:339 [Audio Playback] Successfully decoded audio buffer
+VM460768 use-elevenlabs-realtime.ts:421 [Audio Playback] Audio decoded successfully: Object
+VM460768 use-elevenlabs-realtime.ts:441 [Audio Playback] Starting audio source...
+VM460768 use-elevenlabs-realtime.ts:444 [Audio Playback] Audio source started successfully
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to listening (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:1099 Audio recording started immediately after setup.
+VM459918 chat.tsx:253 Welcome message seems to have finished, marking as played
+VM459918 chat.tsx:262 [Voice State] Changed from speaking to listening
+VM459918 chat.tsx:262 [Voice State] Changed from listening to listening
+VM460768 use-elevenlabs-realtime.ts:1036 MediaRecorder started - FORCING state to listening.
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to listening (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 6130 bytes (total: 6130 bytes)
+VM460768 use-elevenlabs-realtime.ts:644 TTS WebSocket closed: 1005 (no reason)
+VM460768 use-elevenlabs-realtime.ts:650 WebSocket closed, not reconnecting automatically
+VM460768 use-elevenlabs-realtime.ts:434 [Audio Playback] Source node ended.
+VM460768 use-elevenlabs-realtime.ts:204 [Audio Playback] playNextChunk called with queue size: 1
+VM460768 use-elevenlabs-realtime.ts:209 [Audio Playback] Queue has audio, setting state to speaking
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to speaking (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:288 [Audio Playback] Starting playback - Current state: speaking
+VM460768 use-elevenlabs-realtime.ts:58 State changed from idle to speaking (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:295 [Audio Playback] Playing chunk. Queue size: 0, chunk size: 10032 bytes
+VM460768 use-elevenlabs-realtime.ts:334 [Audio Playback] Decoding audio data...
+VM459918 chat.tsx:262 [Voice State] Changed from listening to speaking
+VM460768 use-elevenlabs-realtime.ts:339 [Audio Playback] Successfully decoded audio buffer
+VM460768 use-elevenlabs-realtime.ts:421 [Audio Playback] Audio decoded successfully: Object
+VM460768 use-elevenlabs-realtime.ts:441 [Audio Playback] Starting audio source...
+VM460768 use-elevenlabs-realtime.ts:444 [Audio Playback] Audio source started successfully
+VM460768 use-elevenlabs-realtime.ts:1374 WebSocket health check: Connection needed, reconnecting... Object
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 9197 bytes (total: 15327 bytes)
+VM460768 use-elevenlabs-realtime.ts:434 [Audio Playback] Source node ended.
+VM460768 use-elevenlabs-realtime.ts:204 [Audio Playback] playNextChunk called with queue size: 0
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8689 bytes (total: 24016 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 9107 bytes (total: 33123 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 9058 bytes (total: 42181 bytes)
+VM460768 use-elevenlabs-realtime.ts:1374 WebSocket health check: Connection needed, reconnecting... Object
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8956 bytes (total: 51137 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8677 bytes (total: 59814 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 68724 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8920 bytes (total: 77644 bytes)
+VM460768 use-elevenlabs-realtime.ts:1374 WebSocket health check: Connection needed, reconnecting... Object
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8915 bytes (total: 86559 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 95469 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8919 bytes (total: 104388 bytes)
+VM460768 use-elevenlabs-realtime.ts:1374 WebSocket health check: Connection needed, reconnecting... Object
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 113298 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 122208 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 131118 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8916 bytes (total: 140034 bytes)
+VM460768 use-elevenlabs-realtime.ts:1374 WebSocket health check: Connection needed, reconnecting... Object
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 148944 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 157854 bytes)
+VM460768 use-elevenlabs-realtime.ts:1401 WebSocket check interval: Connection needed, reconnecting...
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 166764 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 9218 bytes (total: 175982 bytes)
+VM460768 use-elevenlabs-realtime.ts:884 [Audio Analysis] Regular: 0.021, Weighted: 0.052, Final: 0.052
+VM460768 use-elevenlabs-realtime.ts:1374 WebSocket health check: Connection needed, reconnecting... Object
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8992 bytes (total: 184974 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8964 bytes (total: 193938 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8630 bytes (total: 202568 bytes)
+VM460768 use-elevenlabs-realtime.ts:1374 WebSocket health check: Connection needed, reconnecting... Object
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8920 bytes (total: 211488 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 220398 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 229308 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 238218 bytes)
+VM460768 use-elevenlabs-realtime.ts:1374 WebSocket health check: Connection needed, reconnecting... Object
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 247128 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 256038 bytes)
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 8910 bytes (total: 264948 bytes)
+VM459918 chat.tsx:185 Ending voice call manually...
+VM460768 use-elevenlabs-realtime.ts:112 Stopping ElevenLabs session (Cleanup)... Object
+VM460768 use-elevenlabs-realtime.ts:58 State changed from speaking to idle (ref updated immediately)
+VM460768 use-elevenlabs-realtime.ts:196 ElevenLabs session stopped.
+VM459918 chat.tsx:262 [Voice State] Changed from speaking to idle
+VM459918 chat.tsx:262 [Voice State] Changed from idle to idle
+VM460768 use-elevenlabs-realtime.ts:1032 Received audio chunk: 7015 bytes (total: 271963 bytes)
+VM460768 use-elevenlabs-realtime.ts:1045 MediaRecorder stopped.
+VM460768 use-elevenlabs-realtime.ts:1055 Agent is speaking, ignoring recorded audio to prevent feedback
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+VM460768 use-elevenlabs-realtime.ts:1418 Strict Mode unmount detected - skipping cleanup Object
+VM460768 use-elevenlabs-realtime.ts:103 Initial state sync: Object
+VM460768 use-elevenlabs-realtime.ts:1340 Strict Mode second mount detected Object
+chat.tsx:331 [Voice State] Changed from idle to idle
+hot-reloader-client.js:44 [Fast Refresh] done in 1514ms
+overview.tsx:77 [Overview] Fetched chatbot config: Object
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+VM460768 use-elevenlabs-realtime.ts:1418 Strict Mode unmount detected - skipping cleanup Object
+ Initial state sync: Object
+ Strict Mode second mount detected Object
+chat.tsx:331 [Voice State] Changed from idle to idle
+hot-reloader-client.js:44 [Fast Refresh] done in 280ms
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+ Strict Mode unmount detected - skipping cleanup Object
+use-elevenlabs-realtime.ts:132 Initial state sync: Object
+use-elevenlabs-realtime.ts:1495 Strict Mode second mount detected Object
+chat.tsx:331 [Voice State] Changed from idle to idle
+hot-reloader-client.js:44 [Fast Refresh] done in 689ms
+chat.tsx:225 Switching mode to: voice
+rive-voice-orb.tsx:101 Setting orb color for light theme: Value=0
+chat.tsx:248 Starting voice call manually...
+use-elevenlabs-realtime.ts:1264 Starting ElevenLabs session...
+use-elevenlabs-realtime.ts:1280 Starting ElevenLabs session...
+use-elevenlabs-realtime.ts:89 State changed from idle to connecting (ref updated immediately)
+use-elevenlabs-realtime.ts:1286 Audio unlocked via user interaction
+use-elevenlabs-realtime.ts:1292 AudioContext created/recreated. AudioContext
+use-elevenlabs-realtime.ts:89 State changed from idle to connecting (ref updated immediately)
+use-elevenlabs-realtime.ts:528 Setting up TTS WebSocket...
+use-elevenlabs-realtime.ts:529 [Debug] Attempting direct connection to ElevenLabs
+chat.tsx:331 [Voice State] Changed from idle to connecting
+use-elevenlabs-realtime.ts:553 TTS WebSocket opened.
+use-elevenlabs-realtime.ts:89 State changed from idle to speaking (ref updated immediately)
+use-elevenlabs-realtime.ts:569 Sending welcome message now
+use-elevenlabs-realtime.ts:89 State changed from idle to speaking (ref updated immediately)
+use-elevenlabs-realtime.ts:589 Welcome message sent successfully - will transition to neutral waiting state when done
+chat.tsx:331 [Voice State] Changed from connecting to speaking
+use-elevenlabs-realtime.ts:635 Received base64 audio from ElevenLabs [object Object]
+use-elevenlabs-realtime.ts:653 Added audio to queue. Current queue length: 1
+use-elevenlabs-realtime.ts:657 Starting audio playback from base64 chunk
+use-elevenlabs-realtime.ts:237 [Audio Playback] playNextChunk called with queue size: 1
+use-elevenlabs-realtime.ts:242 [Audio Playback] Queue has audio, setting state to speaking
+use-elevenlabs-realtime.ts:89 State changed from idle to speaking (ref updated immediately)
+use-elevenlabs-realtime.ts:327 [Audio Playback] Starting playback - Current state: speaking
+use-elevenlabs-realtime.ts:89 State changed from idle to speaking (ref updated immediately)
+use-elevenlabs-realtime.ts:334 [Audio Playback] Playing chunk. Queue size: 0, chunk size: 6732 bytes
+use-elevenlabs-realtime.ts:377 [Audio Playback] Decoding audio data...
+use-elevenlabs-realtime.ts:385 [Audio Playback] Successfully decoded audio buffer
+use-elevenlabs-realtime.ts:476 [Audio Playback] Audio decoded successfully: Object
+use-elevenlabs-realtime.ts:498 [Audio Playback] Starting audio source...
+use-elevenlabs-realtime.ts:501 [Audio Playback] Audio source started successfully
+use-elevenlabs-realtime.ts:635 Received base64 audio from ElevenLabs [object Object]
+use-elevenlabs-realtime.ts:653 Added audio to queue. Current queue length: 1
+use-elevenlabs-realtime.ts:635 Received base64 audio from ElevenLabs [object Object]
+use-elevenlabs-realtime.ts:653 Added audio to queue. Current queue length: 2
+use-elevenlabs-realtime.ts:665 Received text message from WebSocket: Object
+use-elevenlabs-realtime.ts:89 State changed from idle to speaking (ref updated immediately)
+use-elevenlabs-realtime.ts:1535 WebSocket health check: Connection needed, reconnecting... Object
+use-elevenlabs-realtime.ts:528 Setting up TTS WebSocket...
+use-elevenlabs-realtime.ts:529 [Debug] Attempting direct connection to ElevenLabs
+use-elevenlabs-realtime.ts:900 Setting up audio recording...
+use-elevenlabs-realtime.ts:553 TTS WebSocket opened.
+use-elevenlabs-realtime.ts:490 [Audio Playback] Source node ended.
+use-elevenlabs-realtime.ts:237 [Audio Playback] playNextChunk called with queue size: 0
+use-elevenlabs-realtime.ts:89 State changed from idle to listening (ref updated immediately)
+use-elevenlabs-realtime.ts:1251 Audio recording started immediately after setup.
+chat.tsx:317 Welcome message seems to have finished, marking as played
+chat.tsx:331 [Voice State] Changed from speaking to listening
+chat.tsx:331 [Voice State] Changed from listening to listening
+use-elevenlabs-realtime.ts:89 State changed from idle to waiting (ref updated immediately)
+chat.tsx:331 [Voice State] Changed from listening to waiting
+use-elevenlabs-realtime.ts:1178 MediaRecorder started - FORCING state to listening.
+use-elevenlabs-realtime.ts:89 State changed from idle to listening (ref updated immediately)
+chat.tsx:331 [Voice State] Changed from waiting to listening
+use-elevenlabs-realtime.ts:704 TTS WebSocket closed: 1005 (no reason)
+use-elevenlabs-realtime.ts:715 WebSocket closed, not reconnecting automatically
+use-elevenlabs-realtime.ts:1535 WebSocket health check: Connection needed, reconnecting... Object
+use-elevenlabs-realtime.ts:528 Setting up TTS WebSocket...
+use-elevenlabs-realtime.ts:529 [Debug] Attempting direct connection to ElevenLabs
+use-elevenlabs-realtime.ts:553 TTS WebSocket opened.
+use-elevenlabs-realtime.ts:89 State changed from idle to waiting (ref updated immediately)
+chat.tsx:331 [Voice State] Changed from listening to waiting
+use-elevenlabs-realtime.ts:966 [Audio Analysis] Regular: 0.011, Weighted: 0.026, Final: 0.026
+use-elevenlabs-realtime.ts:966 [Audio Analysis] Regular: 0.010, Weighted: 0.024, Final: 0.024
+use-elevenlabs-realtime.ts:966 [Audio Analysis] Regular: 0.009, Weighted: 0.020, Final: 0.020
+use-elevenlabs-realtime.ts:966 [Audio Analysis] Regular: 0.014, Weighted: 0.035, Final: 0.035
+use-elevenlabs-realtime.ts:704 TTS WebSocket closed: 1008 (Have not received a new text input within the timeout of 20 seconds. Streaming input terminated. Please make sure to eit)
+use-elevenlabs-realtime.ts:715 WebSocket closed, not reconnecting automatically
+use-elevenlabs-realtime.ts:704 TTS WebSocket closed: 1008 (Have not received a new text input within the timeout of 20 seconds. Streaming input terminated. Please make sure to eit)
+use-elevenlabs-realtime.ts:715 WebSocket closed, not reconnecting automatically
+use-elevenlabs-realtime.ts:966 [Audio Analysis] Regular: 0.016, Weighted: 0.039, Final: 0.039
+use-elevenlabs-realtime.ts:1467 WebSocket health check ran Object
+use-elevenlabs-realtime.ts:966 [Audio Analysis] Regular: 0.013, Weighted: 0.032, Final: 0.032
+chat.tsx:244 Ending voice call manually...
+use-elevenlabs-realtime.ts:140 Stopping ElevenLabs session (Cleanup)... Object
+use-elevenlabs-realtime.ts:89 State changed from waiting to idle (ref updated immediately)
+use-elevenlabs-realtime.ts:231 ElevenLabs session stopped.
+chat.tsx:331 [Voice State] Changed from waiting to idle
+chat.tsx:331 [Voice State] Changed from idle to idle
+use-elevenlabs-realtime.ts:1189 MediaRecorder stopped.
+use-elevenlabs-realtime.ts:1201 Agent is speaking, ignoring recorded audio to prevent feedback
