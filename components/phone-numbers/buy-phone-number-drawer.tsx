@@ -11,9 +11,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { Icons } from '@/components/icons';
-import { PurchaseConfirmationDialog } from './purchase-confirmation-dialog';
 import { toast } from 'sonner';
 import { addMonths, formatDate } from '@/lib/date-utils';
+import { PurchaseConfirmationDialog } from './purchase-confirmation-dialog';
+
+interface Agent {
+  id: string;
+  name: string;
+}
 
 interface BuyPhoneNumberDrawerProps {
   open: boolean;
@@ -32,7 +37,10 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
   const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [phoneNumberPrice, setPhoneNumberPrice] = useState<number>(0);
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [isLoadingAgents, setIsLoadingAgents] = useState<boolean>(false);
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState<boolean>(false);
 
   useEffect(() => {
     const loadCountries = async () => {
@@ -46,6 +54,40 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
       }
     };
     loadCountries();
+  }, []);
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      setIsLoadingAgents(true);
+      try {
+        const response = await fetch('/api/chatbots');
+        if (!response.ok) throw new Error('Failed to load agents');
+        const data = await response.json();
+        
+        if (data.success && Array.isArray(data.chatbots)) {
+          setAgents(data.chatbots.map((chatbot: any) => ({
+            id: chatbot.id,
+            name: chatbot.name
+          })));
+        } else if (Array.isArray(data)) {
+          // Legacy format
+          setAgents(data.map((chatbot: any) => ({
+            id: chatbot.id,
+            name: chatbot.name
+          })));
+        } else {
+          setAgents([]);
+        }
+      } catch (error) {
+        console.error('Error loading agents:', error);
+        toast.error('Failed to load agents. Please try again later.');
+        setAgents([]);
+      } finally {
+        setIsLoadingAgents(false);
+      }
+    };
+    
+    fetchAgents();
   }, []);
 
   const handleFetchPhoneNumbers = async () => {
@@ -71,47 +113,52 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
     setSelectedNumber(number);
   };
 
-  const handleBuyNumber = () => {
-    if (!selectedNumber) return;
-    setIsConfirmDialogOpen(true);
+  const handleSelectAgent = (agentId: string) => {
+    setSelectedAgentId(agentId === 'none' ? null : agentId);
   };
 
-  const handleConfirmPurchase = async (): Promise<boolean> => {
-    if (!selectedNumber) return false;
+  const handleBuyNumber = async () => {
+    if (!selectedNumber) return;
+    // Open the purchase confirmation dialog instead of direct purchase
+    setShowPurchaseDialog(true);
+  };
+
+  const handleConfirmPurchase = async () => {
+    // This function will be called when the PurchaseConfirmationDialog confirms
+    console.log('Purchase confirmed for:', selectedNumber);
     
     try {
-      const response = await fetch('/api/twilio/phone-numbers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          phoneNumber: selectedNumber,
-          country: selectedCountry,
-          monthlyPrice: phoneNumberPrice + 3.0, // Include the platform fee
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to purchase phone number');
-      }
-      
-      // Call the callback to update the phone numbers list
-      onPhoneNumberPurchased(selectedNumber);
+      // Notify the parent component about the purchase
+      onPhoneNumberPurchased(selectedNumber!);
       
       // Reset form state
       setSelectedNumber(null);
       setAvailableNumbers([]);
       setSelectedCountry(null);
+      setSelectedAgentId(null);
       
-      // Close the drawer
+      // Close the purchase dialog and drawer
+      setShowPurchaseDialog(false);
       onClose();
+      
+      // Show success toast
+      toast.success('Phone number purchased successfully! You can now use it with your agent.');
+      
+      // Force refresh phone number statuses to ensure the new number shows up properly
+      try {
+        const refreshResponse = await fetch('/api/twilio/phone-numbers/refresh-all-statuses', {
+          method: 'POST'
+        });
+        console.log('Refreshed phone number statuses:', refreshResponse.ok);
+      } catch (refreshError) {
+        console.warn('Failed to refresh phone number statuses:', refreshError);
+        // Continue anyway as this is not critical
+      }
       
       return true;
     } catch (error) {
-      console.error('Error purchasing phone number:', error);
+      console.error('Error during purchase confirmation:', error);
+      toast.error('Failed to complete the purchase process.');
       return false;
     }
   };
@@ -121,6 +168,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
     setSelectedNumber(null);
     setAvailableNumbers([]);
     setSelectedCountry(null);
+    setSelectedAgentId(null);
     onClose();
   };
 
@@ -131,7 +179,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
           <DrawerHeader>
             <DrawerTitle>Buy a New Phone Number</DrawerTitle>
           </DrawerHeader>
-          <DrawerBody>
+          <DrawerBody className="overflow-auto">
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
               Select your country to start searching.
             </p>
@@ -181,16 +229,56 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
                 </Select>
               </div>
             )}
+            
+            {selectedNumber && (
+              <div className="mt-4">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Assign to Agent (Optional)
+                </label>
+                <div className="mt-1">
+                  {isLoadingAgents ? (
+                    <div className="flex items-center py-2">
+                      <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                      <span className="text-sm text-gray-500">Loading agents...</span>
+                    </div>
+                  ) : (
+                    <Select onValueChange={handleSelectAgent} value={selectedAgentId || 'none'}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Agent (Optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Agent</SelectItem>
+                        {agents.map((agent) => (
+                          <SelectItem key={agent.id} value={agent.id}>
+                            {agent.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  If selected, this phone number will be assigned to the agent for handling calls and messages.
+                </p>
+              </div>
+            )}
           </DrawerBody>
           <DrawerFooter className="flex flex-col items-start space-y-2 mt-4">
             <Button
               variant="primary"
               onClick={handleBuyNumber}
-              disabled={!selectedNumber}
+              disabled={!selectedNumber || isFetching}
             >
-              {selectedNumber
-                ? `Buy Phone Number for $${(phoneNumberPrice + 3.0).toFixed(2)}/month`
-                : 'Buy Phone Number'}
+              {isFetching ? (
+                <>
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                  Purchasing...
+                </>
+              ) : selectedNumber ? (
+                `Buy Phone Number for $${(phoneNumberPrice + 3.0).toFixed(2)}/month`
+              ) : (
+                'Buy Phone Number'
+              )}
             </Button>
             <div className="h-0.5" />
             {selectedNumber && (
@@ -202,12 +290,14 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
         </DrawerContent>
       </Drawer>
 
+      {/* Purchase Confirmation Dialog */}
       <PurchaseConfirmationDialog
-        open={isConfirmDialogOpen}
-        onOpenChange={setIsConfirmDialogOpen}
+        open={showPurchaseDialog}
+        onOpenChange={setShowPurchaseDialog}
         phoneNumber={selectedNumber}
         monthlyCost={phoneNumberPrice + 3.0}
-        selectedAgentId={null}
+        selectedAgentId={selectedAgentId}
+        onConfirm={handleConfirmPurchase}
       />
     </>
   );

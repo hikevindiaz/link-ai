@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import twilio from 'twilio';
 
 // Initialize Twilio
-const twilioClient = twilio(
+const twilioMainClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
@@ -49,7 +49,7 @@ export async function DELETE(
     
     // Delete the phone number from Twilio
     try {
-      await twilioClient.incomingPhoneNumbers(phoneNumber.twilioSid).remove();
+      await twilioMainClient.incomingPhoneNumbers(phoneNumber.twilioSid).remove();
     } catch (error: any) {
       console.error('Error deleting phone number from Twilio:', error);
       // Continue with deletion in our database even if Twilio deletion fails

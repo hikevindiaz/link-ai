@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       hasFile: !!audioFile, 
       fileType: audioFile?.type,
       fileSize: audioFile?.size,
+      fileName: audioFile?.name
     });
 
     if (!audioFile) {
@@ -51,15 +52,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Convert to a proper Blob with correct MIME type
-    const audioBlob = new Blob([fileBytes], { type: audioFile.type || 'audio/webm' });
+    // Get filename and type from the original file
+    const filename = audioFile.name || 'audio.webm';
+    const fileType = audioFile.type || 'audio/webm';
+
+    // Convert to a proper Blob with original MIME type
+    const audioBlob = new Blob([fileBytes], { type: fileType });
     
     // Prepare form data for ElevenLabs API
     const elevenlabsFormData = new FormData();
-    elevenlabsFormData.append('audio', audioBlob, 'audio.webm');
+    elevenlabsFormData.append('audio', audioBlob, filename);
     
-    // Add optional file format parameter
-    elevenlabsFormData.append('file_format', 'other');
+    // Add optional file format parameter based on the file extension
+    let fileFormat = 'other';
+    if (filename.endsWith('.mp3')) fileFormat = 'mp3';
+    else if (filename.endsWith('.wav')) fileFormat = 'wav';
+    else if (filename.endsWith('.webm')) fileFormat = 'webm';
+
+    elevenlabsFormData.append('file_format', fileFormat);
 
     console.log('Sending to ElevenLabs Audio Isolation:', { 
       endpoint: 'https://api.elevenlabs.io/v1/audio-isolation/stream',

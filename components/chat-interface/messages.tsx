@@ -2,17 +2,10 @@ import { Message } from 'ai';
 import { PreviewMessage, ThinkingMessage } from './message';
 import { useScrollToBottom } from './use-scroll-to-bottom';
 import { Overview } from './overview';
-import { memo } from 'react';
+import { memo, useEffect } from 'react';
 import equal from 'fast-deep-equal';
 import Image from 'next/image';
 import { UserIcon } from 'lucide-react';
-
-// Define the Vote interface to match what's expected
-interface Vote {
-  chatId: string;
-  messageId: string;
-  isUpvoted: boolean;
-}
 
 // Extend the Message type from Vercel AI SDK to include required fields
 interface ChatMessage extends Message {
@@ -23,7 +16,6 @@ interface ChatMessage extends Message {
 export interface MessagesProps {
   chatId: string;
   status: 'error' | 'submitted' | 'streaming' | 'ready';
-  votes: Array<Vote> | undefined;
   messages: Array<ChatMessage>;
   setMessages: (messages: ChatMessage[] | ((messages: ChatMessage[]) => ChatMessage[])) => void;
   reload: (options?: any) => Promise<string>;
@@ -37,7 +29,6 @@ export interface MessagesProps {
 function PureMessages({
   chatId,
   status,
-  votes,
   messages,
   setMessages,
   reload,
@@ -48,6 +39,11 @@ function PureMessages({
 }: MessagesProps) {
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
+
+  // Debug log on status change to help diagnose issues
+  useEffect(() => {
+    console.log(`[Messages] Status changed to: ${status}, message count: ${messages.length}`);
+  }, [status, messages.length]);
 
   const UserAvatar = ({ email }: { email?: string }) => {
     if (email) {
@@ -93,20 +89,25 @@ function PureMessages({
           chatId={chatId}
           message={message}
           isLoading={status === 'streaming' && messages.length - 1 === index}
-          vote={
-            votes
-              ? votes.find((vote) => vote.messageId === message.id)
-              : undefined
-          }
           setMessages={setMessages}
           reload={reload}
           isReadonly={isReadonly}
         />
       ))}
 
-      {status === 'submitted' &&
+      {/* Show "Thinking..." message when in submitted state and last message is from user */}
+      {status === 'submitted' && 
         messages.length > 0 &&
-        messages[messages.length - 1].role === 'user' && <ThinkingMessage />}
+        messages[messages.length - 1].role === 'user' && (
+          <ThinkingMessage />
+      )}
+
+      {/* Also show ThinkingMessage in streaming state for better user feedback */}
+      {status === 'streaming' && 
+        messages.length > 0 &&
+        messages[messages.length - 1].role === 'user' && (
+          <ThinkingMessage />
+      )}
 
       <div
         ref={messagesEndRef}
@@ -117,15 +118,40 @@ function PureMessages({
 }
 
 export const Messages = memo(PureMessages, (prevProps, nextProps) => {
-  if (prevProps.isArtifactVisible && nextProps.isArtifactVisible) return true;
-
-  if (prevProps.status !== nextProps.status) return false;
-  if (prevProps.status && nextProps.status) return false;
-  if (prevProps.messages.length !== nextProps.messages.length) return false;
-  if (!equal(prevProps.messages, nextProps.messages)) return false;
-  if (!equal(prevProps.votes, nextProps.votes)) return false;
+  // Always re-render if status changes - this is critical for UI updates
+  if (prevProps.status !== nextProps.status) {
+    console.log(`[Messages Memo] Re-rendering due to status change: ${prevProps.status} -> ${nextProps.status}`);
+    return false;
+  }
+  
+  // Always re-render if message count changes
+  if (prevProps.messages.length !== nextProps.messages.length) {
+    console.log(`[Messages Memo] Re-rendering due to message count change: ${prevProps.messages.length} -> ${nextProps.messages.length}`);
+    return false;
+  }
+  
+  // Always re-render if messages content changed
+  if (!equal(prevProps.messages, nextProps.messages)) {
+    console.log('[Messages Memo] Re-rendering due to message content change');
+    return false;
+  }
+  
+  // If artifact visibility changed but other properties didn't, optimize render
+  if (prevProps.isArtifactVisible !== nextProps.isArtifactVisible) {
+    const shouldSkipRender = prevProps.messages.length === nextProps.messages.length &&
+      equal(prevProps.messages, nextProps.messages) &&
+      prevProps.status === nextProps.status;
+    
+    if (shouldSkipRender) {
+      console.log('[Messages Memo] Skipping render for artifact visibility change only');
+    }
+    return shouldSkipRender;
+  }
+  
+  // Re-render if other important props change
   if (prevProps.chatbotLogoURL !== nextProps.chatbotLogoURL) return false;
   if (prevProps.welcomeMessage !== nextProps.welcomeMessage) return false;
-
+  
+  // Default to preventing unnecessary re-renders
   return true;
 });

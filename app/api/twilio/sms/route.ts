@@ -1,89 +1,153 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import twilio from 'twilio';
-import { TwimlResponse } from 'twilio/lib/twiml/TwimlResponse';
+import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 
-// POST /api/twilio/sms - Handle incoming SMS
+// Verify Twilio webhook signature
+const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
+  // In production, validate signature using Twilio's validateRequest function
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      const twilioSignature = req.headers.get('x-twilio-signature');
+      const url = process.env.NEXT_PUBLIC_APP_URL + '/api/twilio/sms';
+      
+      if (!twilioSignature || !process.env.TWILIO_AUTH_TOKEN) {
+        console.error('Missing Twilio signature or auth token');
+        return false;
+      }
+      
+      // Convert FormData to plain object for validation
+      const params: Record<string, string> = {};
+      body.forEach((value, key) => {
+        params[key] = value.toString();
+      });
+      
+      const isValid = twilio.validateRequest(
+        process.env.TWILIO_AUTH_TOKEN,
+        twilioSignature,
+        url,
+        params
+      );
+      
+      if (!isValid) {
+        console.error('Invalid Twilio signature');
+      }
+      
+      return isValid;
+    } catch (error) {
+      console.error('Error validating Twilio request:', error);
+      return false;
+    }
+  }
+  
+  // Skip validation in development
+  return true;
+};
+
+// Twilio webhook for handling incoming SMS messages
 export async function POST(req: NextRequest) {
+  console.log('SMS webhook called');
+  
   try {
-    // Parse the Twilio request
+    // Parse the request body from Twilio (form data)
     const formData = await req.formData();
     
-    // Get essential parameters
-    const to = formData.get('To') as string;
-    const from = formData.get('From') as string;
-    const body = formData.get('Body') as string;
-    const accountSid = formData.get('AccountSid') as string;
+    // Validate the request is from Twilio
+    if (!validateTwilioRequest(req, formData)) {
+      console.error('Invalid Twilio request');
+      return NextResponse.json(
+        { error: 'Unauthorized request' },
+        { status: 403 }
+      );
+    }
     
-    // Log the incoming message
-    console.log(`Incoming SMS from ${from} to ${to}: ${body}`);
+    const twilioData: Record<string, string> = {};
+    
+    // Convert FormData to a plain object
+    formData.forEach((value, key) => {
+      twilioData[key] = value.toString();
+    });
+    
+    console.log('Received SMS webhook data:', twilioData);
+    
+    // Extract relevant fields from the Twilio request
+    const {
+      From: from,
+      To: to,
+      Body: body,
+      MessageSid: messageSid
+    } = twilioData;
+    
+    if (!from || !to || !body) {
+      console.error('Missing required SMS webhook parameters');
+      return NextResponse.json(
+        { error: 'Missing required parameters' },
+        { status: 400 }
+      );
+    }
     
     // Look up the phone number in our database
     const phoneNumber = await prisma.twilioPhoneNumber.findFirst({
-      where: {
-        phoneNumber: to,
-      },
+      where: { phoneNumber: to },
       include: {
         user: true,
-        chatbot: true,
-      },
+        chatbot: true
+      }
     });
     
     if (!phoneNumber) {
-      console.log(`Phone number ${to} not found in database`);
-      return createTwimlResponse('Sorry, this number is not configured to receive messages.');
+      console.error('Phone number not found in database:', to);
+      return NextResponse.json(
+        { error: 'Phone number not registered' },
+        { status: 404 }
+      );
     }
     
-    // Look up the user who owns this Twilio subaccount
-    const user = await prisma.user.findFirst({
-      where: {
-        twilioSubaccountSid: accountSid,
-      },
+    // Save the incoming message to database
+    await prisma.message.create({
+      data: {
+        message: body,
+        response: `Auto-response: Message received from ${from}`,
+        threadId: `sms-${from}-${to}`, // Create a thread ID for SMS conversations
+        from,
+        userId: phoneNumber.userId,
+        chatbotId: phoneNumber.chatbotId,
+      }
     });
     
-    if (!user && phoneNumber.user.twilioSubaccountSid !== accountSid) {
-      console.log(`User for subaccount ${accountSid} not found`);
-      return createTwimlResponse('Unauthorized request.');
+    // If there's a chatbot associated, process the message with it
+    if (phoneNumber.chatbot) {
+      // TODO: Process the message with the chatbot
+      console.log('Message will be processed by chatbot:', phoneNumber.chatbot.id);
+      
+      // For now, just acknowledge receipt
+      const twiml = new twilio.twiml.MessagingResponse();
+      twiml.message('Thanks for your message. Our AI assistant will respond shortly.');
+      
+      return new NextResponse(twiml.toString(), {
+        headers: {
+          'Content-Type': 'text/xml'
+        }
+      });
     }
     
-    // Check if the phone number is linked to a chatbot
-    if (phoneNumber.chatbot) {
-      // Create a message thread for this conversation if it doesn't exist
-      let threadId = '';
-      
-      // Store the incoming message
-      await prisma.message.create({
-        data: {
-          message: body,
-          response: 'Processing...',
-          threadId,
-          from,
-          userId: phoneNumber.userId,
-          chatbotId: phoneNumber.chatbotId as string,
-        },
-      });
-      
-      // Pass the message to the agent for processing
-      // This would normally be an async process, with the response sent later
-      // For now, we'll return a simple acknowledgment
-      return createTwimlResponse('Your message has been received. The agent will respond shortly.');
-    } else {
-      // No chatbot assigned to this number
-      return createTwimlResponse('This number is not configured with an agent to respond to messages.');
-    }
+    // If no chatbot is assigned, just acknowledge receipt
+    const twiml = new twilio.twiml.MessagingResponse();
+    twiml.message('This phone number is not configured with an AI assistant.');
+    
+    return new NextResponse(twiml.toString(), {
+      headers: {
+        'Content-Type': 'text/xml'
+      }
+    });
+    
   } catch (error) {
-    console.error('Error handling SMS webhook:', error);
-    return createTwimlResponse('An error occurred processing your message.');
+    console.error('Error processing SMS webhook:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-}
-
-function createTwimlResponse(message: string): NextResponse {
-  const twiml = new twilio.twiml.MessagingResponse();
-  twiml.message(message);
-  
-  return new NextResponse(twiml.toString(), {
-    headers: {
-      'Content-Type': 'text/xml',
-    },
-  });
 } 

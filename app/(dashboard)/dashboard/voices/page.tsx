@@ -2,15 +2,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Divider } from '@/components/Divider';
-import { Input } from '@/components/Input';
-import { Icons } from '@/components/icons';
-import { Badge } from '@/components/ui/badge';
-import { XMarkIcon } from '@heroicons/react/20/solid';
-import { RiDeleteBinLine, RiSoundModuleLine } from '@remixicon/react';
+import { ArrowLeft } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+
+// Import our new components
+import EmptyState from './components/EmptyState';
+import VoiceLibrary from './components/VoiceLibrary';
+import VoiceDetail from './components/VoiceDetail';
+import VoiceSidebar from './components/VoiceSidebar';
 
 // Define types for the voice data
 interface VoiceLabel {
@@ -69,6 +69,38 @@ const VoicesPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<UserVoice | null>(null);
   const [userVoices, setUserVoices] = useState<UserVoice[]>([]);
+  
+  // Mobile responsiveness state
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [showVoiceDetailsOnMobile, setShowVoiceDetailsOnMobile] = useState(false);
+  const [currentAudio, setCurrentAudio] = useState<{ src: string; id: string } | null>(null);
+  
+  // New state for controlling which view is active (library or empty state)
+  const [showLibrary, setShowLibrary] = useState(false);
+
+  // Check for mobile view on mount and window resize
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobileView();
+    
+    // Set up listener for window resize
+    window.addEventListener('resize', checkMobileView);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+  
+  // Update mobile view state when voice is selected
+  useEffect(() => {
+    if (selectedVoice && isMobileView) {
+      setShowVoiceDetailsOnMobile(true);
+    }
+  }, [selectedVoice, isMobileView]);
 
   // Default voice settings if none available
   const defaultSettings: VoiceSettings = {
@@ -440,369 +472,104 @@ const VoicesPage = () => {
     return tags;
   };
 
+  const handleVoiceClick = (voice: UserVoice) => {
+    setSelectedVoice(voice);
+    setShowVoiceDetailsOnMobile(true);
+    setShowLibrary(false);
+  };
+
+  const handleBrowseLibrary = () => {
+    setSelectedVoice(null);
+    setShowLibrary(true);
+    // Make sure we show the content area on mobile too
+    if (isMobileView) {
+      setShowVoiceDetailsOnMobile(true);
+    }
+  };
+  
+  const handleBackFromLibrary = () => {
+    setShowLibrary(false);
+    if (isMobileView) {
+      setShowVoiceDetailsOnMobile(false);
+    }
+  };
+
   return (
     <div className="flex h-full">
       {/* Left Sidebar - My Voices */}
-      <div className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col">
-        <div className="p-4 pb-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-              My Voices
-            </h2>
-            <div className="flex items-center space-x-2">
-              {selectedVoice && (
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="h-9 w-9"
-                  onClick={() => setSelectedVoice(null)}
-                  title="Browse Voice Library"
-                >
-                  <Icons.search className="w-6 h-6" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        <Divider className="mt-4" />
-        
-        <div className="flex-1 overflow-auto px-4 pb-4">
-          {isUserVoicesLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
-              <span className="ml-2 text-sm text-gray-500">Loading voices...</span>
-            </div>
-          ) : userVoices.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3 mt-1">
-              {userVoices.map((voice) => (
-                <Card 
-                  key={voice.voice_id}
-                  className={cn(
-                    "group transition-all duration-200",
-                    "hover:bg-gray-50 dark:hover:bg-gray-900",
-                    "hover:shadow-sm",
-                    "hover:border-gray-300 dark:hover:border-gray-700",
-                    selectedVoice?.voice_id === voice.voice_id && [
-                      "border-indigo-500 dark:border-indigo-500",
-                      "bg-indigo-50/50 dark:bg-indigo-500/5",
-                      "ring-1 ring-indigo-500/20 dark:ring-indigo-500/20"
-                    ]
-                  )}
-                >
-                  <div className="relative px-3.5 py-2.5">
-                    <div className="flex items-center space-x-3">
-                      <span
-                        className={cn(
-                          'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium',
-                          'bg-indigo-100 dark:bg-indigo-500/20',
-                          'text-indigo-800 dark:text-indigo-500',
-                          'transition-transform duration-200 group-hover:scale-[1.02]',
-                          selectedVoice?.voice_id === voice.voice_id && [
-                            "border-2 border-indigo-500 dark:border-indigo-500",
-                            "shadow-[0_0_0_4px_rgba(59,130,246,0.1)]"
-                          ]
-                        )}
-                        aria-hidden={true}
-                      >
-                        <RiSoundModuleLine className="h-5 w-5" />
-                      </span>
-                      <div className="truncate min-w-0">
-                        <p className={cn(
-                          "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
-                          selectedVoice?.voice_id === voice.voice_id && "text-indigo-600 dark:text-indigo-400"
-                        )}>
-                          <button 
-                            onClick={() => setSelectedVoice(voice)}
-                            className="focus:outline-none hover:no-underline no-underline"
-                            type="button"
-                          >
-                            <span className="absolute inset-0" aria-hidden="true" />
-                            {voice.name}
-                          </button>
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline mt-0.5">
-                          Added {new Date(voice.addedOn).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="absolute right-2.5 top-2.5">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 p-0 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeVoiceFromUser(voice.voice_id);
-                        }}
-                        disabled={isSaving}
-                      >
-                        <RiDeleteBinLine className="h-3.5 w-3.5" />
-                        <span className="sr-only">Remove voice</span>
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="flex h-full items-center justify-center py-8 text-center">
-              <div className="flex flex-col items-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                  <RiSoundModuleLine className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-1">
-                  No voices added yet
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  Browse the voice library and add voices to your collection.
-                </p>
-                <Button 
-                  variant="secondary" 
-                  size="sm"
-                  onClick={() => setSelectedVoice(null)}
-                  className="mt-1"
-                >
-                  Browse Voices
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        {selectedVoice ? (
-          <div className="p-6">
-            <header className="border-b border-gray-200 dark:border-gray-800 pb-4 mb-4">
-              <div className="sm:flex sm:items-center sm:justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                    {selectedVoice.name}
-                  </h3>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {getImportantTags(selectedVoice).map((tag, tagIndex) => (
-                      <Badge key={tagIndex} variant="default" className="text-xs px-2 py-0">
-                        {tag.value}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <Button
-                  variant="destructive"
-                  onClick={() => removeVoiceFromUser(selectedVoice.voice_id)}
-                  disabled={isSaving}
-                >
-                  <RiDeleteBinLine className="mr-2 h-4 w-4" />
-                  Remove
-                </Button>
-              </div>
-            </header>
-            <main>
-              <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-                <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
-                  <div className="flex items-center gap-2">
-                    <Icons.play className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                    <h4 className="text-md font-semibold text-gray-900 dark:text-gray-50">
-                      Voice Preview
-                    </h4>
-                  </div>
-                </div>
-                <div className="p-4 bg-white dark:bg-gray-900/50">
-                  <div className="flex items-center space-x-4">
-                    <Input
-                      type="text"
-                      value={textInputs[selectedVoice.voice_id] || getDefaultTextForVoice(findOriginalVoice(selectedVoice))}
-                      onChange={(e) => handleTextChange(selectedVoice.voice_id, e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="primary"
-                      onClick={() => handlePlay(findOriginalVoice(selectedVoice))}
-                      className="h-8 w-8 p-0 rounded-full flex items-center justify-center"
-                      disabled={isPlaying[selectedVoice.voice_id]}
-                    >
-                      {isPlaying[selectedVoice.voice_id] ? (
-                        <Icons.loading className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Icons.play className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </main>
-          </div>
-        ) : (
-          <>
-            {/* Empty state */}
-            <div className="flex h-full flex-col items-center justify-center p-6">
-              <div className="mx-auto max-w-md text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                  <RiSoundModuleLine className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
-                  {userVoices.length > 0 
-                    ? 'Select a Voice' 
-                    : 'Welcome to Voice Library'}
-                </h1>
-                <p className="mt-2 text-gray-500 dark:text-gray-400">
-                  {userVoices.length > 0 
-                    ? 'Select a voice from the sidebar or browse the library below to add more voices to your collection.' 
-                    : 'Browse our premium AI voices to enhance your agents with natural-sounding speech.'}
-                </p>
-                <Button 
-                  className="mt-6" 
-                  onClick={() => {
-                    const voicesSection = document.getElementById('voice-library');
-                    if (voicesSection) {
-                      voicesSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                >
-                  <RiSoundModuleLine className="mr-2 h-4 w-4" />
-                  Browse Voice Library
-                </Button>
-              </div>
-            </div>
-
-            {/* Voice Library Section */}
-            <div id="voice-library" className="p-4 sm:p-6 lg:p-8 border-t border-gray-200 dark:border-gray-800">
-              {/* Banner */}
-              {showBanner && (
-                <div className="relative isolate flex items-center gap-x-6 overflow-hidden bg-gradient-to-r from-pink-100 via-purple-100 to-indigo-100 px-6 py-2.5 sm:px-3.5 sm:before:flex-1 w-full mb-6 rounded-lg">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <p className="text-sm/6 text-gray-900">
-              <strong className="font-semibold">Voice Library</strong>
-              <svg viewBox="0 0 2 2" aria-hidden="true" className="mx-2 inline h-0.5 w-0.5 fill-current">
-                <circle r={1} cx={1} cy={1} />
-              </svg>
-              Customize your agents with premium AI voices
-            </p>
-          </div>
-          <div className="flex flex-1 justify-end">
-            <button
-              type="button"
-              className="-m-3 p-3 focus-visible:outline-offset-[-4px]"
-              onClick={() => setShowBanner(false)}
-            >
-              <span className="sr-only">Dismiss</span>
-              <XMarkIcon aria-hidden="true" className="h-5 w-5 text-gray-900" />
-            </button>
-          </div>
-        </div>
+      {(!isMobileView || (isMobileView && !showVoiceDetailsOnMobile)) && (
+        <VoiceSidebar
+          userVoices={userVoices}
+          selectedVoiceId={selectedVoice?.voice_id || null}
+          isLoading={isUserVoicesLoading}
+          isSaving={isSaving}
+          isMobileView={isMobileView}
+          onVoiceSelect={handleVoiceClick}
+          onRemoveVoice={removeVoiceFromUser}
+          onBrowseLibrary={handleBrowseLibrary}
+        />
       )}
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div>
-                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">Voice Library</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Explore and test new voices for your agents
-            </p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Input
-              placeholder="Search for voice..."
-              id="search"
-              name="search"
-              type="search"
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="w-74 mt-2"
+      {/* Main Content */}
+      {(!isMobileView || (isMobileView && (showVoiceDetailsOnMobile || showLibrary))) && (
+        <div className="flex-1 overflow-auto">
+          {isMobileView && showVoiceDetailsOnMobile && selectedVoice && (
+            <div className="border-b border-gray-200 dark:border-gray-800 p-2">
+              <Button
+                variant="ghost"
+                onClick={() => setShowVoiceDetailsOnMobile(false)}
+                className="flex items-center text-gray-600 dark:text-gray-300"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to voices
+              </Button>
+            </div>
+          )}
+          
+          {selectedVoice ? (
+            <VoiceDetail
+              voice={selectedVoice}
+              isPlaying={!!isPlaying[selectedVoice.voice_id]}
+              isSaving={isSaving}
+              textInput={textInputs[selectedVoice.voice_id] || ''}
+              onRemove={removeVoiceFromUser}
+              onTextChange={handleTextChange}
+              onPlay={() => handlePlay(findOriginalVoice(selectedVoice))}
+              getImportantTags={getImportantTags}
+              getDefaultTextForVoice={(voice) => getDefaultTextForVoice(findOriginalVoice(voice))}
             />
-          </div>
+          ) : showLibrary ? (
+            <VoiceLibrary
+              voices={filteredVoices}
+              searchTerm={searchTerm}
+              visibleVoices={visibleVoices}
+              isLoading={isLoading}
+              showBanner={showBanner}
+              isPlaying={isPlaying}
+              textInputs={textInputs}
+              isSaving={isSaving}
+              userVoices={userVoices}
+              isMobileView={isMobileView}
+              onSearchChange={handleSearchChange}
+              onLoadMore={loadMoreVoices}
+              onAddVoice={addVoiceToUser}
+              onRemoveVoice={removeVoiceFromUser}
+              onPlayVoice={handlePlay}
+              onTextChange={handleTextChange}
+              onBannerClose={() => setShowBanner(false)}
+              onBack={handleBackFromLibrary}
+              getDefaultTextForVoice={getDefaultTextForVoice}
+              isVoiceAddedToUser={isVoiceAddedToUser}
+              getImportantTags={getImportantTags}
+            />
+          ) : (
+            <EmptyState
+              userVoicesCount={userVoices.length}
+              onBrowseClick={handleBrowseLibrary}
+            />
+          )}
         </div>
-
-              <Divider className="mb-6" />
-
-        {/* Loading state */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
-            <span className="ml-2 text-sm text-gray-500">Loading voices...</span>
-          </div>
-        ) : voices.length === 0 ? (
-          <div className="flex h-full items-center justify-center py-8 text-center">
-            <div className="flex flex-col items-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                No voices available.
-              </p>
-            </div>
-          </div>
-        ) : (
-          /* Grid List */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVoices.slice(0, visibleVoices).map((voice, index) => (
-              <Card key={index} className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{voice.name}</h2>
-                          <div className="flex flex-row flex-wrap gap-1 mt-1">
-                            {getImportantTags(voice).map((tag, tagIndex) => (
-                              <Badge key={tagIndex} variant="default" className="text-xs px-2 py-0">
-                                {tag.value}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                    <Button 
-                          variant={isVoiceAddedToUser(voice.voice_id) ? "destructive" : "secondary"} 
-                      size="sm"
-                          onClick={() => isVoiceAddedToUser(voice.voice_id) 
-                            ? removeVoiceFromUser(voice.voice_id) 
-                            : addVoiceToUser(voice)
-                          }
-                          disabled={isSaving}
-                        >
-                          {isVoiceAddedToUser(voice.voice_id) ? (
-                            <>
-                              <RiDeleteBinLine className="mr-1.5 h-4 w-4" />
-                              Remove
-                            </>
-                          ) : (
-                            '+ Add Voice'
-                          )}
-                    </Button>
-                      </div>
-                
-                <div className="flex items-center space-x-4">
-                  <Input
-                    type="text"
-                          value={textInputs[voice.voice_id] || getDefaultTextForVoice(voice)}
-                    onChange={(e) => handleTextChange(voice.voice_id, e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="primary"
-                          onClick={() => handlePlay(voice)}
-                    className="h-8 w-8 p-0 rounded-full flex items-center justify-center"
-                          disabled={isPlaying[voice.voice_id]}
-                  >
-                    {isPlaying[voice.voice_id] ? (
-                      <Icons.loading className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Icons.play className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {/* Load More Button */}
-        {!isLoading && filteredVoices.length > visibleVoices && (
-          <div className="flex justify-center mt-6">
-            <Button variant="primary" onClick={loadMoreVoices}>Load More</Button>
-          </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+      )}
     </div>
   );
 };

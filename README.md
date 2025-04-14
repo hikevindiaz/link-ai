@@ -27,6 +27,44 @@ Welcome to **Link AI**, the platform designed to empower businesses by automatin
 - **Customer Support 24/7**  
   Reduce response time and increase satisfaction with AI-powered support agents, providing round-the-clock assistance to your customers.
 
+## Voice Interface
+
+The application includes a low-latency voice interface that allows users to interact with the AI assistant through speech.
+
+### Features
+
+- Real-time speech-to-text using OpenAI's Whisper model
+- Fast text-to-speech using ElevenLabs Flash v2.5 model for minimal latency
+- Voice activity detection (VAD) for natural conversation flow
+- Animated visual feedback using Rive animations
+- Proper error handling and recovery
+
+### Implementation
+
+The voice interface is implemented using:
+
+- WebSockets for real-time text-to-speech streaming 
+- MediaRecorder API for audio capture
+- AudioContext API for audio processing and level detection
+- React hooks for state management
+
+### Usage
+
+To start a voice conversation, click the "Voice" button in the chat header, then click "Start Voice Call". 
+The system will play a welcome message and then begin listening for your voice input.
+
+### Development
+
+The main components and hooks for the voice interface are:
+
+- `useVoiceInterfaceV2`: Core hook that handles voice state management (in `hooks/use-voice-interface-v2.tsx`)
+- `VoiceInterfaceV2`: UI component for voice interaction (in `components/chat-interface/voice-interface-v2.tsx`)
+- `RiveVoiceOrb`: Animated visualization component (in `components/chat-interface/rive-voice-orb.tsx`)
+
+Voice API endpoints:
+- `/api/voice-credentials`: Provides secure WebSocket endpoints and credentials
+- `/api/openai/stt`: Handles speech-to-text processing using OpenAI Whisper
+
 ---
 
 ## 🧠 Why Link AI?

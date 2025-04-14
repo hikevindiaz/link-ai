@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import twilio from 'twilio';
 
 // Initialize Twilio client
-const twilioClient = twilio(
+const twilioMainClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
@@ -43,7 +43,7 @@ export async function POST(
     
     // Call Twilio API to get the current status of the phone number
     try {
-      const twilioPhoneNumber = await twilioClient.incomingPhoneNumbers(phoneNumber.twilioSid).fetch();
+      const twilioPhoneNumber = await twilioMainClient.incomingPhoneNumbers(phoneNumber.twilioSid).fetch();
       
       // Map Twilio status to our status
       // Note: Twilio's API doesn't have a direct "status" field for phone numbers

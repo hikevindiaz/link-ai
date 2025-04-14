@@ -144,7 +144,7 @@
     "next-themes": "^0.2.1",
     "nextjs-google-analytics": "^2.3.7",
     "oas": "^24.1.0",
-    "openai": "^4.77.3",
+    "openai": "^4.93.0",
     "openai-edge": "^1.2.2",
     "openassistantgpt": "^0.1.7",
     "papaparse": "^5.5.2",

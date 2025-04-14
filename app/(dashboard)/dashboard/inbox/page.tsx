@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from "next-auth/react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Eye, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/Button";
 import { Divider } from "@/components/Divider";
 import {
@@ -32,6 +32,11 @@ export default function InboxPage() {
   const [selectedAgentFilter, setSelectedAgentFilter] = useState<string>("all");
   const { toast: uiToast } = useToast();
   const [knownThreadIds, setKnownThreadIds] = useState<string[]>([]);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  
+  // Add state to track if we're in mobile view
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [showConversationOnMobile, setShowConversationOnMobile] = useState(false);
   
   // Function to fetch conversations
   const fetchConversations = useCallback(async () => {
@@ -170,9 +175,89 @@ export default function InboxPage() {
     await fetchConversations();
   };
 
-  // Update the setSelectedConversation function to mark the thread as read
+  // Add a function to mark all conversations as read
+  const handleMarkAllAsRead = async () => {
+    if (isMarkingAllRead || conversations.length === 0) return;
+    
+    setIsMarkingAllRead(true);
+    
+    try {
+      // Call API to mark all as read
+      const response = await fetch('/api/inbox/markAllAsRead', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          agentId: selectedAgentFilter === "all" ? undefined : selectedAgentFilter 
+        }),
+      });
+      
+      if (response.ok) {
+        // Update the local state to reflect all conversations as read
+        setConversations(prevConversations => 
+          prevConversations.map(conv => ({ ...conv, unread: false }))
+        );
+        
+        // Trigger a refresh of the unread count in the sidebar
+        const event = new CustomEvent('inboxThreadRead');
+        window.dispatchEvent(event);
+        
+        // Notify success
+        uiToast({
+          title: "Success",
+          description: "All messages marked as read"
+        });
+      } else {
+        console.error('Failed to mark all as read');
+        uiToast({
+          title: "Error",
+          description: "Failed to mark all messages as read"
+        });
+      }
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+      uiToast({
+        title: "Error",
+        description: "An error occurred"
+      });
+    } finally {
+      setIsMarkingAllRead(false);
+    }
+  };
+
+  // Check for mobile view on mount and window resize
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobileView();
+    
+    // Set up listener for window resize
+    window.addEventListener('resize', checkMobileView);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+  
+  // Update mobile view state when conversation is selected
+  useEffect(() => {
+    if (isMobileView && selectedConversation) {
+      setShowConversationOnMobile(true);
+    }
+  }, [selectedConversation, isMobileView]);
+
+  // Update the setSelectedConversation function
   const handleSelectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
+    
+    // On mobile, show the conversation panel
+    if (isMobileView) {
+      setShowConversationOnMobile(true);
+    }
     
     // Only make the API call if the conversation is unread
     if (conversation.unread) {
@@ -206,66 +291,103 @@ export default function InboxPage() {
       }
     }
   };
+  
+  // Handle going back to the conversation list on mobile
+  const handleBackToList = () => {
+    setShowConversationOnMobile(false);
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Left Sidebar: Conversations List */}
-      <div className="w-96 border-r border-gray-200 dark:border-gray-800 flex flex-col">
-        <div className="p-4 pb-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-              Inbox
-            </h2>
-            <div className="flex items-center space-x-2">
-              <Select
-                value={selectedAgentFilter}
-                onValueChange={(val) => {
-                  setSelectedAgentFilter(val);
-                  fetchConversations();
-                }}
-              >
-                <SelectTrigger className="p-2 border rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-50 w-30 flex-shrink-0">
-                  <SelectValue placeholder="Select Agent" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Agents</SelectItem>
-                  {Array.isArray(agents) && agents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>
-                      {agent.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="secondary"
-                className="h-8 w-8 p-0"
-                onClick={handleRefresh}
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
+      {(!isMobileView || (isMobileView && !showConversationOnMobile)) && (
+        <div className={`${isMobileView ? 'w-full' : 'w-96'} border-r border-gray-200 dark:border-gray-800 flex flex-col`}>
+          <div className="p-4 pb-0">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Inbox
+              </h2>
+              <div className="flex items-center space-x-2">
+                <Select
+                  value={selectedAgentFilter}
+                  onValueChange={(val) => {
+                    setSelectedAgentFilter(val);
+                    fetchConversations();
+                  }}
+                >
+                  <SelectTrigger className="p-2 border rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-50 w-30 flex-shrink-0">
+                    <SelectValue placeholder="Select Agent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Agents</SelectItem>
+                    {Array.isArray(agents) && agents.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                {/* Mark all as read button */}
+                <Button
+                  variant="secondary"
+                  className="h-8 w-8 p-0"
+                  onClick={handleMarkAllAsRead}
+                  disabled={isMarkingAllRead || conversations.filter(c => c.unread).length === 0}
+                  title="Mark all as read"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                
+                {/* Refresh button */}
+                <Button
+                  variant="secondary"
+                  className="h-8 w-8 p-0"
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                  title="Refresh inbox"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
             </div>
           </div>
+          
+          <Divider className="mt-4" />
+          
+          <ConversationList 
+            conversations={conversations}
+            isLoading={isLoading}
+            selectedConversation={selectedConversation}
+            onSelectConversation={handleSelectConversation}
+            onRefresh={handleRefresh}
+          />
         </div>
-        
-        <Divider className="mt-4" />
-        
-        <ConversationList 
-          conversations={conversations}
-          isLoading={isLoading}
-          selectedConversation={selectedConversation}
-          onSelectConversation={handleSelectConversation}
-          onRefresh={handleRefresh}
-        />
-      </div>
+      )}
 
       {/* Main Content: Chat Thread */}
-      <div className="flex-1 overflow-auto">
-        {selectedConversation ? (
-          <ChatThread conversation={selectedConversation} />
-        ) : (
-          <EmptyThreadState />
-        )}
-      </div>
+      {(!isMobileView || (isMobileView && showConversationOnMobile)) && (
+        <div className="flex-1 overflow-auto">
+          {isMobileView && showConversationOnMobile && (
+            <div className="border-b border-gray-200 dark:border-gray-800 p-2">
+              <Button
+                variant="ghost"
+                onClick={handleBackToList}
+                className="flex items-center text-gray-600 dark:text-gray-300"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to conversations
+              </Button>
+            </div>
+          )}
+          
+          {selectedConversation ? (
+            <ChatThread conversation={selectedConversation} />
+          ) : (
+            <EmptyThreadState />
+          )}
+        </div>
+      )}
     </div>
   );
 }

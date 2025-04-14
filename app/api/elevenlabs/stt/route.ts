@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       hasFile: !!audioFile, 
       fileType: audioFile?.type,
       fileSize: audioFile?.size,
+      name: audioFile?.name,
       modelId 
     });
 
@@ -53,12 +54,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Convert to a proper Blob with correct MIME type
-    const audioBlob = new Blob([fileBytes], { type: 'audio/webm;codecs=opus' });
+    // Get filename and type from the original file
+    const filename = audioFile.name || 'audio.webm';
+    const fileType = audioFile.type || 'audio/webm';
+
+    // Convert to a proper Blob with the original MIME type
+    const audioBlob = new Blob([fileBytes], { type: fileType });
     
     // Prepare form data for ElevenLabs API
     const elevenlabsFormData = new FormData();
-    elevenlabsFormData.append('file', audioBlob, 'audio.webm');
+    elevenlabsFormData.append('file', audioBlob, filename);
     elevenlabsFormData.append('model_id', modelId);
     
     // Optional parameters

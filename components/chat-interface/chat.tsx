@@ -11,22 +11,17 @@ import { VisibilityType } from '@/components/chat-interface/visibility-selector'
 import { useArtifactSelector } from '@/components/chat-interface/hooks/use-artifact';
 import { SuggestedActions } from '@/components/chat-interface/suggested-actions';
 import { toast } from 'sonner';
-import RiveVoiceOrb from '@/components/chat-interface/rive-voice-orb';
-import { useElevenlabsRealtime } from '@/hooks/use-elevenlabs-realtime';
-import { Button } from '@/components/ui/button';
-import useSWR from 'swr';
-import { Chatbot } from '@prisma/client';
+import { VoiceInterfaceV2, VoiceInterfaceHandle } from '@/components/chat-interface/voice-interface-v2';
 
-// Define the Attachment type locally since it's not exported from 'ai'
 interface Attachment {
-  name: string;
+  id: string;
   type: string;
   url: string;
 }
 
-// Define our own Message type that extends the AI SDK Message type
 interface ChatMessage extends Message {
-  id: string; // Make id required
+  id: string; // Make id required to match the Messages component expectation
+  attachments?: Attachment[];
 }
 
 // Type for the append function expected by child components
@@ -34,393 +29,238 @@ type AppendFunction = (message: Message | CreateMessage, chatRequestOptions?: an
 
 // This interface adapts to your existing schema
 export interface ChatProps {
-  id: string;
-  initialMessages?: ChatMessage[];
-  chatbotId: string;
+  chatbotId?: string;
+  currentThreadId: string;
+  welcomeMessage?: string;
   selectedChatModel?: string;
   selectedVisibilityType?: VisibilityType;
+  chatbotLogoURL?: string;
   isReadonly?: boolean;
-  chatbotLogoURL?: string | null;
-  chatTitle?: string | null;
-  testKnowledge?: string;
-  welcomeMessage?: string | null;
-  initialMode?: 'text' | 'voice';
+  chatTitle?: string;
 }
 
 export function Chat({
-  id,
-  initialMessages = [],
   chatbotId,
-  selectedChatModel = 'gpt-4o-mini',
-  selectedVisibilityType = 'public',
-  isReadonly = false,
-  chatbotLogoURL,
-  chatTitle,
-  testKnowledge,
+  currentThreadId,
   welcomeMessage,
-  initialMode = 'text',
+  selectedChatModel = 'gpt-3.5-turbo',
+  selectedVisibilityType = 'public',
+  chatbotLogoURL,
+  isReadonly = false,
+  chatTitle,
 }: ChatProps) {
-  const [currentThreadId] = useState(id.startsWith('thread_') ? id : `thread_${id}`);
-  const [votes, setVotes] = useState<any[]>([]);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+  // State
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  const [currentMode, setCurrentMode] = useState<'text' | 'voice'>(initialMode);
-  const [isCallActive, setIsCallActive] = useState(false);
-  const lastSpokenMessageRef = useRef<string | null>(null);
-  const messageBeingSpokenRef = useRef<string | null>(null);
-  const previousElevenLabsState = useRef<string>('idle');
-  // Track if welcome message has been played
-  const [hasPlayedWelcomeMessage, setHasPlayedWelcomeMessage] = useState(false);
-
-  const { data: chatbotData } = useSWR<Chatbot>(chatbotId ? `/api/chatbots/${chatbotId}` : null, fetcher);
-  const elevenLabsVoiceId = chatbotData?.voice || '21m00Tcm4TlvDq8ikWAM';
-
+  const [currentMode, setCurrentMode] = useState<'text' | 'voice'>('text');
+  const [input, setInput] = useState('');
+  const [attachments, setAttachments] = useState<any[]>([]);
+  const lastResponseRef = useRef<string | null>(null);
+  
+  // Custom hooks
+  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+  
+  // AI Chat SDK integration
   const {
     messages,
-    setMessages,
-    handleSubmit: originalHandleSubmit,
-    input,
-    setInput,
-    append: originalAppend,
-    status,
-    stop,
+    append,
     reload,
+    stop,
     isLoading,
-    error
+    error,
+    setMessages,
   } = useChat({
-    api: '/api/chat-interface',
     id: currentThreadId,
     body: {
       chatbotId,
       selectedChatModel,
-      testKnowledge,
+      selectedVisibilityType,
     },
-    initialMessages: initialMessages.map(msg => ({
-      ...msg,
-      role: msg.role as 'user' | 'assistant' | 'system'
-    })),
-    onError: (error) => {
-      console.error('Chat error:', error);
-      toast.error('An error occurred during chat, please try again!');
-    },
+    api: '/api/chat-interface',
     streamProtocol: 'text',
+    onResponse: async (response) => {
+      console.log('[Chat Interface] Response received, streaming started');
+      if (response.status !== 200) {
+        console.error(`[Chat Interface] Response error: ${response.status} ${response.statusText}`);
+        toast.error('Error receiving response from AI');
+      }
+    },
     onFinish: (message) => {
-      console.log('[Chat Interface] Response finished, dispatching event.');
+      console.log('[Chat Interface] Message streaming complete:', message.id);
+      lastResponseRef.current = message.content;
       
-      // Only speak if in voice mode, message is from assistant, and it hasn't been spoken already
-      if (currentMode === 'voice' && 
-          message.role === 'assistant' && 
-          message.content && 
-          message.content !== lastSpokenMessageRef.current &&
-          // Only try to speak if we're not already speaking (prevents duplicate messages)
-          elevenLabsState !== 'speaking' && 
-          // Also don't speak if we're in the middle of processing speech
-          elevenLabsState !== 'processing') {
-        
-        console.log("Speaking finished message:", message.content.substring(0, 50) + "...");
-        
-        if (typeof sendTextToSpeak === 'function') {
-          // Update both references to track what's being spoken
-          messageBeingSpokenRef.current = message.content;
-          lastSpokenMessageRef.current = message.content;
-          
-          // Send the text to speak
-          sendTextToSpeak(message.content);
-        } else {
-          console.warn("sendTextToSpeak is not available when trying to speak finished message.");
+      // Force a re-render to ensure UI updates but don't re-fetch messages
+      setMessages(prevMessages => {
+        console.log('[Chat Debug] onFinish updating messages array, current count:', prevMessages.length);
+        return [...prevMessages];
+      });
+      
+      // If in voice mode, speak the response
+      if (currentMode === 'voice' && message.role === 'assistant' && message.content) {
+        if (voiceInterfaceRef.current) {
+          voiceInterfaceRef.current.sendTextToSpeak(message.content);
         }
       }
-      
-      window.dispatchEvent(new CustomEvent('newChatMessageSaved'));
     },
+    onError: (error) => {
+      console.error('[Chat Interface] Streaming error:', error);
+      toast.error('Error receiving message from AI. Please try again.');
+      // Force a refresh of UI state to prevent stale state
+      setMessages(prevMessages => [...prevMessages]);
+    }
   });
 
-  const append: AppendFunction = useCallback(async (message, options) => {
-    let role: 'user' | 'assistant' | 'system' | 'data';
-    if (message.role === 'user' || message.role === 'assistant' || message.role === 'system' || message.role === 'data') {
-      role = message.role;
-    } else {
-      console.error(`Invalid role found in append: ${message.role}. Defaulting to user, but this might be incorrect.`);
-      role = 'user';
-    }
-
-    const messageToSend = { ...message, role };
-
-    await originalAppend(messageToSend, options);
-  }, [originalAppend]);
-
-  const handleTranscriptReceived = useCallback((transcript: string, isFinal: boolean) => {
-    if (isFinal && transcript.trim()) {
-      console.log("Final transcript received, appending:", transcript);
-      append({ role: 'user', content: transcript });
-    }
-  }, [append]);
-
-  const handleElevenLabsError = useCallback((errorMsg: string) => {
-    console.error("ElevenLabs Hook Error:", errorMsg);
-    toast.error(`Voice Error: ${errorMsg}`);
-    setIsCallActive(false);
-  }, []);
-
-  // Add a state for audio level
-  const [audioLevel, setAudioLevel] = useState<number>(0);
-
-  const handleAudioLevelChange = useCallback((level: number) => {
-    setAudioLevel(level);
-  }, []);
-
-  const {
-    currentState: elevenLabsState,
-    isApiKeyLoading,
-    startSession: startElevenLabsSession,
-    stopSession: stopElevenLabsSession,
-    stopRecording: stopElevenLabsRecording,
-    sendTextToSpeak,
-    userTranscript: elevenLabsUserTranscript,
-    audioLevel: rawAudioLevel,
-  } = useElevenlabsRealtime({
-    chatbotId: chatbotId,
-    voiceId: elevenLabsVoiceId,
-    onTranscriptReceived: handleTranscriptReceived,
-    onError: handleElevenLabsError,
-    welcomeMessage: welcomeMessage || undefined,
-    onAudioLevelChange: handleAudioLevelChange,
-  });
-
+  // Debug whenever messages change
   useEffect(() => {
-    async function fetchVotes() {
-      try {
-        const data = await fetcher(`/api/chat-interface/votes?threadId=${currentThreadId}`);
-        setVotes(data || []);
-      } catch (error) {
-        console.error('Failed to fetch votes', error);
-      }
-    }
-    
-    if (currentThreadId !== 'thread_new') {
-      fetchVotes();
-    }
-  }, [currentThreadId]);
+    console.log('[Chat Debug] Messages updated:', messages.length);
+    messages.forEach((msg, i) => {
+      console.log(`[Chat Debug] Message ${i}: id=${msg.id || 'NO_ID'}, role=${msg.role}, content=${msg.content?.substring(0, 30) || 'empty'}...`);
+    });
+  }, [messages]);
 
-  const handleMessageSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      await originalHandleSubmit(e);
-    } catch (error) {
-      console.error('Error submitting message:', error);
-      toast.error('Failed to send message');
-    }
-  };
-
-  const chatMessages = messages
-    .map(msg => ({
+  // Ensure all messages have IDs
+  const messagesWithIds = useMemo(() => {
+    const result = messages.map(msg => ({
       ...msg,
-      id: msg.id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    })) as ChatMessage[];
+      id: msg.id || `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+    }));
+    console.log(`[Chat Debug] Processed ${result.length} messages with IDs`);
+    return result;
+  }, [messages]);
 
-  const handleModeChange = useCallback((newMode: 'text' | 'voice') => {
-    console.log(`Switching mode to: ${newMode}`);
-    if (currentMode === 'voice' && newMode === 'text') {
-      if (isCallActive) {
-        console.log("Stopping voice call due to mode switch.");
-        stopElevenLabsSession();
-        setIsCallActive(false);
-      }
-    } else if (currentMode === 'text' && newMode === 'voice' && !isCallActive) {
-    }
-    setCurrentMode(newMode);
-  }, [currentMode, isCallActive, stopElevenLabsSession]);
-
-  const handleCallToggle = useCallback(() => {
-    if (isApiKeyLoading) {
-      console.warn("Cannot start call: API key still loading.");
-      toast.warning("Voice system is initializing, please wait...");
-      return;
-    }
-    if (isCallActive) {
-      console.log("Ending voice call manually...");
-      stopElevenLabsSession();
-      setIsCallActive(false);
-    } else {
-      console.log("Starting voice call manually...");
-      startElevenLabsSession();
-      setIsCallActive(true);
-    }
-  }, [isCallActive, startElevenLabsSession, stopElevenLabsSession, isApiKeyLoading]);
-
-  // Add an effect to automatically update the call active status based on the current state
+  // Helper status variables
+  const status = isLoading ? 'streaming' : error ? 'error' : 'ready';
+  
+  // Debug whenever status changes
   useEffect(() => {
-    // If state becomes 'idle' or 'error', we should update the call active status
-    if (isCallActive && (elevenLabsState === 'idle' || elevenLabsState === 'error')) {
-      console.log(`ElevenLabs state changed to ${elevenLabsState}, updating call status`);
-      setIsCallActive(false);
-    }
-  }, [elevenLabsState, isCallActive]);
-
-  // Modify the orbIsReady state to create a distinct neutral/idle state after welcome message
-  const orbIsReady = useMemo(() => {
-    // This is the neutral "ready for interaction" state after welcome message
-    // where the orb is just waiting for user action (not actively listening yet)
-    return isCallActive && 
-      elevenLabsState === 'waiting' && 
-      hasPlayedWelcomeMessage;
-  }, [isCallActive, elevenLabsState, hasPlayedWelcomeMessage]);
-
-  // Listening should only be when we're actively listening but not speaking yet
-  const orbIsListening = useMemo(() => {
-    return isCallActive && 
-      elevenLabsState === 'listening' && 
-      !elevenLabsUserTranscript.length;
-  }, [isCallActive, elevenLabsState, elevenLabsUserTranscript.length]);
-
-  // Improved user speaking detection - consider both transcript and audio level
-  const orbIsUserSpeaking = useMemo(() => {
-    // Detect user speaking when:
-    // 1. Call is active and in listening state
-    // 2. Either we have transcript text OR the audio level is above threshold (indicating speech)
-    return isCallActive && 
-      elevenLabsState === 'listening' && 
-      (elevenLabsUserTranscript.length > 0 || audioLevel > 0.15);
-  }, [isCallActive, elevenLabsState, elevenLabsUserTranscript.length, audioLevel]);
-
-  // Processing speech to text
-  const orbIsProcessing = isCallActive && elevenLabsState === 'processing';
-
-  // When in connecting state, show as processing
-  const orbIsConnecting = isCallActive && (
-    elevenLabsState === 'connecting'
-  );
-
-  // Speaking state should be pure - only when we're actually speaking
-  const orbIsSpeaking = isCallActive && elevenLabsState === 'speaking';
-
-  // Base waiting state
-  const orbIsWaiting = isCallActive && elevenLabsState === 'waiting';
-
-  // Reset hasPlayedWelcomeMessage when ending a call
+    console.log(`[Chat Debug] Status changed to: ${status}`);
+  }, [status]);
+  
+  // Force refresh thread messages when thread ID changes
   useEffect(() => {
-    if (!isCallActive) {
-      setHasPlayedWelcomeMessage(false);
-    }
-  }, [isCallActive]);
-
-  // Update effect to track when welcome message is played
-  useEffect(() => {
-    // When state transitions from speaking to waiting or listening
-    // and we haven't set hasPlayedWelcomeMessage yet
-    if (!hasPlayedWelcomeMessage && 
-        previousElevenLabsState.current === 'speaking' && 
-        (elevenLabsState === 'waiting' || elevenLabsState === 'listening')) {
-      console.log("Welcome message seems to have finished, marking as played");
-      setHasPlayedWelcomeMessage(true);
-    }
-    
-    // When speech ends (state changes from speaking to something else)
-    if (previousElevenLabsState.current === 'speaking' && 
-        elevenLabsState !== 'speaking' && 
-        messageBeingSpokenRef.current) {
+    if (currentThreadId) {
+      // Manually fetch the latest messages to ensure we have everything
+      console.log(`[Chat Debug] Thread ID changed, refreshing messages for ${currentThreadId}`);
       
-      console.log("Speech finished, clearing message being spoken reference");
-      messageBeingSpokenRef.current = null;
+      fetch(`/api/chat-interface?id=${currentThreadId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.messages && Array.isArray(data.messages)) {
+            console.log(`[Chat Debug] Fetched ${data.messages.length} messages from API`);
+            setMessages(data.messages);
+          }
+        })
+        .catch(err => {
+          console.error(`[Chat Debug] Error fetching messages:`, err);
+        });
     }
-    
-    // Keep track of previous state transitions
-    console.log(`[Voice State] Changed from ${previousElevenLabsState.current} to ${elevenLabsState}`);
-    previousElevenLabsState.current = elevenLabsState;
-  }, [elevenLabsState, hasPlayedWelcomeMessage]);
+  }, [currentThreadId, setMessages]);
 
-  // Update audio level calculation for more natural animation
-  const orbAudioLevel = useMemo(() => {
-    // When user is speaking, use actual audio level with dynamic amplification
-    if (orbIsUserSpeaking) {
-      const amplifiedLevel = Math.pow(audioLevel, 0.7) * 1.8;
-      return Math.min(1, amplifiedLevel); 
-    } 
-    // When system is speaking, use moderate pulsing with slight randomness
-    else if (orbIsSpeaking) {
-      // Use more dynamic randomness for speaking to appear more natural
-      return 0.5 + (Math.sin(Date.now() / 150) * 0.15); 
-    } 
-    // When processing, use subtle pulsing
-    else if (orbIsProcessing || orbIsConnecting) {
-      return 0.3 + (Math.sin(Date.now() / 300) * 0.05); // Gentle pulse
-    } 
-    // When ready for interaction (after welcome message), very subtle animation
-    else if (orbIsReady) {
-      return 0.1 + (Math.sin(Date.now() / 1500) * 0.05); // Very subtle breathing
-    }
-    // When in base listening mode, subtle animation
-    else if (orbIsListening) {
-      return 0.2 + (Math.sin(Date.now() / 800) * 0.05); // Subtle listening pulse
-    }
-    // When in explicit waiting state, minimal animation
-    else if (orbIsWaiting && !hasPlayedWelcomeMessage) {
-      return 0.15; // Less animation during initial setup
-    }
-    // Default minimal animation
-    return 0.1;
-  }, [
-    orbIsUserSpeaking,
-    orbIsSpeaking,
-    orbIsProcessing,
-    orbIsConnecting,
-    orbIsWaiting,
-    orbIsListening,
-    orbIsReady,
-    hasPlayedWelcomeMessage,
-    audioLevel
-  ]);
+  // Ref to the voice interface for TTS
+  const voiceInterfaceRef = useRef<VoiceInterfaceHandle>(null);
 
-  // Improved status text to match desired flow
-  let statusText = "Ready for voice call";
-  if (isApiKeyLoading) {
-    statusText = "Initializing...";
-  } else if (isCallActive) {
-    switch (elevenLabsState) {
-      case 'connecting':
-        statusText = "Connecting...";
-        break;
-      case 'waiting':
-        statusText = hasPlayedWelcomeMessage 
-          ? "I'm ready. What would you like to know?" 
-          : "Getting ready...";
-        break;
-      case 'listening':
-        statusText = orbIsUserSpeaking 
-          ? "I'm listening..." 
-          : "How can I help you?";
-        break;
-      case 'processing':
-        statusText = "Processing...";
-        break;
-      case 'speaking':
-        statusText = "I'm speaking...";
-        break;
-      case 'error':
-        statusText = "Error with voice service";
-        break;
-      case 'idle':
-        statusText = "Voice call ended";
-        break;
-      default:
-        statusText = "Initializing...";
-    }
-  } else {
-    statusText = "Click 'Voice Call' to start";
+  // Mode change handler
+  function handleModeChange(mode: 'text' | 'voice') {
+    console.log("[Chat] Switching mode to:", mode);
+    setCurrentMode(mode);
   }
 
-  // Update the RiveVoiceOrb component props
-  <RiveVoiceOrb
-    isListening={orbIsListening}
-    isUserSpeaking={orbIsUserSpeaking}
-    isThinking={orbIsProcessing || orbIsConnecting}
-    isSpeaking={orbIsSpeaking}
-    isWaiting={orbIsWaiting || orbIsReady}
-    audioLevel={orbAudioLevel}
-  />
+  // Handle transcript from voice interface
+  function handleTranscriptReceived(transcript: string, isFinal: boolean) {
+    console.log(`[Chat] Transcript received (final: ${isFinal}):`, transcript);
+    
+    if (isFinal && transcript.trim()) {
+      // Create message and append to chat
+      const message: CreateMessage = {
+        role: 'user',
+        content: transcript,
+      };
+      
+      handleAppend(message as any);
+    }
+  }
+
+  // Handle LLM response for text-to-speech
+  async function handleAppend(message: any) {
+    console.log('[Chat] Appending message:', message);
+    
+    try {
+      // Ensure message has an ID before appending
+      if (!message.id) {
+        message.id = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      }
+      
+      // Track state before append
+      const messageCountBefore = messages.length;
+      console.log(`[Chat Debug] Before append: ${messageCountBefore} messages, status=${status}`);
+      
+      // Add the message to the UI
+      await append(message);
+      
+      // Track state after append
+      console.log(`[Chat Debug] After append: ${messages.length} messages, status=${status}`);
+      
+    } catch (err) {
+      console.error('[Chat] Error appending message:', err);
+      toast.error('Failed to send message');
+    }
+  }
+
+  // Handle message form submission
+  async function handleMessageSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    
+    if (!input.trim() && !attachments.length) return;
+    
+    try {
+      console.log(`[Chat Debug] Submitting message: ${input.substring(0, 30)}...`);
+      
+      const userMessage = {
+        role: 'user',
+        content: input,
+        attachments,
+        id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      } as ChatMessage;
+      
+      // Clear the input and attachments before sending
+      setInput('');
+      setAttachments([]);
+      
+      // Append the message
+      await handleAppend(userMessage);
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message. Please try again.');
+    }
+  }
+
+  // Effect to check for streaming updates and force render - improve the implementation
+  useEffect(() => {
+    // More frequent updates during streaming to ensure UI reactivity
+    const intervalId = setInterval(() => {
+      if (isLoading) {
+        // Force a re-render during streaming to ensure UI updates
+        console.log('[Chat Debug] Forcing UI refresh during streaming');
+        setMessages(prevMessages => [...prevMessages]);
+      }
+    }, 100); // Check very frequently - every 100ms during streaming
+    
+    return () => clearInterval(intervalId);
+  }, [isLoading, setMessages]);
+
+  // Add error recovery effect
+  useEffect(() => {
+    if (error) {
+      console.error('[Chat Debug] Detected error state, attempting recovery:', error);
+      // After a brief delay, try to recover from error state
+      const timeoutId = setTimeout(() => {
+        console.log('[Chat Debug] Attempting to refresh messages after error');
+        setMessages(prevMessages => [...prevMessages]);
+      }, 1000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [error, setMessages]);
 
   return (
     <div className="chat-interface-container flex flex-col min-w-0 h-dvh bg-white dark:bg-gray-950">
@@ -441,9 +281,8 @@ export function Chat({
             <Messages
               chatId={currentThreadId}
               chatbotId={chatbotId}
-              status={status}
-              votes={votes}
-              messages={chatMessages}
+              status={status as any}
+              messages={messagesWithIds as any}
               setMessages={setMessages as any}
               reload={reload}
               isReadonly={isReadonly}
@@ -453,11 +292,11 @@ export function Chat({
             />
           </div>
 
-          {!isReadonly && messages.length === 0 && (
+          {!isReadonly && messagesWithIds.length === 0 && (
             <SuggestedActions
               chatId={currentThreadId}
               chatbotId={chatbotId}
-              append={append}
+              append={handleAppend as any}
             />
           )}
 
@@ -473,52 +312,24 @@ export function Chat({
                 input={input}
                 setInput={setInput}
                 handleSubmit={handleMessageSubmit}
-                status={status}
+                status={status as any}
                 stop={stop}
                 attachments={attachments}
                 setAttachments={setAttachments}
-                messages={chatMessages}
+                messages={messagesWithIds as any}
                 setMessages={setMessages as any}
-                append={append}
+                append={handleAppend as any}
               />
             )}
           </form>
         </>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center p-4 relative bg-background">
-          <RiveVoiceOrb
-            isListening={orbIsListening}
-            isUserSpeaking={orbIsUserSpeaking}
-            isThinking={orbIsProcessing || orbIsConnecting}
-            isSpeaking={orbIsSpeaking}
-            isWaiting={orbIsWaiting || orbIsReady}
-            audioLevel={orbAudioLevel}
-          />
-          
-          <p className="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300">
-            {statusText}
-          </p>
-          
-          {elevenLabsUserTranscript && (
-            <div className="mt-4 max-w-md w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-800">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                <span className="font-medium text-indigo-600 dark:text-indigo-400">You: </span>
-                {elevenLabsUserTranscript}
-              </p>
-            </div>
-          )}
-          
-          <div className="flex flex-col gap-2 mt-6">
-            <Button 
-              onClick={handleCallToggle}
-              variant={isCallActive ? "destructive" : "primary"}
-              className="rounded-full px-6 py-3"
-              disabled={isApiKeyLoading || elevenLabsState === 'connecting'}
-            >
-              {isCallActive ? "End Call" : "Voice Call"}
-            </Button>
-          </div>
-        </div>
+        <VoiceInterfaceV2
+          chatbotId={chatbotId}
+          welcomeMessage={welcomeMessage}
+          onTranscriptReceived={handleTranscriptReceived}
+          ref={voiceInterfaceRef}
+        />
       )}
     </div>
   );

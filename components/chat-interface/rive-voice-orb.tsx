@@ -106,7 +106,7 @@ const RiveVoiceOrb: React.FC<RiveVoiceOrbProps> = ({
 
   return (
     <div 
-      className="w-80 h-80 cursor-pointer"
+      className="w-96 h-96 cursor-pointer"
       onClick={onClick} 
       aria-label="Voice interaction control"
       role="button"

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/Button";
 import { RiAddLine } from "@remixicon/react";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { FormsSidebar } from "@/components/forms/FormsSidebar";
 import { FormsEmptyState } from "@/components/forms/FormsEmptyState";
@@ -34,6 +35,34 @@ export default function FormsPage() {
   const [isSubmissionDialogOpen, setIsSubmissionDialogOpen] = useState(false);
   const [formToDelete, setFormToDelete] = useState<Form | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Add mobile responsiveness state
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [showFormDetailsOnMobile, setShowFormDetailsOnMobile] = useState(false);
+  
+  // Check for mobile view on mount and window resize
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobileView();
+    
+    // Set up listener for window resize
+    window.addEventListener('resize', checkMobileView);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+  
+  // Update mobile view state when form is selected
+  useEffect(() => {
+    if (isMobileView && selectedForm) {
+      setShowFormDetailsOnMobile(true);
+    }
+  }, [selectedForm, isMobileView]);
 
   const handleCreateForm = async (formData: any) => {
     try {
@@ -57,6 +86,9 @@ export default function FormsPage() {
       // If the deleted form was selected, clear the selection
       if (selectedForm?.id === formToDelete.id) {
         setSelectedForm(null);
+        if (isMobileView) {
+          setShowFormDetailsOnMobile(false);
+        }
       }
       
       toast.success("Form deleted successfully");
@@ -73,36 +105,69 @@ export default function FormsPage() {
     setSelectedSubmission(submission);
     setIsSubmissionDialogOpen(true);
   };
+  
+  // Handle selecting a form
+  const handleSelectForm = (form: Form) => {
+    setSelectedForm(form);
+    
+    // On mobile, show the form details panel
+    if (isMobileView) {
+      setShowFormDetailsOnMobile(true);
+    }
+  };
+  
+  // Handle going back to the forms list on mobile
+  const handleBackToList = () => {
+    setShowFormDetailsOnMobile(false);
+  };
 
   return (
     <div className="flex h-full">
       {/* Left Sidebar */}
-      <FormsSidebar
-        forms={forms}
-        selectedForm={selectedForm}
-        isLoading={isLoading}
-        onSelectForm={setSelectedForm}
-        onCreateForm={() => setIsCreateDialogOpen(true)}
-        onDeleteForm={setFormToDelete}
-      />
+      {(!isMobileView || (isMobileView && !showFormDetailsOnMobile)) && (
+        <FormsSidebar
+          forms={forms}
+          selectedForm={selectedForm}
+          isLoading={isLoading}
+          onSelectForm={handleSelectForm}
+          onCreateForm={() => setIsCreateDialogOpen(true)}
+          onDeleteForm={setFormToDelete}
+          className={isMobileView ? 'w-full' : ''}
+        />
+      )}
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        {selectedForm ? (
-          <FormSubmissionsView
-            form={selectedForm}
-            submissions={submissions}
-            onViewSubmission={handleViewSubmission}
-            onOpenSettings={() => setIsSettingsDialogOpen(true)}
-            onOpenIntegrations={() => setIsIntegrationsDialogOpen(true)}
-          />
-        ) : (
-          <FormsEmptyState
-            hasExistingForms={forms.length > 0}
-            onCreateForm={() => setIsCreateDialogOpen(true)}
-          />
-        )}
-      </div>
+      {(!isMobileView || (isMobileView && showFormDetailsOnMobile)) && (
+        <div className="flex-1 overflow-auto">
+          {isMobileView && showFormDetailsOnMobile && (
+            <div className="border-b border-gray-200 dark:border-gray-800 p-2">
+              <Button
+                variant="ghost"
+                onClick={handleBackToList}
+                className="flex items-center text-gray-600 dark:text-gray-300"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to forms
+              </Button>
+            </div>
+          )}
+          
+          {selectedForm ? (
+            <FormSubmissionsView
+              form={selectedForm}
+              submissions={submissions}
+              onViewSubmission={handleViewSubmission}
+              onOpenSettings={() => setIsSettingsDialogOpen(true)}
+              onOpenIntegrations={() => setIsIntegrationsDialogOpen(true)}
+            />
+          ) : (
+            <FormsEmptyState
+              hasExistingForms={forms.length > 0}
+              onCreateForm={() => setIsCreateDialogOpen(true)}
+            />
+          )}
+        </div>
+      )}
 
       {/* Dialogs */}
       <CreateFormDialog

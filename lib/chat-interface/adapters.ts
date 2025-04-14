@@ -64,12 +64,44 @@ export async function getThreadMessages(threadId: string): Promise<AIMessage[]> 
       orderBy: { createdAt: 'asc' },
     });
     
-    return messages.map(msg => ({
-      id: msg.id,
-      role: msg.from === 'user' ? 'user' : 'assistant',
-      content: msg.from === 'user' ? msg.message : msg.response,
-      createdAt: msg.createdAt
-    }));
+    console.log(`[getThreadMessages] Found ${messages.length} messages for thread ${threadId}`);
+    
+    // Transform database messages to AI SDK format
+    // Each record in our database contains both the user message and AI response
+    // We need to split these into separate messages for the UI
+    const aiMessages: AIMessage[] = [];
+    
+    for (const dbMessage of messages) {
+      // Ensure each message has an ID
+      const messageId = dbMessage.id || uuidv4();
+      
+      // Add user message first
+      if (dbMessage.message) {
+        aiMessages.push({
+          id: `${messageId}-user`,
+          role: 'user',
+          content: dbMessage.message,
+          createdAt: dbMessage.createdAt
+        });
+      }
+      
+      // Add assistant response if it exists
+      if (dbMessage.response) {
+        aiMessages.push({
+          id: `${messageId}-assistant`,
+          role: 'assistant', // Always use 'assistant' role for responses regardless of 'from' field
+          content: dbMessage.response,
+          createdAt: new Date(dbMessage.createdAt.getTime() + 1) // Ensure correct order
+        });
+      }
+    }
+    
+    console.log(`[getThreadMessages] Transformed into ${aiMessages.length} AI messages`);
+    aiMessages.forEach((msg, i) => {
+      console.log(`[getThreadMessages] Message ${i}: role=${msg.role}, id=${msg.id} content=${msg.content.substring(0, 30)}...`);
+    });
+    
+    return aiMessages;
   } catch (error) {
     console.error('Error fetching thread messages:', error);
     return [];

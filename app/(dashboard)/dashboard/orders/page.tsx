@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/ui/badge";
 import { Divider } from "@/components/Divider";
+import { ArrowLeft } from "lucide-react";
 import { 
   Select,
   SelectContent,
@@ -68,6 +69,34 @@ export default function OrdersPage() {
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [orders, setOrders] = useState<Order[]>(mockOrders);
   
+  // Add mobile responsiveness state
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [showOrderDetailsOnMobile, setShowOrderDetailsOnMobile] = useState(false);
+  
+  // Check for mobile view on mount and window resize
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobileView();
+    
+    // Set up listener for window resize
+    window.addEventListener('resize', checkMobileView);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+  
+  // Update mobile view state when order is selected
+  useEffect(() => {
+    if (isMobileView && selectedOrder) {
+      setShowOrderDetailsOnMobile(true);
+    }
+  }, [selectedOrder, isMobileView]);
+  
   // Function to capitalize first letter
   const capitalize = (str: string) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
@@ -122,179 +151,215 @@ export default function OrdersPage() {
     }
   };
 
+  // Handle selecting an order
+  const handleSelectOrder = (order: Order) => {
+    setSelectedOrder(order);
+    
+    // On mobile, show the order details panel
+    if (isMobileView) {
+      setShowOrderDetailsOnMobile(true);
+    }
+  };
+  
+  // Handle going back to the order list on mobile
+  const handleBackToList = () => {
+    setShowOrderDetailsOnMobile(false);
+  };
+
   return (
     <div className="flex h-full">
       {/* Left Sidebar - Order List */}
-      <div className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col">
-        <div className="p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-              Orders
-            </h2>
-            
-            {/* Settings Dialog */}
-            <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="secondary"
-                  className="h-8 w-8 p-1 flex items-center justify-center"
-                >
-                  <RiSettings4Line className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Store Settings</DialogTitle>
-                  <DialogDescription>
-                    Configure your store settings and order workflow.
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <Tabs value={settingsTab} onValueChange={setSettingsTab} className="mt-4">
-                  <TabsList className="grid grid-cols-4 mb-4">
-                    <TabsTrigger value="hours" className="flex items-center gap-2">
-                      <RiStore3Line className="h-4 w-4" />
-                      <span>Store Hours</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="delivery" className="flex items-center gap-2">
-                      <RiTruckLine className="h-4 w-4" />
-                      <span>Delivery</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="payment" className="flex items-center gap-2">
-                      <RiWalletLine className="h-4 w-4" />
-                      <span>Payment</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="notifications" className="flex items-center gap-2">
-                      <RiNotification3Line className="h-4 w-4" />
-                      <span>Notifications</span>
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="hours" className="space-y-4">
-                    <StoreHoursSettings 
-                      storeHours={storeHours} 
-                      onStoreHoursChange={handleStoreHoursChange} 
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="delivery">
-                    <DeliverySettings 
-                      deliveryMethods={deliveryMethods}
-                      onDeliveryMethodsChange={setDeliveryMethods}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="payment">
-                    <PaymentSettings 
-                      paymentMethods={paymentMethods}
-                      onPaymentMethodsChange={setPaymentMethods}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="notifications">
-                    <NotificationSettings 
-                      settings={notificationSettings}
-                      onSettingsChange={setNotificationSettings}
-                    />
-                  </TabsContent>
-                </Tabs>
-                
-                <DialogFooter className="mt-6 sticky bottom-0 bg-white dark:bg-gray-950 pt-4 pb-2">
-                  <Button 
-                    variant="secondary" 
-                    className="mr-2"
-                    onClick={() => setSettingsDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleSaveSettings}>
-                    Save Changes
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            View and manage your orders
-          </p>
-          
-          {/* Status Filter Select */}
-          <div className="mt-4">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="flex items-center">
-                  <div className="flex items-center gap-2">
-                    <RiFilterLine className="size-4 text-gray-500" />
-                    <span>All Orders</span>
-                    <Badge 
-                      variant="secondary"
-                      className="ml-auto text-xs"
-                    >
-                      {orderCounts.all}
-                    </Badge>
-                  </div>
-                </SelectItem>
-                {Object.entries(statusConfig).filter(([key]) => key !== 'all').map(([status, config]) => {
-                  const StatusIcon = config.icon;
-                  return (
-                    <SelectItem key={status} value={status} className="flex items-center">
-                      <div className="flex items-center gap-2">
-                        <StatusIcon className={cn("size-4", config.color)} />
-                        <span>{capitalize(config.label)}</span>
-                        <Badge 
-                          variant={(statusConfig[status as keyof typeof statusConfig]?.variant || "default") as any}
-                          className="ml-auto text-xs"
-                        >
-                          {orderCounts[status as keyof typeof orderCounts] || 0}
-                        </Badge>
-                      </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <Divider />
-        
-        <div className="flex-1 overflow-auto">
-          <OrderList 
-            orders={filteredOrders} 
-            selectedOrder={selectedOrder} 
-            onSelectOrder={setSelectedOrder} 
-          />
-        </div>
-      </div>
-
-      {/* Main Content - Order Details */}
-      <div className="flex-1 overflow-auto">
-        {selectedOrder ? (
-          <OrderDetails 
-            order={selectedOrder} 
-            onUpdateStatus={handleUpdateOrderStatus}
-          />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-            <div className="flex max-w-md flex-col items-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                <RiShoppingBag3Line className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              
-              <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-50">
-                Select an order to view details
+      {(!isMobileView || (isMobileView && !showOrderDetailsOnMobile)) && (
+        <div className={`${isMobileView ? 'w-full' : 'w-80'} border-r border-gray-200 dark:border-gray-800 flex flex-col`}>
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                Orders
               </h2>
               
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Choose an order from the sidebar to view its details and manage it.
-              </p>
+              {/* Settings Dialog */}
+              <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="secondary"
+                    className="h-8 w-8 p-1 flex items-center justify-center"
+                  >
+                    <RiSettings4Line className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Store Settings</DialogTitle>
+                    <DialogDescription>
+                      Configure your store settings and order workflow.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <Tabs value={settingsTab} onValueChange={setSettingsTab} className="mt-4">
+                    <TabsList className="grid grid-cols-2 sm:grid-cols-4 mb-4">
+                      <TabsTrigger value="hours" className="flex items-center gap-2">
+                        <RiStore3Line className="h-4 w-4" />
+                        <span className="hidden sm:inline">Store Hours</span>
+                        <span className="sm:hidden">Hours</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="delivery" className="flex items-center gap-2">
+                        <RiTruckLine className="h-4 w-4" />
+                        <span className="hidden sm:inline">Delivery</span>
+                        <span className="sm:hidden">Delivery</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="payment" className="flex items-center gap-2">
+                        <RiWalletLine className="h-4 w-4" />
+                        <span className="hidden sm:inline">Payment</span>
+                        <span className="sm:hidden">Payment</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="notifications" className="flex items-center gap-2">
+                        <RiNotification3Line className="h-4 w-4" />
+                        <span className="hidden sm:inline">Notifications</span>
+                        <span className="sm:hidden">Alerts</span>
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="hours" className="space-y-4">
+                      <StoreHoursSettings 
+                        storeHours={storeHours} 
+                        onStoreHoursChange={handleStoreHoursChange} 
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="delivery">
+                      <DeliverySettings 
+                        deliveryMethods={deliveryMethods}
+                        onDeliveryMethodsChange={setDeliveryMethods}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="payment">
+                      <PaymentSettings 
+                        paymentMethods={paymentMethods}
+                        onPaymentMethodsChange={setPaymentMethods}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="notifications">
+                      <NotificationSettings 
+                        settings={notificationSettings}
+                        onSettingsChange={setNotificationSettings}
+                      />
+                    </TabsContent>
+                  </Tabs>
+                  
+                  <DialogFooter className="mt-6 sticky bottom-0 bg-white dark:bg-gray-950 pt-4 pb-2">
+                    <Button 
+                      variant="secondary" 
+                      className="mr-2"
+                      onClick={() => setSettingsDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSaveSettings}>
+                      Save Changes
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              View and manage your orders
+            </p>
+            
+            {/* Status Filter Select */}
+            <div className="mt-4">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="flex items-center">
+                    <div className="flex items-center gap-2">
+                      <RiFilterLine className="size-4 text-gray-500" />
+                      <span>All Orders</span>
+                      <Badge 
+                        variant="secondary"
+                        className="ml-auto text-xs"
+                      >
+                        {orderCounts.all}
+                      </Badge>
+                    </div>
+                  </SelectItem>
+                  {Object.entries(statusConfig).filter(([key]) => key !== 'all').map(([status, config]) => {
+                    const StatusIcon = config.icon;
+                    return (
+                      <SelectItem key={status} value={status} className="flex items-center">
+                        <div className="flex items-center gap-2">
+                          <StatusIcon className={cn("size-4", config.color)} />
+                          <span>{capitalize(config.label)}</span>
+                          <Badge 
+                            variant={(statusConfig[status as keyof typeof statusConfig]?.variant || "default") as any}
+                            className="ml-auto text-xs"
+                          >
+                            {orderCounts[status as keyof typeof orderCounts] || 0}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-        )}
-      </div>
+          
+          <Divider />
+          
+          <div className="flex-1 overflow-auto">
+            <OrderList 
+              orders={filteredOrders} 
+              selectedOrder={selectedOrder} 
+              onSelectOrder={handleSelectOrder} 
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Main Content - Order Details */}
+      {(!isMobileView || (isMobileView && showOrderDetailsOnMobile)) && (
+        <div className="flex-1 overflow-auto">
+          {isMobileView && showOrderDetailsOnMobile && (
+            <div className="border-b border-gray-200 dark:border-gray-800 p-2">
+              <Button
+                variant="ghost"
+                onClick={handleBackToList}
+                className="flex items-center text-gray-600 dark:text-gray-300"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Back to orders
+              </Button>
+            </div>
+          )}
+          
+          {selectedOrder ? (
+            <OrderDetails 
+              order={selectedOrder} 
+              onUpdateStatus={handleUpdateOrderStatus}
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center p-8 text-center">
+              <div className="flex max-w-md flex-col items-center">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
+                  <RiShoppingBag3Line className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                
+                <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-50">
+                  Select an order to view details
+                </h2>
+                
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Choose an order from the sidebar to view its details and manage it.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

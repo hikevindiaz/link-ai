@@ -55,6 +55,7 @@ interface PurchaseConfirmationDialogProps {
   phoneNumber: string | null;
   monthlyCost: number;
   selectedAgentId?: string | null;
+  onConfirm?: () => Promise<boolean>;
 }
 
 type PurchaseState = 
@@ -82,12 +83,14 @@ function StripePaymentForm({
   phoneNumber,
   monthlyCost,
   clientSecret,
+  selectedAgentId,
   onSuccess,
   onError,
 }: {
   phoneNumber: string;
   monthlyCost: number;
   clientSecret: string;
+  selectedAgentId: string | null;
   onSuccess: () => void;
   onError: (message: string) => void;
 }) {
@@ -105,30 +108,79 @@ function StripePaymentForm({
 
     setIsProcessing(true);
 
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/dashboard/phone-numbers`,
-      },
-      redirect: "if_required",
-    });
+    try {
+      // Confirm the payment with Stripe
+      const { error, paymentIntent } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/dashboard/phone-numbers`,
+        },
+        redirect: "if_required",
+      });
 
-    if (error) {
-      onError(error.message || "An error occurred during payment processing");
-      toast({
-        title: "Payment Failed",
-        description: error.message || "An error occurred during payment processing",
-        variant: "destructive",
-      });
-    } else if (paymentIntent && paymentIntent.status === "succeeded") {
-      onSuccess();
-      toast({
-        title: "Payment Successful",
-        description: `Your phone number ${phoneNumber} has been purchased successfully!`,
-      });
+      if (error) {
+        console.error("Payment error:", error);
+        onError(error.message || "An error occurred during payment processing");
+        toast({
+          title: "Payment Failed",
+          description: error.message || "An error occurred during payment processing",
+          variant: "destructive",
+        });
+        return;
+      } 
+      
+      if (paymentIntent && paymentIntent.status === "succeeded") {
+        console.log("Payment succeeded, completing phone number purchase");
+        
+        // After successful payment, make API call to provision the phone number
+        try {
+          console.log("Making phone number purchase API call with data:", {
+            phoneNumber,
+            monthlyPrice: monthlyCost,
+            country: "US",
+            selectedAgentId
+          });
+          
+          const response = await axios.post("/api/twilio/phone-numbers", {
+            phoneNumber: phoneNumber,
+            monthlyPrice: monthlyCost,
+            country: "US", // Default to US or extract from phoneNumber
+            selectedAgentId: selectedAgentId || null,
+            testMode: 'development_testing_mode', // Add test mode for free purchases
+            // Add proper formatting for the API
+            // Don't include any undefined or null values
+          });
+          
+          console.log("Phone number purchase API response:", response.data);
+          
+          if (response.data.success) {
+            onSuccess();
+            toast({
+              title: "Purchase Successful",
+              description: `Your phone number ${phoneNumber} has been purchased successfully!`,
+            });
+          } else {
+            throw new Error(response.data.error || "Failed to provision phone number");
+          }
+        } catch (provisionError: any) {
+          console.error("Phone number provisioning error:", provisionError);
+          onError(provisionError.message || "Payment succeeded but phone number provisioning failed");
+          toast({
+            title: "Provisioning Failed",
+            description: "Your payment was processed but we couldn't provision the phone number. Our team will contact you.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        console.warn("Payment intent returned but status is not succeeded:", paymentIntent?.status);
+        onError("Payment process did not complete successfully");
+      }
+    } catch (submitError: any) {
+      console.error("Form submission error:", submitError);
+      onError(submitError.message || "An unexpected error occurred");
+    } finally {
+      setIsProcessing(false);
     }
-
-    setIsProcessing(false);
   };
 
   return (
@@ -274,7 +326,8 @@ export function PurchaseConfirmationDialog({
   onOpenChange,
   phoneNumber,
   monthlyCost,
-  selectedAgentId
+  selectedAgentId,
+  onConfirm
 }: PurchaseConfirmationDialogProps) {
   const { toast } = useToast();
   const [purchaseState, setPurchaseState] = useState<PurchaseState>("idle");
@@ -393,31 +446,104 @@ export function PurchaseConfirmationDialog({
     }
 
     setPurchaseState("processing");
+    console.log("Starting purchase with existing payment method for:", safePhoneNumber);
 
     try {
-      // Direct API call to purchase the phone number with existing payment method
-      // This will create a Twilio subaccount if the user doesn't have one yet
-      const response = await axios.post("/api/twilio/phone-numbers", {
-        phoneNumber: safePhoneNumber,
-        monthlyPrice: monthlyCost,
-        country: "US", // Default to US
-        agentId: selectedAgentId || null,
-      });
-
-      if (response.data.success) {
-        setPurchasedPhoneNumber(safePhoneNumber);
-        setPurchaseState("success");
-        toast({
-          title: "Success",
-          description: 'Phone number purchased successfully!',
-        });
+      // If onConfirm prop is provided, call it first
+      if (onConfirm) {
+        try {
+          console.log("Using onConfirm callback provided by parent component");
+          const success = await onConfirm();
+          console.log("onConfirm callback result:", success);
+          
+          if (success) {
+            setPurchasedPhoneNumber(safePhoneNumber);
+            setPurchaseState("success");
+            toast({
+              title: "Success",
+              description: 'Phone number purchased successfully!',
+            });
+            return;
+          } else {
+            throw new Error("Failed to purchase phone number");
+          }
+        } catch (error: any) {
+          console.error("Error in onConfirm callback:", error);
+          throw error; // Rethrow to be caught by outer catch block
+        }
       } else {
-        throw new Error(response.data.error || "Failed to purchase phone number");
+        // Direct API call to purchase the phone number with existing payment method
+        console.log("Making direct API call to purchase phone number:", {
+          phoneNumber: safePhoneNumber,
+          monthlyCost,
+          selectedAgentId: selectedAgentId
+        });
+        
+        try {
+          const response = await axios.post("/api/twilio/phone-numbers", {
+            phoneNumber: safePhoneNumber,
+            monthlyPrice: monthlyCost,
+            country: "US", // Default to US
+            selectedAgentId: selectedAgentId || null,
+            testMode: 'development_testing_mode' // Add test mode for free purchases
+          });
+
+          console.log("Phone number purchase API response:", response.data);
+
+          if (response.data.success) {
+            // Refresh phone number status to ensure it's properly provisioned
+            try {
+              await axios.post("/api/twilio/phone-numbers/refresh-all-statuses");
+              console.log("Refreshed phone number statuses");
+            } catch (refreshError) {
+              console.warn("Failed to refresh phone number statuses:", refreshError);
+              // Continue anyway as this is not critical
+            }
+            
+            setPurchasedPhoneNumber(safePhoneNumber);
+            setPurchaseState("success");
+            toast({
+              title: "Success",
+              description: 'Phone number purchased successfully!',
+            });
+          } else {
+            console.error("API returned success: false", response.data);
+            throw new Error(response.data.error || "Failed to purchase phone number");
+          }
+        } catch (error: any) {
+          console.error("Error in API call:", error);
+          const apiErrorMessage = error.response?.data?.error || error.message;
+          console.error("API error details:", apiErrorMessage);
+          throw error; // Rethrow for the outer catch
+        }
       }
     } catch (error: any) {
       console.error("Error purchasing phone number:", error);
-      setErrorMessage(error.response?.data?.error || error.message || "Failed to purchase phone number");
+      
+      // Extract most informative error message
+      let errorMsg = "Failed to purchase phone number. Please try again.";
+      
+      if (error.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      // Log detailed error for debugging
+      console.error("Purchase error details:", {
+        message: errorMsg,
+        responseData: error.response?.data,
+        status: error.response?.status
+      });
+      
+      setErrorMessage(errorMsg);
       setPurchaseState("error");
+      
+      toast({
+        title: "Purchase Failed",
+        description: errorMsg,
+        variant: "destructive"
+      });
     }
   };
 
@@ -459,7 +585,7 @@ export function PurchaseConfirmationDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px] dark:border-gray-800">
+      <DialogContent className="sm:max-w-[425px] dark:border-gray-800 max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="text-foreground dark:text-gray-100">
             {purchaseState === "success"
@@ -627,6 +753,7 @@ export function PurchaseConfirmationDialog({
                   phoneNumber={safePhoneNumber}
                   monthlyCost={monthlyCost}
                   clientSecret={clientSecret}
+                  selectedAgentId={selectedAgentId}
                   onSuccess={handleSuccess}
                   onError={handleError}
                 />

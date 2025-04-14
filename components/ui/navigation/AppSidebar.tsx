@@ -299,22 +299,31 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
     >
       {/* Header */}
       <div className={cn(
-        "px-3 py-4 flex items-center justify-between",
+        "py-4 flex items-center justify-between",
+        collapsed ? "px-2" : "px-3" // Match menu item padding
       )}>
         <div className={cn(
           "flex items-center", 
-          "gap-3"
+          collapsed ? "justify-center w-full" : "pl-2" // Add left padding to align with menu items when expanded
         )}>
-          <span className="flex items-center justify-center">
-            <LinkAIProfileIcon />
-          </span>
-          {!collapsed && (
-            <div>
-              <span className="block text-sm font-semibold">Link AI</span>
-              <span className="block text-xs text-gray-500 dark:text-gray-400">
-                for Business
-              </span>
-            </div>
+          {collapsed ? (
+            // Collapsed state - we need to use a smaller icon
+            <Image 
+              src={currentTheme === "dark" ? "/LINK AI ICON LIGHT.png" : "/LINK AI ICON DARK.png"} 
+              alt="Link AI Logo" 
+              width={12}
+              height={12}
+              className="object-contain"
+            />
+          ) : (
+            // Expanded state - use full logo
+            <Image 
+              src={currentTheme === "dark" ? "/LINK AI LOGO LIGHT.png" : "/LINK AI LOGO DARK.png"} 
+              alt="Link AI Logo" 
+              width={65}
+              height={20}
+              className="object-contain"
+            />
           )}
         </div>
         {/* Only show the button in the header when NOT collapsed */}
@@ -386,7 +395,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
                     onClick={toggleSidebar}
                     aria-label="Expand sidebar"
                     className={cn(
-                      "flex w-full items-center justify-left rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
+                      "flex w-full items-center justify-center rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
                       "text-gray-900 dark:text-gray-400", // Match exact text color of other icons
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                     )}
@@ -397,28 +406,34 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
               )}
               
               {navigation.map((item) => (
-                <li key={item.name}>
+                <li key={item.name} className="relative">
                   <a
                     href={item.href}
                     aria-current={pathname === item.href ? "page" : undefined}
                     data-active={pathname === item.href}
                     className={cn(
-                      "flex items-center justify-between rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
+                      "flex items-center rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
+                      collapsed ? "justify-center" : "justify-between",
                       "text-gray-900 dark:text-gray-400 hover:dark:text-gray-50",
                       "data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                     )}
                   >
-                    <span className={cn("flex items-center", "gap-x-2.5")}>
+                    <span className={cn(
+                      "flex items-center", 
+                      !collapsed && "gap-x-2.5"
+                    )}>
                       {item.icon && <item.icon className="size-[18px] shrink-0" aria-hidden="true" />}
                       {!collapsed && item.name}
                     </span>
                     {item.notifications && (
                       <span className={cn(
-                        "inline-flex size-5 items-center justify-center rounded bg-indigo-100 text-sm font-medium text-indigo-600 sm:text-xs dark:bg-indigo-500/10 dark:text-indigo-500",
-                        collapsed && "absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 size-4"
+                        "inline-flex items-center justify-center rounded",
+                        collapsed 
+                          ? "absolute top-0.5 right-1.5 size-2 bg-indigo-600 dark:bg-indigo-500" 
+                          : "size-5 bg-indigo-100 text-sm font-medium text-indigo-600 sm:text-xs dark:bg-indigo-500/10 dark:text-indigo-500"
                       )}>
-                        {item.notifications}
+                        {!collapsed && item.notifications}
                       </span>
                     )}
                   </a>
@@ -438,12 +453,12 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
           <div className="w-full text-sm">
             <ul className="flex w-full min-w-0 flex-col gap-1 space-y-4">
               {navigation2.map((item) => (
-                <li key={item.name}>
+                <li key={item.name} className="relative">
                   <button
                     onClick={() => toggleMenu(item.name)}
                     className={cn(
-                      "flex items-center justify-between gap-2 rounded-md p-2 w-full",
-                      collapsed && "justify-center",
+                      "flex items-center rounded-md p-2 w-full",
+                      collapsed ? "justify-center" : "justify-between gap-2",
                       theme === "dark"
                         ? "text-white hover:bg-gray-800"
                         : "text-gray-900 hover:bg-gray-200"

@@ -23,6 +23,7 @@ interface FormsSidebarProps {
   onSelectForm: (form: Form) => void;
   onCreateForm: () => void;
   onDeleteForm: (form: Form) => void;
+  className?: string;
 }
 
 const colorCombinations = [
@@ -50,10 +51,11 @@ export function FormsSidebar({
   isLoading,
   onSelectForm,
   onCreateForm,
-  onDeleteForm
+  onDeleteForm,
+  className
 }: FormsSidebarProps) {
   return (
-    <div className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+    <div className={cn("w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col", className)}>
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">

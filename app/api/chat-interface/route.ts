@@ -283,9 +283,9 @@ KNOWLEDGE BASE INSTRUCTIONS:
     // Ensure messages are present 
     if (!messages) {
        return new Response('Missing messages', { status: 400 });
-      }
+    }
       
-    // Construct the payload for the Responses API call (Restore TOOLS)
+    // Construct the payload for the Responses API call
     const responsesPayload = {
         model: modelName,
         instructions: fullPrompt,
@@ -293,8 +293,7 @@ KNOWLEDGE BASE INSTRUCTIONS:
         temperature: chatbot.temperature || 0.7,
         max_output_tokens: chatbot.maxCompletionTokens || 1000,
         stream: true,
-      tools: toolsForResponsesApi.length > 0 ? toolsForResponsesApi : undefined, // Restore TOOLS
-      // user: `chatbot-interface-user-${chatbotId}`, // Keep user commented out for now
+        tools: toolsForResponsesApi.length > 0 ? toolsForResponsesApi : undefined,
     };
 
     let responseStream;
@@ -302,53 +301,52 @@ KNOWLEDGE BASE INSTRUCTIONS:
       console.log("[Responses API] Calling openai.responses.create with full toolset");
       responseStream = await openai.responses.create(responsesPayload as any); 
 
-      // Stream handling - ADD DETAILED LOGGING
-      let completion = '';
-      const readableStream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
+      // Create a proper text stream for the Vercel AI SDK in 'text' protocol mode
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          let completion = '';
+          
           try {
-            console.log("[Responses API] Starting stream processing - LOGGING ALL CHUNKS");
+            console.log("[Responses API] Starting stream processing");
+            
+            // Process each chunk from OpenAI
             for await (const chunk of responseStream) {
-              // Log the raw chunk structure
-              console.log('[Responses API Chunk]', JSON.stringify(chunk)); 
-
+              // Log for debugging
+              console.log('[Responses API Chunk]', JSON.stringify(chunk));
+              
+              // Extract text based on chunk type
               let chunkText = '';
-              // Extract text based on known chunk types
-            if (chunk.type === 'response.output_text.delta') {
+              if (chunk.type === 'response.output_text.delta') {
                 if (typeof chunk.delta === 'string') chunkText = chunk.delta;
                 else if (chunk.delta?.text) chunkText = chunk.delta.text;
                 else if (chunk.delta?.value) chunkText = chunk.delta.value;
               }
               else if (chunk.type === 'message_delta' && chunk.delta?.content?.[0]?.text) {
-                 chunkText = chunk.delta.content[0].text;
+                chunkText = chunk.delta.content[0].text;
               } else if (chunk.type === 'content_block_delta' && chunk.delta?.text) {
-                 chunkText = chunk.delta.text;
+                chunkText = chunk.delta.text;
               }
               
-              // Enqueue only text parts for the client UI
+              // Only send non-empty text chunks
               if (chunkText) {
                 completion += chunkText;
+                
+                // For streamProtocol: 'text' we just send the raw text directly
                 controller.enqueue(encoder.encode(chunkText));
               }
-              
-              // No explicit action needed on tool events for now, just logging above
             }
-             console.log("[Responses API] Stream processing finished");
-          } catch (streamError) {
-            console.error("[Responses API] Error reading stream:", streamError);
-            controller.error(streamError);
-        } finally {
-          controller.close();
-            // ---- DB Save Logic ---- 
-            console.log('[DB SAVE] Attempting to save message pair.');
-            console.log(`[DB SAVE] Thread ID: ${threadId}`);
-            console.log(`[DB SAVE] User ID: ${userId}`);
-            console.log(`[DB SAVE] Chatbot ID: ${chatbotId}`);
-            console.log(`[DB SAVE] User Input Length: ${userInput?.length || 0}`);
-            console.log(`[DB SAVE] Completion Length: ${completion?.length || 0}`);
-            console.log(`[DB SAVE] Completion Start: ${completion?.substring(0, 50) || 'EMPTY'}`); 
-
+            
+            // Signal end of stream (not needed for text protocol but doesn't hurt)
+            controller.close();
+            console.log("[Responses API] Stream processing finished successfully");
+          } catch (error) {
+            console.error("[Responses API] Error processing stream:", error);
+            controller.error(error);
+          } finally {
+            // Save the completed message to the database
+            console.log('[DB SAVE] Attempting to save message with completion length:', completion.length);
+            
             if (userId && threadId && userInput && completion) {
               try {
                 await prisma.message.create({ 
@@ -356,37 +354,35 @@ KNOWLEDGE BASE INSTRUCTIONS:
                      message: userInput,
                      response: completion,
                      threadId: threadId,
-                     from: 'user',
+                     from: 'user', // Using 'user' as in reference implementation
                      userId: userId,
                      chatbotId: chatbotId,
                      read: false,
                   } 
                 });
-                console.log(`[DB SAVE] Successfully saved message and response for thread ${threadId}`);
+                
+                console.log(`[DB SAVE] Successfully saved message pair for thread ${threadId}`);
               } catch (dbError) {
                 console.error(`[DB SAVE ERROR] Failed to save message for thread ${threadId}:`, dbError);
               }
             } else {
               console.warn(`[DB SAVE WARN] Missing data for saving message: userId=${!!userId}, threadId=${!!threadId}, userInput=${!!userInput}, completion=${!!completion}`);
             }
-            // -------------------------
           }
-        },
-        cancel(reason) {
-          console.log('[Responses API] Stream cancelled:', reason);
         }
       });
-      return new Response(readableStream, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
-        'X-Content-Type-Options': 'nosniff'
-      }
-    });
+      
+      // Return with the appropriate headers
+      return new Response(stream, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8', // Plain text for text protocol
+          'Cache-Control': 'no-cache, no-transform',
+          'X-Content-Type-Options': 'nosniff'
+        },
+      });
 
-  } catch (error) {
+    } catch (error) {
       console.error('[Responses API] Error in OpenAI API call:', error);
-      // ... existing error handling ...
       throw error;
     }
 

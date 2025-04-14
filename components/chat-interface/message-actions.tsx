@@ -3,8 +3,6 @@ import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
 import { useState } from 'react';
 
-import type { Vote } from '@/lib/chat-interface/db/schema';
-
 import { CopyIcon, CheckCircleFillIcon } from './icons';
 import { Button } from './ui/button';
 import {
@@ -19,12 +17,10 @@ import equal from 'fast-deep-equal';
 export function PureMessageActions({
   chatId,
   message,
-  vote,
   isLoading,
 }: {
   chatId: string;
   message: Message;
-  vote: Vote | undefined;
   isLoading: boolean;
 }) {
   const [_, copyToClipboard] = useCopyToClipboard();
@@ -62,9 +58,7 @@ export function PureMessageActions({
 export const MessageActions = memo(
   PureMessageActions,
   (prevProps, nextProps) => {
-    if (!equal(prevProps.vote, nextProps.vote)) return false;
     if (prevProps.isLoading !== nextProps.isLoading) return false;
-
     return true;
   },
 );

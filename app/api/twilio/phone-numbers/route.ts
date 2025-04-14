@@ -6,7 +6,9 @@ import { z } from 'zod';
 import { TwilioPhoneNumber, Chatbot } from '@prisma/client';
 import Stripe from 'stripe';
 import { formatDate, addMonths } from '@/lib/date-utils';
+import { getTwilioWebhookUrls } from '@/lib/twilio';
 import twilio from 'twilio';
+import { v4 as uuidv4 } from 'uuid';
 
 type PhoneNumberWithChatbot = TwilioPhoneNumber & {
   chatbot: Chatbot | null;
@@ -18,7 +20,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 });
 
 // Initialize Twilio client with your main account credentials
-const twilioClient = twilio(
+const twilioMainClient = twilio(
   process.env.TWILIO_ACCOUNT_SID,
   process.env.TWILIO_AUTH_TOKEN
 );
@@ -108,192 +110,349 @@ const createPhoneNumberSchema = z.object({
 
 // POST /api/twilio/phone-numbers - Purchase a new phone number
 export async function POST(req: NextRequest) {
-  // Declare invoice variable outside the try blocks
   let invoice;
   
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!session?.user?.id) {
+      console.error('No user session found');
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
     
     const userId = session.user.id;
+    console.log('Processing phone number purchase for user:', userId);
     
-    // Get request body
     const body = await req.json();
-    const { phoneNumber, agentId, monthlyPrice, country } = body;
+    console.log('Request body:', JSON.stringify(body));
+    
+    // Validate required fields
+    const { phoneNumber, monthlyPrice, paymentMethodId, selectedAgentId, testMode } = body;
+    
+    // Special test/development mode to bypass payment
+    const skipPayment = testMode === 'development_testing_mode';
     
     if (!phoneNumber) {
-      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+      console.error('Missing phoneNumber in request');
+      return NextResponse.json({ success: false, error: 'Phone number is required' }, { status: 400 });
     }
     
     if (!monthlyPrice) {
-      return NextResponse.json({ error: 'Monthly price is required' }, { status: 400 });
+      console.error('Missing monthlyPrice in request');
+      return NextResponse.json({ success: false, error: 'Monthly price is required' }, { status: 400 });
     }
     
-    // Check if user has a valid payment method
+    // Ensure phoneNumber is in correct format (E.164)
+    const phoneNumberString = String(phoneNumber).trim();
+    if (!phoneNumberString.startsWith('+')) {
+      console.error('Invalid phone number format:', phoneNumberString);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Phone number must be in E.164 format (e.g. +11234567890)' 
+      }, { status: 400 });
+    }
+    
+    // Check if user exists and has valid payment setup
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { paymentMethods: true }
+      select: { 
+        stripeCustomerId: true,
+        email: true,
+        twilioSubaccountSid: true,
+        paymentMethods: true
+      }
     });
     
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      console.error('User not found:', userId);
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 400 });
     }
     
     if (!user.stripeCustomerId) {
-      return NextResponse.json(
-        { error: 'You need to set up a payment method before purchasing a phone number' },
-        { status: 400 }
-      );
+      console.error('User has no Stripe customer ID:', userId);
+      return NextResponse.json({ success: false, error: 'No payment method available' }, { status: 400 });
     }
-    
+
     if (user.paymentMethods.length === 0) {
-      return NextResponse.json(
-        { error: 'You need to add a payment method before purchasing a phone number' },
-        { status: 400 }
-      );
+      console.error('User has no payment methods:', userId);
+      return NextResponse.json({ success: false, error: 'No payment method available' }, { status: 400 });
     }
     
-    // Check if the user already has this phone number
+    // Check if the user already owns this phone number
     const existingNumber = await prisma.twilioPhoneNumber.findFirst({
       where: {
-        phoneNumber,
         userId,
-      },
+        phoneNumber: phoneNumberString
+      }
     });
     
     if (existingNumber) {
-      return NextResponse.json(
-        { error: 'You already own this phone number' },
-        { status: 400 }
-      );
+      console.error('User already owns this phone number:', phoneNumberString);
+      return NextResponse.json({ 
+        success: false, 
+        error: 'You already own this phone number' 
+      }, { status: 400 });
     }
-
+    
     // Default payment method for this customer
     const defaultPaymentMethod = user.paymentMethods.find(pm => pm.isDefault) || user.paymentMethods[0];
     
     try {
-      // Create a payment intent for the phone number purchase
-      // This is a one-time charge for purchasing the phone number
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(parseFloat(monthlyPrice.toString()) * 100), // Convert to cents
-        currency: 'usd',
-        customer: user.stripeCustomerId,
-        payment_method: defaultPaymentMethod.stripePaymentMethodId,
-        off_session: true, // Since we're charging without the customer present
-        confirm: true, // Confirm the payment immediately
-        description: `Phone number purchase: ${phoneNumber}`,
-        metadata: {
-          userId,
-          phoneNumber,
-          type: 'phone_number_purchase',
-        },
-      });
+      // Payment processing
+      let paymentIntent: any;
+      
+      if (skipPayment) {
+        // Skip payment for testing, create a mock payment intent
+        console.log('TEST MODE: Skipping actual payment for testing');
+        paymentIntent = {
+          id: `test_pi_${Date.now()}`,
+          status: 'succeeded',
+          amount: Math.round(parseFloat(monthlyPrice.toString()) * 100),
+          currency: 'usd'
+        };
+      } else {
+        // Create a payment intent for the phone number purchase
+        // This is a one-time charge for purchasing the phone number
+        paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(parseFloat(monthlyPrice.toString()) * 100), // Convert to cents
+          currency: 'usd',
+          customer: user.stripeCustomerId,
+          payment_method: defaultPaymentMethod.stripePaymentMethodId,
+          off_session: true, // Since we're charging without the customer present
+          confirm: true, // Confirm the payment immediately
+          description: `Phone number purchase: ${phoneNumber}`,
+          metadata: {
+            userId,
+            phoneNumber,
+            type: 'phone_number_purchase',
+          },
+        });
+      }
       
       // If payment succeeds, proceed with Twilio purchase
       if (paymentIntent.status === 'succeeded') {
         console.log('Payment succeeded. Purchasing phone number:', phoneNumber);
         
-        // Get or create a Twilio subaccount for the user
-        let subaccountSid = user.twilioSubaccountSid;
-        
-        if (!subaccountSid) {
-          // Create a new subaccount via our API
-          const response = await fetch(`${process.env.NEXTAUTH_URL}/api/twilio/subaccount`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Cookie': req.headers.get('cookie') || '',
-            },
-            body: JSON.stringify({
-              friendlyName: `${user.email || userId} - ${new Date().toISOString()}`
-            }),
-          });
+        try {
+          // Get or create a Twilio subaccount for the user
+          let subaccountSid = user.twilioSubaccountSid;
           
-          const data = await response.json();
-          
-          if (!data.success || !data.subaccountSid) {
-            throw new Error('Failed to create Twilio subaccount');
+          if (!subaccountSid) {
+            // Create a new subaccount via our API
+            console.log('Creating new Twilio subaccount for user:', userId);
+            const response = await fetch(`${process.env.NEXTAUTH_URL}/api/twilio/subaccount`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Cookie': req.headers.get('cookie') || '',
+              },
+              body: JSON.stringify({
+                friendlyName: `${user.email || userId} - ${new Date().toISOString()}`
+              }),
+            });
+            
+            const data = await response.json();
+            console.log('Subaccount creation response:', data);
+            
+            if (!data.success || !data.subaccountSid) {
+              console.error('Failed to create Twilio subaccount:', data);
+              throw new Error('Failed to create Twilio subaccount');
+            }
+            
+            subaccountSid = data.subaccountSid;
+            
+            // Update user with new subaccount SID
+            await prisma.user.update({
+              where: { id: userId },
+              data: { twilioSubaccountSid: subaccountSid }
+            });
+            console.log('User updated with subaccount SID:', subaccountSid);
+          } else {
+            console.log('Using existing subaccount:', subaccountSid);
           }
           
-          subaccountSid = data.subaccountSid;
+          // Create a Twilio client for the subaccount
+          console.log('Creating Twilio client with subaccount SID');
+          const subaccountClient = twilio(
+            process.env.TWILIO_ACCOUNT_SID,
+            process.env.TWILIO_AUTH_TOKEN,
+            { accountSid: subaccountSid }
+          );
           
-          // Update user with new subaccount SID
-          await prisma.user.update({
-            where: { id: userId },
-            data: { twilioSubaccountSid: subaccountSid }
-          });
-        }
-        
-        // Create a Twilio client for the subaccount
-        const subaccountClient = twilio(
-          process.env.TWILIO_ACCOUNT_SID,
-          process.env.TWILIO_AUTH_TOKEN,
-          { accountSid: subaccountSid }
-        );
-        
-        // Purchase the phone number using the subaccount client
-        const purchasedNumber = await subaccountClient.incomingPhoneNumbers.create({
-          phoneNumber,
-          smsUrl: `${process.env.NEXTAUTH_URL}/api/twilio/sms`, // Optional: Set up SMS webhook
-          voiceUrl: `${process.env.NEXTAUTH_URL}/api/twilio/voice`, // Optional: Set up voice webhook
-        });
-        
-        console.log('Purchased number:', purchasedNumber.sid);
-        
-        // Calculate renewal date (1 month from now)
-        const renewalDate = new Date();
-        renewalDate.setMonth(renewalDate.getMonth() + 1);
-        
-        // Save the phone number to the database
-        const newPhoneNumber = await prisma.twilioPhoneNumber.create({
-          data: {
-            phoneNumber,
-            twilioSid: purchasedNumber.sid,
-            country: country || 'US',
-            monthlyPrice: parseFloat(monthlyPrice.toString()),
-            status: 'active',
-            purchasedAt: new Date(),
-            renewalDate,
-            user: {
-              connect: {
-                id: userId,
-              },
-            },
-            ...(agentId
-              ? {
-                  chatbot: {
-                    connect: {
-                      id: agentId,
-                    },
+          // Try to purchase the phone number using Twilio API
+          console.log('Attempting to purchase phone number on Twilio:', phoneNumberString);
+          let purchasedNumber;
+          try {
+            // Get webhook URLs based on environment
+            const { smsUrl, voiceUrl } = getTwilioWebhookUrls(skipPayment);
+              
+            purchasedNumber = await subaccountClient.incomingPhoneNumbers.create({
+              phoneNumber: phoneNumberString,
+              smsUrl,
+              voiceUrl,
+            });
+            console.log('Phone number purchased successfully on Twilio, SID:', purchasedNumber.sid);
+          } catch (twilioError: any) {
+            console.error('Twilio API error when purchasing number:', twilioError);
+            
+            if (twilioError.code === 21422) {
+              console.error('Invalid phone number format');
+              return NextResponse.json({ 
+                success: false, 
+                error: `Invalid phone number format. Please use E.164 format (e.g. +11234567890).` 
+              }, { status: 400 });
+            }
+            
+            if (twilioError.code === 21452) {
+              console.error('Phone number is not available');
+              return NextResponse.json({ 
+                success: false, 
+                error: `This phone number is no longer available for purchase.` 
+              }, { status: 400 });
+            }
+            
+            console.error('Twilio error details:', {
+              code: twilioError.code,
+              message: twilioError.message,
+              status: twilioError.status,
+              moreInfo: twilioError.moreInfo
+            });
+            
+            // Refund the payment since the Twilio purchase failed
+            try {
+              if (!skipPayment) {
+                await stripe.refunds.create({
+                  payment_intent: paymentIntent.id,
+                  reason: 'requested_by_customer'
+                });
+                console.log('Payment refunded due to Twilio error');
+              } else {
+                console.log('TEST MODE: No need to refund test payment');
+              }
+            } catch (refundError) {
+              console.error('Failed to refund payment:', refundError);
+            }
+            
+            return NextResponse.json({ 
+              success: false, 
+              error: `Twilio API error: ${twilioError.message}` 
+            }, { status: 500 });
+          }
+          
+          // Calculate renewal date (1 month from now)
+          const renewalDate = new Date();
+          renewalDate.setMonth(renewalDate.getMonth() + 1);
+          
+          // Save the phone number to the database
+          console.log('Saving phone number to database');
+          try {
+            const newPhoneNumber = await prisma.twilioPhoneNumber.create({
+              data: {
+                phoneNumber,
+                twilioSid: purchasedNumber.sid,
+                country: body.country || 'US',
+                monthlyPrice: parseFloat(monthlyPrice.toString()),
+                status: 'active',
+                purchasedAt: new Date(),
+                renewalDate,
+                user: {
+                  connect: {
+                    id: userId,
                   },
-                }
-              : {}),
-          },
-        });
-        
-        // Create an invoice record for the purchase
-        invoice = await prisma.invoice.create({
-          data: {
-            stripePaymentIntentId: paymentIntent.id,
-            amount: parseFloat(monthlyPrice.toString()),
-            status: 'paid',
-            description: `Purchase of phone number ${phoneNumber}`,
-            type: 'purchase',
-            userId,
-            twilioPhoneNumberId: newPhoneNumber.id,
-          },
-        });
-        
-        // Continue with existing subscription logic...
-
+                },
+                ...(selectedAgentId
+                  ? {
+                      chatbot: {
+                        connect: {
+                          id: selectedAgentId,
+                        },
+                      },
+                    }
+                  : {}),
+              },
+            });
+            console.log('Phone number saved to database:', newPhoneNumber.id);
+            
+            // Create an invoice record for the purchase
+            invoice = await prisma.invoice.create({
+              data: {
+                stripePaymentIntentId: paymentIntent.id,
+                amount: parseFloat(monthlyPrice.toString()),
+                status: 'paid',
+                description: skipPayment 
+                  ? `TEST MODE: Purchase of phone number ${phoneNumber}` 
+                  : `Purchase of phone number ${phoneNumber}`,
+                type: 'purchase',
+                userId,
+                twilioPhoneNumberId: newPhoneNumber.id,
+              },
+            });
+            console.log('Invoice created:', invoice.id);
+            
+            return NextResponse.json({ 
+              success: true, 
+              message: 'Phone number purchased successfully',
+              phoneNumber: newPhoneNumber 
+            });
+          } catch (dbError: any) {
+            console.error('Database error saving phone number:', dbError);
+            
+            // Try to release the number from Twilio since we couldn't save it
+            try {
+              await subaccountClient.incomingPhoneNumbers(purchasedNumber.sid).remove();
+              console.log('Released phone number from Twilio due to database error');
+            } catch (releaseError) {
+              console.error('Failed to release phone number from Twilio:', releaseError);
+            }
+            
+            // Try to refund the customer
+            try {
+              if (!skipPayment) {
+                await stripe.refunds.create({
+                  payment_intent: paymentIntent.id,
+                  reason: 'requested_by_customer'
+                });
+                console.log('Payment refunded due to database error');
+              } else {
+                console.log('TEST MODE: No need to refund test payment');
+              }
+            } catch (refundError) {
+              console.error('Failed to refund payment:', refundError);
+            }
+            
+            return NextResponse.json({ 
+              success: false, 
+              error: `Database error: ${dbError.message}` 
+            }, { status: 500 });
+          }
+        } catch (provisioningError: any) {
+          console.error('Error during phone number provisioning:', provisioningError);
+          
+          // Try to refund the customer if we already charged them
+          try {
+            if (!skipPayment) {
+              await stripe.refunds.create({
+                payment_intent: paymentIntent.id,
+                reason: 'requested_by_customer'
+              });
+              console.log('Payment refunded due to provisioning error');
+            } else {
+              console.log('TEST MODE: No need to refund test payment');
+            }
+          } catch (refundError) {
+            console.error('Failed to refund payment:', refundError);
+          }
+          
+          return NextResponse.json({ 
+            success: false, 
+            error: provisioningError.message || 'Failed to provision phone number'
+          }, { status: 500 });
+        }
+      } else {
+        console.log('Payment intent not succeeded:', paymentIntent.status);
         return NextResponse.json({ 
-          success: true, 
-          message: 'Phone number purchased successfully',
-          phoneNumber: newPhoneNumber 
-        });
+          success: false, 
+          error: `Payment failed with status: ${paymentIntent.status}`
+        }, { status: 400 });
       }
     } catch (error) {
       console.error('Error charging payment method:', error);
@@ -434,6 +593,10 @@ export async function POST_PURCHASE(request: Request) {
 
     // Parse request body
     const { phoneNumber, chatbotId } = await request.json();
+    const selectedAgentId = chatbotId;
+    // Check for test mode
+    const testMode = request.headers.get('x-test-mode') === 'development_testing_mode';
+    const skipPayment = testMode;
 
     if (!phoneNumber) {
       return NextResponse.json(
@@ -443,9 +606,9 @@ export async function POST_PURCHASE(request: Request) {
     }
 
     // Check if chatbot exists if chatbotId is provided
-    if (chatbotId) {
+    if (selectedAgentId) {
       const chatbot = await prisma.chatbot.findUnique({
-        where: { id: chatbotId, userId: user.id },
+        where: { id: selectedAgentId, userId: user.id },
       });
 
       if (!chatbot) {
@@ -457,7 +620,7 @@ export async function POST_PURCHASE(request: Request) {
 
       // Check if chatbot already has a phone number
       const existingPhoneNumber = await prisma.twilioPhoneNumber.findFirst({
-        where: { chatbotId },
+        where: { chatbotId: selectedAgentId },
       });
 
       if (existingPhoneNumber) {
@@ -483,8 +646,13 @@ export async function POST_PURCHASE(request: Request) {
     // Purchase phone number from Twilio
     let twilioResponse;
     try {
-      twilioResponse = await twilioClient.incomingPhoneNumbers.create({
+      // Get webhook URLs based on environment
+      const { smsUrl, voiceUrl } = getTwilioWebhookUrls(skipPayment);
+      
+      twilioResponse = await twilioMainClient.incomingPhoneNumbers.create({
         phoneNumber,
+        smsUrl,
+        voiceUrl,
       });
     } catch (error: any) {
       return NextResponse.json(
@@ -505,15 +673,15 @@ export async function POST_PURCHASE(request: Request) {
         monthlyPrice,
         renewalDate,
         userId: user.id,
-        chatbotId: chatbotId || null,
+        chatbotId: selectedAgentId || null,
         status: 'active',
       },
     });
 
     // If chatbotId provided, update the chatbot with the phone number
-    if (chatbotId) {
+    if (selectedAgentId) {
       await prisma.chatbot.update({
-        where: { id: chatbotId },
+        where: { id: selectedAgentId },
         data: { phoneNumber },
       });
     }

@@ -4,7 +4,6 @@ import type { Message } from 'ai';
 import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useState } from 'react';
-import type { Vote } from '@/lib/chat-interface/db/schema';
 import { DocumentToolCall, DocumentToolResult } from '@/components/chat-interface/document';
 import { PencilEditIcon, SparklesIcon } from '@/components/chat-interface/icons';
 import { Markdown } from '@/components/chat-interface/markdown';
@@ -22,7 +21,6 @@ import { MessageReasoning } from '@/components/chat-interface/message-reasoning'
 const PurePreviewMessage = ({
   chatId,
   message,
-  vote,
   isLoading,
   setMessages,
   reload,
@@ -30,7 +28,6 @@ const PurePreviewMessage = ({
 }: {
   chatId: string;
   message: Message;
-  vote: Vote | undefined;
   isLoading: boolean;
   setMessages: (
     messages: Message[] | ((messages: Message[]) => Message[]),
@@ -188,7 +185,6 @@ const PurePreviewMessage = ({
                 key={`action-${message.id}`}
                 chatId={chatId}
                 message={message}
-                vote={vote}
                 isLoading={isLoading}
               />
             )}
@@ -199,25 +195,12 @@ const PurePreviewMessage = ({
   );
 };
 
-export const PreviewMessage = memo(
-  PurePreviewMessage,
-  (prevProps, nextProps) => {
-    if (prevProps.isLoading !== nextProps.isLoading) return false;
-    if (prevProps.message.reasoning !== nextProps.message.reasoning)
-      return false;
-    if (prevProps.message.content !== nextProps.message.content) return false;
-    if (
-      !equal(
-        prevProps.message.toolInvocations,
-        nextProps.message.toolInvocations,
-      )
-    )
-      return false;
-    if (!equal(prevProps.vote, nextProps.vote)) return false;
-
-    return true;
-  },
-);
+export const PreviewMessage = memo(PurePreviewMessage, (prevProps, nextProps) => {
+  if (!equal(prevProps.message, nextProps.message)) return false;
+  if (prevProps.isLoading !== nextProps.isLoading) return false;
+  
+  return true;
+});
 
 export const ThinkingMessage = () => {
   const role = 'assistant';
