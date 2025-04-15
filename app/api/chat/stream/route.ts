@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
           
           // Stream response from OpenAI
           const completion = await openai.chat.completions.create({
-            model: chatbot?.model || "gpt-4o-mini",
+            model: chatbot?.model || "gpt-4.1-nano-2025-04-14",
             messages,
             stream: true,
             temperature: partial ? 0.3 : 0.7, // Lower temp for partial transcripts

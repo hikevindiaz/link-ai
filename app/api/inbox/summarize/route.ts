@@ -146,7 +146,7 @@ If there's not enough content to summarize, please indicate that in your respons
     // Call OpenAI to generate a summary
     try {
       const response = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-nano-2025-04-14',
         messages: formattedMessages,
         temperature: 0.7,
         max_tokens: 500,
