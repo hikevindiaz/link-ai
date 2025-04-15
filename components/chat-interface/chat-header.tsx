@@ -48,7 +48,7 @@ export function ChatHeader({
                 onClick={handleModeToggle}
                 variant="ghost"
                 size="icon" 
-                className="size-8 rounded-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="size-8 rounded-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-white"
               >
                 {currentMode === 'text' ? <RiVoiceAiLine className="size-5" /> : <RiChatAiLine className="size-5" />}
                 <span className="sr-only">Switch to {currentMode === 'text' ? 'Voice' : 'Text'} Mode</span>

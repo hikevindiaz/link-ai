@@ -134,7 +134,7 @@ export const Overview = ({ chatbotId, chatbotLogoURL, welcomeMessage }: Overview
       transition={{ delay: 0.5 }}
     >
       <div className="flex flex-col items-center justify-center h-full gap-6 leading-relaxed max-w-3xl mx-auto">
-        <p className="text-4xl mt-2 text-center"> 
+        <p className="text-2xl md:text-3xl lg:text-4xl mt-2 text-center text-black dark:text-white"> 
           <span> 
             {displayMessage}
           </span>

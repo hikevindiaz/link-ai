@@ -90,14 +90,17 @@ const PurePreviewMessage = ({
             {(message.content || message.reasoning) && mode === 'view' && (
               <div
                 data-testid="message-content"
-                className="flex flex-row gap-2 items-start"
+                className={cn(
+                  'flex flex-row gap-2 items-start',
+                  message.role === 'user' && 'justify-end'
+                )}
               >
                 <div
                   className={cn(
                     'flex flex-col gap-4',
-                    'px-3 py-2 rounded-xl max-w-full break-words',
+                    'px-2 h-fit py-2 rounded-xl max-w-full break-words',
                     message.role === 'user'
-                      ? 'bg-black text-white dark:bg-white dark:text-black'
+                      ? 'bg-black text-white dark:bg-white dark:text-black max-w-[90%]'
                       : 'bg-white-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
                   )}
                 >
