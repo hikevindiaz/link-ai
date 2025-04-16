@@ -36,12 +36,13 @@ export async function GET(req: NextRequest) {
     
     const userId = session.user.id;
     
-    // Check payment method status first - this addresses the issue where phone numbers
-    // would appear suspended if payment method verification was broken
+    // Fetch user AND their payment methods from the database
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: { 
-        paymentMethods: true,
+        paymentMethods: { // Include payment methods relation
+           where: { isDefault: true } // Optimization: Only fetch the default one if needed
+        } 
       }
     });
 
@@ -49,14 +50,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check if user has a valid payment method either:
-    // 1. They have payment methods stored in our database
-    // 2. They have a valid Stripe subscription 
-    // 3. They have a Stripe customer ID (which means they've added a payment method before)
-    const hasValidPaymentMethod = 
-      user.paymentMethods.length > 0 || 
-      ['active', 'trialing', 'beta_active'].includes(user.stripeSubscriptionStatus || '') ||
-      Boolean(user.stripeCustomerId);
+    // Determine if a default payment method exists directly from the fetched data
+    const hasDefaultPaymentMethod = user.paymentMethods.length > 0;
+    console.log(`[GET /phone-numbers] User: ${userId}, Found Default PM in DB: ${hasDefaultPaymentMethod}`);
 
     // Get all phone numbers for the current user
     const phoneNumbers = await prisma.twilioPhoneNumber.findMany({
@@ -71,15 +67,15 @@ export async function GET(req: NextRequest) {
           },
         },
       },
+       orderBy: {
+        purchasedAt: 'desc' // Order by purchase date
+       }
     });
     
-    // Format phone numbers for the frontend, ensuring correct status is set
+    // Format phone numbers for the frontend
     const formattedPhoneNumbers = phoneNumbers.map((phone) => {
-      // If the phone number is already active and user has a valid payment method,
-      // keep it active; otherwise, respect the current status
-      const status = (phone.status === 'active' && !hasValidPaymentMethod) 
-        ? 'suspended' 
-        : phone.status;
+      // Determine status: ALWAYS suspended if no default payment method, otherwise use DB status
+      const currentStatus = !hasDefaultPaymentMethod ? 'suspended' : phone.status;
 
       return {
         id: phone.id,
@@ -88,8 +84,8 @@ export async function GET(req: NextRequest) {
         agentName: phone.chatbot?.name || null,
         boughtOn: phone.purchasedAt.toISOString(),
         renewsOn: phone.renewalDate.toISOString(),
-        monthlyFee: `$${phone.monthlyPrice.toString()}`,
-        status,
+        monthlyFee: `$${phone.monthlyPrice.toFixed(2)}`, // Ensure formatting
+        status: currentStatus, // Use the calculated status
         twilioSid: phone.twilioSid as string | undefined,
       };
     });
@@ -108,10 +104,52 @@ const createPhoneNumberSchema = z.object({
   monthlyPrice: z.number(),
 });
 
+// Helper function to save/update payment method in local DB
+async function savePaymentMethodToDb(userId: string, paymentMethod: Stripe.PaymentMethod) {
+    if (!paymentMethod.card) {
+        console.warn(`Payment method ${paymentMethod.id} is not a card, skipping DB save.`);
+        return;
+    }
+    try {
+        // Ensure only one default PM per user in DB
+        await prisma.paymentMethod.updateMany({
+            where: { userId: userId, isDefault: true },
+            data: { isDefault: false },
+        });
+        
+        await prisma.paymentMethod.upsert({
+            where: { stripePaymentMethodId: paymentMethod.id },
+            update: {
+                brand: paymentMethod.card.brand,
+                last4: paymentMethod.card.last4,
+                expMonth: paymentMethod.card.exp_month,
+                expYear: paymentMethod.card.exp_year,
+                isDefault: true, // Make the newly added card default in DB
+                userId: userId,
+            },
+            create: {
+                stripePaymentMethodId: paymentMethod.id,
+                brand: paymentMethod.card.brand,
+                last4: paymentMethod.card.last4,
+                expMonth: paymentMethod.card.exp_month,
+                expYear: paymentMethod.card.exp_year,
+                isDefault: true, // Make the newly added card default in DB
+                userId: userId,
+            },
+        });
+        console.log(`Saved/Updated payment method ${paymentMethod.id} in database.`);
+    } catch (dbError) {
+        console.error(`Error saving payment method ${paymentMethod.id} to DB:`, dbError);
+        // Non-critical, log and continue
+    }
+}
+
 // POST /api/twilio/phone-numbers - Purchase a new phone number
 export async function POST(req: NextRequest) {
   let invoice;
-  
+  let confirmedPaymentIntent: Stripe.PaymentIntent | null = null; // Keep this
+  let newPaymentMethodId: string | null = null; // To store PM ID from intent
+
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -172,11 +210,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'No payment method available' }, { status: 400 });
     }
 
-    if (user.paymentMethods.length === 0) {
-      console.error('User has no payment methods:', userId);
-      return NextResponse.json({ success: false, error: 'No payment method available' }, { status: 400 });
-    }
-    
     // Check if the user already owns this phone number
     const existingNumber = await prisma.twilioPhoneNumber.findFirst({
       where: {

@@ -586,11 +586,13 @@ const PhoneNumbersPage = () => {
                       Renews On: {new Date(selectedPhoneNumber.renewsOn).toLocaleDateString()}
                     </p>
                     
-                    {/* Payment Method Display */}
-                    <PaymentMethodDisplay 
-                      renewalDate={selectedPhoneNumber.renewsOn} 
-                      showDetailsButton={true}
-                    />
+                    {/* Wrap Payment Method Display in a div with margin */}
+                    <div className="mt-4">
+                      <PaymentMethodDisplay 
+                        renewalDate={selectedPhoneNumber.renewsOn} 
+                        showDetailsButton={true}
+                      />
+                    </div>
                     
                     <div className="mt-4 rounded-md bg-indigo-50 p-3 dark:bg-indigo-900/20">
                       <div className="flex">

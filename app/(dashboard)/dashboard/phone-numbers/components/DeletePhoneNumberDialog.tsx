@@ -96,7 +96,7 @@ export function DeletePhoneNumberDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-background dark:bg-gray-900 border dark:border-gray-800">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border dark:border-gray-800">
         {deleteState === 'confirming' && (
           <>
             <DialogHeader>
@@ -126,7 +126,7 @@ export function DeletePhoneNumberDialog({
                     </p>
                     <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-amber-700 dark:text-amber-300">
                       <li>Permanently remove it from your account</li>
-                      <li>Release it back to Twilio's number pool</li>
+                      <li>Release it back to numbers pool</li>
                       <li>Stop all billing associated with this number</li>
                       <li>End any active calls or messages being handled by this number</li>
                     </ul>
@@ -156,7 +156,7 @@ export function DeletePhoneNumberDialog({
 
         {deleteState === 'deleting' && (
           <div className="py-12 flex flex-col items-center justify-center">
-            <Icons.spinner className="h-12 w-12 animate-spin text-blue-500 dark:text-blue-400 mb-6" />
+            <Icons.spinner className="h-12 w-12 animate-spin text-indigo-500 dark:text-indigo-400 mb-6" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50 mb-2">
               Deleting Phone Number
             </h3>

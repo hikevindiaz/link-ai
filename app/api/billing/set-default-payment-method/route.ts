@@ -56,27 +56,27 @@ export async function POST(request: Request) {
       },
     });
 
-    // Check if we need to use a temporary solution without the database model
-    try {
-      // Try to use the PaymentMethod model
-      // First, set all payment methods to non-default
-      await prisma.$transaction([
-        prisma.paymentMethod.updateMany({
-          where: { userId: user.id },
-          data: { isDefault: false },
-        }),
-        // Then set the selected one as default
-        prisma.paymentMethod.updateMany({
-          where: { 
-            userId: user.id,
-            stripePaymentMethodId: paymentMethodId,
-          },
-          data: { isDefault: true },
-        }),
-      ]);
-    } catch (error) {
-      console.warn('PaymentMethod model may not be available yet:', error);
-      // Continue without updating the database - it will be synced on next fetch
+    // Update the default status in the local database
+    // First, set all payment methods for this user to non-default
+    await prisma.paymentMethod.updateMany({
+      where: { userId: user.id },
+      data: { isDefault: false },
+    });
+    
+    // Then, set the selected payment method as default
+    const updateResult = await prisma.paymentMethod.updateMany({
+      where: { 
+        userId: user.id,
+        stripePaymentMethodId: paymentMethodId,
+      },
+      data: { isDefault: true },
+    });
+
+    // Check if the update actually affected any rows (i.e., the PM was found)
+    if (updateResult.count === 0) {
+        console.warn(`Could not find PaymentMethod with stripePaymentMethodId ${paymentMethodId} for user ${user.id} to set as default in DB.`);
+        // Optionally return an error here if finding the PM in the DB is critical
+        // return NextResponse.json({ success: false, message: 'Payment method not found in database.' }, { status: 404 });
     }
 
     return NextResponse.json({

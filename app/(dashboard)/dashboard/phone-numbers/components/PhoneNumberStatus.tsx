@@ -19,7 +19,8 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
 
   // Function to refresh the status directly from Twilio
   const refreshStatus = async () => {
-    if (!phoneNumber.twilioSid) return;
+    // Removed check for twilioSid - rely on internal ID
+    // if (!phoneNumber.twilioSid) return; 
     
     try {
       setIsRefreshing(true);
@@ -191,14 +192,14 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
             Status Monitoring
           </h5>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Status changes are automatically synced with Twilio via webhooks. 
+            Status changes are automatically synced via webhooks. 
             Any changes in phone number status—such as purchase, modification, or deletion—are 
             immediately reflected in your system.
           </p>
           
           <div className="mt-3 text-xs text-gray-500 border-l-2 border-gray-200 pl-3 py-1">
             <p>Last status update: {new Date().toLocaleString()}</p>
-            {phoneNumber.twilioSid && <p>Twilio SID: {phoneNumber.twilioSid}</p>}
+            {/* {phoneNumber.twilioSid && <p>Twilio SID: {phoneNumber.twilioSid}</p>} */}
           </div>
         </div>
       </div>

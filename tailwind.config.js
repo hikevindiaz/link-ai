@@ -23,21 +23,15 @@ module.exports = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: {
-          light: "#FFFFFF", // Light theme background
-          dark: "#0F123B", // Dark theme background
-        },
-        foreground: {
-          light: "#000000", // Light theme text
-          dark: "#FFFFFF", // Dark theme text
-        },
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#0075FF", // Bright blue
-          foreground: "#FFFFFF",
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "#184090", // Dark blue
-          foreground: "#FFFFFF",
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -56,14 +50,14 @@ module.exports = {
           foreground: "hsl(var(--popover-foreground))",
         },
         card: {
-          light: "#FFFFFF", // Card background for light theme
-          dark: "#0F123B", // Card background for dark theme
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
       },
       borderRadius: {
-        lg: "1rem", // Large radius for universal styling
-        md: "0.75rem", // Medium radius
-        sm: "0.5rem", // Small radius
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
         sans: ["var(--font-geist)", ...fontFamily.sans],

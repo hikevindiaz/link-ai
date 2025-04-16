@@ -12,7 +12,7 @@ import { Divider } from "@/components/Divider";
 import { EmptyState } from "@/components/agents/empty-state";
 import { CreateAgentDrawer } from "@/components/agents/create-agent-drawer";
 import { toast } from "sonner";
-import { RiMoreFill } from "@remixicon/react";
+import { RiMoreFill, RiArrowLeftLine } from "@remixicon/react";
 import { LinkAIAgentIcon } from "@/components/icons/LinkAIAgentIcon";
 import {
   DropdownMenu,
@@ -110,6 +110,39 @@ export default function TestChatbotPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'deleting' | 'success' | 'error'>('idle');
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Add mobile responsiveness state
+  const [isMobileView, setIsMobileView] = useState<boolean>(false);
+  const [showAgentDetailsOnMobile, setShowAgentDetailsOnMobile] = useState<boolean>(false);
+
+  // Check for mobile view on mount and window resize
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768); // Use 768px as breakpoint
+    };
+    
+    // Initial check
+    checkMobileView();
+    
+    // Set up listener for window resize
+    window.addEventListener('resize', checkMobileView);
+    
+    // Cleanup listener on unmount
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+  
+  // Update mobile view state when agent is selected
+  useEffect(() => {
+    if (selectedAgent && isMobileView) {
+      setShowAgentDetailsOnMobile(true);
+    }
+    // If not on mobile, always hide the details view initially if agent selection changes
+    if (!isMobileView) {
+      setShowAgentDetailsOnMobile(false);
+    }
+  }, [selectedAgent, isMobileView]);
 
   useEffect(() => {
     fetchAgents();
@@ -235,6 +268,12 @@ export default function TestChatbotPage() {
     } finally {
       setIsDeleting(false);
     }
+
+    // Clear selected agent if it was deleted and hide details on mobile
+    if (selectedAgent?.id === id) {
+      setSelectedAgent(null);
+      setShowAgentDetailsOnMobile(false); 
+    }
   };
 
   const fetchAgentDetails = async (agentId: string) => {
@@ -281,168 +320,262 @@ export default function TestChatbotPage() {
 
   return (
     <div className="flex h-full">
-      {/* Left Sidebar */}
-      <div className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col">
-        <div className="p-4 pb-0">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-              My Agents
-            </h2>
-            <Button
-              variant="secondary"
-              className="h-8 w-8 p-0"
-              onClick={() => setIsDrawerOpen(true)}
-            >
-              <RiAddLine className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        <Divider className="mt-4" />
-        
-        <div className="px-4 pb-4 flex-1 overflow-auto">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
-              <span className="ml-2 text-sm text-gray-500">Loading agents...</span>
+      {/* Left Sidebar - Conditionally Rendered */}
+      {(!isMobileView || (isMobileView && !showAgentDetailsOnMobile)) && (
+        <div className={cn("border-r border-gray-200 dark:border-gray-800 flex flex-col", 
+          isMobileView ? "w-full" : "w-80")}>
+          <div className="p-4 pb-0">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                My Agents
+              </h2>
+              <Button
+                variant="secondary"
+                className="h-8 w-8 p-0"
+                onClick={() => setIsDrawerOpen(true)}
+              >
+                <RiAddLine className="h-4 w-4" />
+              </Button>
             </div>
-          ) : agents.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3 mt-1">
-              {agents.map((agent, index) => (
-                <Card 
-                  key={agent.id} 
-                  asChild 
-                  className={cn(
-                    "group transition-all duration-200",
-                    "hover:bg-gray-50 dark:hover:bg-gray-900",
-                    "hover:shadow-sm",
-                    "hover:border-gray-300 dark:hover:border-gray-700",
-                    selectedAgent?.id === agent.id && [
-                      "border-indigo-600 dark:border-indigo-500",
-                      "bg-indigo-50/50 dark:bg-indigo-500/5",
-                      "ring-1 ring-indigo-500 dark:ring-indigo-500"
-                    ]
-                  )}
-                >
-                  <div className="relative px-3.5 py-2.5">
-                    <div className="flex items-center space-x-3">
-                      <span
-                        className={cn(
-                          colorCombinations[index % colorCombinations.length].bg,
-                          colorCombinations[index % colorCombinations.length].text,
-                          'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium',
-                          'transition-transform duration-200 group-hover:scale-[1.02]',
-                          selectedAgent?.id === agent.id && [
-                            "border-2 border-indigo-500 dark:border-indigo",
-                            "shadow-[0_0_0_4px_rgba(59,130,246,0.1)]"
-                          ]
-                        )}
-                        aria-hidden={true}
-                      >
-                        {getInitials(agent.name)}
-                      </span>
-                      <div className="truncate min-w-0">
-                        <p className={cn(
-                          "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
-                          selectedAgent?.id === agent.id && "text-indigo-600 dark:text-indigo-400"
-                        )}>
-                          <button 
-                            onClick={() => handleAgentSelect(agent)}
-                            className="focus:outline-none hover:no-underline no-underline"
-                            type="button"
-                          >
-                            <span className="absolute inset-0" aria-hidden="true" />
-                            {agent.name}
-                          </button>
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline">
-                            ID: {agent.id.slice(0, 12)}
+          </div>
+          
+          <Divider className="mt-4" />
+          
+          <div className="px-4 pb-4 flex-1 overflow-auto">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
+                <span className="ml-2 text-sm text-gray-500">Loading agents...</span>
+              </div>
+            ) : agents.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3 mt-1">
+                {agents.map((agent, index) => (
+                  <Card 
+                    key={agent.id} 
+                    asChild 
+                    className={cn(
+                      "group transition-all duration-200",
+                      "hover:bg-gray-50 dark:hover:bg-gray-900",
+                      "hover:shadow-sm",
+                      "hover:border-gray-300 dark:hover:border-gray-700",
+                      selectedAgent?.id === agent.id && [
+                        "border-indigo-600 dark:border-indigo-500",
+                        "bg-indigo-50/50 dark:bg-indigo-500/5",
+                        "ring-1 ring-indigo-500 dark:ring-indigo-500"
+                      ]
+                    )}
+                  >
+                    <div className="relative px-3.5 py-2.5">
+                      <div className="flex items-center space-x-3">
+                        <span
+                          className={cn(
+                            colorCombinations[index % colorCombinations.length].bg,
+                            colorCombinations[index % colorCombinations.length].text,
+                            'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium',
+                            'transition-transform duration-200 group-hover:scale-[1.02]',
+                            selectedAgent?.id === agent.id && [
+                              "border-2 border-indigo-500 dark:border-indigo",
+                              "shadow-[0_0_0_4px_rgba(59,130,246,0.1)]"
+                            ]
+                          )}
+                          aria-hidden={true}
+                        >
+                          {getInitials(agent.name)}
+                        </span>
+                        <div className="truncate min-w-0">
+                          <p className={cn(
+                            "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
+                            selectedAgent?.id === agent.id && "text-indigo-600 dark:text-indigo-400"
+                          )}>
+                            <button 
+                              onClick={() => handleAgentSelect(agent)}
+                              className="focus:outline-none hover:no-underline no-underline"
+                              type="button"
+                            >
+                              <span className="absolute inset-0" aria-hidden="true" />
+                              {agent.name}
+                            </button>
                           </p>
-                          <Badge
-                            variant={agent.status === 'live' ? 'default' : 'secondary'}
-                            className={cn(
-                              "text-xs py-0 px-1.5",
-                              selectedAgent?.id === agent.id && agent.status === 'draft' && 
-                              "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400"
-                            )}
-                          >
-                            {agent.status}
-                          </Badge>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline">
+                              ID: {agent.id.slice(0, 12)}
+                            </p>
+                            <Badge
+                              variant={agent.status === 'live' ? 'default' : 'secondary'}
+                              className={cn(
+                                "text-xs py-0 px-1.5",
+                                selectedAgent?.id === agent.id && agent.status === 'draft' && 
+                                "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400"
+                              )}
+                            >
+                              {agent.status}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
+
+                      <div className="absolute right-2.5 top-2.5">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-6 w-6 p-0"
+                            >
+                              <RiMoreFill className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="min-w-56">
+                            <DropdownMenuLabel>Agent Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem onClick={() => handleAgentChat(agent.id)}>
+                                <span className="flex items-center gap-x-2">
+                                  <RiMessage2Line className="size-4 text-inherit" />
+                                  <span>Chat</span>
+                                </span>
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem onClick={() => window.location.href = `/dashboard/inquiries/${agent.id}`}>
+                                <span className="flex items-center gap-x-2">
+                                  <RiUserLine className="size-4 text-inherit" />
+                                  <span>User Inquiries</span>
+                                </span>
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => window.location.href = `/dashboard/errors/${agent.id}`}>
+                                <span className="flex items-center gap-x-2">
+                                  <RiErrorWarningLine className="size-4 text-inherit" />
+                                  <span>Errors</span>
+                                </span>
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuItem 
+                              onClick={() => setAgentToDelete(agent)}
+                              className="text-red-600 dark:text-red-400"
+                            >
+                              <span className="flex items-center gap-x-2">
+                                <RiDeleteBinLine className="size-4 text-inherit" />
+                                <span>Delete</span>
+                              </span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full items-center justify-center py-8 text-center">
+                <div className="flex flex-col items-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    No agents yet.
+                  </p>
+                  <Button 
+                    variant="secondary"
+                    className="mt-4"
+                    onClick={() => setIsDrawerOpen(true)}
+                  >
+                    <RiAddLine className="mr-2 h-4 w-4" />
+                    Create New Agent
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-                    <div className="absolute right-2.5 top-2.5">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-6 w-6 p-0"
-                          >
-                            <RiMoreFill className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="min-w-56">
-                          <DropdownMenuLabel>Agent Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          
-                          <DropdownMenuGroup>
-                            <DropdownMenuItem onClick={() => handleAgentChat(agent.id)}>
-                              <span className="flex items-center gap-x-2">
-                                <RiMessage2Line className="size-4 text-inherit" />
-                                <span>Chat</span>
-                              </span>
-                            </DropdownMenuItem>
-                          </DropdownMenuGroup>
-
-                          <DropdownMenuSeparator />
-
-                          <DropdownMenuGroup>
-                            <DropdownMenuItem onClick={() => window.location.href = `/dashboard/inquiries/${agent.id}`}>
-                              <span className="flex items-center gap-x-2">
-                                <RiUserLine className="size-4 text-inherit" />
-                                <span>User Inquiries</span>
-                              </span>
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => window.location.href = `/dashboard/errors/${agent.id}`}>
-                              <span className="flex items-center gap-x-2">
-                                <RiErrorWarningLine className="size-4 text-inherit" />
-                                <span>Errors</span>
-                              </span>
-                            </DropdownMenuItem>
-                          </DropdownMenuGroup>
-
-                          <DropdownMenuSeparator />
-
-                          <DropdownMenuItem 
-                            onClick={() => setAgentToDelete(agent)}
-                            className="text-red-600 dark:text-red-400"
-                          >
-                            <span className="flex items-center gap-x-2">
-                              <RiDeleteBinLine className="size-4 text-inherit" />
-                              <span>Delete</span>
-                            </span>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+      {/* Main Content - Conditionally Rendered */}
+      {(!isMobileView || (isMobileView && showAgentDetailsOnMobile)) && (
+        <div className="flex-1 overflow-auto">
+          {/* Mobile Back Button */}
+          {isMobileView && showAgentDetailsOnMobile && selectedAgent && (
+            <div className="border-b border-gray-200 dark:border-gray-800 p-2 sticky top-0 bg-background z-10">
+              <Button
+                variant="ghost"
+                onClick={() => setShowAgentDetailsOnMobile(false)}
+                className="flex items-center text-gray-600 dark:text-gray-300"
+              >
+                <RiArrowLeftLine className="mr-1 h-4 w-4" />
+                Back to agents
+              </Button>
             </div>
+          )}
+          
+          {selectedAgent ? (
+            <AgentSettings 
+              key={selectedAgent.id} // Add key to force re-render on agent change
+              agent={selectedAgent}
+              onSave={async (data) => {
+                // Handle saving agent settings
+                try {
+                  console.log('Saving agent settings:', JSON.stringify(data, null, 2));
+                  
+                  const response = await fetch(`/api/chatbots/${selectedAgent.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                  });
+                  
+                  if (!response.ok) throw new Error('Failed to update agent');
+                  
+                  const updatedData = await response.json();
+                  console.log('Updated agent response:', JSON.stringify(updatedData, null, 2));
+                  
+                  toast.success("Settings saved successfully");
+                  
+                  // Process the returned data to ensure it has all required fields
+                  const updatedAgent = {
+                    ...selectedAgent,
+                    ...data,
+                    // Make sure knowledgeSources is properly included
+                    knowledgeSources: updatedData.knowledgeSources || data.knowledgeSources || []
+                  };
+                  
+                  console.log('Processed updated agent:', JSON.stringify(updatedAgent, null, 2));
+                  
+                  // Set the selected agent with the complete updated data
+                  setSelectedAgent(updatedAgent);
+                  
+                  // Make sure the agent list reflects the name change immediately
+                  setAgents(prevAgents => 
+                    prevAgents.map(a => a.id === updatedAgent.id ? { ...a, name: updatedAgent.name, status: updatedAgent.status || 'draft' } : a)
+                  );
+
+                  return updatedAgent;
+                } catch (error) {
+                  console.error('Error updating agent:', error); // Log the error
+                  toast.error("Failed to save settings");
+                  throw error;
+                }
+              }}
+            />
           ) : (
-            <div className="flex h-full items-center justify-center py-8 text-center">
-              <div className="flex flex-col items-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No agents yet.
+            <div className="flex h-full flex-col items-center justify-center p-6">
+              <div className="mx-auto max-w-md text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
+                  <LinkAIAgentIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
+                  {agents.length > 0 
+                    ? 'Select an Agent' 
+                    : 'Welcome to Agents'}
+                </h1>
+                <p className="mt-2 text-gray-500 dark:text-gray-400">
+                  {agents.length > 0 
+                    ? 'Select an agent from the sidebar or create a new one to get started.' 
+                    : 'Create your first agent to enhance your business operations.'}
                 </p>
-                <Button 
-                  variant="secondary"
-                  className="mt-4"
-                  onClick={() => setIsDrawerOpen(true)}
-                >
+                <Button className="mt-6" onClick={() => setIsDrawerOpen(true)}>
                   <RiAddLine className="mr-2 h-4 w-4" />
                   Create New Agent
                 </Button>
@@ -450,76 +583,7 @@ export default function TestChatbotPage() {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        {selectedAgent ? (
-          <AgentSettings 
-            agent={selectedAgent}
-            onSave={async (data) => {
-              // Handle saving agent settings
-              try {
-                console.log('Saving agent settings:', JSON.stringify(data, null, 2));
-                
-                const response = await fetch(`/api/chatbots/${selectedAgent.id}`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(data),
-                });
-                
-                if (!response.ok) throw new Error('Failed to update agent');
-                
-                const updatedData = await response.json();
-                console.log('Updated agent response:', JSON.stringify(updatedData, null, 2));
-                
-                toast.success("Settings saved successfully");
-                
-                // Process the returned data to ensure it has all required fields
-                const updatedAgent = {
-                  ...selectedAgent,
-                  ...data,
-                  // Make sure knowledgeSources is properly included
-                  knowledgeSources: updatedData.knowledgeSources || data.knowledgeSources || []
-                };
-                
-                console.log('Processed updated agent:', JSON.stringify(updatedAgent, null, 2));
-                
-                // Set the selected agent with the complete updated data
-                setSelectedAgent(updatedAgent);
-                
-                return updatedData;
-              } catch (error) {
-                console.error('Error updating agent:', error);
-                toast.error("Failed to save settings");
-                throw error;
-              }
-            }}
-          />
-        ) : (
-          <div className="flex h-full flex-col items-center justify-center p-6">
-            <div className="mx-auto max-w-md text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                <LinkAIAgentIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
-                {agents.length > 0 
-                  ? 'Select an Agent' 
-                  : 'Welcome to Agents'}
-              </h1>
-              <p className="mt-2 text-gray-500 dark:text-gray-400">
-                {agents.length > 0 
-                  ? 'Select an agent from the sidebar or create a new one to get started.' 
-                  : 'Create your first agent to enhance your business operations.'}
-              </p>
-              <Button className="mt-6" onClick={() => setIsDrawerOpen(true)}>
-                <RiAddLine className="mr-2 h-4 w-4" />
-                Create New Agent
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!agentToDelete} onOpenChange={(open) => {
