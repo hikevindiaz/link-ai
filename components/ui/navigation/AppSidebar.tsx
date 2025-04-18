@@ -19,7 +19,19 @@ import {
 } from "@/components/Sidebar";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { RiArrowDownSFill } from "@remixicon/react";
+import { 
+  RiArrowDownSFill, 
+  RiShoppingBagFill, 
+  RiCheckboxMultipleFill, 
+  RiCustomerService2Fill, 
+  RiCalendarFill,
+  RiApps2AiLine,
+  RiMailLine,
+  RiShoppingBag2Line,
+  RiTicketLine,
+  RiCalendarLine,
+  RiMailAiLine,
+} from "@remixicon/react";
 import { BookText, MessageSquare, Mouse, PackageSearch, PanelLeft, PanelRight } from "lucide-react";
 import Image from "next/image";
 import { UserProfile } from "./UserProfile";
@@ -34,37 +46,73 @@ import { LinkAIAgentIcon } from "@/components/icons/LinkAIAgentIcon";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/Button";
 
-// Main navigation items (Mutable - directly updated)
+// Define Module type (sessionFlag removed)
+interface ModuleItem {
+  id: string;
+  name: string;
+  href: string;
+  icon: React.ElementType;
+}
+
+// Define the shape of the session user object with the nested settings map
+// Make sure types/next-auth.d.ts reflects this structure
+interface SessionUserWithSettings {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  integrationSettings?: Record<string, boolean>; // Key is integrationId
+}
+
+// Main navigation items
 const navigation = [
   {
     name: "Home",
     href: "/dashboard",
-    icon: Icons.dashboard,
+    icon: RiApps2AiLine,
     notifications: false,
     active: false,
   },
   {
     name: "Inbox",
     href: "/dashboard/inbox",
-    icon: Icons.mail,
-    notifications: 0 as number | false, // Initialize with type
+    icon: RiMailAiLine,
+    notifications: 0 as number | false, 
     active: false,
   },
 ];
 
-// Nested navigation with dropdowns
-const navigation2 = [
+// Define all potential modules (sessionFlag removed)
+const allModules: ModuleItem[] = [
   {
-    name: "Activity",
-    href: "#",
-    icon: Icons.messagesSquare,
-    children: [
-      { name: "Orders", href: "/dashboard/orders", active: false },
-      { name: "Smart Forms", href: "/dashboard/forms", active: false },
-      { name: "Customer Tickets", href: "/dashboard/tickets", active: false },
-      { name: "Calendar", href: "/dashboard/calendar", active: false },
-    ],
+    id: 'module-orders',
+    name: 'Orders', 
+    href: '/dashboard/orders', 
+    icon: RiShoppingBag2Line,
   },
+  {
+    id: 'module-forms',
+    name: 'Smart Forms', 
+    href: '/dashboard/forms', 
+    icon: Icons.clipboard,
+  },
+  {
+    id: 'module-tickets',
+    name: 'Customer Tickets', 
+    href: '/dashboard/tickets', 
+    icon: RiTicketLine,
+  },
+  {
+    id: 'module-calendar',
+    name: 'Calendar', 
+    href: '/dashboard/calendar',
+    icon: RiCalendarLine,
+  },
+];
+
+// Nested navigation - Remove Activity, keep Agents, KB, Settings
+const navigationGroups = [
+  // Activity group removed
   {
     name: "Agents",
     href: "#",
@@ -82,10 +130,11 @@ const navigation2 = [
   },
   {
     name: "Knowledge Base",
-    href: "/dashboard/knowledge-base",
+    href: "/dashboard/knowledge-base", // Direct link for parent?
     icon: Icons.brain,
     children: [
       { name: "Sources", href: "/dashboard/knowledge-base", active: false },
+      // Add other KB links if needed
     ],
   },
   {
@@ -95,6 +144,7 @@ const navigation2 = [
     children: [
       { name: "Integrations", href: "/dashboard/integrations", active: false },
       { name: "General Settings", href: "/dashboard/settings", active: false },
+      // Add Billing, etc.
     ],
   },
 ];
@@ -103,21 +153,49 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
   const pathname = usePathname();
   const { toast } = useToast();
   const [collapsed, setCollapsed] = useState(false);
-  const [openMenus, setOpenMenus] = React.useState<string[]>(() =>
-  navigation2
-    .filter((item) =>
-      item.children?.some((child) => pathname === child.href)
-    )
-    .map((item) => item.name)
-);
   const { theme, resolvedTheme } = useTheme();
   const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined);
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [searchResults, setSearchResults] = React.useState<any[]>([]);
-  // State for the unread count itself
   const [inboxUnreadCount, setInboxUnreadCount] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
+  
+  // Debugging log (can be kept or removed)
+  useEffect(() => {
+    if (sessionStatus === 'authenticated') {
+      console.log("[AppSidebar] Session Data:", session);
+      console.log("[AppSidebar] Integration Settings from Session:", (session?.user as SessionUserWithSettings)?.integrationSettings);
+    }
+  }, [session, sessionStatus]);
+
+  // Filter modules based on session data (UPDATED LOGIC)
+  const enabledModules = React.useMemo(() => {
+    if (sessionStatus !== 'authenticated' || !session?.user) {
+      return [];
+    }
+    // Cast session.user to our specific type
+    const currentUser = session.user as SessionUserWithSettings;
+    const settings = currentUser.integrationSettings ?? {}; // Get the settings map, default to empty
+    
+    console.log("[AppSidebar] Filtering based on settings:", settings);
+
+    return allModules.filter(module => {
+        // Check if the module's ID exists as a key in the settings map and is true
+        const isEnabled = settings[module.id] === true;
+        console.log(`[AppSidebar] Checking ${module.id}: Found in settings=${settings.hasOwnProperty(module.id)}, Value=${settings[module.id]}, Enabled=${isEnabled}`);
+        return isEnabled;
+    });
+  }, [session, sessionStatus]);
+
+  // Initialize open menus based on navigationGroups and active modules
+  const [openMenus, setOpenMenus] = React.useState<string[]>(() =>
+    navigationGroups
+      .filter((item) =>
+        item.children?.some((child) => pathname === child.href)
+      )
+      .map((item) => item.name)
+  );
   
   // Set mounted state and initialize currentTheme
   useEffect(() => {
@@ -155,68 +233,44 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
   
   // Simplified effect for fetching count and handling events
   useEffect(() => {
-    // Ensure component is mounted before running fetch or adding listeners
     if (!isMounted) return;
-    
-    // Define fetch function within the effect's scope
     const fetchUnreadCount = async () => {
       try {
           const response = await fetch('/api/inbox/unread');
-        if (!isMounted) return; // Check mount status after async call
-          
+        if (!isMounted) return;
           if (response.ok) {
             const data = await response.json();
           const count = data.count > 0 ? data.count : 0;
           setInboxUnreadCount(count);
-          // Update the mutable navigation object directly
-          navigation[1].notifications = count > 0 ? count : false;
-          // Force a re-render if direct mutation doesn't trigger update (usually state update is enough)
-          // Consider using state for navigation if direct mutation is unreliable
+          // Directly update the navigation item (assuming index 1 is Inbox)
+          if (navigation.length > 1) {
+              navigation[1].notifications = count > 0 ? count : false;
+          }
         } else {
           console.error('[AppSidebar] Failed to fetch unread count:', response.status);
           setInboxUnreadCount(0);
-          navigation[1].notifications = false;
+          if (navigation.length > 1) {
+             navigation[1].notifications = false;
+          }
         }
       } catch (error) {
-        if (!isMounted) return; // Check mount status after async error
+        if (!isMounted) return;
         console.error('[AppSidebar] Error fetching unread count:', error);
         setInboxUnreadCount(0);
-        navigation[1].notifications = false;
+         if (navigation.length > 1) {
+             navigation[1].notifications = false;
+          }
       }
     };
-    
-    // Initial fetch
     fetchUnreadCount();
-    
-    // Event handler for when a user reads a thread in the inbox page
-    const handleThreadRead = () => {
-      if (!isMounted) return;
-      console.log('[AppSidebar] inboxThreadRead event received, fetching count.');
-      fetchUnreadCount();
-    };
-    
-    // Event handler for when a new message is likely saved (from chat interface)
-    const handleNewMessageSaved = () => {
-      if (!isMounted) return;
-      console.log('[AppSidebar] newChatMessageSaved event received, fetching count with delay.');
-      // Fetch after a short delay to allow DB save to complete
-      setTimeout(() => {
-        if (isMounted) { // Check mount status again before fetching in timeout
-      fetchUnreadCount();
-        }
-      }, 1500); // 1.5 second delay
-    };
-    
-    // Add listeners
+    const handleThreadRead = () => { if (isMounted) fetchUnreadCount(); };
+    const handleNewMessageSaved = () => { if (isMounted) setTimeout(() => { if (isMounted) fetchUnreadCount(); }, 1500); };
     window.addEventListener('inboxThreadRead', handleThreadRead);
     window.addEventListener('newChatMessageSaved', handleNewMessageSaved);
-
-    // Cleanup function
     return () => {
       window.removeEventListener('inboxThreadRead', handleThreadRead);
       window.removeEventListener('newChatMessageSaved', handleNewMessageSaved);
     };
-    // Dependency array includes isMounted to re-run when it becomes true
   }, [isMounted]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -227,17 +281,13 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
       setSearchResults([]);
       return;
     }
-  
-    // Fix the type issues with the search functionality
-    type SearchableItem = {
-      name: string;
-      href: string;
-      [key: string]: any;
-    };
     
+    // Combine static nav, *ENABLED* modules, and grouped nav for search
+    type SearchableItem = { name: string; href: string; [key: string]: any; };
     const allPages: SearchableItem[] = [
       ...navigation as SearchableItem[],
-      ...navigation2.flatMap((item) => {
+      ...enabledModules as SearchableItem[], // Use the filtered enabledModules for search
+      ...navigationGroups.flatMap((item) => {
         if (item.children) {
           return [{ ...item, isParent: true } as SearchableItem, ...item.children as SearchableItem[]];
         }
@@ -246,7 +296,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
     ];
   
     const filteredResults = allPages.filter((item) =>
-      item.name.toLowerCase().includes(query)
+      item.name.toLowerCase().includes(query) && item.href !== '#' // Exclude parent group triggers
     );
   
     setSearchResults(filteredResults);
@@ -254,13 +304,10 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
 
   const toggleMenu = (name: string) => {
     if (collapsed) {
-      // If sidebar is collapsed and user clicks on a menu,
-      // expand the sidebar first and then open that menu
       setCollapsed(false);
       setOpenMenus([name]);
       return;
     }
-    
     setOpenMenus((prev) =>
       prev.includes(name)
         ? prev.filter((item) => item !== name)
@@ -268,21 +315,15 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
     );
   };
 
-  // Toggle sidebar expanded/collapsed state
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
-    // Close all open menus when collapsing
     if (!collapsed) {
       setOpenMenus([]);
     }
   };
 
-  // Only render when mounted to avoid flashing wrong theme
-  if (!isMounted) {
-    return null;
-  }
+  if (!isMounted) return null;
 
-  // Determine theme class based on resolvedTheme for more accurate theme detection
   const themeClass = currentTheme === "dark" 
     ? "bg-gray-950 text-white" 
     : "bg-gray-50 text-gray-900";
@@ -300,23 +341,21 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
       {/* Header */}
       <div className={cn(
         "py-4 flex items-center justify-between",
-        collapsed ? "px-2" : "px-3" // Match menu item padding
+        collapsed ? "px-2" : "px-3"
       )}>
         <div className={cn(
           "flex items-center", 
-          collapsed ? "justify-center w-full" : "pl-2" // Add left padding to align with menu items when expanded
+          collapsed ? "justify-center w-full" : "pl-2"
         )}>
           {collapsed ? (
-            // Collapsed state - we need to use a smaller icon
             <Image 
               src={currentTheme === "dark" ? "/LINK AI ICON LIGHT.png" : "/LINK AI ICON DARK.png"} 
               alt="Link AI Logo" 
               width={12}
               height={12}
-              className="object-contain"
+              className="object-contain h-auto"
             />
           ) : (
-            // Expanded state - use full logo
             <Image 
               src={currentTheme === "dark" ? "/LINK AI LOGO LIGHT.png" : "/LINK AI LOGO DARK.png"} 
               alt="Link AI Logo" 
@@ -326,7 +365,6 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
             />
           )}
         </div>
-        {/* Only show the button in the header when NOT collapsed */}
         {!collapsed && (
           <Button
             variant="ghost"
@@ -340,7 +378,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0">
         {/* Search Bar - only show when expanded */}
         {!collapsed && (
           <div className="relative flex w-full min-w-0 flex-col p-3">
@@ -353,8 +391,6 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
                   placeholder="Search pages..."
                   className="[&>input]:sm:py-1.5"
                 />
-      
-                {/* Search Results Dropdown */}
                 {searchQuery && searchResults.length > 0 && (
                   <div className="absolute z-10 mt-2 w-full bg-white shadow-lg rounded-md overflow-hidden dark:bg-gray-800">
                     {searchResults.map((result) => (
@@ -372,10 +408,8 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
                     ))}
                   </div>
                 )}
-      
-                {/* If no results */}
                 {searchQuery && searchResults.length === 0 && (
-                  <div className="absolute z-10 mt-2 w-full bg-white shadow-lg rounded-md overflow-hidden dark:bg-gray-800">
+                  <div className="absolute z-10 mt-2 w-full bg-white shadow-lg rounded-md overflow-hidden dark:bg-gray-800 p-2 text-center text-xs text-gray-500">
                     No results found.
                   </div>
                 )}
@@ -396,7 +430,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
                     aria-label="Expand sidebar"
                     className={cn(
                       "flex w-full items-center justify-center rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
-                      "text-gray-900 dark:text-gray-400", // Match exact text color of other icons
+                      "text-gray-900 dark:text-gray-400",
                       "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                     )}
                   >
@@ -405,6 +439,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
                 </li>
               )}
               
+              {/* --- Render Static Top Links (Home, Inbox) --- */}
               {navigation.map((item) => (
                 <li key={item.name} className="relative">
                   <a
@@ -423,19 +458,53 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
                       "flex items-center", 
                       !collapsed && "gap-x-2.5"
                     )}>
-                      {item.icon && <item.icon className="size-[18px] shrink-0" aria-hidden="true" />}
+                      {item.icon && <item.icon className="size-[18px] shrink-0" aria-hidden="true" />} 
                       {!collapsed && item.name}
                     </span>
-                    {item.notifications && (
-                      <span className={cn(
-                        "inline-flex items-center justify-center rounded",
-                        collapsed 
-                          ? "absolute top-0.5 right-1.5 size-2 bg-indigo-600 dark:bg-indigo-500" 
-                          : "size-5 bg-indigo-100 text-sm font-medium text-indigo-600 sm:text-xs dark:bg-indigo-500/10 dark:text-indigo-500"
-                      )}>
-                        {!collapsed && item.notifications}
-                      </span>
+                     {/* Updated notification badge logic */}
+                     {item.name === 'Inbox' && inboxUnreadCount > 0 && (
+                        <span className={cn(
+                            "inline-flex items-center justify-center rounded",
+                            collapsed 
+                            ? "absolute top-0.5 right-1.5 size-2 bg-indigo-600 dark:bg-indigo-500" 
+                            : "ml-auto size-5 bg-indigo-100 text-sm font-medium text-indigo-600 sm:text-xs dark:bg-indigo-500/10 dark:text-indigo-500"
+                        )}>
+                            {!collapsed && inboxUnreadCount}
+                        </span>
                     )}
+                  </a>
+                </li>
+              ))}
+              
+              {/* Divider between static nav and modules - Conditional Rendering */}
+              {enabledModules.length > 0 && (
+                <div className="px-3">
+                  <Divider className="my-1" />
+                </div>
+              )}
+
+              {/* --- Render ENABLED Modules based on session --- */}
+              {enabledModules.map((item) => (
+                <li key={item.id} className="relative">
+                  <a
+                    href={item.href}
+                    aria-current={pathname === item.href ? "page" : undefined}
+                    data-active={pathname === item.href}
+                    className={cn(
+                      "flex items-center rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
+                      collapsed ? "justify-center" : "justify-start", // Align left when expanded
+                      "text-gray-900 dark:text-gray-400 hover:dark:text-gray-50",
+                      "data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    )}
+                  >
+                    <span className={cn(
+                      "flex items-center", 
+                      !collapsed && "gap-x-2.5"
+                    )}>
+                      {item.icon && <item.icon className="size-[18px] shrink-0" aria-hidden="true" />} 
+                      {!collapsed && item.name}
+                    </span>
                   </a>
                 </li>
               ))}
@@ -445,28 +514,30 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
   
         {/* Divider */}
         <div className="px-3">
-          <Divider className="my-0 py-0" />
+          <Divider className="my-1" />
         </div>
   
-        {/* Nested Dropdown Navigation */}
-        <div className="relative flex w-full min-w-0 flex-col p-3">
+        {/* --- Render Static Navigation Groups (Agents, KB, Settings) --- */}
+        <div className="relative flex w-full min-w-0 flex-col p-3 pt-1">
           <div className="w-full text-sm">
-            <ul className="flex w-full min-w-0 flex-col gap-1 space-y-4">
-              {navigation2.map((item) => (
+            <ul className="flex w-full min-w-0 flex-col gap-1 space-y-1"> {/* Reduced space-y */} 
+              {navigationGroups.map((item) => (
                 <li key={item.name} className="relative">
                   <button
                     onClick={() => toggleMenu(item.name)}
+                     // Check if current path is within this group for active state
+                     data-active={item.children?.some(child => pathname === child.href)}
                     className={cn(
-                      "flex items-center rounded-md p-2 w-full",
+                      "flex items-center rounded-md p-2 w-full text-base transition sm:text-sm",
                       collapsed ? "justify-center" : "justify-between gap-2",
-                      theme === "dark"
-                        ? "text-white hover:bg-gray-800"
-                        : "text-gray-900 hover:bg-gray-200"
+                      "text-gray-900 dark:text-gray-400 hover:bg-gray-200/50 hover:dark:bg-gray-900 hover:dark:text-gray-50",
+                       // Apply active styles to the button if a child is active
+                      "data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500"
                     )}
                   >
-                    <div className={cn("flex items-center gap-2")}>
+                    <div className={cn("flex items-center", !collapsed && "gap-x-2.5")}>
                       <item.icon
-                        className="size-[18px] shrink-0"
+                        className="size-[18px] shrink-0" 
                         aria-hidden="true"
                       />
                       {!collapsed && item.name}
@@ -481,9 +552,10 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
                       />
                     )}
                   </button>
+                  {/* Submenu rendering logic remains the same */}
                   {item.children && openMenus.includes(item.name) && !collapsed && (
-                    <ul className="relative space-y-1 border-l border-transparent">
-                      <div className="relative inset-y-0 left-4 w-px bg-gray-300 dark:bg-gray-800" />
+                    <ul className="relative mt-1 space-y-1 border-l border-transparent">
+                      <div className="absolute inset-y-0 left-4 w-px bg-gray-300 dark:bg-gray-800" />
                       {item.children.map((child) => (
                         <li key={child.name}>
                           <a
@@ -517,7 +589,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
       </div>
       
       {/* Footer */}
-      <div className={cn("flex flex-col gap-2 p-3", collapsed ? "px-0" : "")}>
+      <div className={cn("flex flex-col gap-2 p-3", collapsed ? "items-center" : "")}>
         <div className="border-t border-gray-200 dark:border-gray-800" />
         {session && <UserProfile user={session.user} collapsed={collapsed} />}
       </div>

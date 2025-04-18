@@ -1,12 +1,16 @@
-import { type NextAuthOptions } from "next-auth";
+import { type NextAuthOptions, Profile, Account } from "next-auth";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { db } from "@/lib/db";
+import { sendWelcomeEmail } from "./emails/send-welcome";
+import { PrismaClient } from "@prisma/client"; // Import Prisma Client
+
+// --- Magic SDK Initialization --- 
 let Magic: any;
 let magicAdmin: any;
 
-// Add logging for initialization
 console.log("Auth module initializing");
 console.log("DATABASE_URL format check:", process.env.DATABASE_URL?.substring(0, 12));
 console.log("DIRECT_URL format check:", process.env.DIRECT_URL?.substring(0, 12));
@@ -14,25 +18,28 @@ console.log("DIRECT_URL format check:", process.env.DIRECT_URL?.substring(0, 12)
 if (typeof window === 'undefined') {
   try {
     console.log("Initializing Magic SDK on server");
-    Magic = require('@magic-sdk/admin').Magic;
+    // Ensure require is used correctly for server-side CJS module
+    const MagicAdmin = require('@magic-sdk/admin').Magic;
     
     if (!process.env.MAGIC_SECRET_KEY) {
       console.error("MAGIC_SECRET_KEY is missing or empty!");
     } else {
       console.log("MAGIC_SECRET_KEY is configured [Key hidden]");
-      magicAdmin = new Magic(process.env.MAGIC_SECRET_KEY);
+      // Assign to the globally scoped variable
+      magicAdmin = new MagicAdmin(process.env.MAGIC_SECRET_KEY);
       console.log("Magic admin client initialized successfully");
     }
   } catch (error) {
     console.error("Failed to initialize Magic admin client:", error);
+    // Set magicAdmin to null or handle the error appropriately
+    magicAdmin = null;
   }
 }
+// --- End Magic SDK Initialization ---
 
-import { db } from "@/lib/db";
-import { sendWelcomeEmail } from "./emails/send-welcome";
-
-// Log whether Prisma client is available
 console.log("Prisma client initialized:", !!db);
+
+type IntegrationSettingsMap = Record<string, boolean>;
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db as any),
@@ -43,7 +50,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
-    error: "/login?error=true", // Add error page for debugging
+    error: "/login?error=true",
   },
   logger: {
     error(code, metadata) {
@@ -74,6 +81,11 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         console.log("=== MAGIC AUTH FLOW STARTED ===");
+        // Check if magicAdmin was initialized successfully
+        if (!magicAdmin) {
+           console.error("Magic Admin SDK not initialized. Cannot authorize.");
+           return null;
+        }
         try {
           console.log("Checking credentials");
           const didToken = credentials?.didToken;
@@ -83,18 +95,14 @@ export const authOptions: NextAuthOptions = {
           }
           console.log("DID token received [token hidden]");
 
-          // Log database connection status before trying it
           try {
             console.log("Testing database connection");
-            // Simple DB test to see if connection works
             const dbTest = await db.$queryRaw`SELECT 1 as test`;
             console.log("Database connection test result:", dbTest);
           } catch (dbError) {
             console.error("Database connection test failed:", dbError);
-            // Continue with auth flow despite DB error
           }
 
-          // Verify the token with Magic
           console.log("Validating Magic token");
           try {
             await magicAdmin.token.validate(didToken);
@@ -104,7 +112,6 @@ export const authOptions: NextAuthOptions = {
             throw validationError;
           }
 
-          // Retrieve the user's email from the token
           console.log("Getting user metadata from Magic");
           let metadata;
           try {
@@ -115,7 +122,6 @@ export const authOptions: NextAuthOptions = {
             throw metadataError;
           }
 
-          // Find or create the user in your database
           console.log("Looking for user in database");
           let user;
           try {
@@ -134,10 +140,13 @@ export const authOptions: NextAuthOptions = {
               user = await db.user.create({
                 data: {
                   email: metadata.email,
-                  name: metadata.email.split('@')[0], // Default name
+                  name: metadata.email.split('@')[0], 
                 },
               });
               console.log("New user created successfully:", user.id);
+              // Trigger createUser event manually after successful creation if needed
+              // This assumes you have specific logic in the createUser *event*
+              // await options.events?.createUser?.({ user }); 
             } catch (createError) {
               console.error("Error creating user:", createError);
               throw createError;
@@ -156,78 +165,100 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async session({ token, session }) {
-      console.log("Session callback called");
-      if (token) {
-        session!.user!.id = token.id;
-        session!.user!.name = token.name;
-        session!.user!.email = token.email;
-        session!.user!.image = token.picture;
+      console.log("Session callback called with token:", token);
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.name = token.name;
+        session.user.email = token.email;
+        session.user.image = token.picture;
+        session.user.integrationSettings = token.integrationSettings as IntegrationSettingsMap ?? {};
+        console.log("Integration settings added to session:", session.user.integrationSettings);
       }
-      console.log("Session callback completed");
+      console.log("Session callback completed with session:", session);
       return session;
     },
-    async jwt({ token, user }) {
-      console.log("JWT callback called");
-      let dbUser;
-      try {
-        console.log("Looking up user for JWT:", token.email);
-        dbUser = await db.user.findFirst({
-          where: {
-            email: token.email,
-          },
-        });
-        console.log("JWT user lookup result:", dbUser ? "User found" : "User not found");
-      } catch (error) {
-        console.error("Error in JWT callback:", error);
-        // If DB lookup fails, still return token with user info if available
-        if (user) {
-          console.log("Using provided user for JWT");
-          token.id = user?.id;
+    async jwt({ token, user, trigger, session: updateSessionData }) {
+      console.log("JWT callback called. Trigger:", trigger, "User:", user, "Token:", token);
+      
+      // Get the user ID from the token if it exists, otherwise from the user object (initial sign in)
+      const userId = token?.id as string ?? user?.id;
+
+      // If we have a userId, always try to fetch the latest data from the DB
+      if (userId) {
+        try {
+          console.log(`Fetching DB user and settings for JWT. User ID: ${userId}`);
+          const dbUser = await db.user.findUnique({
+            where: { id: userId },
+            include: {
+              integrationSettings: true, // Include related settings
+            },
+          });
+          console.log("JWT DB user lookup result:", dbUser ? "User found" : "User not found");
+
+          if (dbUser) {
+            // Always update token with the latest DB info
+            token.id = dbUser.id;
+            token.name = dbUser.name;
+            token.email = dbUser.email;
+            token.picture = dbUser.image;
+
+            // Process integration settings into a map
+            const settingsMap: IntegrationSettingsMap = {};
+            dbUser.integrationSettings.forEach(setting => {
+              settingsMap[setting.integrationId] = setting.isEnabled;
+            });
+            token.integrationSettings = settingsMap; // Add/Update settings map in token
+            console.log("Integration settings updated in JWT:", token.integrationSettings);
+
+          } else {
+             console.warn(`JWT: User with ID ${userId} not found in DB. Token might be stale.`);
+             // If user not found in DB, maybe clear outdated settings?
+             token.integrationSettings = {}; 
+          }
+        } catch (error) {
+          console.error(`Error fetching user/settings for JWT (User ID: ${userId}):`, error);
+          // Keep existing token data if fetch fails, but log error
         }
-        console.log("JWT callback completed with error fallback");
-        return token;
+      } else if (user) {
+          // Fallback for initial sign-in if somehow userId wasn't available above
+          // This case might be less likely now
+          console.log("JWT: Using initial user object info");
+          token.id = user.id;
+          token.name = user.name;
+          token.email = user.email;
+          token.picture = user.image;
+          token.integrationSettings = {}; // No settings available yet
       }
 
-      if (!dbUser) {
-        if (user) {
-          console.log("Using provided user for JWT");
-          token.id = user?.id;
-        }
-        console.log("JWT callback completed (no DB user)");
-        return token;
-      }
-
-      console.log("JWT callback completed with DB user");
-      return {
-        id: dbUser.id,
-        name: dbUser.name,
-        email: dbUser.email,
-        picture: dbUser.image,
-      };
+      console.log("JWT callback completed. Returning token:", token);
+      return token;
     },
+    async signIn({ user, account, profile, email, credentials }) {
+        console.log("signIn callback:", { user, account, profile, email, credentials });
+        return true // Or custom logic
+      },
   },
   events: {
-    async signIn(message) {
-      console.log("Sign in event:", message.user.email);
-    },
-    async signOut(message) {
-      console.log("Sign out event:", message);
-    },
     async createUser(message) {
-      console.log("Create user event:", message.user.email);
-      try {
-        const params = {
-          name: message.user.name,
-          email: message.user.email,
-        };
-        await sendWelcomeEmail(params);
-        console.log("Welcome email sent");
-      } catch (error) {
-        console.error("Failed to send welcome email:", error);
-      }
-    },
-    async error(message) {
-      console.error("Auth error event:", message);
-    }
-  },
+        console.log("createUser event:", message.user);
+        // Send welcome email
+        try {
+          // Check required fields before sending
+          if (message.user.email) { 
+            await sendWelcomeEmail({ 
+                email: message.user.email, 
+                name: message.user.name ?? message.user.email.split('@')[0] // Use name or derive from email
+            });
+            console.log("Welcome email sent to:", message.user.email);
+          } else {
+              console.warn("Cannot send welcome email: email is missing.");
+          }
+        } catch (emailError) {
+          console.error("Failed to send welcome email:", emailError);
+        }
+      },
+      async signOut(message) {
+        console.log("signOut event:", message); // signOut is an event
+      },
+  }
 };

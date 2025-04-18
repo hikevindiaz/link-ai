@@ -74,6 +74,11 @@ import {
   Smile,
   Frown,
   Meh,
+  Filter,
+  Bell,
+  CalendarX,
+  ShoppingBag,
+  CalendarPlus,
 } from "lucide-react";
 
 // Import the custom Google icon from Material UI
@@ -157,7 +162,11 @@ export const Icons = {
   clipboardCheck: ClipboardCheck,
   smile: Smile,
   frown: Frown,
-  meh: Meh,
+  filter: Filter,
+  bell: Bell,
+  calendarX: CalendarX,
+  shoppingBag: ShoppingBag,
+  calendarPlus: CalendarPlus,
   // Custom Imported Icons
   google: GoogleIcon,
   gitHub: ({ ...props }: LucideProps) => (

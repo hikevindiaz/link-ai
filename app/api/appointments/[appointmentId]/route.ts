@@ -1,0 +1,78 @@
+import { NextResponse } from 'next/server';
+import { updateAppointment, deleteAppointment } from '@/lib/api/appointments'; // Import update/delete logic
+import type { AppointmentInput } from "@/lib/api/appointments"; // Import input type
+
+interface RouteParams {
+    params: {
+        appointmentId: string;
+    }
+}
+
+// PATCH /api/appointments/[appointmentId]
+export async function PATCH(request: Request, { params }: RouteParams) {
+    const { appointmentId } = params;
+
+    if (!appointmentId) {
+        return NextResponse.json({ error: 'Missing appointmentId parameter' }, { status: 400 });
+    }
+
+    try {
+        const body = await request.json();
+
+        // --- Input Validation ---
+        // Validate the fields being updated (e.g., status must be valid enum)
+        // For now, we pass the partial body directly to the update function,
+        // which has its own internal checks (like checking calendar ownership if calendarId changes).
+        const updateInput: Partial<AppointmentInput> & { calendarId?: string } = body;
+        // ------------------------
+
+        // TODO: Add authentication/authorization check here 
+        // Ensure the logged-in user OWNS this appointment before allowing update.
+
+        const updatedAppointment = await updateAppointment(appointmentId, updateInput);
+
+        return NextResponse.json(updatedAppointment);
+
+    } catch (error) {
+        console.error(`Error updating appointment ${appointmentId}:`, error);
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
+        // Handle specific errors like "Not Found" potentially with 404
+        if (message.includes("not found")) { 
+            return NextResponse.json({ error: `Appointment not found` }, { status: 404 });
+        }
+        return NextResponse.json({ error: `Failed to update appointment: ${message}` }, { status: 500 });
+    }
+}
+
+// DELETE /api/appointments/[appointmentId]
+export async function DELETE(request: Request, { params }: RouteParams) {
+    const { appointmentId } = params;
+
+    if (!appointmentId) {
+        return NextResponse.json({ error: 'Missing appointmentId parameter' }, { status: 400 });
+    }
+
+    try {
+         // TODO: Add authentication/authorization check here 
+        // Ensure the logged-in user OWNS this appointment before allowing delete.
+
+        await deleteAppointment(appointmentId);
+
+        return new NextResponse(null, { status: 204 }); // 204 No Content on successful deletion
+
+    } catch (error) {
+        console.error(`Error deleting appointment ${appointmentId}:`, error);
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
+         // Handle specific errors like "Not Found" potentially with 404
+        if (message.includes("not found")) { 
+            return NextResponse.json({ error: `Appointment not found` }, { status: 404 });
+        }
+        return NextResponse.json({ error: `Failed to delete appointment: ${message}` }, { status: 500 });
+    }
+}
+
+// Optional: GET /api/appointments/[appointmentId]
+// export async function GET(request: Request, { params }: RouteParams) {
+//     const { appointmentId } = params;
+//     // ... implementation to fetch single appointment by ID ...
+// } 

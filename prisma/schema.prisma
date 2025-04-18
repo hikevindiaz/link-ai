@@ -8,6 +8,14 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Enum for Appointment Status
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
 model OpenAIConfig {
   id           String   @id @default(cuid())
   userId       String   @unique
@@ -253,6 +261,8 @@ model User {
   onboardingCompleted      Boolean               @default(false)
   postalCode               String?
   state                    String?
+
+  // Relations
   accounts                 Account[]
   openAIConfig             OpenAIConfig?
   sessions                 Session[]
@@ -267,6 +277,9 @@ model User {
   paymentMethods           PaymentMethod[]
   phoneNumbers             TwilioPhoneNumber[]
   voices                   UserVoice[]
+  calendars                Calendar[]          // Calendars owned by this user
+  bookedAppointments       Appointment[]       @relation("BookedAppointments") // Appointments booked by this user (as agent/owner)
+  integrationSettings      UserIntegrationSetting[] // Added relation
 }
 
 model VerificationToken {
@@ -519,4 +532,79 @@ model AssistantSettings {
   chatbot           Chatbot  @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
 
   @@map("AssistantSettings")
+}
+
+// Model for Calendars
+model Calendar {
+  id                       String        @id @default(cuid())
+  name                     String
+  userId                   String // Relation to the User who owns this calendar
+  user                     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Availability Settings
+  workingHoursStart        String        @default("09:00") // Store as HH:MM string
+  workingHoursEnd          String        @default("17:00") // Store as HH:MM string
+  includeSaturday          Boolean       @default(true)
+  includeSunday            Boolean       @default(false)
+  // Consider adding timezone setting here if needed: timezone String?
+
+  // Notification Settings
+  notificationEmail        String?       // Email address to send booking notifications/confirmations
+  notificationEmailEnabled Boolean       @default(true)
+  emailReminderEnabled     Boolean       @default(true)
+  smsReminderEnabled       Boolean       @default(false) // Requires SMS integration setup
+  reminderTimeMinutes      Int           @default(30) // e.g., 30, 60, 1440
+
+  createdAt                DateTime      @default(now()) @map("created_at")
+  updatedAt                DateTime      @updatedAt @map("updated_at")
+
+  appointments             Appointment[] // Relation to appointments within this calendar
+
+  @@map("calendars")
+}
+
+// Model for Appointments (Bookings)
+model Appointment {
+  id                  String            @id @default(cuid())
+  calendarId          String // Relation to the Calendar it belongs to
+  calendar            Calendar          @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+
+  bookedByUserId      String? // Optional: ID of the User (Agent/Owner) who created the booking
+  bookedByUser        User?             @relation("BookedAppointments", fields: [bookedByUserId], references: [id], onDelete:SetNull) // Use a named relation
+
+  // Client/Booking Details
+  clientName          String
+  clientPhoneNumber   String?
+  description         String
+
+  // Date & Time - Using DateTime for easier querying
+  startTime           DateTime // Combined Date and Start Time
+  endTime             DateTime // Combined Date and End Time
+
+  status              AppointmentStatus @default(PENDING) // Use the enum
+  color               String            @default("indigo") // UI color hint
+
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  // Indexes for common queries
+  @@index([calendarId, startTime, endTime])
+  @@index([bookedByUserId])
+  @@map("appointments")
+}
+
+// Model for user-specific integration/module settings
+model UserIntegrationSetting {
+  id            String   @id @default(cuid())
+  userId        String
+  integrationId String   // e.g., "module-calendar", "ext-zapier"
+  isEnabled     Boolean  @default(true) // Default to true based on previous flags
+  configuredAt  DateTime? @updatedAt // Use updatedAt to track last config change
+  // Add other fields like status or configDataJson if needed later
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, integrationId]) // User can only have one setting per integration
+  @@index([userId])
+  @@map("user_integration_settings") // Optional: explicit table name
 }
