@@ -584,6 +584,8 @@ model Appointment {
   status              AppointmentStatus @default(PENDING) // Use the enum
   color               String            @default("indigo") // UI color hint
 
+  source              String?           // Optional field for appointment source (e.g., "Manual", "Web Chat", "SMS")
+
   createdAt           DateTime          @default(now()) @map("created_at")
   updatedAt           DateTime          @updatedAt @map("updated_at")
 

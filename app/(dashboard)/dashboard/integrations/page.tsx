@@ -27,6 +27,7 @@ import {
   RiInformationLine,
   RiToggleFill,
   RiToggleLine,
+  RiDriveFill,
 } from '@remixicon/react';
 import { toast } from "react-hot-toast";
 
@@ -166,6 +167,16 @@ const allIntegrationsData: IntegrationItem[] = [
     iconUrl: 'https://www.svgrepo.com/show/331592/stripe-v2.svg',
     comingSoon: true,
   },
+  {
+    id: 'ext-google-drive',
+    name: 'Google Drive',
+    description: 'Connect Google Docs & Sheets',
+    icon: RiDriveFill,
+    status: 'Enable',
+    isModule: false,
+    iconUrl: 'https://www.svgrepo.com/show/475644/drive-color.svg',
+    comingSoon: false,
+  },
 ];
 
 const ThemedSvg = ({ src, alt, className = "size-6" }: { src: string; alt: string; className?: string }) => {
@@ -273,9 +284,16 @@ export default function IntegrationsPage() {
       return <LoadingState text="Loading integration settings..." />;
   }
 
+  // Define gradient colors (can be customized)
+  const borderGradientColors = ["#4f46e5", "#7c3aed", "#db2777"]; // Using indigo/purple/pink
+  const [color1, color2, color3] = borderGradientColors;
+  const gradientStyle = `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})`;
+
   return (
     <div className="p-0">
-      <div className="flex justify-between items-center px-8 pt-6">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0 px-4 md:px-8 pt-6">
+        {/* Left Side: Title & Count */}
         <div className="flex items-center space-x-2">
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50">
             Integrations & Modules
@@ -284,8 +302,9 @@ export default function IntegrationsPage() {
             {filteredAndSortedData.length}
           </span>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="relative w-64">
+        {/* Right Side: Search & Filter */}
+        <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+          <div className="relative w-full sm:w-64">
             <Input 
               type="search"
               placeholder="Search..."
@@ -297,7 +316,7 @@ export default function IntegrationsPage() {
             value={filterStatus}
             onValueChange={setFilterStatus}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <div className="flex items-center space-x-2">
                 <RiFilterLine className="size-4" />
                 <span>Filter: {filterStatus === 'all' ? 'All' : filterStatus === 'enabled' ? 'Enabled' : 'Disabled'}</span>
@@ -313,12 +332,15 @@ export default function IntegrationsPage() {
       </div>
       <Divider className="my-4" />
       
-      <div className="px-8 mt-4">
+      {/* Card Grid Section */}
+      <div className="px-4 md:px-8 mt-4">
         <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredAndSortedData.map((item) => {
             const isItemLoading = isLoading[item.id] ?? false;
-            return (
-              <Card key={item.id} className="flex flex-col justify-between p-4 relative border hover:shadow-md transition-shadow duration-200">
+
+            // Define the inner content of the card first
+            const cardInnerContent = (
+              <>
                 <div className="flex items-start gap-4">
                   <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white p-1.5 dark:border-gray-800 dark:bg-gray-900">
                     {item.iconUrl ? (
@@ -350,17 +372,59 @@ export default function IntegrationsPage() {
                         {isItemLoading ? 'Updating...' : item.isEnabled ? 'Enabled' : 'Disabled'}
                       </Label>
                     </div>
-                  ) : item.comingSoon ? (
+                  ) : item.comingSoon === true ? (
                     <Badge variant="secondary" className="text-xs font-normal py-0.5">Coming Soon</Badge>
+                  ) : item.status === 'Connected' ? (
+                    <Badge variant="success" className="text-xs font-normal py-0.5">Connected</Badge>
                   ) : (
-                    <Button variant="secondary" size="sm" className="text-xs" disabled>Connect</Button>
+                    <Button variant="secondary" size="sm" className="text-xs">Connect</Button>
                   )}
                 </div>
-              </Card>
+              </>
             );
+
+            if (item.isModule) {
+              // Wrap modules with the animated border
+              return (
+                <div
+                  key={item.id} // Key on the outer wrapper
+                  className="relative rounded-xl p-[1px] animate-border overflow-hidden"
+                  style={{ background: gradientStyle }}
+                >
+                  <Card 
+                    className="flex flex-col justify-between p-4 relative h-full bg-white dark:bg-gray-900 rounded-lg"
+                  >
+                    {cardInnerContent}
+                  </Card>
+                </div>
+              );
+            } else {
+              // Render non-modules as regular cards
+              return (
+                <Card 
+                  key={item.id} 
+                  className="flex flex-col justify-between p-4 relative border hover:shadow-md transition-shadow duration-200 h-full bg-white dark:bg-gray-900 rounded-lg"
+                >
+                  {cardInnerContent}
+                </Card>
+              );
+            }
           })}
         </dl>
       </div>
+      <style jsx global>{`
+          @property --border-angle {
+              syntax: '<angle>';
+              initial-value: 0deg;
+              inherits: false;
+          }
+          @keyframes border { 
+              to { --border-angle: 360deg; } 
+          }
+          .animate-border {
+              animation: border 4s linear infinite;
+          }
+      `}</style>
     </div>
   );
 }

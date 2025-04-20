@@ -590,8 +590,8 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
       
       {/* Footer */}
       <div className={cn("flex flex-col gap-2 p-3", collapsed ? "items-center" : "")}>
-        <div className="border-t border-gray-200 dark:border-gray-800" />
-        {session && <UserProfile user={session.user} collapsed={collapsed} />}
+        <div className="w-full border-t border-gray-200 dark:border-gray-800" />
+        {session && <UserProfile user={session.user as SessionUserWithSettings} collapsed={collapsed} />}
       </div>
     </div>
   );

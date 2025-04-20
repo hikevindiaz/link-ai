@@ -163,9 +163,20 @@ export function AppointmentDetailsView({
             <div className="mt-6">
               <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Description</h3>
               <p className="text-sm text-gray-700 dark:text-gray-300 break-words">
-                 {/* Use description */} 
                 {appointment.description || <span className="italic text-gray-500">No description provided.</span>}
               </p>
+            </div>
+
+            <Divider className="my-5" />
+
+            {/* Placeholder Source Info */}
+            <div className="mt-6">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Source</h3>
+                <p className="text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                   <Icons.import className="mr-2 h-4 w-4 opacity-70" /> {/* Using Import icon as placeholder */} 
+                    Manual
+                   {/* Later, replace "Manual" with {appointment.source || "N/A"} when field exists */} 
+                </p>
             </div>
 
             <Divider className="my-5" />

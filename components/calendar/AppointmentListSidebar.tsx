@@ -279,8 +279,12 @@ export function AppointmentListSidebar({
                         <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline">
                            {/* Use startTime (Date object) for formatDate */}
                           {formatDate(appointment.startTime)} 
-                          {/* TODO: Decide how/if to display time range */}
-                          {/* Example: • {appointment.startTime.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})} - {appointment.endTime.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})} */} 
+                          <Badge 
+                            variant={statusConfig[appointment.status]?.variant as any ?? "secondary"} 
+                            className="ml-1.5 text-[10px] px-1 py-0 leading-tight capitalize"
+                          >
+                            {appointment.status.toLowerCase()}
+                          </Badge>
                         </p>
                         </div>
                     </div>

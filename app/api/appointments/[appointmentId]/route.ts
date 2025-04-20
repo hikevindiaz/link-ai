@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from "next-auth/next"; // Import session logic
+import { authOptions } from "@/lib/auth"; // Import auth options
 import { updateAppointment, deleteAppointment } from '@/lib/api/appointments'; // Import update/delete logic
 import type { AppointmentInput } from "@/lib/api/appointments"; // Import input type
 
@@ -17,6 +19,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     try {
+        // Get authenticated user
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
+
         const body = await request.json();
 
         // --- Input Validation ---
@@ -26,10 +35,8 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         const updateInput: Partial<AppointmentInput> & { calendarId?: string } = body;
         // ------------------------
 
-        // TODO: Add authentication/authorization check here 
-        // Ensure the logged-in user OWNS this appointment before allowing update.
-
-        const updatedAppointment = await updateAppointment(appointmentId, updateInput);
+        // Pass appointmentId, updateInput, and authenticated userId to the update function
+        const updatedAppointment = await updateAppointment(appointmentId, updateInput, userId);
 
         return NextResponse.json(updatedAppointment);
 
@@ -53,8 +60,16 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     }
 
     try {
-         // TODO: Add authentication/authorization check here 
+        // Get authenticated user
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.user.id;
+
+        // TODO: Add authentication/authorization check here 
         // Ensure the logged-in user OWNS this appointment before allowing delete.
+        // NOTE: deleteAppointment function in lib still needs refactoring to accept userId
 
         await deleteAppointment(appointmentId);
 

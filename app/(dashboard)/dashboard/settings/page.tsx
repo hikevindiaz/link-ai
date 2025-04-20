@@ -685,7 +685,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-8">
       <h1 className="text-lg font-bold text-gray-900 dark:text-gray-50">
         Settings
       </h1>
@@ -693,7 +693,7 @@ export default function SettingsPage() {
         Manage your personal details, notifications, business information, and billing information.
       </p>
       <Tabs defaultValue="account" className="mt-8">
-        <TabsList variant="line">
+        <TabsList variant="line" className="overflow-x-auto whitespace-nowrap">
           <TabsTrigger value="account" className="inline-flex gap-2">
             Account details
           </TabsTrigger>
@@ -872,7 +872,7 @@ export default function SettingsPage() {
             
             <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 flex-1 mr-4">
                   <Label htmlFor="notifications" className="text-sm font-medium">
                     Inquiry Notifications
                   </Label>
@@ -888,7 +888,7 @@ export default function SettingsPage() {
               </div>
               
               <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 flex-1 mr-4">
                   <Label htmlFor="marketing" className="text-sm font-medium">
                     Marketing Emails
                   </Label>
@@ -1088,7 +1088,7 @@ export default function SettingsPage() {
               Manage your payment methods for billing.
             </p>
             
-            <Card className="mt-4 p-6">
+            <Card className="mt-4 p-4 sm:p-6">
               <div className="space-y-4">
                 {isLoading && paymentMethods.length === 0 && !showPaymentForm ? (
                   <div className="py-8 text-center text-gray-500">
@@ -1163,7 +1163,7 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   paymentMethods.map((method) => (
-                    <div key={method.id} className="flex justify-between items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div key={method.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors gap-4 sm:gap-0">
                       <div className="flex items-center">
                         {getCardBrandIcon(method.card.brand)}
                         <div>
@@ -1176,12 +1176,13 @@ export default function SettingsPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
                         {!method.isDefault && (
                           <Button 
                             variant="ghost" 
                             onClick={() => handleSetDefaultPaymentMethod(method.id)}
                             disabled={isLoading || isAddingPaymentMethod || showPaymentForm}
+                            className="w-full sm:w-auto justify-center"
                           >
                             {isLoading ? (
                               <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1272,20 +1273,22 @@ export default function SettingsPage() {
             </p>
             
             <Card className="mt-4 overflow-hidden">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell className="text-right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <InvoiceList />
-                </TableBody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Date</TableCell>
+                      <TableCell>Description</TableCell>
+                      <TableCell>Amount</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell className="text-right">Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <InvoiceList />
+                  </TableBody>
+                </Table>
+              </div>
             </Card>
           </div>
         </TabsContent>
