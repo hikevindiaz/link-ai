@@ -11,7 +11,7 @@ export default function DashboardLayout({
 }) {
   return (
     <TooltipProvider>
-      <div className="flex h-screen w-full overflow-hidden">
+      <div className="flex h-[100dvh] w-full overflow-hidden">
         <Toaster />
         <AppSidebar />
         <main className="flex-1 overflow-auto bg-white dark:bg-gray-950">

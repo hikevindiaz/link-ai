@@ -8,12 +8,19 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ loading, userFirstName }: DashboardHeaderProps) {
+  const greet = () => {
+    const h = new Date().getHours();
+    if (h < 12) return `Good morning, ${userFirstName}!`;
+    if (h < 18) return `Good afternoon, ${userFirstName}!`;
+    return `Good evening, ${userFirstName}!`;
+  };
+
   return (
     <div className="border-b border-gray-200 dark:border-gray-800">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-            {loading ? 'Loading...' : `${userFirstName}, welcome to your dashboard`}
+            {loading ? 'Loading…' : greet()}
           </h1>
           <Button asChild className="ml-4">
             <a href="/dashboard/agents" className="flex items-center gap-2">
