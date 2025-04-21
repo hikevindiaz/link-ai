@@ -378,7 +378,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div className="flex-1 min-h-0">
         {/* Search Bar - only show when expanded */}
         {!collapsed && (
           <div className="relative flex w-full min-w-0 flex-col p-3">
