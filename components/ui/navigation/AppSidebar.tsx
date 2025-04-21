@@ -332,7 +332,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
     <div
       {...props}
       className={cn(
-        "h-full flex flex-col justify-between flex-shrink-0 transition-all duration-300 overflow-hidden",
+        "h-full flex flex-col flex-shrink-0 transition-all duration-300",
         "border-r border-gray-200 dark:border-gray-800",
         themeClass,
         collapsed ? "w-[70px]" : "w-[260px]"
@@ -344,7 +344,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
         collapsed ? "px-2" : "px-3"
       )}>
         <div className={cn(
-          "flex items-center relative h-[20px]",
+          "flex items-center relative min-h-[20px]",
           collapsed ? "justify-center w-full" : "pl-2"
         )}>
           <Image 
@@ -356,7 +356,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
               "object-contain h-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
               "transition-opacity duration-300 ease-in-out"
             )}
-            ${collapsed ? "opacity-100" : "opacity-0"}`}
+            ${collapsed ? "opacity-100 pointer-events-none" : "opacity-0 pointer-events-none"}`}
           />
           <Image 
             src={currentTheme === "dark" ? "/LINK AI LOGO LIGHT.png" : "/LINK AI LOGO DARK.png"} 
@@ -364,10 +364,10 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
             width={65}
             height={20}
             className={`${cn(
-              "object-contain absolute left-2 top-1/2 -translate-y-1/2",
+              "object-contain",
               "transition-opacity duration-300 ease-in-out"
             )}
-            ${!collapsed ? "opacity-100" : "opacity-0"}`}
+            ${!collapsed ? "opacity-100" : "opacity-0 pointer-events-none"}`}
           />
         </div>
         {!collapsed && (
@@ -383,7 +383,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {/* Search Bar - only show when expanded */}
         {!collapsed && (
           <div className="relative flex w-full min-w-0 flex-col p-3">
@@ -594,8 +594,12 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
       </div>
       
       {/* Footer */}
-      <div className={cn("flex flex-col gap-2 p-3", collapsed ? "items-center" : "")}>
-        <div className="w-full border-t border-gray-200 dark:border-gray-800" />
+      <div className={cn(
+        "sticky bottom-0 z-10",
+        "border-t border-gray-200 dark:border-gray-800",
+        themeClass,
+        collapsed ? "px-2 py-3" : "p-3"
+      )}>
         {session && <UserProfile user={session.user as SessionUserWithSettings} collapsed={collapsed} />}
       </div>
     </div>
