@@ -332,7 +332,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
     <div
       {...props}
       className={cn(
-        "h-full flex flex-col justify-between flex-shrink-0 transition-all duration-300",
+        "h-full flex flex-col justify-between flex-shrink-0 transition-all duration-300 overflow-hidden",
         "border-r border-gray-200 dark:border-gray-800",
         themeClass,
         collapsed ? "w-[70px]" : "w-[260px]"
@@ -344,26 +344,31 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
         collapsed ? "px-2" : "px-3"
       )}>
         <div className={cn(
-          "flex items-center", 
+          "flex items-center relative h-[20px]",
           collapsed ? "justify-center w-full" : "pl-2"
         )}>
-          {collapsed ? (
-            <Image 
-              src={currentTheme === "dark" ? "/LINK AI ICON LIGHT.png" : "/LINK AI ICON DARK.png"} 
-              alt="Link AI Logo" 
-              width={12}
-              height={12}
-              className="object-contain h-auto"
-            />
-          ) : (
-            <Image 
-              src={currentTheme === "dark" ? "/LINK AI LOGO LIGHT.png" : "/LINK AI LOGO DARK.png"} 
-              alt="Link AI Logo" 
-              width={65}
-              height={20}
-              className="object-contain"
-            />
-          )}
+          <Image 
+            src={currentTheme === "dark" ? "/LINK AI ICON LIGHT.png" : "/LINK AI ICON DARK.png"} 
+            alt="Link AI Icon" 
+            width={12}
+            height={12}
+            className={`${cn(
+              "object-contain h-auto absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+              "transition-opacity duration-300 ease-in-out"
+            )}
+            ${collapsed ? "opacity-100" : "opacity-0"}`}
+          />
+          <Image 
+            src={currentTheme === "dark" ? "/LINK AI LOGO LIGHT.png" : "/LINK AI LOGO DARK.png"} 
+            alt="Link AI Logo" 
+            width={65}
+            height={20}
+            className={`${cn(
+              "object-contain absolute left-2 top-1/2 -translate-y-1/2",
+              "transition-opacity duration-300 ease-in-out"
+            )}
+            ${!collapsed ? "opacity-100" : "opacity-0"}`}
+          />
         </div>
         {!collapsed && (
           <Button
