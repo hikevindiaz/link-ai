@@ -149,7 +149,13 @@ const navigationGroups = [
   },
 ];
 
-export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
+// Updated interface for AppSidebar props
+interface AppSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
+  collapsed?: boolean;
+  onToggle?: () => void;
+}
+
+export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: AppSidebarProps) {
   const pathname = usePathname();
   const { toast } = useToast();
   const [collapsed, setCollapsed] = useState(false);
@@ -161,6 +167,13 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
   const [inboxUnreadCount, setInboxUnreadCount] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
   
+  // Use prop collapsed state if provided, otherwise use internal state
+  useEffect(() => {
+    if (propCollapsed !== undefined) {
+      setCollapsed(propCollapsed);
+    }
+  }, [propCollapsed]);
+
   // Debugging log (can be kept or removed)
   useEffect(() => {
     if (sessionStatus === 'authenticated') {
@@ -316,7 +329,15 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
   };
 
   const toggleSidebar = () => {
-    setCollapsed(!collapsed);
+    if (onToggle) {
+      // Use the parent's toggle function if provided
+      onToggle();
+    } else {
+      // Otherwise use internal state
+      setCollapsed(!collapsed);
+    }
+    
+    // This logic applies in both cases - clear open menus when collapsing
     if (!collapsed) {
       setOpenMenus([]);
     }
@@ -332,7 +353,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
     <div
       {...props}
       className={cn(
-        "h-full flex flex-col flex-shrink-0 transition-all duration-300",
+        "fixed inset-y-0 left-0 flex flex-col flex-shrink-0 transition-all duration-300 z-20",
         "border-r border-gray-200 dark:border-gray-800",
         themeClass,
         collapsed ? "w-[70px]" : "w-[260px]"
@@ -598,6 +619,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
         "sticky bottom-0 z-10",
         "border-t border-gray-200 dark:border-gray-800",
         themeClass,
+        "mt-auto",
         collapsed ? "px-2 py-3" : "p-3"
       )}>
         {session && <UserProfile user={session.user as SessionUserWithSettings} collapsed={collapsed} />}

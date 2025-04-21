@@ -1274,20 +1274,20 @@ export default function SettingsPage() {
             
             <Card className="mt-4 overflow-hidden">
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Date</TableCell>
-                      <TableCell>Description</TableCell>
-                      <TableCell>Amount</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell className="text-right">Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    <InvoiceList />
-                  </TableBody>
-                </Table>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Description</TableCell>
+                    <TableCell>Amount</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell className="text-right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <InvoiceList />
+                </TableBody>
+              </Table>
               </div>
             </Card>
           </div>
