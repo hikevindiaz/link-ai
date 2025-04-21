@@ -332,7 +332,7 @@ export function AppSidebar({ ...props }: React.HTMLAttributes<HTMLDivElement>) {
     <div
       {...props}
       className={cn(
-        "h-screen flex flex-col justify-between flex-shrink-0 transition-all duration-300",
+        "h-[100dvh] flex flex-col justify-between flex-shrink-0 transition-all duration-300",
         "border-r border-gray-200 dark:border-gray-800",
         themeClass,
         collapsed ? "w-[70px]" : "w-[260px]"
