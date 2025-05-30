@@ -93,7 +93,7 @@ export function SettingsTabWrapper({
   };
 
   return (
-    <div className="relative">
+    <div className="relative w-full overflow-hidden">
       {children}
       
       {showCard && (

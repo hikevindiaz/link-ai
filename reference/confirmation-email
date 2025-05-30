@@ -1,0 +1,163 @@
+import * as React from 'react';
+import {
+  Body,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Link,
+  Preview,
+  Section,
+  Text,
+  Tailwind,
+  Hr,
+} from '@react-email/components';
+
+const AppointmentConfirmation = (props) => {
+  return (
+    <Html lang="en" dir="ltr">
+      <Tailwind>
+        <Head />
+        <Preview>Your appointment with Link AI is confirmed! We're excited to meet with you.</Preview>
+        <Body className="bg-gray-100 font-sans py-[40px]">
+          <Container className="bg-white rounded-[8px] shadow-lg max-w-[600px] mx-auto p-[32px]">
+            {/* Header */}
+            <Section className="text-center mb-[32px]">
+              <Heading className="text-[32px] font-bold text-gray-900 m-0 mb-[8px]">
+                Link AI
+              </Heading>
+              <Text className="text-[16px] text-gray-600 m-0">
+                Artificial Intelligence Solutions
+              </Text>
+            </Section>
+
+            {/* Confirmation Message */}
+            <Section className="mb-[32px]">
+              <Heading className="text-[24px] font-bold text-green-600 m-0 mb-[16px]">
+                ✓ Appointment Confirmed!
+              </Heading>
+              <Text className="text-[16px] text-gray-700 leading-[24px] m-0 mb-[16px]">
+                Hi {props.customerName},
+              </Text>
+              <Text className="text-[16px] text-gray-700 leading-[24px] m-0">
+                Great news! Your appointment with Link AI has been successfully confirmed. We're excited to discuss how our AI solutions can transform your business and help you achieve your goals.
+              </Text>
+            </Section>
+
+            {/* Appointment Details */}
+            <Section className="bg-blue-50 rounded-[8px] p-[24px] mb-[32px]">
+              <Heading className="text-[20px] font-bold text-gray-900 m-0 mb-[16px]">
+                Appointment Details
+              </Heading>
+              
+              <Text className="text-[14px] font-semibold text-gray-600 m-0 mb-[4px]">
+                DATE & TIME
+              </Text>
+              <Text className="text-[16px] text-gray-900 m-0 mb-[16px]">
+                {props.appointmentDate} at {props.appointmentTime}
+              </Text>
+
+              <Text className="text-[14px] font-semibold text-gray-600 m-0 mb-[4px]">
+                DURATION
+              </Text>
+              <Text className="text-[16px] text-gray-900 m-0 mb-[16px]">
+                {props.duration} minutes
+              </Text>
+
+              <Text className="text-[14px] font-semibold text-gray-600 m-0 mb-[4px]">
+                MEETING TYPE
+              </Text>
+              <Text className="text-[16px] text-gray-900 m-0 mb-[16px]">
+                {props.meetingType}
+              </Text>
+
+              <Text className="text-[14px] font-semibold text-gray-600 m-0 mb-[4px]">
+                CONSULTANT
+              </Text>
+              <Text className="text-[16px] text-gray-900 m-0">
+                {props.consultantName}
+              </Text>
+            </Section>
+
+            {/* What to Expect */}
+            <Section className="mb-[32px]">
+              <Heading className="text-[20px] font-bold text-gray-900 m-0 mb-[16px]">
+                What to Expect
+              </Heading>
+              <Text className="text-[16px] text-gray-700 leading-[24px] m-0 mb-[12px]">
+                During our meeting, we'll:
+              </Text>
+              <Text className="text-[16px] text-gray-700 leading-[24px] m-0 mb-[8px]">
+                • Discuss your current business challenges and objectives
+              </Text>
+              <Text className="text-[16px] text-gray-700 leading-[24px] m-0 mb-[8px]">
+                • Explore how AI can streamline your operations
+              </Text>
+              <Text className="text-[16px] text-gray-700 leading-[24px] m-0 mb-[8px]">
+                • Present tailored solutions for your industry
+              </Text>
+              <Text className="text-[16px] text-gray-700 leading-[24px] m-0">
+                • Answer any questions you may have about our services
+              </Text>
+            </Section>
+
+            {/* Preparation */}
+            <Section className="bg-yellow-50 rounded-[8px] p-[24px] mb-[32px]">
+              <Heading className="text-[18px] font-bold text-gray-900 m-0 mb-[12px]">
+                💡 Come Prepared
+              </Heading>
+              <Text className="text-[16px] text-gray-700 leading-[24px] m-0">
+                To make the most of our time together, please bring any relevant information about your current processes, pain points, or specific AI use cases you'd like to explore.
+              </Text>
+            </Section>
+
+            {/* Contact Information */}
+            <Section className="mb-[32px]">
+              <Heading className="text-[18px] font-bold text-gray-900 m-0 mb-[16px]">
+                Need to Make Changes?
+              </Heading>
+              <Text className="text-[16px] text-gray-700 leading-[24px] m-0 mb-[16px]">
+                If you need to reschedule or have any questions before our meeting, don't hesitate to reach out:
+              </Text>
+              <Text className="text-[16px] text-gray-700 m-0 mb-[8px]">
+                📧 Email: <Link href="mailto:appointments@linkai.com" className="text-blue-600 underline">appointments@linkai.com</Link>
+              </Text>
+              <Text className="text-[16px] text-gray-700 m-0">
+                📞 Phone: <Link href="tel:+1-555-LINK-AI" className="text-blue-600 underline">+1 (555) LINK-AI</Link>
+              </Text>
+            </Section>
+
+            <Hr className="border-gray-200 my-[32px]" />
+
+            {/* Footer */}
+            <Section className="text-center">
+              <Text className="text-[14px] text-gray-600 m-0 mb-[16px]">
+                We're looking forward to meeting with you and exploring how Link AI can accelerate your business growth!
+              </Text>
+              <Text className="text-[12px] text-gray-500 m-0 mb-[8px]">
+                Link AI Technologies Inc.
+              </Text>
+              <Text className="text-[12px] text-gray-500 m-0 mb-[8px]">
+                123 Innovation Drive, Tech Valley, CA 94043
+              </Text>
+              <Text className="text-[12px] text-gray-500 m-0">
+                © {new Date().getFullYear()} Link AI. All rights reserved. | <Link href="#" className="text-blue-600 underline">Unsubscribe</Link>
+              </Text>
+            </Section>
+          </Container>
+        </Body>
+      </Tailwind>
+    </Html>
+  );
+};
+
+AppointmentConfirmation.PreviewProps = {
+  customerName: "Sarah Johnson",
+  appointmentDate: "Friday, June 14th, 2024",
+  appointmentTime: "2:00 PM EST",
+  duration: "45",
+  meetingType: "Virtual Consultation",
+  consultantName: "Michael Chen, Senior AI Consultant",
+};
+
+export default AppointmentConfirmation;

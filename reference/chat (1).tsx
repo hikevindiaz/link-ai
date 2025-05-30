@@ -51,7 +51,7 @@ export function Chat({
   id,
   initialMessages = [],
   chatbotId,
-  selectedChatModel = 'gpt-4o-mini',
+  selectedChatModel = 'gpt-4.1-mini-2025-04-14',
   selectedVisibilityType = 'public',
   isReadonly = false,
   chatbotLogoURL,

@@ -14,8 +14,17 @@ import { AOSInit } from '@/components/aos-init';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { constructMetadata } from '@/lib/construct-metadata';
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { disableDebugLogging, enableProductionLogging, applyLogFilters } from "@/lib/log-config";
 
 import { SessionWrapper } from "@/components/providers/SessionWrapper";  // ✅ Import the wrapper
+
+// Configure logging based on environment
+if (process.env.NODE_ENV === 'production') {
+  enableProductionLogging();
+} else {
+  // In development, apply filters for noisy logs
+  applyLogFilters();
+}
 
 const fontHeading = localFont({
   src: "../assets/fonts/CalSans-SemiBold.woff2",

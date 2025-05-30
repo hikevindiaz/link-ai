@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth"; // Assuming authOptions is defined here
-import { db as prisma } from "@/lib/db"; // Import prisma directly
+import prisma from "@/lib/prisma"; // Use consistent prisma import
 import type { CalendarCreateInput } from "@/lib/api/appointments"; // Import input type
 // We will handle auth here later
 // import { getCurrentUserId } from '@/lib/auth';

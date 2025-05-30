@@ -169,6 +169,34 @@ export function AppointmentDetailsView({
 
             <Divider className="my-5" />
 
+            {/* Contact Information */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {appointment.clientEmail && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Email</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                    <Icons.mail className="mr-2 h-4 w-4 opacity-70" />
+                    <a href={`mailto:${appointment.clientEmail}`} className="hover:underline">
+                      {appointment.clientEmail}
+                    </a>
+                  </p>
+                </div>
+              )}
+              {appointment.clientPhoneNumber && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Phone</h3>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                    <Icons.phone className="mr-2 h-4 w-4 opacity-70" />
+                    <a href={`tel:${appointment.clientPhoneNumber}`} className="hover:underline">
+                      {appointment.clientPhoneNumber}
+                    </a>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <Divider className="my-5" />
+
             {/* Placeholder Source Info */}
             <div className="mt-6">
                 <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Source</h3>

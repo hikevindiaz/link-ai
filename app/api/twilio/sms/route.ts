@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import twilio from 'twilio';
 import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
+import { processAppointmentSMSReply } from '@/lib/calendar-sms';
 
 // Verify Twilio webhook signature
 const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
@@ -119,6 +120,26 @@ export async function POST(req: NextRequest) {
     
     // If there's a chatbot associated, process the message with it
     if (phoneNumber.chatbot) {
+      // Check if this might be an appointment confirmation reply
+      const messageUpper = body.toUpperCase().trim();
+      if (messageUpper === 'YES' || messageUpper === 'Y' || 
+          messageUpper === 'NO' || messageUpper === 'N' || 
+          messageUpper === 'CANCEL' ||
+          body.match(/ID:\s*[A-Za-z0-9]{6}/i)) {
+        
+        // Process as appointment confirmation
+        const replyMessage = await processAppointmentSMSReply(from, body, to);
+        
+        const twiml = new twilio.twiml.MessagingResponse();
+        twiml.message(replyMessage);
+        
+        return new NextResponse(twiml.toString(), {
+          headers: {
+            'Content-Type': 'text/xml'
+          }
+        });
+      }
+      
       // TODO: Process the message with the chatbot
       console.log('Message will be processed by chatbot:', phoneNumber.chatbot.id);
       

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +64,52 @@ export function FloatingActionCard({
     return null;
   }
 
+  // Determine button content based on save status
+  const getButtonContent = () => {
+    switch (saveStatus) {
+      case "saving":
+        return (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Saving...
+          </>
+        );
+      case "success":
+        return (
+          <>
+            <Check className="mr-2 h-4 w-4" />
+            Saved!
+          </>
+        );
+      case "error":
+        return (
+          <>
+            <X className="mr-2 h-4 w-4" />
+            Save Failed
+          </>
+        );
+      default:
+        return (
+          <>
+            <Save className="mr-2 h-4 w-4" />
+            Save
+          </>
+        );
+    }
+  };
+
+  // Determine button variant based on status
+  const getButtonVariant = () => {
+    switch (saveStatus) {
+      case "success":
+        return "primary"; // Use primary for success
+      case "error":
+        return "destructive";
+      default:
+        return "primary";
+    }
+  };
+
   return (
     <div className="fixed inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none">
       <div
@@ -95,21 +141,12 @@ export function FloatingActionCard({
             </Button>
           )}
           <Button
+            variant={getButtonVariant()}
             onClick={onSave}
             disabled={saveStatus === "saving" || isSaving || !isDirty}
             className="h-9"
           >
-            {saveStatus === "saving" || isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Save
-              </>
-            )}
+            {getButtonContent()}
           </Button>
         </div>
       </div>

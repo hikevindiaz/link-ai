@@ -26,11 +26,11 @@ export const myProvider = isTestEnvironment
   : {
       languageModel: (modelName: string) => {
         const models = {
-          'chat-model-small': openai('gpt-4.1-nano-2025-04-14'),
+          'chat-model-small': openai('gpt-4.1-mini-2025-04-14'),
           'chat-model-large': openai('gpt-4o'),
           'chat-model-reasoning': fireworks('accounts/fireworks/models/deepseek-r1'),
           'title-model': openai('gpt-4-turbo'),
-          'artifact-model': openai('gpt-4o-mini'),
+          'artifact-model': openai('gpt-4.1-mini-2025-04-14'),
         };
         return models[modelName] || models['chat-model-small'];
       },

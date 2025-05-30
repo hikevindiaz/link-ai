@@ -50,16 +50,25 @@ export interface Agent {
   chatHistoryEnabled?: boolean;
   bubbleColor?: string;
   bubbleTextColor?: string;
+  chatBackgroundColor?: string;
+  buttonTheme?: 'light' | 'dark';
+  riveOrbColor?: number;
+  borderGradientColors?: string[];
   chatHeaderBackgroundColor?: string;
   chatHeaderTextColor?: string;
   userReplyBackgroundColor?: string;
   userReplyTextColor?: string;
   displayBranding?: boolean;
   chatFileAttachementEnabled?: boolean;
+  chatbotLogoURL?: string | null;
+  iconType?: 'orb' | 'logo';
   // Channel related fields
   websiteEnabled?: boolean;
   whatsappEnabled?: boolean;
-  // Actions Tab fields
+  smsEnabled?: boolean;
+  messengerEnabled?: boolean;
+  instagramEnabled?: boolean;
+  // Actions Tab fields (deprecated - kept for backward compatibility)
   actions?: Array<{
     id: string;
     type: string;
@@ -68,4 +77,7 @@ export interface Agent {
   bookingEnabled?: boolean;
   inquiryEnabled?: boolean;
   webhookEnabled?: boolean;
+  // Calendar integration
+  calendarEnabled?: boolean;
+  calendarId?: string | null;
 }

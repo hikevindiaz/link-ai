@@ -8,14 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Enum for Appointment Status
-enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  COMPLETED
-  CANCELLED
-}
-
 model OpenAIConfig {
   id           String   @id @default(cuid())
   userId       String   @unique
@@ -69,6 +61,8 @@ model Chatbot {
   rightToLeftLanguage             Boolean                 @default(false)
   bubbleColor                     String                  @default("#FFFFFF")
   bubbleTextColor                 String                  @default("#000000")
+  riveOrbColor                    Int?
+  borderGradientColors            String[]                @default([])
   chatHeaderBackgroundColor       String                  @default("FFFFFF")
   chatHeaderTextColor             String                  @default("#000000")
   chatbotReplyBackgroundColor     String                  @default("#e4e4e7")
@@ -95,6 +89,12 @@ model Chatbot {
   allowEveryone                   Boolean                 @default(true)
   allowedIpRanges                 String[]                @default([])
   chatBackgroundColor             String                  @default("#FFFFFF")
+  buttonTheme                     String                  @default("light")
+  websiteEnabled                  Boolean                 @default(false)
+  whatsappEnabled                 Boolean                 @default(false)
+  smsEnabled                      Boolean                 @default(false)
+  messengerEnabled                Boolean                 @default(false)
+  instagramEnabled                Boolean                 @default(false)
   callTimeout                     Int?
   checkUserPresence               Boolean?                @default(false)
   hangUpMessage                   String?
@@ -110,12 +110,16 @@ model Chatbot {
   lastTrainedAt                   DateTime?
   trainingMessage                 String?
   trainingStatus                  String                  @default("idle")
+  iconType                        String?                 @default("orb")
+  calendarEnabled                 Boolean                 @default(false)
+  calendarId                      String?
   assistantSettings               AssistantSettings?
   ChatbotErrors                   ChatbotErrors[]
   ChatbotFiles                    ChatbotFiles[]
   ChatbotMessagesExport           ChatbotMessagesExport[]
   ClientInquiries                 ClientInquiries[]
   forms                           ChatbotForm[]
+  calendar                        Calendar?               @relation(fields: [calendarId], references: [id])
   model                           ChatbotModel?           @relation(fields: [modelId], references: [id])
   user                            User                    @relation(fields: [userId], references: [id])
   formSubmissions                 FormSubmission[]
@@ -234,38 +238,38 @@ model Session {
 }
 
 model User {
-  id                       String                @id @default(cuid())
+  id                       String                   @id @default(cuid())
   name                     String?
-  email                    String?               @unique
+  email                    String?                  @unique
   emailVerified            DateTime?
   image                    String?
-  createdAt                DateTime              @default(now()) @map("created_at")
-  inquiryEmailEnabled      Boolean               @default(true)
-  marketingEmailEnabled    Boolean               @default(true)
+  createdAt                DateTime                 @default(now()) @map("created_at")
+  inquiryEmailEnabled      Boolean                  @default(true)
+  marketingEmailEnabled    Boolean                  @default(true)
   stripeSubscriptionStatus String?
-  stripeCurrentPeriodEnd   DateTime?             @map("stripe_current_period_end")
-  stripeCustomerId         String?               @unique @map("stripe_customer_id")
-  stripePriceId            String?               @map("stripe_price_id")
-  stripeSubscriptionId     String?               @unique @map("stripe_subscription_id")
-  twilioSubaccountSid      String?               @unique @map("twilio_subaccount_sid")
+  stripeCurrentPeriodEnd   DateTime?                @map("stripe_current_period_end")
+  stripeCustomerId         String?                  @unique @map("stripe_customer_id")
+  stripePriceId            String?                  @map("stripe_price_id")
+  stripeSubscriptionId     String?                  @unique @map("stripe_subscription_id")
+  twilioSubaccountSid      String?                  @unique @map("twilio_subaccount_sid")
   addressLine1             String?
   addressLine2             String?
-  businessTasks            String[]              @default([])
+  businessTasks            String[]                 @default([])
   businessWebsite          String?
   city                     String?
-  communicationChannels    String[]              @default([])
+  communicationChannels    String[]                 @default([])
   companyName              String?
   companySize              String?
   country                  String?
   industryType             String?
-  onboardingCompleted      Boolean               @default(false)
+  onboardingCompleted      Boolean                  @default(false)
   postalCode               String?
   state                    String?
-
-  // Relations
   accounts                 Account[]
   openAIConfig             OpenAIConfig?
   sessions                 Session[]
+  bookedAppointments       Appointment[]            @relation("BookedAppointments")
+  calendars                Calendar[]
   chatbots                 Chatbot[]
   conversationSummaries    ConversationSummary[]
   crawlers                 Crawler[]
@@ -276,10 +280,10 @@ model User {
   messages                 Message[]
   paymentMethods           PaymentMethod[]
   phoneNumbers             TwilioPhoneNumber[]
+  subscriptionItems        SubscriptionItem[]
+  integrationSettings      UserIntegrationSetting[]
   voices                   UserVoice[]
-  calendars                Calendar[]          // Calendars owned by this user
-  bookedAppointments       Appointment[]       @relation("BookedAppointments") // Appointments booked by this user (as agent/owner)
-  integrationSettings      UserIntegrationSetting[] // Added relation
+  usageRecords             UsageRecord[]
 }
 
 model VerificationToken {
@@ -470,18 +474,47 @@ model TwilioPhoneNumber {
   twilioSid    String    @unique
   country      String
   monthlyPrice Decimal   @db.Decimal(10, 2)
-  status       String    @default("active")
+  status       String    @default("pending") // pending, active, suspended
   purchasedAt  DateTime  @default(now())
-  renewalDate  DateTime
   userId       String
   chatbotId    String?   @unique
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  invoices     Invoice[]
-  chatbot      Chatbot?  @relation(fields: [chatbotId], references: [id])
-  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Stripe subscription tracking (NEW APPROACH)
+  subscriptionItemId String? // Reference to SubscriptionItem
+  
+  // Legacy fields to keep for now
+  renewalDate  DateTime // Keep for display purposes
+  
+  // Additional data storage
+  metadata     Json?    // Store purchase details, pricing info, etc.
+  
+  invoices          Invoice[]
+  chatbot           Chatbot?         @relation(fields: [chatbotId], references: [id])
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionItem  SubscriptionItem? @relation(fields: [subscriptionItemId], references: [id])
 
   @@map("twilio_phone_numbers")
+}
+
+model SubscriptionItem {
+  id                       String             @id @default(cuid())
+  userId                   String
+  stripeSubscriptionItemId String             @unique
+  stripePriceId            String             // e.g., price_phone_number, price_premium_features
+  itemType                 String             // 'phone_number', 'premium_features', 'extra_storage'
+  itemId                   String?            // Reference to TwilioPhoneNumber.id if applicable
+  quantity                 Int                @default(1)
+  isActive                 Boolean            @default(true)
+  metadata                 Json?              // Store additional data like phone number, feature details
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  
+  user                     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phoneNumbers             TwilioPhoneNumber[] // One subscription item can have multiple phone numbers
+
+  @@map("subscription_items")
 }
 
 model UserVoice {
@@ -511,6 +544,7 @@ model Invoice {
   userId                String
   twilioPhoneNumberId   String?
   pdfUrl                String?
+  metadata              Json?              // Store additional data
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   twilioPhoneNumber     TwilioPhoneNumber? @relation(fields: [twilioPhoneNumberId], references: [id])
@@ -534,79 +568,95 @@ model AssistantSettings {
   @@map("AssistantSettings")
 }
 
-// Model for Calendars
 model Calendar {
-  id                       String        @id @default(cuid())
-  name                     String
-  userId                   String // Relation to the User who owns this calendar
-  user                     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Availability Settings
-  workingHoursStart        String        @default("09:00") // Store as HH:MM string
-  workingHoursEnd          String        @default("17:00") // Store as HH:MM string
-  includeSaturday          Boolean       @default(true)
-  includeSunday            Boolean       @default(false)
-  // Consider adding timezone setting here if needed: timezone String?
-
-  // Notification Settings
-  notificationEmail        String?       // Email address to send booking notifications/confirmations
-  notificationEmailEnabled Boolean       @default(true)
-  emailReminderEnabled     Boolean       @default(true)
-  smsReminderEnabled       Boolean       @default(false) // Requires SMS integration setup
-  reminderTimeMinutes      Int           @default(30) // e.g., 30, 60, 1440
-
-  createdAt                DateTime      @default(now()) @map("created_at")
-  updatedAt                DateTime      @updatedAt @map("updated_at")
-
-  appointments             Appointment[] // Relation to appointments within this calendar
+  id                        String        @id @default(cuid())
+  name                      String
+  userId                    String
+  workingHoursStart         String        @default("09:00")
+  workingHoursEnd           String        @default("17:00")
+  includeSaturday           Boolean       @default(true)
+  includeSunday             Boolean       @default(false)
+  smsReminderEnabled        Boolean       @default(true)
+  reminderTimeMinutes       Int           @default(30)
+  askForDuration            Boolean       @default(true)
+  askForNotes               Boolean       @default(true)
+  defaultDuration           Int           @default(30)
+  bufferBetweenAppointments Int           @default(15)
+  maxBookingsPerSlot        Int           @default(1)
+  minimumAdvanceNotice      Int           @default(60)
+  requirePhoneNumber        Boolean       @default(true)
+  defaultLocation           String?
+  bookingPrompt             String?
+  confirmationMessage       String?
+  createdAt                 DateTime      @default(now()) @map("created_at")
+  updatedAt                 DateTime      @updatedAt @map("updated_at")
+  confirmationRequired      Boolean       @default(true)
+  confirmationTimeoutHours  Int           @default(24)
+  notificationSmsEnabled    Boolean       @default(true)
+  appointments              Appointment[]
+  user                      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chatbots                  Chatbot[]
 
   @@map("calendars")
 }
 
-// Model for Appointments (Bookings)
 model Appointment {
-  id                  String            @id @default(cuid())
-  calendarId          String // Relation to the Calendar it belongs to
-  calendar            Calendar          @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  calendarId        String
+  bookedByUserId    String?
+  clientName        String
+  clientPhoneNumber String?
+  description       String
+  startTime         DateTime
+  endTime           DateTime
+  status            AppointmentStatus @default(PENDING)
+  color             String            @default("indigo")
+  source            String?
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+  clientEmail       String?
+  bookedByUser      User?             @relation("BookedAppointments", fields: [bookedByUserId], references: [id])
+  calendar          Calendar          @relation(fields: [calendarId], references: [id], onDelete: Cascade)
 
-  bookedByUserId      String? // Optional: ID of the User (Agent/Owner) who created the booking
-  bookedByUser        User?             @relation("BookedAppointments", fields: [bookedByUserId], references: [id], onDelete:SetNull) // Use a named relation
-
-  // Client/Booking Details
-  clientName          String
-  clientPhoneNumber   String?
-  description         String
-
-  // Date & Time - Using DateTime for easier querying
-  startTime           DateTime // Combined Date and Start Time
-  endTime             DateTime // Combined Date and End Time
-
-  status              AppointmentStatus @default(PENDING) // Use the enum
-  color               String            @default("indigo") // UI color hint
-
-  source              String?           // Optional field for appointment source (e.g., "Manual", "Web Chat", "SMS")
-
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-
-  // Indexes for common queries
   @@index([calendarId, startTime, endTime])
   @@index([bookedByUserId])
   @@map("appointments")
 }
 
-// Model for user-specific integration/module settings
 model UserIntegrationSetting {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   userId        String
-  integrationId String   // e.g., "module-calendar", "ext-zapier"
-  isEnabled     Boolean  @default(true) // Default to true based on previous flags
-  configuredAt  DateTime? @updatedAt // Use updatedAt to track last config change
-  // Add other fields like status or configDataJson if needed later
+  integrationId String
+  isEnabled     Boolean   @default(true)
+  configuredAt  DateTime? @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, integrationId]) // User can only have one setting per integration
+  @@unique([userId, integrationId])
   @@index([userId])
-  @@map("user_integration_settings") // Optional: explicit table name
+  @@map("user_integration_settings")
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model UsageRecord {
+  id                   String   @id @default(cuid())
+  userId               String
+  usageType            String   // 'message', 'sms', 'web_search', 'conversation_summary', 'whatsapp_conversation', 'voice_minute'
+  quantity             Int      @default(1)
+  metadata             Json?    // Store additional context like chatbotId, phoneNumber, etc.
+  billingPeriodStart   DateTime
+  billingPeriodEnd     DateTime
+  createdAt            DateTime @default(now())
+  
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, billingPeriodStart, billingPeriodEnd])
+  @@index([userId, usageType, billingPeriodStart])
+  @@index([createdAt])
+  @@map("usage_records")
 }

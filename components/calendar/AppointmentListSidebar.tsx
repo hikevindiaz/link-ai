@@ -72,6 +72,7 @@ interface AppointmentListSidebarProps {
   selectedCalendarId: string | null | 'all'; // Allow 'all'
   onCalendarSelectChange: (value: string) => void;
   onCreateCalendar: () => void; // To open the dialog
+  onOpenCalendarSettings: () => void; // To open calendar settings dialog
   isLoading: boolean;
   className?: string; // Add className prop
 }
@@ -94,6 +95,7 @@ export function AppointmentListSidebar({
   selectedCalendarId,
   onCalendarSelectChange,
   onCreateCalendar,
+  onOpenCalendarSettings,
   isLoading,
   className, // Destructure className
 }: AppointmentListSidebarProps) {
@@ -132,32 +134,47 @@ export function AppointmentListSidebar({
            </div>
         </div>
 
-        {/* Calendar Selection Dropdown */}
+        {/* Calendar Selection Dropdown with Settings */}
         <div className="mb-4">
-            <Select 
-                value={selectedCalendarId ?? 'all'} // Default to 'all' if null/undefined
-                onValueChange={onCalendarSelectChange}
-                disabled={isLoading}
-            >
-                <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Calendar" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Calendars</SelectItem>
-                    <Divider className="my-1" />
-                    {calendars.length > 0 ? (
-                        calendars.map(cal => (
-                            <SelectItem key={cal.id} value={cal.id}>{cal.name}</SelectItem>
-                        ))
-                    ) : (
-                       <div className="px-2 py-1.5 text-xs text-gray-500 italic">No calendars exist</div>
-                    )}
-                    <Divider className="my-1" />
-                    <SelectItem value="new" className="text-indigo-600 dark:text-indigo-400">
-                       + Create New Calendar
-                    </SelectItem>
-                </SelectContent>
-            </Select>
+            <div className="flex gap-2 items-center">
+                <Select 
+                    value={selectedCalendarId ?? 'all'} // Default to 'all' if null/undefined
+                    onValueChange={onCalendarSelectChange}
+                    disabled={isLoading}
+                >
+                    <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select Calendar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Calendars</SelectItem>
+                        <Divider className="my-1" />
+                        {calendars.length > 0 ? (
+                            calendars.map(cal => (
+                                <SelectItem key={cal.id} value={cal.id}>{cal.name}</SelectItem>
+                            ))
+                        ) : (
+                           <div className="px-2 py-1.5 text-xs text-gray-500 italic">No calendars exist</div>
+                        )}
+                        <Divider className="my-1" />
+                        <SelectItem value="new" className="text-indigo-600 dark:text-indigo-400">
+                           + Create New Calendar
+                        </SelectItem>
+                    </SelectContent>
+                </Select>
+                
+                {/* Calendar Settings Button - only show when specific calendar is selected */}
+                {selectedCalendarId && selectedCalendarId !== 'all' && (
+                    <Button
+                        variant="secondary"
+                        size="icon"
+                        onClick={onOpenCalendarSettings}
+                        className="h-10 w-10 shrink-0"
+                        title="Configure Calendar"
+                    >
+                        <Icons.settings className="h-4 w-4" />
+                    </Button>
+                )}
+            </div>
         </div>
         
         {/* Status Filter Select */}

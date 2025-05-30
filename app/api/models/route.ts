@@ -11,7 +11,7 @@ export async function GET() {
     }
 
     // Use the correct model name that OpenAI recognizes
-    const modelName = "gpt-4o-mini";
+    const modelName = "gpt-4.1-mini-2025-04-14";
     
     // Check if the model exists
     let model = await prisma.chatbotModel.findFirst({
@@ -42,7 +42,7 @@ export async function GET() {
     const versionSpecificModels = await prisma.chatbotModel.findMany({
       where: {
         name: {
-          contains: "gpt-4o-mini-",
+          contains: "gpt-4.1-mini-2025-04-14-",
         },
         NOT: {
           name: modelName,

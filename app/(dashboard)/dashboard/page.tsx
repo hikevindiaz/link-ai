@@ -2,28 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from "next-auth/react";
+import { Select, SelectItem, DateRangePickerValue } from "@tremor/react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { DashboardStats } from "@/components/dashboard/stats";
 import { MessagesChart } from "@/components/dashboard/messages-chart";
-import { UserInquiriesGrid } from "@/components/dashboard/user-inquiries";
-import { ErrorsTable } from "@/components/dashboard/errors-table";
 import { DashboardOverview } from '@/components/dashboard/overview-header';
 import WelcomeBanner from '@/components/WelcomeBanner';
 import { WelcomeModal } from '@/components/WelcomeModal';
-
-interface UserInquiry {
-  id: string;
-  name: string;
-  initial: string;
-  textColor: string;
-  bgColor: string;
-  email: string;
-  href: string;
-  details: {
-    type: string;
-    value: string;
-  }[];
-}
 
 interface KpiData {
   name: string;
@@ -33,24 +18,27 @@ interface KpiData {
 }
 
 interface MessageData {
-  date: string;
-  Messages: number;
+  name: string;
+  channels: {
+    [channel: string]: number;
+  };
 }
 
-interface ErrorData {
-  agent: string;
-  chatbotId: string;
-  threadId: string;
-  error: string;
-  date: string;
+interface IntegrationSettingsMap {
+  [integrationId: string]: {
+    isEnabled: boolean;
+  };
 }
 
 interface DashboardData {
   kpiData: KpiData[];
   messageData: MessageData[];
   totalMessages: number;
-  userInquiries: UserInquiry[];
-  errorData: ErrorData[];
+  integrationSettings: IntegrationSettingsMap;
+  appointmentsCount: number;
+  formsCount: number;
+  formSubmissionsCount: number;
+  messageCountToday: number;
 }
 
 export default function DashboardPage() {
@@ -58,12 +46,19 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  // ADDED: State for selected period (default '30d')
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('30d');
+
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     kpiData: [],
     messageData: [],
     totalMessages: 0,
-    userInquiries: [],
-    errorData: []
+    integrationSettings: {},
+    appointmentsCount: 0,
+    formsCount: 0,
+    formSubmissionsCount: 0,
+    messageCountToday: 0,
   });
 
   // Check if user is a first-time visitor - only run once when session is available
@@ -124,38 +119,54 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (session?.user?.id) {
+        // ADDED: Calculate start and end dates based on selectedPeriod
+        let startDate = new Date();
+        const endDate = new Date(); // Today
+        endDate.setHours(23, 59, 59, 999); // End of today
+
+        switch (selectedPeriod) {
+          case '7d':
+            startDate.setDate(endDate.getDate() - 6);
+            break;
+          case '90d':
+            startDate.setDate(endDate.getDate() - 89);
+            break;
+          case '30d':
+          default:
+            startDate.setDate(endDate.getDate() - 29);
+            break;
+        }
+        startDate.setHours(0, 0, 0, 0); // Start of the day
+
+        // Format dates for query parameters
+        const fromDate = startDate.toISOString().split('T')[0];
+        const toDate = endDate.toISOString().split('T')[0];
+        
+        const apiUrl = `/api/dashboard/stats?from=${fromDate}&to=${toDate}`;
+
         try {
-          const response = await fetch('/api/dashboard/stats');
+          const response = await fetch(apiUrl);
           const data = await response.json();
-          
+
+          // REMOVED: Manual KPI data construction and conditional logic
+          // The API now returns the final kpiData array directly
+
           setDashboardData({
-            kpiData: [
-              {
-                name: 'Total Agents',
-                stat: data.totalAgents.toString(),
-                change: '12.1%',
-                changeType: 'positive',
-              },
-              {
-                name: 'Total Files',
-                stat: data.totalFiles.toString(),
-                change: '9.8%',
-                changeType: 'negative',
-              },
-              {
-                name: 'Total Messages in 30 Days',
-                stat: data.messageCountLast30Days.toString(),
-                change: '7.7%',
-                changeType: 'positive',
-              }
-            ],
-            messageData: data.messagesPerDay.map((item: { name: string; total: number }) => ({
-              date: item.name,
-              Messages: item.total
-            })),
-            totalMessages: data.messagesPerDay[data.messagesPerDay.length - 1]?.total || 0,
-            userInquiries: data.userInquiries,
-            errorData: data.chatbotErrors
+            // UPDATE: Use kpiData directly from API response
+            kpiData: data.kpiData || [],
+            // UPDATE: No need to transform messagesPerDay anymore - pass it directly
+            messageData: data.messagesPerDay || [],
+            // UPDATE: Use totalMessages directly from API response
+            totalMessages: data.totalMessages || 0,
+            // Keep other state properties if they are still needed elsewhere,
+            // otherwise they can be removed if only used for KPI construction previously.
+            // For now, we'll keep them assuming they might be used later, but they are not used
+            // to build the kpiData array anymore.
+            integrationSettings: {}, // API no longer returns this separately
+            appointmentsCount: 0,   // API no longer returns this separately
+            formsCount: 0,          // API no longer returns this separately
+            formSubmissionsCount: 0,// API no longer returns this separately
+            messageCountToday: 0,   // API no longer returns this separately
           });
           setLoading(false);
         } catch (error) {
@@ -168,20 +179,24 @@ export default function DashboardPage() {
     if (session) {
       fetchData();
     }
-  }, [session]);
+  }, [session, selectedPeriod]);
 
   // Handle modal state change
   const handleModalStateChange = (open: boolean) => {
     setShowWelcomeModal(open);
     
-    // No need for complex logic here - just update localStorage
-    // The rest will be handled by the WelcomeModal component
     if (!open) {
       localStorage.setItem('welcomeModalShown', 'true');
     }
   };
 
   const userFirstName = session?.user?.name?.split(' ')[0] || '';
+
+  // Split KPI data for rendering order
+  // UPDATE: Add 'Phone Numbers' to top KPIs
+  const topKpiKeys = ['Agents', 'Knowledge Sources', 'Phone Numbers', 'Messages'];
+  const topKpiData = dashboardData.kpiData.filter(kpi => topKpiKeys.includes(kpi.name));
+  const conditionalKpiData = dashboardData.kpiData.filter(kpi => !topKpiKeys.includes(kpi.name));
 
   return (
     <div className="flex flex-col p-0">
@@ -197,14 +212,22 @@ export default function DashboardPage() {
       />
       <div className="p-4 sm:p-6 lg:p-8">
         <WelcomeBanner />
-        <DashboardOverview />
-        <DashboardStats data={dashboardData.kpiData} />
+        {/* UPDATE: Pass props to DashboardOverview */}
+        <DashboardOverview 
+          selectedPeriod={selectedPeriod}
+          onPeriodChange={setSelectedPeriod}
+        />
+        {/* UPDATE: Render top KPIs first */}
+        <DashboardStats data={topKpiData} />
+        {/* UPDATE: Render chart next */}
         <MessagesChart 
           data={dashboardData.messageData}
           totalMessages={dashboardData.totalMessages}
         />
-        <UserInquiriesGrid inquiries={dashboardData.userInquiries} />
-        <ErrorsTable errors={dashboardData.errorData} />
+        {/* UPDATE: Render conditional KPIs last (if any) */}
+        {conditionalKpiData.length > 0 && (
+          <DashboardStats data={conditionalKpiData} />
+        )}
       </div>
     </div>
   );

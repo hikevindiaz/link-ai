@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import prisma from "@/lib/prisma";
+import { db as prisma } from "@/lib/db";
 import { headers } from "next/headers";
 import { twilio } from "@/lib/twilio";
 import { PaymentMethod as PrismaPaymentMethod } from '@prisma/client';
@@ -118,6 +118,109 @@ export async function POST(req: Request) {
           },
         });
 
+        break;
+
+      case "invoice.payment_failed":
+        const failedInvoice = event.data.object as Stripe.Invoice;
+        
+        // Find user by customer ID
+        const userWithFailedPayment = await prisma.user.findFirst({
+          where: {
+            stripeCustomerId: failedInvoice.customer as string,
+          },
+        });
+
+        if (!userWithFailedPayment) {
+          console.error("User not found for failed invoice:", failedInvoice.id);
+          break;
+        }
+
+        // Update subscription status and handle phone number billing failures
+        await prisma.user.update({
+          where: {
+            id: userWithFailedPayment.id,
+          },
+          data: {
+            stripeSubscriptionStatus: "past_due",
+          },
+        });
+
+        // Mark phone numbers as having billing issues
+        await prisma.twilioPhoneNumber.updateMany({
+          where: { userId: userWithFailedPayment.id },
+          data: {
+            billingFailedDate: new Date(),
+            unpaidBalance: {
+              increment: 7.99 // Add monthly phone number fee to unpaid balance
+            }
+          }
+        });
+
+        console.log(`[Webhook] Marked phone numbers as past due for user ${userWithFailedPayment.id}`);
+        break;
+
+      case "customer.subscription.created":
+        const createdSubscription = event.data.object as Stripe.Subscription;
+        
+        // Update user with subscription ID
+        await prisma.user.updateMany({
+          where: { stripeCustomerId: createdSubscription.customer as string },
+          data: {
+            stripeSubscriptionId: createdSubscription.id,
+            stripeSubscriptionStatus: createdSubscription.status,
+            stripeCurrentPeriodEnd: new Date(createdSubscription.current_period_end * 1000)
+          }
+        });
+        
+        console.log(`[Webhook] Updated user with new subscription: ${createdSubscription.id}`);
+        break;
+
+      case "customer.subscription.updated":
+        const updatedSubscription = event.data.object as Stripe.Subscription;
+        
+        // Update subscription status
+        await prisma.user.updateMany({
+          where: { stripeCustomerId: updatedSubscription.customer as string },
+          data: {
+            stripeSubscriptionStatus: updatedSubscription.status,
+            stripeCurrentPeriodEnd: new Date(updatedSubscription.current_period_end * 1000)
+          }
+        });
+        
+        console.log(`[Webhook] Updated subscription status: ${updatedSubscription.status}`);
+        break;
+
+      case "customer.subscription.deleted":
+        const deletedSubscription = event.data.object as Stripe.Subscription;
+        
+        // Update subscription status and suspend phone numbers
+        const userWithDeletedSub = await prisma.user.findFirst({
+          where: { stripeCustomerId: deletedSubscription.customer as string }
+        });
+
+        if (userWithDeletedSub) {
+          await prisma.user.update({
+            where: { id: userWithDeletedSub.id },
+            data: {
+              stripeSubscriptionStatus: "canceled",
+              stripeSubscriptionId: null
+            }
+          });
+
+          // Suspend all phone numbers
+          await prisma.twilioPhoneNumber.updateMany({
+            where: { userId: userWithDeletedSub.id },
+            data: { status: 'suspended' }
+          });
+
+          // Mark subscription items as inactive
+          await prisma.subscriptionItem.updateMany({
+            where: { userId: userWithDeletedSub.id },
+            data: { isActive: false }
+          });
+        }
+        
+        console.log(`[Webhook] Handled subscription deletion: ${deletedSubscription.id}`);
         break;
         
       case "setup_intent.succeeded":

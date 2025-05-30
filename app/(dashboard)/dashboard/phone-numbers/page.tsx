@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Divider } from '@/components/Divider';
 import EmptyState from '@/components/ui/empty-state';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
-import { RiDeleteBinLine, RiPencilLine, RiAddLine, RiMoreFill, RiPhoneLine } from '@remixicon/react';
+import { RiDeleteBinLine, RiPencilLine, RiAddLine, RiMoreFill, RiPhoneLine, RiInformationLine, RiCheckboxCircleFill, RiErrorWarningLine } from '@remixicon/react';
 import { Icons } from '@/components/icons';
 import {
   DropdownMenu,
@@ -32,6 +32,8 @@ import {
 import { DeletePhoneNumberDialog } from './components/DeletePhoneNumberDialog';
 import { PhoneNumberStatus } from './components/PhoneNumberStatus';
 import { PaymentMethodDisplay } from '@/components/billing/payment-method-display';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { RiAlertLine } from '@remixicon/react';
 
 interface PhoneNumber {
   id: string;
@@ -43,6 +45,9 @@ interface PhoneNumber {
   monthlyFee: string;
   status: 'active' | 'suspended' | 'pending';
   twilioSid?: string;
+  calculatedStatus?: 'active' | 'pending' | 'warning' | 'suspended';
+  warningMessage?: string;
+  statusReason?: string;
 }
 
 interface Agent {
@@ -50,6 +55,65 @@ interface Agent {
   name: string;
   phoneNumberId: string | null;
 }
+
+// Status Badge Component
+const StatusBadge = ({ status, calculatedStatus, size = 'sm' }: { 
+  status: string; 
+  calculatedStatus?: string; 
+  size?: 'xxs' | 'xs' | 'sm' | 'md' 
+}) => {
+  const displayStatus = calculatedStatus || status;
+  
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case 'active':
+        return {
+          label: 'Active',
+          className: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+        };
+      case 'pending':
+        return {
+          label: 'Pending',
+          className: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400'
+        };
+      case 'warning':
+        return {
+          label: 'Warning',
+          className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400'
+        };
+      case 'suspended':
+        return {
+          label: 'Suspended',
+          className: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+        };
+      default:
+        return {
+          label: 'Active', // Default to active for unknown statuses
+          className: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+        };
+    }
+  };
+
+  if (!status) return null; // Don't render if no status
+
+  const config = getStatusConfig(displayStatus);
+  const sizeClasses = {
+    xxs: 'px-1 py-0.5 text-[10px]',
+    xs: 'px-1.5 py-0.5 text-xs',
+    sm: 'px-2 py-1 text-xs',
+    md: 'px-2.5 py-1.5 text-sm'
+  };
+
+  return (
+    <span className={cn(
+      'inline-flex items-center rounded-full font-medium',
+      sizeClasses[size],
+      config.className
+    )}>
+      {config.label}
+    </span>
+  );
+};
 
 const PhoneNumbersPage = () => {
   const [selectedPhoneNumber, setSelectedPhoneNumber] = useState<PhoneNumber | null>(null);
@@ -61,6 +125,19 @@ const PhoneNumbersPage = () => {
   const [isUpdateLoading, setIsUpdateLoading] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [phoneNumberToDelete, setPhoneNumberToDelete] = useState<PhoneNumber | null>(null);
+  
+  // Assignment progress state
+  const [assignmentProgress, setAssignmentProgress] = useState<{
+    isAssigning: boolean;
+    progress: number;
+    message: string;
+    phoneNumberId?: string;
+  }>({
+    isAssigning: false,
+    progress: 0,
+    message: '',
+    phoneNumberId: undefined
+  });
   
   // Add mobile responsiveness state
   const [isMobileView, setIsMobileView] = useState<boolean>(false);
@@ -188,8 +265,34 @@ const PhoneNumbersPage = () => {
       }
     }
 
+    // Start progress tracking
+    setAssignmentProgress({
+      isAssigning: true,
+      progress: 0,
+      message: agentId ? 'Starting agent assignment...' : 'Removing agent assignment...',
+      phoneNumberId
+    });
+
     setIsUpdateLoading(true);
+    
     try {
+      // Progress: 25%
+      setAssignmentProgress(prev => ({
+        ...prev,
+        progress: 25,
+        message: agentId ? 'Configuring SMS and voice capabilities...' : 'Updating phone number configuration...'
+      }));
+
+      // Small delay to show progress
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Progress: 50%
+      setAssignmentProgress(prev => ({
+        ...prev,
+        progress: 50,
+        message: agentId ? 'Connecting agent to incoming calls and messages...' : 'Disconnecting agent from phone number...'
+      }));
+
       const response = await fetch(`/api/twilio/phone-numbers/${phoneNumberId}/assign`, {
         method: 'POST',
         headers: {
@@ -199,6 +302,16 @@ const PhoneNumbersPage = () => {
       });
 
       if (!response.ok) throw new Error('Failed to assign agent');
+
+      // Progress: 75%
+      setAssignmentProgress(prev => ({
+        ...prev,
+        progress: 75,
+        message: agentId ? 'Finalizing agent setup...' : 'Completing configuration...'
+      }));
+
+      // Small delay to show progress
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Update the phone numbers list
       setPhoneNumbers(prevPhoneNumbers => 
@@ -253,13 +366,42 @@ const PhoneNumbersPage = () => {
           return agent;
         })
       );
+
+      // Progress: 100%
+      setAssignmentProgress(prev => ({
+        ...prev,
+        progress: 100,
+        message: agentId ? 'Phone number ready for calls and messages!' : 'Agent removed successfully!'
+      }));
+
+      // Wait a moment to show completion
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      toast.success(agentId ? 'Agent assigned successfully' : 'Agent removed successfully');
+      toast.success(agentId ? 'Agent assigned and ready to receive calls and SMS' : 'Agent removed successfully');
+      
     } catch (error) {
       console.error('Error assigning agent:', error);
+      setAssignmentProgress(prev => ({
+        ...prev,
+        progress: 0,
+        message: 'Assignment failed. Please try again.'
+      }));
+      
+      // Wait a moment to show error
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
       toast.error('Failed to assign agent');
     } finally {
       setIsUpdateLoading(false);
+      // Reset progress after a delay
+      setTimeout(() => {
+        setAssignmentProgress({
+          isAssigning: false,
+          progress: 0,
+          message: '',
+          phoneNumberId: undefined
+        });
+      }, 1000);
     }
   };
   
@@ -312,6 +454,77 @@ const PhoneNumbersPage = () => {
     return agents.filter(agent => 
       !agent.phoneNumberId || 
       (selectedPhoneNumber && agent.phoneNumberId === selectedPhoneNumber.id)
+    );
+  };
+
+  // Function to get detailed status information
+  const getStatusInfo = (phone: PhoneNumber) => {
+    const status = phone.calculatedStatus || phone.status;
+    
+    switch (status) {
+      case 'active':
+        return {
+          variant: 'default' as const,
+          icon: RiCheckboxCircleFill,
+          title: 'Phone Number Active',
+          description: 'Your phone number is active and ready to receive calls and messages.',
+          className: 'border-green-200 bg-green-50 dark:border-green-800/50 dark:bg-green-950/20'
+        };
+      
+      case 'warning':
+        return {
+          variant: 'default' as const,
+          icon: RiErrorWarningLine,
+          title: 'Subscription Required',
+          description: phone.warningMessage || phone.statusReason || 'This phone number requires an active subscription to function properly. Please upgrade your plan or add a payment method to keep this number active.',
+          className: 'border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/20'
+        };
+      
+      case 'pending':
+        return {
+          variant: 'default' as const,
+          icon: RiInformationLine,
+          title: 'Ready for Agent Assignment',
+          description: 'Your phone number is active and ready to use. Assign it to an agent to start receiving calls and messages.',
+          className: 'border-blue-200 bg-blue-50 dark:border-blue-800/50 dark:bg-blue-950/20'
+        };
+      
+      case 'suspended':
+        return {
+          variant: 'destructive' as const,
+          icon: RiErrorWarningLine,
+          title: 'Phone Number Suspended',
+          description: 'Your phone number has been suspended due to payment issues. Add a payment method to reactivate this number.',
+          className: 'border-red-200 bg-red-50 dark:border-red-800/50 dark:bg-red-950/20'
+        };
+      
+      default:
+        return {
+          variant: 'default' as const,
+          icon: RiInformationLine,
+          title: 'Phone Number Status',
+          description: 'Phone number status information is being updated.',
+          className: 'border-gray-200 bg-gray-50 dark:border-gray-800/50 dark:bg-gray-950/20'
+        };
+    }
+  };
+
+  // Component for status banner
+  const PhoneNumberStatusBanner = ({ phone }: { phone: PhoneNumber }) => {
+    const statusInfo = getStatusInfo(phone);
+    const StatusIcon = statusInfo.icon;
+
+    // Only show banner for non-active statuses
+    if ((phone.calculatedStatus || phone.status) === 'active') {
+      return null;
+    }
+
+    return (
+      <Alert className={`mb-6 ${statusInfo.className}`}>
+        <StatusIcon className="h-4 w-4" />
+        <AlertTitle>{statusInfo.title}</AlertTitle>
+        <AlertDescription>{statusInfo.description}</AlertDescription>
+      </Alert>
     );
   };
 
@@ -381,29 +594,36 @@ const PhoneNumbersPage = () => {
                           <RiPhoneLine className="h-5 w-5" />
                         </span>
                         <div className="truncate min-w-0">
-                          <p className={cn(
-                            "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
-                            selectedPhoneNumber?.id === phone.id && "text-indigo-600 dark:text-indigo-400",
-                            phone.status === 'suspended' && "text-gray-500 dark:text-gray-400"
-                          )}>
-                            <button 
-                              onClick={() => {
-                                setSelectedPhoneNumber(phone);
-                                if (isMobileView) {
-                                  setShowPhoneDetailsOnMobile(true);
-                                }
-                              }}
-                              className="focus:outline-none hover:no-underline no-underline"
-                              type="button"
-                            >
-                              <span className="absolute inset-0" aria-hidden="true" />
-                              {phone.number}
-                            </button>
-                          </p>
+                          <div className="flex items-center justify-between">
+                            <p className={cn(
+                              "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
+                              selectedPhoneNumber?.id === phone.id && "text-indigo-600 dark:text-indigo-400",
+                              phone.status === 'suspended' && "text-gray-500 dark:text-gray-400"
+                            )}>
+                              <button 
+                                onClick={() => {
+                                  setSelectedPhoneNumber(phone);
+                                  if (isMobileView) {
+                                    setShowPhoneDetailsOnMobile(true);
+                                  }
+                                }}
+                                className="focus:outline-none hover:no-underline no-underline"
+                                type="button"
+                              >
+                                <span className="absolute inset-0" aria-hidden="true" />
+                                {phone.number}
+                              </button>
+                            </p>
+                            <div className="ml-2">
+                              <StatusBadge 
+                                status={phone.status} 
+                                calculatedStatus={phone.calculatedStatus}
+                                size="xxs"
+                              />
+                            </div>
+                          </div>
                           <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline mt-0.5">
                             {phone.agentName || 'No agent assigned'}
-                            {phone.status === 'suspended' && ' · Suspended'}
-                            {phone.status === 'pending' && ' · Pending'}
                           </p>
                         </div>
                       </div>
@@ -487,50 +707,133 @@ const PhoneNumbersPage = () => {
           
           {selectedPhoneNumber ? (
             <div className="p-6">
-              <header className="border-b border-gray-200 dark:border-gray-800 pb-4 mb-4">
+              {/* Simplified Header */}
+              <header className="mb-6">
                 <div className="sm:flex sm:items-center sm:justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-                      {selectedPhoneNumber.number}
-                    </h3>
-                    {selectedPhoneNumber.status === 'suspended' && (
-                      <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-500">
-                        This phone number is suspended. Please check your billing information.
-                      </p>
-                    )}
-                    {selectedPhoneNumber.status === 'pending' && (
-                      <p className="mt-1 text-sm text-indigo-600 dark:text-indigo-500">
-                        This phone number is being provisioned. It will be available soon.
-                      </p>
-                    )}
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                        {selectedPhoneNumber.number}
+                      </h3>
+                      <StatusBadge 
+                        status={selectedPhoneNumber.status} 
+                        calculatedStatus={selectedPhoneNumber.calculatedStatus}
+                        size="sm"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {selectedPhoneNumber.monthlyFee}/month • Purchased {selectedPhoneNumber.boughtOn}
+                    </p>
                   </div>
                   <Button
                     variant="destructive"
                     onClick={() => handleDeletePhoneNumber(selectedPhoneNumber)}
+                    className="mt-3 sm:mt-0"
                   >
                     <RiDeleteBinLine className="mr-2 h-4 w-4" />
                     Delete
                   </Button>
                 </div>
               </header>
-              <main>
-                <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900 mb-4">
-                  <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
-                    <div className="flex items-center gap-2">
+
+              {/* Status Banner */}
+              {/* <PhoneNumberStatusBanner phone={selectedPhoneNumber} /> */}
+
+              {/* Status-based Action Cards */}
+              {selectedPhoneNumber.status === 'suspended' && (
+                <Card className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/20">
+                  <div className="p-4">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <Icons.warning className="h-5 w-5 text-amber-600 dark:text-amber-500" />
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                          Phone Number Suspended
+                        </h3>
+                        <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                          Add a payment method to reactivate this number and keep it active.
+                        </p>
+                        <div className="mt-4">
+                          <PaymentMethodDisplay 
+                            renewalDate={selectedPhoneNumber.renewsOn} 
+                            showDetailsButton={false}
+                          />
+                          <div className="mt-3">
+                            <Button 
+                              variant="secondary" 
+                              className="bg-amber-100 hover:bg-amber-200 text-amber-800 border-amber-300 dark:bg-amber-900/50 dark:hover:bg-amber-900/70 dark:text-amber-200 dark:border-amber-700"
+                            >
+                              Add Payment Method
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {selectedPhoneNumber.status === 'pending' && (
+                <Card className="mb-6 border-indigo-200 bg-indigo-50 dark:border-indigo-800/50 dark:bg-indigo-950/20">
+                  <div className="p-4">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <RiInformationLine className="h-5 w-5 text-indigo-600 dark:text-indigo-500" />
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                          Ready for Agent Assignment
+                        </h3>
+                        <p className="mt-1 text-sm text-indigo-700 dark:text-indigo-300">
+                          Your phone number is active and ready to use. Assign it to an agent below to start receiving calls and messages.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              <main className="space-y-6">
+                {/* Agent Assignment */}
+                <Card>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
                       <Icons.speech className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                      <h4 className="text-md font-semibold text-gray-900 dark:text-gray-50">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">
                         Agent Assignment
                       </h4>
                     </div>
-                  </div>
-                  <div className="p-4 bg-white dark:bg-gray-900/50">
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      Assign an agent to handle calls to this phone number. Each agent can only have one phone number assigned.
-                    </p>
+                    
+                    {/* Progress Bar */}
+                    {assignmentProgress.isAssigning && assignmentProgress.phoneNumberId === selectedPhoneNumber.id && (
+                      <div className="mb-4 p-3 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-800/50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-600"></div>
+                          <span className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                            {assignmentProgress.message}
+                          </span>
+                        </div>
+                        <div className="w-full bg-indigo-200 dark:bg-indigo-800 rounded-full h-2">
+                          <div 
+                            className="bg-indigo-600 dark:bg-indigo-500 h-2 rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${assignmentProgress.progress}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between mt-1">
+                          <span className="text-xs text-indigo-600 dark:text-indigo-400">
+                            {assignmentProgress.progress}%
+                          </span>
+                          <span className="text-xs text-indigo-600 dark:text-indigo-400">
+                            Please wait...
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     
                     {isAgentsLoading ? (
                       <div className="flex items-center py-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mr-2"></div>
+                        <Icons.spinner className="h-4 w-4 animate-spin mr-2" />
                         <span className="text-sm text-gray-500">Loading agents...</span>
                       </div>
                     ) : getAvailableAgents().length > 0 ? (
@@ -538,7 +841,7 @@ const PhoneNumbersPage = () => {
                         <Select 
                           value={selectedPhoneNumber.agentId || 'none'} 
                           onValueChange={(value) => handleAssignAgent(selectedPhoneNumber.id, value === 'none' ? null : value)}
-                          disabled={isUpdateLoading || selectedPhoneNumber.status !== 'active'}
+                          disabled={isUpdateLoading || (selectedPhoneNumber.status !== 'active' && selectedPhoneNumber.status !== 'pending')}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select Agent" />
@@ -553,70 +856,51 @@ const PhoneNumbersPage = () => {
                           </SelectContent>
                         </Select>
                         
-                        {selectedPhoneNumber.status !== 'active' && (
-                          <p className="mt-2 text-xs text-yellow-600 dark:text-yellow-500">
-                            Agent assignment is only available for active phone numbers.
+                        {(selectedPhoneNumber.status !== 'active' && selectedPhoneNumber.status !== 'pending') && (
+                          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Available when number is active or pending
                           </p>
                         )}
                       </div>
                     ) : (
-                      <p className="text-sm text-yellow-600 dark:text-yellow-500">
-                        No available agents found. Create an agent first or free up an agent by unassigning their current phone number.
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        No available agents. Create an agent first.
                       </p>
                     )}
                   </div>
                 </Card>
-                <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-                  <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
-                    <div className="flex items-center gap-2">
-                      <Icons.billing className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                      <h4 className="text-md font-semibold text-gray-900 dark:text-gray-50">
-                        Billing Information
-                      </h4>
-                    </div>
-                  </div>
-                  <div className="p-4 bg-white dark:bg-gray-900/50">
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      Monthly Fee: {selectedPhoneNumber.monthlyFee}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      Purchased On: {new Date(selectedPhoneNumber.boughtOn).toLocaleDateString()}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      Renews On: {new Date(selectedPhoneNumber.renewsOn).toLocaleDateString()}
-                    </p>
-                    
-                    {/* Wrap Payment Method Display in a div with margin */}
-                    <div className="mt-4">
-                      <PaymentMethodDisplay 
-                        renewalDate={selectedPhoneNumber.renewsOn} 
-                        showDetailsButton={true}
-                      />
-                    </div>
-                    
-                    <div className="mt-4 rounded-md bg-indigo-50 p-3 dark:bg-indigo-900/20">
-                      <div className="flex">
-                        <Icons.info className="h-5 w-5 text-indigo-400 dark:text-indigo-500" />
-                        <div className="ml-3">
-                          <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                            This phone number requires an active payment method. If your payment method becomes invalid, 
-                            the phone number may be suspended and eventually released.
-                          </p>
+
+                {/* Simplified Billing Info */}
+                {selectedPhoneNumber.status === 'active' && (
+                  <Card>
+                    <div className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Icons.billing className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                          Billing
+                        </h4>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Monthly cost</span>
+                          <span className="font-medium">{selectedPhoneNumber.monthlyFee}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Next billing</span>
+                          <span>{new Date(selectedPhoneNumber.renewsOn).toLocaleDateString()}</span>
                         </div>
                       </div>
+                      
+                      <div className="mt-4">
+                        <PaymentMethodDisplay 
+                          renewalDate={selectedPhoneNumber.renewsOn} 
+                          showDetailsButton={true}
+                        />
+                      </div>
                     </div>
-                  </div>
-                </Card>
-                
-                {/* Phone Number Status Component */}
-                <PhoneNumberStatus 
-                  phoneNumber={{
-                    id: selectedPhoneNumber.id,
-                    number: selectedPhoneNumber.number,
-                    status: selectedPhoneNumber.status,
-                    twilioSid: selectedPhoneNumber.twilioSid
-                  }}
-                />
+                  </Card>
+                )}
               </main>
             </div>
           ) : (

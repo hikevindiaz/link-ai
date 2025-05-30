@@ -286,7 +286,7 @@ export async function getModelNameFromId(modelId: string): Promise<string> {
   }
 
   // Default to gpt-4o-mini if model not found
-  return "gpt-4o-mini";
+  return "gpt-4.1-mini-2025-04-14";
 }
 
 // Upload a file to OpenAI and return the file ID

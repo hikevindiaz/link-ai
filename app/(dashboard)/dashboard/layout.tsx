@@ -45,11 +45,14 @@ export default function DashboardLayout({
         <AppSidebar collapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
         <main 
           className={cn(
-            "transition-all duration-300 min-h-screen",
+            "transition-all duration-300",
+            "flex flex-col h-screen",
             sidebarCollapsed ? "ml-[70px]" : "ml-[260px]"
           )}
         >
-          {children}
+          <div className="flex-1">
+            {children}
+          </div>
         </main>
       </div>
     </TooltipProvider>

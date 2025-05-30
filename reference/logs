@@ -1,76 +1,98 @@
-Failed to load resource: the server responded with a status of 500 (Internal Server Error)Understand this errorAI
-app-index.js:33 Failed to create appointment: Error: Failed to create appointment: Target calendar not found or access denied.
-    at eval (page.tsx:651:19)
-    at async handleSubmit (CreateAppointmentDialog.tsx:88:7)
-window.console.error @ app-index.js:33Understand this errorAI
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+script.debug.js:1 [Vercel Speed Insights] Debug mode is enabled by default in development. No requests will be sent to the server.
+v3:1 You may test your Stripe.js integration over HTTP. However, live Stripe.js integrations must use HTTPS.
+value @ v3:1Understand this warning
+warn-once.js:16 Image with src "/LINK AI LOGO DARK.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+warnOnce @ warn-once.js:16Understand this warning
+warn-once.js:16 Image with src "/LINK AI ICON DARK.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+warnOnce @ warn-once.js:16Understand this warning
+AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
+AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=true, Value=true, Enabled=true
+AppSidebar.tsx:180 [AppSidebar] Session Data: Object
+AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
 hot-reloader-client.js:187 [Fast Refresh] rebuilding
-2app-index.js:33 ./lib/api/appointments.ts
-Error: 
-  × cannot reassign to a variable declared with `const`
-     ╭─[/Users/kevindiaz/LinkAI/lib/api/appointments.ts:168:1]
- 168 │  */
- 169 │ export const createAppointment = async (
- 170 │     input: AppointmentInput, // Frontend input
- 171 │     userId: string // Pass the authenticated user ID explicitly
-     ·     ───────┬──────
-     ·            ╰── cannot reassign
- 172 │ ): Promise<Appointment> => {
- 173 │     // Ensure calendarId is present in the input from the frontend
- 174 │     if (!input.calendarId) {
- 175 │         throw new Error("Calendar ID is missing in the input.");
- 176 │     }
- 177 │ 
- 178 │     const userId = await getCurrentUserId();
-     ·           ───┬──
-     ·              ╰── const variable was declared here
- 179 │ 
- 180 │     // <<< Add Logging Here >>>
- 181 │     console.log("[createAppointment] Checking ownership - User ID:", userId, "Calendar ID:", input.calendarId);
-     ╰────
-
-Import trace for requested module:
-./lib/api/appointments.ts
-./app/(dashboard)/dashboard/calendar/page.tsx
-window.console.error @ app-index.js:33
-console.error @ hydration-error-info.js:63
-handleErrors @ hot-reloader-client.js:166
-processMessage @ hot-reloader-client.js:207
-handler @ hot-reloader-client.js:395Understand this errorAI
-app-index.js:33 ./lib/api/appointments.ts
-Error: 
-  × cannot reassign to a variable declared with `const`
-     ╭─[/Users/kevindiaz/LinkAI/lib/api/appointments.ts:168:1]
- 168 │  */
- 169 │ export const createAppointment = async (
- 170 │     input: AppointmentInput, // Frontend input
- 171 │     userId: string // Pass the authenticated user ID explicitly
-     ·     ───────┬──────
-     ·            ╰── cannot reassign
- 172 │ ): Promise<Appointment> => {
- 173 │     // Ensure calendarId is present in the input from the frontend
- 174 │     if (!input.calendarId) {
- 175 │         throw new Error("Calendar ID is missing in the input.");
- 176 │     }
- 177 │ 
- 178 │     const userId = await getCurrentUserId();
-     ·           ───┬──
-     ·              ╰── const variable was declared here
- 179 │ 
- 180 │     // <<< Add Logging Here >>>
- 181 │     console.log("[createAppointment] Checking ownership - User ID:", userId, "Calendar ID:", input.calendarId);
-     ╰────
-
-Import trace for requested module:
-./lib/api/appointments.ts
-./app/(dashboard)/dashboard/calendar/page.tsx
-window.console.error @ app-index.js:33Understand this errorAI
+hot-reloader-client.js:44 [Fast Refresh] done in 1113ms
 hot-reloader-client.js:187 [Fast Refresh] rebuilding
-hot-reloader-client.js:44 [Fast Refresh] done in 1227ms
-:3000/api/appointments:1 
+hot-reloader-client.js:44 [Fast Refresh] done in 1189ms
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+hot-reloader-client.js:44 [Fast Refresh] done in 2888ms
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+hot-reloader-client.js:44 [Fast Refresh] done in 640ms
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+hot-reloader-client.js:44 [Fast Refresh] done in 5149ms
+script.debug.js:1 [Vercel Speed Insights] [vitals] Object
+AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
+AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=true, Value=true, Enabled=true
+AppSidebar.tsx:180 [AppSidebar] Session Data: Object
+AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
+script.debug.js:1 [Vercel Speed Insights] [vitals] Object
+AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
+AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=true, Value=true, Enabled=true
+AppSidebar.tsx:180 [AppSidebar] Session Data: Object
+AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+hot-reloader-client.js:44 [Fast Refresh] done in 416ms
+index.mjs:466 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+eval @ index.mjs:466Understand this warning
+AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
+AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=true, Value=false, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=true, Value=true, Enabled=true
+AppSidebar.tsx:180 [AppSidebar] Session Data: Object
+AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
+buy-phone-number-drawer.tsx:117 Dynamic pricing for PR: $6.25 (Twilio: $3.25 + Markup: $3)
+purchase-confirmation-dialog.tsx:376 Payment methods fetched: [
+  {
+    "id": "pm_1RUBKtBMnxCzo29MLj9aMTKL",
+    "isDefault": true,
+    "card": {
+      "brand": "visa",
+      "last4": "4242",
+      "exp_month": 4,
+      "exp_year": 2028
+    }
+  }
+]
+purchase-confirmation-dialog.tsx:383 Selected payment method: {
+  "id": "pm_1RUBKtBMnxCzo29MLj9aMTKL",
+  "isDefault": true,
+  "card": {
+    "brand": "visa",
+    "last4": "4242",
+    "exp_month": 4,
+    "exp_year": 2028
+  }
+}
+purchase-confirmation-dialog.tsx:387 Card details: {
+  "brand": "visa",
+  "last4": "4242",
+  "exp_month": 4,
+  "exp_year": 2028
+}
+purchase-confirmation-dialog.tsx:446 Starting purchase with existing payment method for: +17875923450
+purchase-confirmation-dialog.tsx:450 Making direct API call to purchase phone number: Object
+:3000/api/twilio/phone-numbers/purchase-with-payment-method:1 
             
             
-           Failed to load resource: the server responded with a status of 500 (Internal Server Error)Understand this errorAI
-app-index.js:33 Failed to create appointment: Error: Failed to create appointment: Cannot read properties of null (reading 'id')
-    at eval (page.tsx:651:19)
-    at async handleSubmit (CreateAppointmentDialog.tsx:88:7)
-window.console.error @ app-index.js:33Understand this errorAI
+           Failed to load resource: the server responded with a status of 400 (Bad Request)Understand this error
+app-index.js:33 Error purchasing phone number: AxiosError
+window.console.error @ app-index.js:33Understand this error
+app-index.js:33 Purchase error details: Object
+window.console.error @ app-index.js:33Understand this error
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning
+hot-reloader-client.js:187 [Fast Refresh] rebuilding

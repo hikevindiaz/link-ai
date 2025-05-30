@@ -1,0 +1,14 @@
+# Add these to your .env file for the new pricing plans:
+NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID=price_1RUDYnBMnxCzo29MYxGrDWG7
+NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID=price_1RUDYoBMnxCzo29MXVYvVNNv  
+NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID=price_1RUDYpBMnxCzo29MpWmyrw6f
+
+# Required for Stripe webhook verification (get this from Stripe Dashboard > Webhooks)
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# These are the new Stripe price IDs from the billing setup script
+# They replace the old hobby/basic/pro pricing structure with the new
+# Starter ($69), Growth ($199), and Scale ($499) plans 
+
+# Note: The STRIPE_WEBHOOK_SECRET is required for webhook verification.
+# Get this from your Stripe Dashboard under Developers > Webhooks > [Your Endpoint] > Signing secret 

@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { Icons } from '@/components/icons';
 import { toast } from 'sonner';
-import { addMonths, formatDate } from '@/lib/date-utils';
+import { formatDate } from '@/lib/date-utils';
 import { PurchaseConfirmationDialog } from './purchase-confirmation-dialog';
 
 interface Agent {
@@ -37,10 +37,20 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
   const [selectedNumber, setSelectedNumber] = useState<string | null>(null);
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [phoneNumberPrice, setPhoneNumberPrice] = useState<number>(0);
+  const [pricingBreakdown, setPricingBreakdown] = useState<{
+    twilioPrice: number;
+    markup: number;
+    total: number;
+  } | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [isLoadingAgents, setIsLoadingAgents] = useState<boolean>(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState<boolean>(false);
+  const [subscriptionInfo, setSubscriptionInfo] = useState<{
+    renewalDate: Date | null;
+  } | null>(null);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean>(false);
+  const [isCheckingSubscription, setIsCheckingSubscription] = useState<boolean>(false);
 
   useEffect(() => {
     const loadCountries = async () => {
@@ -53,8 +63,36 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
         toast.error('Failed to load countries. Please try again.');
       }
     };
-    loadCountries();
-  }, []);
+    
+    const checkSubscription = async () => {
+      setIsCheckingSubscription(true);
+      try {
+        const response = await fetch('/api/billing/subscription-info');
+        const data = await response.json();
+        
+        if (data.success && data.subscription) {
+          setHasActiveSubscription(true);
+          setSubscriptionInfo({
+            renewalDate: new Date(data.subscription.current_period_end * 1000)
+          });
+        } else {
+          setHasActiveSubscription(false);
+          setSubscriptionInfo(null);
+        }
+      } catch (error) {
+        console.error('Error checking subscription:', error);
+        setHasActiveSubscription(false);
+        setSubscriptionInfo(null);
+      } finally {
+        setIsCheckingSubscription(false);
+      }
+    };
+    
+    if (open) {
+      loadCountries();
+      checkSubscription();
+    }
+  }, [open]);
 
   useEffect(() => {
     const fetchAgents = async () => {
@@ -87,24 +125,56 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
       }
     };
     
-    fetchAgents();
-  }, []);
+    if (open) {
+      fetchAgents();
+    }
+  }, [open]);
 
   const handleFetchPhoneNumbers = async () => {
     if (!selectedCountry) return;
+    
+    if (!hasActiveSubscription) {
+      toast.error('You need an active subscription to purchase phone numbers.');
+      return;
+    }
+    
     setIsFetching(true);
     try {
       const response = await fetch(`/api/twilio/numbers?country=${selectedCountry}`);
       const data = await response.json();
       setAvailableNumbers(data.numbers);
 
-      const pricingResponse = await fetch(`/api/twilio/pricing?country=${selectedCountry}`);
+      // Get dynamic pricing with markup for this country
+      const pricingResponse = await fetch(`/api/twilio/pricing/display?country=${selectedCountry}`);
       const pricingData = await pricingResponse.json();
-      const localPrice = pricingData.phone_number_prices.find((price: { number_type: string }) => price.number_type === 'local');
-      setPhoneNumberPrice(parseFloat(localPrice?.current_price || '0'));
+      
+      if (pricingData.success) {
+        setPhoneNumberPrice(pricingData.monthlyPrice);
+        setPricingBreakdown({
+          twilioPrice: pricingData.breakdown.twilioPrice,
+          markup: pricingData.breakdown.markup,
+          total: pricingData.monthlyPrice
+        });
+        console.log(`Dynamic pricing for ${selectedCountry}: $${pricingData.monthlyPrice} (Twilio: $${pricingData.breakdown.twilioPrice} + Markup: $${pricingData.breakdown.markup})`);
+      } else {
+        // Fallback to old method if dynamic pricing fails
+        const legacyPricingResponse = await fetch(`/api/twilio/pricing?country=${selectedCountry}`);
+        const legacyPricingData = await legacyPricingResponse.json();
+        const localPrice = legacyPricingData.phone_number_prices.find((price: { number_type: string }) => price.number_type === 'local');
+        const twilioPrice = parseFloat(localPrice?.current_price || '0');
+        setPhoneNumberPrice(twilioPrice + 3.00); // Add $3 markup
+        setPricingBreakdown({
+          twilioPrice: twilioPrice,
+          markup: 3.00,
+          total: twilioPrice + 3.00
+        });
+      }
     } catch (error) {
       console.error('Error fetching phone numbers or pricing:', error);
       toast.error('Failed to fetch phone numbers. Please try again.');
+      // Fallback pricing
+      setPhoneNumberPrice(6.75);
+      setPricingBreakdown(null);
     }
     setIsFetching(false);
   };
@@ -119,48 +189,32 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
 
   const handleBuyNumber = async () => {
     if (!selectedNumber) return;
-    // Open the purchase confirmation dialog instead of direct purchase
+    
+    if (!hasActiveSubscription) {
+      toast.error('You need an active subscription to purchase phone numbers.');
+      return;
+    }
+    
+    // Open the purchase confirmation dialog
     setShowPurchaseDialog(true);
   };
 
   const handleConfirmPurchase = async () => {
-    // This function will be called when the PurchaseConfirmationDialog confirms
-    console.log('Purchase confirmed for:', selectedNumber);
+    // This is called when the purchase is successfully completed
+    // Reset form state and close everything
+    setSelectedNumber(null);
+    setAvailableNumbers([]);
+    setSelectedCountry(null);
+    setSelectedAgentId(null);
+    setShowPurchaseDialog(false);
+    onClose();
     
-    try {
-      // Notify the parent component about the purchase
-      onPhoneNumberPurchased(selectedNumber!);
-      
-      // Reset form state
-      setSelectedNumber(null);
-      setAvailableNumbers([]);
-      setSelectedCountry(null);
-      setSelectedAgentId(null);
-      
-      // Close the purchase dialog and drawer
-      setShowPurchaseDialog(false);
-      onClose();
-      
-      // Show success toast
-      toast.success('Phone number purchased successfully! You can now use it with your agent.');
-      
-      // Force refresh phone number statuses to ensure the new number shows up properly
-      try {
-        const refreshResponse = await fetch('/api/twilio/phone-numbers/refresh-all-statuses', {
-          method: 'POST'
-        });
-        console.log('Refreshed phone number statuses:', refreshResponse.ok);
-      } catch (refreshError) {
-        console.warn('Failed to refresh phone number statuses:', refreshError);
-        // Continue anyway as this is not critical
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error during purchase confirmation:', error);
-      toast.error('Failed to complete the purchase process.');
-      return false;
+    // Notify parent component of successful purchase
+    if (selectedNumber) {
+      onPhoneNumberPurchased(selectedNumber);
     }
+    
+    return true;
   };
 
   const handleClose = () => {
@@ -169,8 +223,39 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
     setAvailableNumbers([]);
     setSelectedCountry(null);
     setSelectedAgentId(null);
+    setShowPurchaseDialog(false);
     onClose();
   };
+
+  // Show subscription warning if not active
+  if (open && !isCheckingSubscription && !hasActiveSubscription) {
+    return (
+      <Drawer open={open} onOpenChange={handleClose}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Subscription Required</DrawerTitle>
+          </DrawerHeader>
+          <DrawerBody className="text-center py-8">
+            <div className="mb-4">
+              <Icons.warning className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400">
+                You need an active subscription to purchase phone numbers.
+              </p>
+            </div>
+            <Button 
+              variant="primary" 
+              onClick={() => {
+                onClose();
+                window.location.href = '/dashboard/settings?tab=billing';
+              }}
+            >
+              View Subscription Plans
+            </Button>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
 
   return (
     <>
@@ -180,113 +265,141 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
             <DrawerTitle>Buy a New Phone Number</DrawerTitle>
           </DrawerHeader>
           <DrawerBody className="overflow-auto">
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Select your country to start searching.
-            </p>
-            <div className="mt-4">
-              <Select onValueChange={setSelectedCountry}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map((country) => (
-                    <SelectItem key={country.code} value={country.code}>
-                      <span className="flex items-center gap-2">
-                        <span>{country.emoji}</span>
-                        {country.name}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="primary"
-                className="mt-2"
-                onClick={handleFetchPhoneNumbers}
-                disabled={!selectedCountry || isFetching}
-              >
-                {isFetching ? (
-                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Icons.search className="mr-2 h-4 w-4" />
-                )}
-                {isFetching ? 'Searching...' : 'Search'}
-              </Button>
-            </div>
-            {availableNumbers.length > 0 && (
-              <div className="mt-4">
-                <Select onValueChange={handleSelectPhoneNumber}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Phone Number" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableNumbers.map((number) => (
-                      <SelectItem key={number} value={number}>
-                        {number}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {isCheckingSubscription ? (
+              <div className="flex items-center justify-center py-8">
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                <span>Checking subscription...</span>
               </div>
-            )}
-            
-            {selectedNumber && (
-              <div className="mt-4">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Assign to Agent (Optional)
-                </label>
-                <div className="mt-1">
-                  {isLoadingAgents ? (
-                    <div className="flex items-center py-2">
+            ) : (
+              <>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  Select your country to start searching.
+                </p>
+                <div className="mt-4">
+                  <Select onValueChange={setSelectedCountry}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countries.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          <span className="flex items-center gap-2">
+                            <span>{country.emoji}</span>
+                            {country.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="primary"
+                    className="mt-2"
+                    onClick={handleFetchPhoneNumbers}
+                    disabled={!selectedCountry || isFetching || !hasActiveSubscription}
+                  >
+                    {isFetching ? (
                       <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                      <span className="text-sm text-gray-500">Loading agents...</span>
-                    </div>
-                  ) : (
-                    <Select onValueChange={handleSelectAgent} value={selectedAgentId || 'none'}>
+                    ) : (
+                      <Icons.search className="mr-2 h-4 w-4" />
+                    )}
+                    {isFetching ? 'Searching...' : 'Search'}
+                  </Button>
+                </div>
+                
+                {availableNumbers.length > 0 && (
+                  <div className="mt-4">
+                    <Select onValueChange={handleSelectPhoneNumber}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select Agent (Optional)" />
+                        <SelectValue placeholder="Select Phone Number" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">No Agent</SelectItem>
-                        {agents.map((agent) => (
-                          <SelectItem key={agent.id} value={agent.id}>
-                            {agent.name}
+                        {availableNumbers.map((number) => (
+                          <SelectItem key={number} value={number}>
+                            {number}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  )}
-                </div>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  If selected, this phone number will be assigned to the agent for handling calls and messages.
-                </p>
-              </div>
+                  </div>
+                )}
+                
+                {selectedNumber && pricingBreakdown && (
+                  <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                    <h4 className="text-sm font-medium text-indigo-900 dark:text-indigo-100 mb-2">Pricing</h4>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between font-medium text-indigo-900 dark:text-indigo-100">
+                        <span>Monthly cost:</span>
+                        <span>${pricingBreakdown.total.toFixed(2)}/month</span>
+                      </div>
+                      <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1">
+                        Prorated charge today, then added to your monthly subscription.
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedNumber && (
+                  <div className="mt-4">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Assign to Agent (Optional)
+                    </label>
+                    <div className="mt-1">
+                      {isLoadingAgents ? (
+                        <div className="flex items-center py-2">
+                          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                          <span className="text-sm text-gray-500">Loading agents...</span>
+                        </div>
+                      ) : (
+                        <Select onValueChange={handleSelectAgent} value={selectedAgentId || 'none'}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Agent (Optional)" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No Agent</SelectItem>
+                            {agents.map((agent) => (
+                              <SelectItem key={agent.id} value={agent.id}>
+                                {agent.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      If selected, this phone number will be assigned to the agent for handling calls and messages.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </DrawerBody>
-          <DrawerFooter className="flex flex-col items-start space-y-2 mt-4">
-            <Button
-              variant="primary"
-              onClick={handleBuyNumber}
-              disabled={!selectedNumber || isFetching}
-            >
-              {isFetching ? (
-                <>
-                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                  Purchasing...
-                </>
-              ) : selectedNumber ? (
-                `Buy Phone Number for $${(phoneNumberPrice + 3.0).toFixed(2)}/month`
-              ) : (
-                'Buy Phone Number'
+          
+          {!isCheckingSubscription && hasActiveSubscription && (
+            <DrawerFooter className="flex flex-col items-start space-y-2 mt-4">
+              <Button
+                variant="primary"
+                onClick={handleBuyNumber}
+                disabled={!selectedNumber || isFetching}
+              >
+                {isFetching ? (
+                  <>
+                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    Purchasing...
+                  </>
+                ) : selectedNumber ? (
+                  `Buy Phone Number for $${phoneNumberPrice.toFixed(2)}/month`
+                ) : (
+                  'Buy Phone Number'
+                )}
+              </Button>
+              <div className="h-0.5" />
+              {selectedNumber && subscriptionInfo?.renewalDate && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Added to your subscription. Next billing: {formatDate(subscriptionInfo.renewalDate)}
+                </p>
               )}
-            </Button>
-            <div className="h-0.5" />
-            {selectedNumber && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Your subscription will renew on {formatDate(addMonths(new Date(), 1))}
-              </p>
-            )}
-          </DrawerFooter>
+            </DrawerFooter>
+          )}
         </DrawerContent>
       </Drawer>
 
@@ -295,7 +408,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
         open={showPurchaseDialog}
         onOpenChange={setShowPurchaseDialog}
         phoneNumber={selectedNumber}
-        monthlyCost={phoneNumberPrice + 3.0}
+        monthlyCost={phoneNumberPrice}
         selectedAgentId={selectedAgentId}
         onConfirm={handleConfirmPurchase}
       />

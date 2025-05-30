@@ -23,7 +23,17 @@ export default async function Button({ params }: ChatComponentProps) {
     return notFound();
   }
 
+  // Get border gradient colors from the chatbot or use default
+  const borderGradientColors = (chatbot as any).borderGradientColors || 
+    ["#4F46E5", "#4338CA", "#6366F1"]; // Default to Indigo
+    
   return (
-    <ChatbotButton textColor={chatbot?.bubbleTextColor} backgroundColor={chatbot?.bubbleColor} />
+    <ChatbotButton 
+      textColor={chatbot?.bubbleTextColor} 
+      backgroundColor={chatbot?.bubbleColor}
+      borderGradientColors={borderGradientColors}
+      useRiveOrb={true}
+      riveOrbColor={(chatbot as any)?.riveOrbColor ?? 0} // Default to black (0)
+    />
   )
 }

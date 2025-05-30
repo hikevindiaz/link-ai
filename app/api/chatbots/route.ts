@@ -88,6 +88,23 @@ export async function POST(req: Request) {
       );
     }
 
+    // Get or create the gpt-4o-mini model
+    const modelName = "gpt-4.1-mini-2025-04-14";
+    let model = await prisma.chatbotModel.findFirst({
+      where: {
+        name: modelName,
+      },
+    });
+
+    // If the model doesn't exist, create it
+    if (!model) {
+      model = await prisma.chatbotModel.create({
+        data: {
+          name: modelName,
+        },
+      });
+    }
+
     // Create the chatbot with default values for new fields
     const chatbot = await prisma.chatbot.create({
       data: {
@@ -99,6 +116,8 @@ export async function POST(req: Request) {
         temperature: body.temperature || 0.7,
         maxPromptTokens: body.maxPromptTokens || 1200,
         maxCompletionTokens: body.maxCompletionTokens || 1200,
+        // Set modelId using the actual model ID from the database
+        modelId: model.id,
         // Initialize training-related fields with default values
         trainingStatus: "idle",
         trainingMessage: null,

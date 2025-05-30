@@ -34,6 +34,7 @@ import { Divider } from "@/components/Divider";
 import { useSession } from 'next-auth/react';
 import { KnowledgeSourceBadge } from './source-settings';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useKnowledgeBase } from '@/app/(dashboard)/dashboard/knowledge-base/layout'; // Corrected import path
 
 export interface Source {
   id: string;
@@ -43,6 +44,7 @@ export interface Source {
   updatedAt: string;
   catalogMode?: string;
   userId?: string; // User ID for file uploads
+  isLoading: boolean;
 }
 
 // Color combinations for source icons
@@ -76,6 +78,7 @@ interface SourceStatus {
 export function SourceSidebar() {
   const router = useRouter();
   const pathname = usePathname() || '';
+  const { isMobileView, setShowDetailsOnMobile } = useKnowledgeBase(); // Use context
   const [sources, setSources] = useState<Source[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -252,8 +255,11 @@ export function SourceSidebar() {
     }
   };
 
-  // Handle source selection
+  // Handle click on a source - navigate and potentially update mobile view
   const handleSourceClick = (sourceId: string) => {
+    if (isMobileView) {
+      setShowDetailsOnMobile(true); // Show details pane on mobile
+    }
     router.push(`/dashboard/knowledge-base/${sourceId}`);
   };
   
@@ -415,7 +421,7 @@ export function SourceSidebar() {
   const currentSourceId = pathname.match(/\/dashboard\/knowledge-base\/([^\/]+)/)?.[1];
 
   return (
-    <div className="w-80 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
@@ -478,14 +484,11 @@ export function SourceSidebar() {
                       <div className="flex items-center gap-2">
                         <p className={cn(
                           "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
-                          currentSourceId === source.id && "text-indigo-600 dark:text-indigo-400"
+                          pathname.endsWith(source.id) && "text-indigo-600 dark:text-indigo-400"
                         )}>
                           <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSourceClick(source.id);
-                            }}
-                            className="focus:outline-none hover:no-underline no-underline"
+                            onClick={() => handleSourceClick(source.id)}
+                            className="focus:outline-none hover:no-underline no-underline text-left"
                             type="button"
                           >
                             <span className="absolute inset-0" aria-hidden="true" />

@@ -8,6 +8,7 @@ import { z } from "zod";
 import { fileTypes as codeFile } from "@/lib/validations/codeInterpreter";
 import { fileTypes as searchFile } from "@/lib/validations/fileSearch";
 import { getOpenAIKey, getModelNameFromId } from '@/lib/openai';
+import { deleteFromSupabase } from '@/lib/supabase';
 
 export const maxDuration = 300;
 
@@ -42,13 +43,12 @@ export async function GET(
     // Get the session only if not embedded
     const session = !isEmbedded ? await getServerSession(authOptions) : null;
 
-    // For embedded chat, only fetch necessary public fields
-    // For admin access, verify ownership and fetch all fields
-    const chatbot = await prisma.chatbot.findUnique({
-      where: {
-        id: chatbotId,
-      },
-      select: isEmbedded ? {
+    // Define the select object based on whether it's embedded or not
+    let selectFields = {};
+    
+    if (isEmbedded) {
+      // Limited fields for embedded view
+      selectFields = {
         id: true,
         name: true,
         modelId: true,
@@ -63,6 +63,11 @@ export async function GET(
         prompt: true,
         welcomeMessage: true,
         allowEveryone: true,
+        buttonTheme: true,
+        chatBackgroundColor: true,
+        riveOrbColor: true,
+        bubbleColor: true,
+        bubbleTextColor: true,
         knowledgeSources: {
           select: {
             id: true,
@@ -71,8 +76,10 @@ export async function GET(
             vectorStoreId: true
           }
         }
-      } : {
-        // Full selection for authenticated users
+      };
+    } else {
+      // Full selection for authenticated users - include all necessary fields
+      selectFields = {
         id: true,
         name: true,
         modelId: true,
@@ -88,6 +95,19 @@ export async function GET(
         maxPromptTokens: true,
         maxCompletionTokens: true,
         allowEveryone: true,
+        websiteEnabled: true,
+        whatsappEnabled: true,
+        smsEnabled: true,
+        messengerEnabled: true,
+        instagramEnabled: true,
+        riveOrbColor: true,
+        borderGradientColors: true,
+        iconType: true,
+        chatbotLogoURL: true,
+        buttonTheme: true,
+        chatBackgroundColor: true,
+        bubbleColor: true,
+        bubbleTextColor: true,
         knowledgeSources: {
           select: {
             id: true,
@@ -96,7 +116,6 @@ export async function GET(
             vectorStoreId: true
           }
         },
-        // Include other fields needed for admin view
         phoneNumber: true,
         responseRate: true,
         checkUserPresence: true,
@@ -110,8 +129,20 @@ export async function GET(
         voice: true,
         trainingStatus: true,
         trainingMessage: true,
-        lastTrainedAt: true
-      }
+        lastTrainedAt: true,
+        // Calendar integration fields
+        calendarEnabled: true,
+        calendarId: true
+      };
+    }
+
+    // For embedded chat, only fetch necessary public fields
+    // For admin access, verify ownership and fetch all fields
+    const chatbot = await prisma.chatbot.findUnique({
+      where: {
+        id: chatbotId,
+      },
+      select: selectFields as any, // Use type assertion to avoid TypeScript errors
     });
 
     if (!chatbot) {
@@ -172,7 +203,52 @@ export async function PATCH(
     if (body.prompt !== undefined) updateData.prompt = body.prompt;
     if (body.welcomeMessage !== undefined) updateData.welcomeMessage = body.welcomeMessage;
     if (body.chatbotErrorMessage !== undefined) updateData.chatbotErrorMessage = body.chatbotErrorMessage;
-    if (body.modelId !== undefined) updateData.modelId = body.modelId;
+    if (body.iconType !== undefined) updateData.iconType = body.iconType;
+    if (body.chatbotLogoURL !== undefined) {
+      // If the logo URL is set to null, and the chatbot had a logo before,
+      // then delete the old logo from Supabase
+      if (body.chatbotLogoURL === null && existingChatbot.chatbotLogoURL) {
+        console.log('Logo deletion requested, removing from storage');
+        try {
+          const urlParts = existingChatbot.chatbotLogoURL.split('/agent-logos/');
+          const oldPath = urlParts.length > 1 ? urlParts[1] : null;
+          if (oldPath) {
+            console.log(`Deleting file from Supabase: agent-logos/${oldPath}`);
+            await deleteFromSupabase(oldPath, 'agent-logos');
+          }
+        } catch (deleteError) {
+          console.error('Error deleting logo from storage:', deleteError);
+          // Continue with the update even if storage deletion fails
+        }
+      }
+      
+      // Set the new value (null or new URL)
+      updateData.chatbotLogoURL = body.chatbotLogoURL;
+    }
+    
+    // Always use the default model
+    if (body.modelId !== undefined) {
+      // Get or create the model if needed
+      const modelName = "gpt-4.1-mini-2025-04-14";
+      let model = await prisma.chatbotModel.findFirst({
+        where: {
+          name: modelName,
+        },
+      });
+      
+      // If the model doesn't exist, create it
+      if (!model) {
+        model = await prisma.chatbotModel.create({
+          data: {
+            name: modelName,
+          },
+        });
+      }
+      
+      // Set modelId using the actual model ID from the database
+      updateData.modelId = model.id;
+    }
+    
     if (body.temperature !== undefined) updateData.temperature = body.temperature;
     if (body.maxPromptTokens !== undefined) updateData.maxPromptTokens = body.maxPromptTokens;
     if (body.maxCompletionTokens !== undefined) updateData.maxCompletionTokens = body.maxCompletionTokens;
@@ -190,6 +266,32 @@ export async function PATCH(
     if (body.language !== undefined) updateData.language = body.language;
     if (body.secondLanguage !== undefined) updateData.secondLanguage = body.secondLanguage;
     
+    // Channel settings
+    if (body.websiteEnabled !== undefined) updateData.websiteEnabled = body.websiteEnabled;
+    if (body.whatsappEnabled !== undefined) updateData.whatsappEnabled = body.whatsappEnabled;
+    if (body.smsEnabled !== undefined) updateData.smsEnabled = body.smsEnabled;
+    if (body.messengerEnabled !== undefined) updateData.messengerEnabled = body.messengerEnabled;
+    if (body.instagramEnabled !== undefined) updateData.instagramEnabled = body.instagramEnabled;
+    
+    // Calendar integration
+    if (body.calendarEnabled !== undefined) updateData.calendarEnabled = body.calendarEnabled;
+    if (body.calendarId !== undefined) updateData.calendarId = body.calendarId;
+    
+    // Widget settings
+    if (body.chatTitle !== undefined) updateData.chatTitle = body.chatTitle;
+    if (body.riveOrbColor !== undefined) updateData.riveOrbColor = body.riveOrbColor;
+    if (body.borderGradientColors !== undefined) updateData.borderGradientColors = body.borderGradientColors;
+    if (body.bubbleColor !== undefined) updateData.bubbleColor = body.bubbleColor;
+    if (body.chatHeaderBackgroundColor !== undefined) updateData.chatHeaderBackgroundColor = body.chatHeaderBackgroundColor;
+    if (body.chatHeaderTextColor !== undefined) updateData.chatHeaderTextColor = body.chatHeaderTextColor;
+    if (body.userReplyBackgroundColor !== undefined) updateData.userReplyBackgroundColor = body.userReplyBackgroundColor;
+    if (body.userReplyTextColor !== undefined) updateData.userReplyTextColor = body.userReplyTextColor;
+    if (body.displayBranding !== undefined) updateData.displayBranding = body.displayBranding;
+    if (body.chatFileAttachementEnabled !== undefined) updateData.chatFileAttachementEnabled = body.chatFileAttachementEnabled;
+    if (body.chatMessagePlaceHolder !== undefined) updateData.chatMessagePlaceHolder = body.chatMessagePlaceHolder;
+    if (body.chatInputStyle !== undefined) updateData.chatInputStyle = body.chatInputStyle;
+    if (body.chatHistoryEnabled !== undefined) updateData.chatHistoryEnabled = body.chatHistoryEnabled;
+
     // Training-related fields
     if (body.trainingStatus !== undefined) updateData.trainingStatus = body.trainingStatus;
     if (body.trainingMessage !== undefined) updateData.trainingMessage = body.trainingMessage;

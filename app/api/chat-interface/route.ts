@@ -3,6 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getThreadMessages } from '@/lib/chat-interface/adapters';
 import { StreamingTextResponse } from '@/lib/chat-interface/ai/compatibility';
 import prisma from '@/lib/prisma'; // Import shared instance
+import { 
+  handleCheckAvailability, 
+  handleBookAppointment, 
+  handleViewAppointment, 
+  handleModifyAppointment, 
+  handleCancelAppointment 
+} from './handlers/calendar';
+import { getCalendarTools, CalendarConfig } from './tools/calendar-tools';
+import { buildSystemPrompt } from './utils/system-prompt';
 
 // Create an OpenAI API client
 const openai = new OpenAI({
@@ -37,12 +46,72 @@ export async function POST(req: Request) {
     
     const chatbot = await chatbotResponse.json();
 
+    console.log(`[Chat Interface] Chatbot data:`, JSON.stringify({
+      id: chatbot.id,
+      name: chatbot.name,
+      calendarEnabled: chatbot.calendarEnabled,
+      calendarId: chatbot.calendarId
+    }));
+
     // Get the model name from the chatbot's model relation
-    let modelName = 'gpt-4.1-nano-2025-04-14'; // Default model
+    let modelName = 'gpt-4.1-mini-2025-04-14'; // Default model
     if (chatbot.model && chatbot.model.name) {
       modelName = chatbot.model.name;
     }
 
+    // Check if calendar action is enabled for this agent
+    // Use the simpler calendarEnabled and calendarId fields from the chatbot
+    let calendarActionEnabled = false;
+    let calendarConfig: CalendarConfig | null = null;
+    
+    try {
+      console.log(`[Calendar Action] Checking calendar for chatbot ${tempChatbotId}`);
+      console.log(`[Calendar Action] Chatbot calendar enabled: ${chatbot.calendarEnabled}, calendarId: ${chatbot.calendarId}`);
+      
+      if (chatbot.calendarEnabled && chatbot.calendarId) {
+        // Fetch the calendar directly from the database instead of making an HTTP request
+        const calendar = await prisma.calendar.findUnique({
+          where: {
+            id: chatbot.calendarId
+          }
+        });
+        
+        console.log(`[Calendar Action] Calendar found:`, calendar ? 'Yes' : 'No');
+        
+        if (calendar) {
+          console.log(`[Calendar Action] Calendar validated successfully:`, calendar.name);
+          
+          calendarActionEnabled = true;
+          // Build calendar config from the calendar data
+          calendarConfig = {
+            defaultCalendarId: chatbot.calendarId,
+            askForDuration: (calendar as any).askForDuration ?? true,
+            askForNotes: (calendar as any).askForNotes ?? true,
+            defaultDuration: (calendar as any).defaultDuration || 30,
+            bufferBetweenAppointments: (calendar as any).bufferBetweenAppointments || 15,
+            maxBookingsPerSlot: (calendar as any).maxBookingsPerSlot || 1,
+            minimumAdvanceNotice: (calendar as any).minimumAdvanceNotice || 60,
+            requirePhoneNumber: (calendar as any).requirePhoneNumber ?? true,
+            defaultLocation: (calendar as any).defaultLocation || null,
+            bookingPrompt: (calendar as any).bookingPrompt || 'I can help you schedule appointments on our calendar.',
+            confirmationMessage: (calendar as any).confirmationMessage || 'I\'ve successfully scheduled your appointment! You will receive a confirmation email.',
+          };
+          
+          console.log(`[Calendar Action] Calendar config built:`, calendarConfig);
+          } else {
+          console.log(`[Calendar Action] Calendar not found in database`);
+        }
+      } else {
+        console.log(`[Calendar Action] Calendar not enabled or no calendar ID set`);
+      }
+    } catch (error) {
+      console.error('[Calendar Action] Error checking calendar configuration:', error);
+      // Continue without calendar action if there's an error
+      calendarActionEnabled = false;
+    }
+    
+    console.log(`[Calendar Action] Final state - Enabled: ${calendarActionEnabled}`);
+    
     // Fetch knowledge sources
     const knowledgeSourcesResponse = await fetch(
       `${req.headers.get('origin')}/api/knowledge-sources?chatbotId=${tempChatbotId}`,
@@ -135,102 +204,37 @@ export async function POST(req: Request) {
       }
     }
 
-    // Combine the chatbot's prompt with knowledge and messages
-    let systemPrompt = chatbot.prompt || 'You are a helpful AI assistant.';
-    
-    // Add strong instruction to speak in first person as the business - put at the beginning for emphasis
-    systemPrompt = `YOU ARE THE COMPANY/BUSINESS ITSELF. Speak in first person plural (we/us/our) at all times. You must ONLY provide information about our specific business, products, and services.
-
-CORE PRINCIPLES:
-1. Stay within our business context - never provide general information about topics outside our specific offerings
-2. If information is not in our knowledge base or approved websites:
-   - Say "I apologize, but I don't have specific information about that topic in our knowledge base."
-   - Add "I'll make note of your inquiry to help us improve our information."
-   - Never make up information or provide general knowledge
-3. Only use information from:
-   - Our approved knowledge base
-   - Our specifically configured websites
-   - Our documented business policies and procedures
-
-IMPORTANT RESPONSE INSTRUCTIONS:
-1. ALL responses must be in FIRST PERSON PLURAL (we/us/our) as the business itself
-2. ANY information retrieved from the knowledge base or file search MUST be reformatted into first person
-3. NEVER quote text directly - always rewrite information as if you (the business) are speaking
-4. For ALL types of content (PDF, text, QA, websites) maintain consistent first-person voice
-5. Begin responses with phrases like "We offer..." or "Our service provides..." rather than "The company offers..."
-6. AVOID phrases like "according to the document" or "the text states" - incorporate information naturally
-
-${systemPrompt}\n\n`;
-
-    // Add instructions for web search with stronger guidance
-    if (useWebSearch && websiteUrls.length > 0) {
-      systemPrompt += `\n\nWEB SEARCH INSTRUCTIONS:
-I have access to real-time search on our approved websites. I must search these sites when:
-1. The user asks about topics mentioned in the search instructions
-2. The information might need to be current (prices, availability, etc.)
-3. The knowledge base doesn't have the specific information needed
-4. Search the specific websites for the most current information, do not use general web search.
-
-Approved websites and their use cases:`;
-      
-      // Add specific instructions for each website
-      for (const site of websiteInstructions) {
-        try {
-          const domain = new URL(site.url).hostname;
-          if (site.instructions && site.instructions.trim()) {
-            systemPrompt += `\n\n• ${site.url}\n  REQUIRED SEARCH CASES:\n  - ${site.instructions}`;
-          } else {
-            systemPrompt += `\n\n• ${site.url}\n  REQUIRED SEARCH CASES:\n  - When users ask about information from this website\n  - When current information is needed`;
-          }
-        } catch (e) {
-          // Fallback if URL parsing fails
-          if (site.instructions && site.instructions.trim()) {
-            systemPrompt += `\n\n• ${site.url}\n  REQUIRED SEARCH CASES:\n  - ${site.instructions}`;
-          } else {
-            systemPrompt += `\n\n• ${site.url}\n  REQUIRED SEARCH CASES:\n  - When users ask about information from this website\n  - When current information is needed`;
-          }
+    // Fetch user/company information
+    let companyName = 'the company';
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          id: chatbot.userId
+        },
+        select: {
+          companyName: true
         }
-      }
+      });
       
-      systemPrompt += `\n\nIMPORTANT: You MUST search these websites when the query matches any of the specified cases. Do not rely on general knowledge - either use our knowledge base or search our approved websites.`;
+      if (user?.companyName) {
+        companyName = user.companyName;
+      }
+    } catch (error) {
+      console.error('Error fetching user/company data:', error);
     }
-    
-    // Add context about knowledge base access without mentioning uploads
-    if (useFileSearch) {
-      systemPrompt += `\n\nYou have access to a curated knowledge base to help answer questions accurately. You should ALWAYS search this knowledge base before responding to user questions. Use the file search capability to retrieve relevant information. 
 
-KNOWLEDGE BASE INSTRUCTIONS:
-1. When retrieving information from our knowledge base, ALWAYS convert it to first-person plural (we/us/our)
-2. Never present knowledge as "the document says" or "according to the file" - speak as the business directly
-3. Maintain our brand voice consistently regardless of how the information is stored
-4. Important: Never mention "uploaded files" or suggest that the user has uploaded any documents. The knowledge base was prepared by administrators, not the current user.`;
-
-      // Add special handling for catalog data
-      systemPrompt += `\n\nCATALOG DATA INSTRUCTIONS:
-1. Our product catalog contains manually entered product information including names, descriptions, pricing, and images
-2. When working with product data from our catalog:
-   - Present the information as if you are a salesperson knowledgeable about our offerings
-   - Format prices, descriptions, and other details in a conversational, helpful way
-   - ALWAYS use first-person plural - "We offer this product at $X" not "The product costs $X"
-   - If a product has an image, you can share it by including the imageUrl in your response
-3. For product images:
-   - When a user first asks about a specific product or ask for pricing, proactively include the image URL in your response
-   - Only share a product's image URL once per conversation unless specifically asked again
-   - If a user asks to see the product or image again, include the URL in your response
-   - Simply insert the full image URL in your response text and it will render as an image
-   - Example: "We offer our Premium Widget for $99. Here's what it looks like: https://example.com/image.jpg"
-   - If a product doesn't have an image, you can mention this: "We don't currently have an image for this product" or something simple and friendly.
-4. For any product inquiry:
-   - Search thoroughly through our product catalog before responding
-   - Present product information clearly, accurately, and conversationally
-   - Include product images where available by sharing the image URL
-   - NEVER say you can't find information without searching the knowledge base first
-   - If multiple products match, present options clearly to help the user choose`;
-    }
-    
-    const fullPrompt = !useFileSearch && !useWebSearch && knowledge
-      ? `${systemPrompt}\n\nHere is relevant knowledge to help answer questions:\n${knowledge}`
-      : systemPrompt;
+    // Build system prompt using the utility function
+    const systemPrompt = buildSystemPrompt({
+      chatbotName: chatbot.name,
+      companyName,
+      basePrompt: chatbot.prompt || 'You are a helpful AI assistant.',
+      calendarEnabled: calendarActionEnabled,
+      calendarConfig,
+      useFileSearch,
+      useWebSearch,
+      websiteInstructions,
+      knowledge
+    });
 
     // --- MOVE webSearchOptions DEFINITION EARLIER --- 
     // Configure web search options
@@ -258,19 +262,28 @@ KNOWLEDGE BASE INSTRUCTIONS:
 
     // Define tools specifically for the Responses API (Restored)
     const toolsForResponsesApi = [];
+    
+    // Add calendar booking tools if enabled
+    if (calendarActionEnabled && calendarConfig) {
+      console.log(`[Responses API] Using calendar_booking tool with calendar ID:`, calendarConfig.defaultCalendarId);
+      toolsForResponsesApi.push(...getCalendarTools(calendarConfig));
+    }
+    
     if (useFileSearch && vectorStoreIds.length > 0) {
       console.log(`[Responses API] Using file_search with vector store IDs:`, vectorStoreIds);
       toolsForResponsesApi.push({ 
           type: "file_search",
+          file_search: {
           vector_store_ids: vectorStoreIds,
+          }
         });
       }
-    // Restore web_search_preview tool 
+    // Restore web_search tool 
       if (useWebSearch) {
-      console.log(`[Responses API] Using web_search_preview with options:`, webSearchOptions);
+      console.log(`[Responses API] Using web_search with options:`, webSearchOptions);
       toolsForResponsesApi.push({ 
-          type: "web_search_preview",
-        ...webSearchOptions // webSearchOptions is defined earlier
+          type: "web_search",
+          web_search: webSearchOptions // webSearchOptions is defined earlier
       });
     }
     
@@ -285,27 +298,162 @@ KNOWLEDGE BASE INSTRUCTIONS:
        return new Response('Missing messages', { status: 400 });
     }
       
+    // Build conversation history for the Responses API
+    let conversationInput = [];
+    
+    // If this is a continuing conversation, fetch previous messages from the database
+    if (threadId) {
+      try {
+        // Get the timestamp of the oldest message in the current request to avoid duplicates
+        const currentMessagesTimestamp = new Date();
+        
+        // Fetch previous messages from the database (excluding any that might be in the current request)
+        const previousMessages = await prisma.message.findMany({
+          where: {
+            threadId: threadId,
+            chatbotId: chatbotId,
+            createdAt: {
+              lt: currentMessagesTimestamp // Only get messages before this request
+            }
+          },
+          orderBy: {
+            createdAt: 'desc' // Get newest first
+          },
+          take: 20 // Get last 20 messages (10 exchanges)
+        });
+        
+        // Reverse to get chronological order
+        previousMessages.reverse();
+        
+        // Convert database messages to the format expected by Responses API
+        for (const msg of previousMessages) {
+          // Add user message
+          conversationInput.push({
+            type: "message",
+            role: "user",
+            content: [{
+              type: "input_text",
+              text: msg.message
+            }]
+          });
+          
+          // Add assistant response
+          if (msg.response) {
+            conversationInput.push({
+              type: "message",
+              role: "assistant",
+              content: [{
+                type: "output_text",
+                text: msg.response
+              }]
+            });
+          }
+        }
+        
+        console.log(`[Responses API] Loaded ${previousMessages.length} previous messages for context`);
+      } catch (error) {
+        console.error('[Responses API] Error fetching conversation history:', error);
+        // Continue without history if there's an error
+      }
+    }
+    
+    // Add the current user message
+    conversationInput.push({
+      type: "message",
+      role: "user",
+      content: [{
+        type: "input_text",
+        text: userInput
+      }]
+    });
+    
+    // Get the previous response ID if this is a continuing conversation
+    let previousResponseId = null;
+    if (threadId && messages.length > 1) {
+      try {
+        // Get the most recent assistant message from the database
+        // We'll use the message ID as the response ID for assistant messages
+        const lastAssistantMessage = await prisma.message.findFirst({
+          where: {
+            threadId: threadId,
+            from: 'assistant',
+            chatbotId: chatbotId
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          select: {
+            id: true
+          }
+        });
+        
+        if (lastAssistantMessage?.id) {
+          // The message ID contains the response ID for assistant messages
+          previousResponseId = lastAssistantMessage.id;
+          console.log(`[Responses API] Using previous_response_id: ${previousResponseId}`);
+        }
+      } catch (error) {
+        console.error('[Responses API] Error fetching previous response ID:', error);
+        // Continue without previous response ID
+      }
+    }
+      
     // Construct the payload for the Responses API call
     const responsesPayload = {
         model: modelName,
-        instructions: fullPrompt,
-        input: userInput,
+        instructions: systemPrompt,
+        input: conversationInput, // Use the full conversation history
         temperature: chatbot.temperature || 0.7,
         max_output_tokens: chatbot.maxCompletionTokens || 1000,
         stream: true,
         tools: toolsForResponsesApi.length > 0 ? toolsForResponsesApi : undefined,
+        // Add previous_response_id for conversation continuity
+        previous_response_id: previousResponseId
     };
+    
+    console.log(`[Chat Interface] Tools being sent:`, toolsForResponsesApi.length, 'tools');
+    if (toolsForResponsesApi.length > 0) {
+      console.log(`[Chat Interface] Tool types:`, toolsForResponsesApi.map(t => t.type || t.function?.name).join(', '));
+      console.log(`[Chat Interface] Full tools array:`, JSON.stringify(toolsForResponsesApi, null, 2));
+    }
+    console.log(`[Chat Interface] Calendar action enabled:`, calendarActionEnabled);
 
     let responseStream;
     try {
       console.log("[Responses API] Calling openai.responses.create with full toolset");
+      console.log("[Responses API] Payload:", JSON.stringify({
+        model: responsesPayload.model,
+        instructions: responsesPayload.instructions.substring(0, 200) + '...',
+        input: responsesPayload.input.length + ' messages',
+        temperature: responsesPayload.temperature,
+        max_output_tokens: responsesPayload.max_output_tokens,
+        stream: responsesPayload.stream,
+        tools: responsesPayload.tools ? responsesPayload.tools.length + ' tools' : 'no tools',
+        previous_response_id: responsesPayload.previous_response_id
+      }, null, 2));
+      
       responseStream = await openai.responses.create(responsesPayload as any); 
+      
+      // For non-streaming response (debugging)
+      if (!responsesPayload.stream) {
+        console.log("[Responses API] Non-streaming response received");
+        const response = responseStream as any;
+        console.log("[Responses API] Response:", JSON.stringify(response, null, 2));
+        
+        // Return the response as JSON for debugging
+        return NextResponse.json({
+          output: response.output,
+          usage: response.usage,
+          id: response.id
+        });
+      }
 
       // Create a proper text stream for the Vercel AI SDK in 'text' protocol mode
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async start(controller) {
           let completion = '';
+          let responseId = null; // Capture the response ID
           
           try {
             console.log("[Responses API] Starting stream processing");
@@ -314,6 +462,123 @@ KNOWLEDGE BASE INSTRUCTIONS:
             for await (const chunk of responseStream) {
               // Log for debugging
               console.log('[Responses API Chunk]', JSON.stringify(chunk));
+              
+              // Log chunk type specifically
+              if (chunk.type) {
+                console.log('[Responses API] Chunk type:', chunk.type);
+              }
+              
+              // Capture response ID from the first chunk
+              if (!responseId && chunk.id) {
+                responseId = chunk.id;
+                console.log('[Responses API] Captured response ID:', responseId);
+              }
+              
+              // Handle function calls based on actual chunk types from logs
+              if (chunk.type === 'response.output_item.done' && chunk.item?.type === 'function_call') {
+                console.log('[Responses API] Function call completed:', chunk.item.name);
+                console.log('[Responses API] Function arguments:', chunk.item.arguments);
+                const functionCall = chunk.item;
+                
+                if (functionCall.name === 'check_availability') {
+                  try {
+                    const args = JSON.parse(functionCall.arguments);
+                    console.log('[Calendar Tool] Checking availability with args:', args);
+                    
+                    const result = await handleCheckAvailability(args, calendarConfig);
+                    const resultData = JSON.parse(result);
+                    
+                    const resultMsg = resultData.message;
+                    completion += resultMsg;
+                    controller.enqueue(encoder.encode(resultMsg));
+                  } catch (e) {
+                    console.error('[Calendar Tool] Error:', e);
+                    const errorMsg = "Sorry, I couldn't check the calendar availability.";
+                    completion += errorMsg;
+                    controller.enqueue(encoder.encode(errorMsg));
+                  }
+                }
+                else if (functionCall.name === 'book_appointment') {
+                    try {
+                    const args = JSON.parse(functionCall.arguments);
+                    console.log('[Calendar Tool] Booking appointment with args:', args);
+                    
+                      const result = await handleBookAppointment(args, calendarConfig, chatbot.userId);
+                    const resultData = JSON.parse(result);
+                    
+                    const resultMsg = resultData.message;
+                    completion += resultMsg;
+                    controller.enqueue(encoder.encode(resultMsg));
+                    } catch (e) {
+                    console.error('[Calendar Tool] Error:', e);
+                    const errorMsg = "Sorry, there was an error booking your appointment.";
+                    completion += errorMsg;
+                    controller.enqueue(encoder.encode(errorMsg));
+                  }
+                }
+                else if (functionCall.name === 'view_appointment') {
+                  try {
+                    const args = JSON.parse(functionCall.arguments);
+                    console.log('[Calendar Tool] Viewing appointment with args:', args);
+                    
+                    const result = await handleViewAppointment(args);
+                    const resultData = JSON.parse(result);
+                    
+                    const resultMsg = resultData.message;
+                    completion += resultMsg;
+                    controller.enqueue(encoder.encode(resultMsg));
+                  } catch (e) {
+                    console.error('[Calendar Tool] Error:', e);
+                    const errorMsg = "Sorry, I couldn't retrieve the appointment details.";
+                    completion += errorMsg;
+                    controller.enqueue(encoder.encode(errorMsg));
+                  }
+                }
+                else if (functionCall.name === 'modify_appointment') {
+                  try {
+                    const args = JSON.parse(functionCall.arguments);
+                    console.log('[Calendar Tool] Modifying appointment with args:', args);
+                    
+                    const result = await handleModifyAppointment(args, calendarConfig);
+                    const resultData = JSON.parse(result);
+                    
+                    const resultMsg = resultData.message;
+                    completion += resultMsg;
+                    controller.enqueue(encoder.encode(resultMsg));
+                  } catch (e) {
+                    console.error('[Calendar Tool] Error:', e);
+                    const errorMsg = "Sorry, I couldn't modify the appointment.";
+                    completion += errorMsg;
+                    controller.enqueue(encoder.encode(errorMsg));
+                  }
+                }
+                else if (functionCall.name === 'cancel_appointment') {
+                  try {
+                    const args = JSON.parse(functionCall.arguments);
+                    console.log('[Calendar Tool] Canceling appointment with args:', args);
+                    
+                    const result = await handleCancelAppointment(args);
+                    const resultData = JSON.parse(result);
+                    
+                    const resultMsg = resultData.message;
+                    completion += resultMsg;
+                    controller.enqueue(encoder.encode(resultMsg));
+                  } catch (e) {
+                    console.error('[Calendar Tool] Error:', e);
+                    const errorMsg = "Sorry, I couldn't cancel the appointment.";
+                    completion += errorMsg;
+                    controller.enqueue(encoder.encode(errorMsg));
+                  }
+                }
+                continue;
+              }
+              
+              // Handle the completed response
+              if (chunk.type === 'response.completed' && chunk.response?.output) {
+                console.log('[Responses API] Response completed with output');
+                // Don't process function calls here as they're already handled in response.output_item.done
+                continue;
+              }
               
               // Extract text based on chunk type
               let chunkText = '';
@@ -349,8 +614,8 @@ KNOWLEDGE BASE INSTRUCTIONS:
             
             if (userId && threadId && userInput && completion) {
               try {
-                await prisma.message.create({ 
-                  data: { 
+                // Use the response ID as the message ID if available
+                const messageData: any = { 
                      message: userInput,
                      response: completion,
                      threadId: threadId,
@@ -358,10 +623,18 @@ KNOWLEDGE BASE INSTRUCTIONS:
                      userId: userId,
                      chatbotId: chatbotId,
                      read: false,
+                };
+                
+                // If we have a response ID, use it as the message ID for the assistant response
+                if (responseId) {
+                  messageData.id = responseId;
                   } 
+                
+                await prisma.message.create({ 
+                  data: messageData
                 });
                 
-                console.log(`[DB SAVE] Successfully saved message pair for thread ${threadId}`);
+                console.log(`[DB SAVE] Successfully saved message pair for thread ${threadId} with response ID: ${responseId}`);
               } catch (dbError) {
                 console.error(`[DB SAVE ERROR] Failed to save message for thread ${threadId}:`, dbError);
               }

@@ -34,6 +34,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RiUserLine, RiBriefcaseLine, RiBankCardLine } from "@remixicon/react";
+import { PricingDialog } from '@/components/billing/pricing-dialog';
+import { AccountDetailsTab } from './components/AccountDetailsTab';
+import { BusinessInformationTab } from './components/BusinessInformationTab';
+import { BillingOverview } from './components/BillingOverview';
+import { PaymentMethodsSection } from './components/PaymentMethodsSection';
+import { InvoicesSection } from './components/InvoicesSection';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
@@ -66,7 +73,7 @@ function PaymentMethodForm({ clientSecret, onSuccess, onCancel }: {
       return;
     }
 
-    const { error: confirmError } = await stripe.confirmSetup({
+    const { error: confirmError, setupIntent } = await stripe.confirmSetup({
       elements,
       clientSecret,
       confirmParams: {
@@ -78,9 +85,27 @@ function PaymentMethodForm({ clientSecret, onSuccess, onCancel }: {
     if (confirmError) {
       setError(confirmError.message || "An error occurred while confirming your payment method");
       setProcessing(false);
-    } else {
-      // If no redirect happened, the setup was successful
-      onSuccess();
+    } else if (setupIntent) {
+      // Save the payment method to the database
+      try {
+        const response = await fetch('/api/billing/payment-methods/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ setupIntentId: setupIntent.id }),
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          onSuccess();
+        } else {
+          setError(data.message || 'Failed to save payment method');
+          setProcessing(false);
+        }
+      } catch (err) {
+        setError('Failed to save payment method');
+        setProcessing(false);
+      }
     }
   };
 
@@ -156,13 +181,21 @@ export default function SettingsPage() {
   const [industryType, setIndustryType] = useState('');
 
   // Mock usage data
-  const usageData = [
-    { resource: 'Messages', usage: '3,450', maximum: '12,000', percentage: 28 },
-    { resource: 'SMS Messages', usage: '85', maximum: '150', percentage: 56 },
-    { resource: 'Web Searches', usage: '320', maximum: '500', percentage: 64 },
-    { resource: 'Documents', usage: '2', maximum: '3', percentage: 66 },
-    { resource: 'Conversation Summaries', usage: '210', maximum: '400', percentage: 52 },
-  ];
+  const [usageData, setUsageData] = useState<Array<{
+    resource: string;
+    usage: string;
+    maximum: string;
+    percentage: number;
+    overage: number;
+    overageCost: number;
+  }>>([]);
+  const [overageCost, setOverageCost] = useState<number>(0);
+  const [phoneNumbers, setPhoneNumbers] = useState<Array<{
+    id: string;
+    phoneNumber: string;
+    monthlyPrice: number;
+    status: string;
+  }>>([]);
 
   // Mock billing history
   const billingHistory = [
@@ -211,6 +244,33 @@ export default function SettingsPage() {
     { id: 'sms', label: 'SMS' },
   ];
 
+  const [showPricingDialog, setShowPricingDialog] = useState(false);
+
+  const fetchPhoneNumbers = async () => {
+    try {
+      const response = await fetch('/api/twilio/phone-numbers');
+      const data = await response.json();
+      
+      if (data.success && data.phoneNumbers) {
+        // Format phone numbers for billing display
+        const formattedPhoneNumbers = data.phoneNumbers
+          .map((phone: any) => ({
+            id: phone.id,
+            phoneNumber: phone.number, // API returns 'number' not 'phoneNumber'
+            monthlyPrice: parseFloat(phone.monthlyFee.replace('$', '')) || 7.99, // Parse from $7.99 format
+            status: phone.calculatedStatus || 'active'
+          }));
+        
+        setPhoneNumbers(formattedPhoneNumbers);
+      } else {
+        setPhoneNumbers([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch phone numbers:', error);
+      setPhoneNumbers([]);
+    }
+  };
+
   useEffect(() => {
     // Fetch user data
     if (session?.user) {
@@ -220,14 +280,24 @@ export default function SettingsPage() {
       // Fetch user notification preferences
       fetchUserPreferences();
       
-      // Fetch payment methods and subscription
+      // Fetch payment methods and subscription first
       fetchPaymentMethods();
       fetchSubscription();
       
       // Fetch user profile details
       fetchUserProfile();
+      
+      // Fetch phone numbers
+      fetchPhoneNumbers();
     }
   }, [session]);
+
+  // Separate useEffect to fetch usage data after currentPlan is set
+  useEffect(() => {
+    if (currentPlan) {
+      fetchUsageData();
+    }
+  }, [currentPlan]);
 
   // Check for Stripe redirect completion
   useEffect(() => {
@@ -349,6 +419,118 @@ export default function SettingsPage() {
       }
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
+    }
+  };
+
+  const fetchUsageData = async () => {
+    try {
+      // Fetch both usage tracking data and real database counts
+      const [usageResponse, agentsResponse, messageCountResponse] = await Promise.all([
+        fetch('/api/billing/usage'),
+        fetch('/api/chatbots'), // Get real agent/chatbot count
+        fetch('/api/billing/message-count') // Get real message count
+      ]);
+      
+      const usageData = await usageResponse.json();
+      const agentsData = await agentsResponse.json();
+      const messageCountData = await messageCountResponse.json();
+      
+      if (usageData.success && usageData.summary) {
+        const summary = usageData.summary;
+        
+        // Get current plan for proper limits - more robust detection
+        const priceId = currentPlan?.priceId || currentPlan?.stripePriceId || '';
+        let planType = 'starter'; // default
+        
+        if (priceId === process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID) {
+          planType = 'starter';
+        } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID) {
+          planType = 'growth';
+        } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID) {
+          planType = 'scale';
+        } else {
+          // Fallback: try to detect from plan name or other properties
+          const planName = currentPlan?.name?.toLowerCase() || '';
+          if (planName.includes('scale')) {
+            planType = 'scale';
+          } else if (planName.includes('growth')) {
+            planType = 'growth';
+          } else if (planName.includes('starter')) {
+            planType = 'starter';
+          }
+        }
+        
+        // Define correct plan limits based on pricing
+        const planLimits = {
+          starter: { agents: 1, messages: 2000, sms: 50, webSearches: 25, voiceMinutes: 30 },
+          growth: { agents: 5, messages: 12000, sms: 150, webSearches: 100, voiceMinutes: 120 },
+          scale: { agents: 10, messages: 25000, sms: 400, webSearches: 250, voiceMinutes: 300 }
+        };
+        
+        const currentLimits = planLimits[planType as keyof typeof planLimits];
+        
+        // Get real agent count from API response
+        const actualAgentCount = agentsData.chatbots ? agentsData.chatbots.length : (Array.isArray(agentsData) ? agentsData.length : 0);
+        
+        // Get real message count from API response
+        const actualMessageCount = messageCountData.success ? (messageCountData.messageCount || 0) : 0;
+        
+        // Format usage data for display
+        const formattedUsage = [
+          {
+            resource: 'Agents',
+            usage: actualAgentCount.toLocaleString(),
+            maximum: `${currentLimits.agents} included`,
+            percentage: currentLimits.agents > 0 ? Math.round((actualAgentCount / currentLimits.agents) * 100) : 0,
+            overage: Math.max(0, actualAgentCount - currentLimits.agents),
+            overageCost: Math.max(0, actualAgentCount - currentLimits.agents) * 10 // $10 per additional agent
+          },
+          {
+            resource: 'Messages',
+            usage: actualMessageCount.toLocaleString(),
+            maximum: `${currentLimits.messages.toLocaleString()} included`,
+            percentage: Math.round((actualMessageCount / currentLimits.messages) * 100),
+            overage: Math.max(0, actualMessageCount - currentLimits.messages),
+            overageCost: Math.max(0, actualMessageCount - currentLimits.messages) * 0.01 // Estimated overage cost
+          },
+          {
+            resource: 'SMS Messages', 
+            usage: (summary.usage.sms || 0).toLocaleString(),
+            maximum: `${currentLimits.sms.toLocaleString()} included`,
+            percentage: Math.round(((summary.usage.sms || 0) / currentLimits.sms) * 100),
+            overage: Math.max(0, (summary.usage.sms || 0) - currentLimits.sms),
+            overageCost: summary.overageCosts.sms || 0
+          },
+          {
+            resource: 'Web Searches',
+            usage: (summary.usage.webSearches || 0).toLocaleString(), 
+            maximum: `${currentLimits.webSearches.toLocaleString()} included`,
+            percentage: Math.round(((summary.usage.webSearches || 0) / currentLimits.webSearches) * 100),
+            overage: Math.max(0, (summary.usage.webSearches || 0) - currentLimits.webSearches),
+            overageCost: summary.overageCosts.webSearches || 0
+          },
+          {
+            resource: 'Voice Minutes',
+            usage: (summary.usage.voiceMinutes || 0).toLocaleString(),
+            maximum: currentLimits.voiceMinutes > 0 ? `${currentLimits.voiceMinutes.toLocaleString()} included` : 'Not included',
+            percentage: currentLimits.voiceMinutes > 0 ? Math.round(((summary.usage.voiceMinutes || 0) / currentLimits.voiceMinutes) * 100) : 0,
+            overage: Math.max(0, (summary.usage.voiceMinutes || 0) - currentLimits.voiceMinutes),
+            overageCost: summary.overageCosts.voiceMinutes || 0
+          }
+        ];
+        
+        setUsageData(formattedUsage);
+        setOverageCost(summary.overageCosts.total || 0);
+      } else {
+        // Use empty array as fallback
+        setUsageData([]);
+        setOverageCost(0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch usage data:', error);
+      // Use empty array as fallback
+      setUsageData([]);
+      setOverageCost(0);
     }
   };
 
@@ -613,10 +795,11 @@ export default function SettingsPage() {
     if (!currentPlan) return {
       name: 'No active plan',
       price: '$0',
-      features: []
+      features: [] as string[],
+      nextBillingDate: undefined as string | undefined
     };
     
-    // This would be dynamically determined based on the plan from the API
+    // Map Stripe price IDs to plan details
     const planInfo = {
       starter: {
         name: 'Starter Plan',
@@ -626,7 +809,7 @@ export default function SettingsPage() {
       growth: {
         name: 'Growth Plan',
         price: '$199 per month',
-        features: ['3 Agents', '12,000 Messages', 'Priority Support']
+        features: ['5 Agents', '12,000 Messages', 'Priority Support']
       },
       scale: {
         name: 'Scale Plan',
@@ -635,17 +818,42 @@ export default function SettingsPage() {
       }
     };
     
-    // Determine which plan the user is on
-    const planId = currentPlan.priceId || '';
-    let plan = planInfo.starter;
+    // Determine which plan the user is on based on their stripePriceId
+    const priceId = currentPlan.priceId || currentPlan.stripePriceId || '';
+    let selectedPlan = planInfo.starter;
     
-    if (planId === process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID) {
-      plan = planInfo.growth;
-    } else if (planId === process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID) {
-      plan = planInfo.scale;
+    // Use the correct environment variables
+    if (priceId === process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID) {
+      selectedPlan = planInfo.starter;
+    } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID) {
+      selectedPlan = planInfo.growth;
+    } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID) {
+      selectedPlan = planInfo.scale;
+    } else {
+      // Fallback: try to detect from plan name or other properties
+      const planName = currentPlan?.name?.toLowerCase() || '';
+      if (planName.includes('scale')) {
+        selectedPlan = planInfo.scale;
+      } else if (planName.includes('growth')) {
+        selectedPlan = planInfo.growth;
+      } else if (planName.includes('starter')) {
+        selectedPlan = planInfo.starter;
+      }
     }
     
-    return plan;
+    // Return plan details with optional billing date
+    return {
+      name: selectedPlan.name,
+      price: selectedPlan.price,
+      features: selectedPlan.features,
+      nextBillingDate: currentPlan.currentPeriodEnd 
+        ? new Date(currentPlan.currentPeriodEnd).toLocaleDateString('en-US', { 
+            month: 'long', 
+            day: 'numeric',
+            year: 'numeric'
+          })
+        : undefined
+    };
   };
 
   const planDetails = getPlanDetails();
@@ -693,603 +901,73 @@ export default function SettingsPage() {
         Manage your personal details, notifications, business information, and billing information.
       </p>
       <Tabs defaultValue="account" className="mt-8">
-        <TabsList variant="line" className="overflow-x-auto whitespace-nowrap">
-          <TabsTrigger value="account" className="inline-flex gap-2">
-            Account details
+        <TabsList variant="line">
+          <TabsTrigger value="account" className="inline-flex items-center gap-2">
+            <RiUserLine className="size-4 sm:-ml-1" aria-hidden="true" /> 
+            <span className="hidden sm:inline">Account details</span>
           </TabsTrigger>
-          <TabsTrigger value="business" className="inline-flex gap-2">
-            Business Information
+          <TabsTrigger value="business" className="inline-flex items-center gap-2">
+            <RiBriefcaseLine className="size-4 sm:-ml-1" aria-hidden="true" /> 
+            <span className="hidden sm:inline">Business Information</span>
           </TabsTrigger>
-          <TabsTrigger value="billing" className="inline-flex gap-2">
-            Billing
+          <TabsTrigger value="billing" className="inline-flex items-center gap-2">
+            <RiBankCardLine className="size-4 sm:-ml-1" aria-hidden="true" /> 
+            <span className="hidden sm:inline">Billing</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Account Details Tab */}
         <TabsContent value="account" className="mt-8 space-y-8">
-          <form onSubmit={handleUpdateProfile}>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-50">
-              Personal Information
-            </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
-              Update your personal information associated with this account.
-            </p>
-            <div className="mt-6">
-              <Label htmlFor="fullName" className="font-medium">
-                Full Name
-              </Label>
-              <Input
-                type="text"
-                id="fullName"
-                name="fullName"
-                placeholder="John Smith"
-                className="mt-2 w-full sm:max-w-lg"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="mt-6">
-              <Label htmlFor="email" className="font-medium">
-                Email Address
-              </Label>
-              <Input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="john@company.com"
-                className="mt-2 w-full sm:max-w-lg"
-                value={email}
-                disabled
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Your email is used for login and cannot be changed.
-              </p>
-            </div>
-
-            {/* Add address fields to account tab */}
-            <div className="space-y-6 mt-8">
-              <h3 className="text-lg font-medium">Address Information</h3>
-              
-              <div>
-                <Label htmlFor="addressLine1" className="font-medium">
-                  Address Line 1
-                </Label>
-                <Input
-                  type="text"
-                  id="addressLine1"
-                  name="addressLine1"
-                  placeholder="123 Main St"
-                  className="mt-2 w-full sm:max-w-lg"
-                  value={addressLine1}
-                  onChange={(e) => setAddressLine1(e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="addressLine2" className="font-medium">
-                  Address Line 2 (Optional)
-                </Label>
-                <Input
-                  type="text"
-                  id="addressLine2"
-                  name="addressLine2"
-                  placeholder="Apartment, suite, etc."
-                  className="mt-2 w-full sm:max-w-lg"
-                  value={addressLine2}
-                  onChange={(e) => setAddressLine2(e.target.value)}
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <div>
-                  <Label htmlFor="city" className="font-medium">
-                    City
-                  </Label>
-                  <Input
-                    type="text"
-                    id="city"
-                    name="city"
-                    placeholder="New York"
-                    className="mt-2 w-full"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="state" className="font-medium">
-                    State/Province
-                  </Label>
-                  <Input
-                    type="text"
-                    id="state"
-                    name="state"
-                    placeholder="NY"
-                    className="mt-2 w-full"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="postalCode" className="font-medium">
-                    Postal Code
-                  </Label>
-                  <Input
-                    type="text"
-                    id="postalCode"
-                    name="postalCode"
-                    placeholder="10001"
-                    className="mt-2 w-full"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="country" className="font-medium">
-                  Country
-                </Label>
-                <Select 
-                  value={country} 
-                  onValueChange={setCountry}
-                >
-                  <SelectTrigger className="mt-2 w-full sm:max-w-lg">
-                    <SelectValue placeholder="Select a country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="US">United States</SelectItem>
-                    <SelectItem value="CA">Canada</SelectItem>
-                    <SelectItem value="GB">United Kingdom</SelectItem>
-                    <SelectItem value="AU">Australia</SelectItem>
-                    <SelectItem value="DE">Germany</SelectItem>
-                    <SelectItem value="FR">France</SelectItem>
-                    <SelectItem value="JP">Japan</SelectItem>
-                    <SelectItem value="CN">China</SelectItem>
-                    <SelectItem value="IN">India</SelectItem>
-                    <SelectItem value="BR">Brazil</SelectItem>
-                    {/* Add more countries as needed */}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Button type="submit" className="mt-6" disabled={isLoading}>
-              {isLoading ? 'Updating...' : 'Update Information'}
-            </Button>
-          </form>
-
-          <Divider />
-          
-          <form onSubmit={handleUpdateNotifications}>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-50">
-              Notification Settings
-            </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
-              Configure how and when you receive notifications.
-            </p>
-            
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5 flex-1 mr-4">
-                  <Label htmlFor="notifications" className="text-sm font-medium">
-                    Inquiry Notifications
-                  </Label>
-                  <p className="text-xs text-gray-500">
-                    Receive email notifications when there are new inquiries.
-                  </p>
-                </div>
-                <Switch 
-                  id="notifications" 
-                  checked={notificationsEnabled}
-                  onCheckedChange={setNotificationsEnabled}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5 flex-1 mr-4">
-                  <Label htmlFor="marketing" className="text-sm font-medium">
-                    Marketing Emails
-                  </Label>
-                  <p className="text-xs text-gray-500">
-                    Receive emails about new features and product updates.
-                  </p>
-                </div>
-                <Switch 
-                  id="marketing" 
-                  checked={marketingEnabled}
-                  onCheckedChange={setMarketingEnabled}
-                />
-              </div>
-            </div>
-            
-            <Button type="submit" className="mt-6" disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save Notification Settings'}
-            </Button>
-          </form>
+          <AccountDetailsTab />
         </TabsContent>
 
         {/* Business Information Tab */}
         <TabsContent value="business" className="mt-8 space-y-8">
-          <form onSubmit={handleUpdateBusinessInfo}>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-50">
-              Business Information
-            </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
-              Update your company details to help us customize your experience.
-            </p>
-            
-            <div className="grid grid-cols-1 gap-6 mt-8 md:grid-cols-2">
-              <div>
-                <Label htmlFor="companyName" className="font-medium">
-                  Company Name
-                </Label>
-                <Input
-                  type="text"
-                  id="companyName"
-                  name="companyName"
-                  placeholder="Acme Inc."
-                  className="mt-2 w-full"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="businessWebsite" className="font-medium">
-                  Business Website (Optional)
-                </Label>
-                <Input
-                  type="text"
-                  id="businessWebsite"
-                  name="businessWebsite"
-                  placeholder="https://example.com"
-                  className="mt-2 w-full"
-                  value={businessWebsite}
-                  onChange={(e) => setBusinessWebsite(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2">
-              <div>
-                <Label htmlFor="companySize" className="font-medium">
-                  Company Size
-                </Label>
-                <Select 
-                  value={companySize} 
-                  onValueChange={setCompanySize}
-                >
-                  <SelectTrigger className="mt-2 w-full">
-                    <SelectValue placeholder="Select company size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {companySizes.map(size => (
-                      <SelectItem key={size.id} value={size.id}>
-                        {size.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="industryType" className="font-medium">
-                  Industry Type
-                </Label>
-                <Select 
-                  value={industryType} 
-                  onValueChange={setIndustryType}
-                >
-                  <SelectTrigger className="mt-2 w-full">
-                    <SelectValue placeholder="Select industry" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {industryTypes.map(industry => (
-                      <SelectItem key={industry.id} value={industry.id}>
-                        {industry.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <Button type="submit" className="mt-8" disabled={isLoading}>
-              {isLoading ? 'Updating...' : 'Update Business Information'}
-            </Button>
-          </form>
+          <BusinessInformationTab />
         </TabsContent>
 
         {/* Billing Tab */}
         <TabsContent value="billing" className="mt-8 space-y-8">
-          {/* Current Plan */}
+          <div className="max-w-4xl space-y-10">
           <div>
             <h2 className="font-semibold text-gray-900 dark:text-gray-50">
-              Current Plan
+                Billing overview
             </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
-              Your current subscription plan and details.
-            </p>
-            
-            <Card className="mt-4 p-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">{planDetails.name}</h3>
-                  <p className="text-sm text-gray-500">{planDetails.price}</p>
-                  <ul className="mt-4 space-y-2 text-sm">
-                    {planDetails.features.map((feature, index) => (
-                      <li key={index} className="flex items-center">
-                        <svg className="h-4 w-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+                {currentPlan 
+                  ? `See the breakdown of your costs for the upcoming payment.`
+                  : 'Your workspace has no active plan. Choose a plan to get started with AI agents.'
+                }{' '}
+                <button
+                  onClick={() => setShowPricingDialog(true)}
+                  className="inline-flex items-center gap-1 text-indigo-500 hover:underline hover:underline-offset-4 dark:text-indigo-400"
+                >
+                  {currentPlan ? 'Compare pricing plans' : 'View plans'}
+                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <Button variant="light">Change Plan</Button>
-              </div>
-              
-              {currentPlan && currentPlan.currentPeriodEnd && (
-                <p className="mt-6 text-sm text-gray-500">
-                  Next billing date: {new Date(currentPlan.currentPeriodEnd).toLocaleDateString()}
-                </p>
-              )}
-            </Card>
-          </div>
+                </button>
+              </p>
 
-          <Divider />
-
-          {/* Usage Section */}
-          <div>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-50">
-              Usage
-            </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
-              Monitor your current usage across different services.
-            </p>
-            
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {usageData.map((item) => (
-                <Card key={item.resource} className="p-4 hover:bg-gray-50 transition-colors">
-                  <p className="text-sm text-gray-500">
-                    {item.resource}
-                  </p>
-                  <p className="mt-3 flex items-end">
-                    <span className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
-                      {item.usage}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-500 ml-1">
-                      /{item.maximum}
-                    </span>
-                  </p>
-                  
-                  <div className="mt-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-indigo-500 rounded-full" 
-                      style={{ width: `${item.percentage}%` }}
-                    />
-                  </div>
-                </Card>
-              ))}
+              <BillingOverview
+                currentPlan={currentPlan}
+                usageData={usageData}
+                phoneNumbers={phoneNumbers}
+                overageCost={overageCost}
+                onShowPricingDialog={() => setShowPricingDialog(true)}
+              />
             </div>
-          </div>
-
-          <Divider />
-          
-          {/* Payment Methods */}
-          <div>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-50">
-              Payment Methods
-            </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
-              Manage your payment methods for billing.
-            </p>
             
-            <Card className="mt-4 p-4 sm:p-6">
-              <div className="space-y-4">
-                {isLoading && paymentMethods.length === 0 && !showPaymentForm ? (
-                  <div className="py-8 text-center text-gray-500">
-                    <div className="flex justify-center mb-4">
-                      <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                    <p>Loading payment methods...</p>
-                  </div>
-                ) : showPaymentForm && clientSecret ? (
-                  <div className="py-4">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50 mb-4">Add Payment Method</h3>
-                    <Elements stripe={stripePromise} options={{ 
-                      clientSecret,
-                      appearance: {
-                        theme: 'stripe',
-                        variables: {
-                          colorPrimary: '#3b82f6',
-                          colorBackground: '#ffffff',
-                          colorText: '#1f2937',
-                          colorDanger: '#ef4444',
-                          fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
-                          borderRadius: '6px',
-                        },
-                        labels: 'floating',
-                      },
-                      loader: 'auto',
-                    }}>
-                      <PaymentMethodForm 
-                        clientSecret={clientSecret}
-                        onSuccess={handlePaymentSuccess}
-                        onCancel={handlePaymentCancel}
-                      />
-                    </Elements>
-                  </div>
-                ) : isAddingPaymentMethod && !showPaymentForm ? (
-                  <div className="py-12 text-center">
-                    <div className="flex justify-center mb-4">
-                      <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50 mb-2">Preparing payment form...</h3>
-                    <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-                      Please wait while we securely set up your payment method with Stripe.
-                    </p>
-                  </div>
-                ) : paymentMethods.length === 0 ? (
-                  <div className="py-12 text-center">
-                    <div className="flex justify-center mb-4">
-                      <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50 mb-2">No payment methods added</h3>
-                    <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-                      Add a payment method to easily manage your subscription and make future purchases without re-entering your card details.
-                    </p>
-                    <Button 
-                      onClick={handleAddPaymentMethod}
-                      disabled={isAddingPaymentMethod}
-                      className="mx-auto"
-                    >
-                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                      Add Payment Method
-                    </Button>
-                  </div>
-                ) : (
-                  paymentMethods.map((method) => (
-                    <div key={method.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors gap-4 sm:gap-0">
-                      <div className="flex items-center">
-                        {getCardBrandIcon(method.card.brand)}
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-gray-50">
-                            {formatCardBrand(method.card?.brand)} ending in {method.card?.last4 || '****'}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Expires {method.card?.exp_month || '--'}/{method.card?.exp_year || '----'} 
-                            {method.isDefault && <span className="text-green-500 ml-2 font-medium">Default</span>}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
-                        {!method.isDefault && (
-                          <Button 
-                            variant="ghost" 
-                            onClick={() => handleSetDefaultPaymentMethod(method.id)}
-                            disabled={isLoading || isAddingPaymentMethod || showPaymentForm}
-                            className="w-full sm:w-auto justify-center"
-                          >
-                            {isLoading ? (
-                              <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                              </svg>
-                            ) : (
-                              <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            )}
-                            Set Default
-                          </Button>
-                        )}
-                        <Button 
-                          variant="ghost" 
-                          className="text-red-500" 
-                          onClick={() => handleRemovePaymentMethod(method.id, method.card.brand, method.card.last4)}
-                          disabled={isLoading || isAddingPaymentMethod || showPaymentForm}
-                        >
-                          {isLoading ? (
-                            <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                          ) : (
-                            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          )}
-                          Remove
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-                
-                {paymentMethods.length > 0 && !showPaymentForm && (
-                  <div className="pt-4 border-t border-gray-100 mt-4">
-                    <Button 
-                      variant="light" 
-                      onClick={handleAddPaymentMethod}
-                      disabled={isLoading || isAddingPaymentMethod}
-                    >
-                      {isAddingPaymentMethod ? (
-                        <>
-                          <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Adding Payment Method...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                          Add Payment Method
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-                
-                {/* Secure payment info */}
-                <div className="flex items-center p-4 mt-6 text-sm text-gray-500 bg-gray-50 rounded-lg">
-                  <svg className="h-5 w-5 text-gray-400 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  <div>
-                    <p>Payment information is securely processed and stored by Stripe. We never store your full card details on our servers.</p>
-                    <p className="mt-1">Your payment method will be used for subscription charges and any future purchases you make.</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
+            <PaymentMethodsSection
+              onAddPaymentMethod={() => setIsAddPaymentMethodDialogOpen(true)}
+              onDeletePaymentMethod={(id, details) => {
+                setSelectedPaymentMethodId(id);
+                setSelectedPaymentMethodDetails(details);
+                setIsDeletePaymentMethodDialogOpen(true);
+              }}
+            />
 
-          <Divider />
-          
-          {/* Billing History */}
-          <div>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-50">
-              Billing History
-            </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
-              View your past invoices and payment history.
-            </p>
-            
-            <Card className="mt-4 overflow-hidden">
-              <div className="overflow-x-auto">
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Description</TableCell>
-                    <TableCell>Amount</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell className="text-right">Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <InvoiceList />
-                </TableBody>
-              </Table>
-              </div>
-            </Card>
+            <InvoicesSection />
           </div>
         </TabsContent>
       </Tabs>
@@ -1312,6 +990,74 @@ export default function SettingsPage() {
           last4: selectedPaymentMethodDetails.last4
         } : undefined}
         onConfirm={handleDeletePaymentMethodConfirm}
+      />
+
+      {/* Pricing Dialog */}
+      <PricingDialog
+        open={showPricingDialog}
+        onOpenChange={setShowPricingDialog}
+        currentPlan={currentPlan}
+        hasPaymentMethods={paymentMethods.length > 0}
+        paymentMethods={paymentMethods}
+        onPlanConfirmed={async (planId: string) => {
+          try {
+            const planMap = {
+              'starter': process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID,
+              'growth': process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID,
+              'scale': process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID,
+            };
+
+            const stripePriceId = planMap[planId as keyof typeof planMap];
+            if (!stripePriceId) {
+              throw new Error('Price ID not configured');
+            }
+
+            // Show loading state
+            toast.loading('Processing your subscription...');
+
+            const response = await fetch('/api/billing/confirm-subscription', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                priceId: stripePriceId,
+                planId: planId
+              }),
+            });
+
+            const result = await response.json();
+            
+            // Dismiss loading toast
+            toast.dismiss();
+            
+            if (!response.ok) {
+              throw new Error(result.error || 'Failed to process subscription');
+            }
+
+            if (result.success) {
+              // Success!
+              toast.success(result.message || 'Subscription processed successfully!');
+              
+              // Refresh the page data
+              await Promise.all([
+                fetchSubscription(),
+                fetchUsageData(),
+                fetchPaymentMethods(),
+                fetchPhoneNumbers()
+              ]);
+              
+              // Close the dialog (handled by parent in PricingDialog)
+            } else {
+              throw new Error(result.error || 'Unexpected response format');
+            }
+          } catch (error) {
+            console.error('Error processing subscription:', error);
+            toast.dismiss();
+            toast.error(error instanceof Error ? error.message : 'Failed to process subscription');
+            throw error; // Re-throw to let the dialog handle it
+          }
+        }}
       />
     </div>
   );

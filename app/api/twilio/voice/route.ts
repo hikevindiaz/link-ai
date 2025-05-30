@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import twilio from 'twilio';
+import OpenAI from 'openai';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Verify Twilio webhook signature
 const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
@@ -76,24 +82,40 @@ export async function POST(req: NextRequest) {
       CallSid: callSid
     } = twilioData;
     
-    if (!from || !to) {
-      console.error('Missing required voice webhook parameters');
-      return NextResponse.json(
-        { error: 'Missing required parameters' },
-        { status: 400 }
-      );
+    // Extract agentId from URL query parameters
+    const url = new URL(req.url);
+    const agentId = url.searchParams.get('agentId');
+    
+    // If no agent ID, try to look up by phone number
+    let agent;
+    
+    if (agentId) {
+      console.log(`Looking up agent with ID: ${agentId}`);
+      agent = await prisma.chatbot.findUnique({
+        where: { id: agentId },
+        include: {
+          model: true,
+        }
+      });
+    } else if (to) {
+      console.log(`No agent ID provided, looking up by phone number: ${to}`);
+      // Look up the phone number in our database
+      const phoneNumber = await prisma.twilioPhoneNumber.findFirst({
+        where: { phoneNumber: to },
+        include: {
+          chatbot: {
+            include: {
+              model: true,
+            }
+          }
+        }
+      });
+      
+      agent = phoneNumber?.chatbot;
     }
     
-    // Look up the phone number in our database
-    const phoneNumber = await prisma.twilioPhoneNumber.findFirst({
-      where: { phoneNumber: to },
-      include: {
-        chatbot: true
-      }
-    });
-    
-    if (!phoneNumber) {
-      console.error('Phone number not found in database:', to);
+    if (!agent) {
+      console.error('No agent found for this call');
       const twiml = new twilio.twiml.VoiceResponse();
       twiml.say('Sorry, this number is not configured to receive calls.');
       twiml.hangup();
@@ -105,29 +127,77 @@ export async function POST(req: NextRequest) {
       });
     }
     
-    // If there's a chatbot associated, start a voice conversation
-    if (phoneNumber.chatbot) {
-      console.log('Call will be handled by chatbot:', phoneNumber.chatbot.id);
+    console.log(`Call will be handled by agent: ${agent.name} (${agent.id})`);
+    
+    // Create a TwiML response
+    const twiml = new twilio.twiml.VoiceResponse();
+    
+    // Start with a welcome message using the agent's configuration
+    const welcomeMessage = agent.welcomeMessage || 'Hello! I\'m your AI assistant. How can I help you today?';
+    
+    // Set language based on agent configuration
+    const language = agent.language || 'en-US';
+    
+    // Get the configured silence and call timeouts
+    const silenceTimeout = agent.silenceTimeout || 5; // Default to 5 seconds if not specified
+    const callTimeoutSeconds = agent.callTimeout || 300; // Default to 5 minutes if not specified
+    
+    // Check if we should use ElevenLabs voice
+    if (agent.voice) {
+      console.log(`Using ElevenLabs voice ID: ${agent.voice}`);
+      // Generate the TTS endpoint URL for the welcome message
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000';
+      const ttsEndpoint = `${baseUrl}/api/twilio/tts?message=${encodeURIComponent(welcomeMessage)}&voice=${encodeURIComponent(agent.voice)}`;
       
-      const twiml = new twilio.twiml.VoiceResponse();
-      
-      // For now, just provide a simple response
-      twiml.say('Hello! This is an AI assistant. I\'m not fully configured yet, but will be available soon.');
-      twiml.pause({ length: 1 });
-      twiml.say('Thank you for calling. Goodbye.');
-      twiml.hangup();
-      
-      return new NextResponse(twiml.toString(), {
-        headers: {
-          'Content-Type': 'text/xml'
-        }
-      });
+      // Play the welcome message using ElevenLabs
+      twiml.play(ttsEndpoint);
+    } else {
+      // Fall back to Twilio TTS with Polly voices
+      const voice = 'Polly.Joanna';
+    twiml.say({ voice, language }, welcomeMessage);
     }
     
-    // If no chatbot is assigned, play a message and hang up
-    const twiml = new twilio.twiml.VoiceResponse();
-    twiml.say('This phone number is not configured with an AI assistant to handle voice calls.');
-    twiml.hangup();
+    // Use Gather to collect user speech
+    const gather = twiml.gather({
+      input: ['speech'],
+      speechTimeout: silenceTimeout,
+      speechModel: 'phone_call',
+      enhanced: true,
+      language: language,
+      action: `/api/twilio/voice/respond?agentId=${agent.id}`,
+      method: 'POST',
+      actionOnEmptyResult: true,
+    });
+    
+    // If user doesn't say anything, redirect to respond endpoint to handle silence
+    twiml.redirect(`/api/twilio/voice/respond?agentId=${agent.id}`);
+    
+    // Create a thread for this call if it doesn't exist
+    try {
+      const threadId = `call-${callSid}`;
+      const existingThread = await prisma.message.findFirst({
+        where: { threadId }
+      });
+      
+      if (!existingThread) {
+        // Create a new thread ID in the messages table
+        await prisma.message.create({
+          data: {
+            threadId,
+            message: "Call started",
+            response: welcomeMessage,
+            from: from,
+            userId: agent.userId,
+            chatbotId: agent.id,
+          }
+        });
+        
+        console.log(`Created thread ${threadId} for call from ${from}`);
+      }
+    } catch (dbError) {
+      console.error('Error creating call thread:', dbError);
+      // Continue with the call even if we couldn't create the thread
+    }
     
     return new NextResponse(twiml.toString(), {
       headers: {

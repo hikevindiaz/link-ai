@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db as prisma } from '@/lib/db';
 import Stripe from 'stripe';
 import { PaymentMethod } from '@prisma/client';
 
@@ -14,7 +14,7 @@ export async function GET() {
   try {
     // Get user session
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
@@ -23,7 +23,7 @@ export async function GET() {
 
     // Get user and their payment methods directly from the database
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email as string },
+      where: { id: session.user.id },
       include: { 
         paymentMethods: { // Fetch related payment methods
           orderBy: { isDefault: 'desc' } // Optional: order by default status

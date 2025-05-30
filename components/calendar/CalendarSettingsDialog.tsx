@@ -22,13 +22,16 @@ import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/icons";
 
 // Import the correct settings type from the API layer
-import type { CalendarSettingsInput } from "@/lib/api/appointments";
+import type { CalendarSettingsInput, CalendarUpdateInput } from "@/lib/api/appointments";
+
+// Button states for the save button
+type SaveButtonState = 'idle' | 'loading' | 'success' | 'error';
 
 interface CalendarSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialSettings: CalendarSettingsInput; // Use the imported type
-  onSave: (settings: CalendarSettingsInput) => void; // Use the imported type
+  initialSettings: CalendarSettingsInput & { name?: string }; // Include name for editing
+  onSave: (settings: CalendarUpdateInput) => Promise<void>; // Make it async for proper state handling
 }
 
 export function CalendarSettingsDialog({
@@ -37,34 +40,103 @@ export function CalendarSettingsDialog({
   initialSettings,
   onSave,
 }: CalendarSettingsDialogProps) {
-  const [settingsTab, setSettingsTab] = useState<string>("availability"); // Default to Availability
-  // Local state uses the flat CalendarSettingsInput type
-  const [currentSettings, setCurrentSettings] = useState<CalendarSettingsInput>(initialSettings);
+  const [settingsTab, setSettingsTab] = useState<string>("general"); // Default to General
+  // Local state uses the flat CalendarSettingsInput type with name
+  const [currentSettings, setCurrentSettings] = useState<CalendarSettingsInput & { name?: string }>(initialSettings);
+  const [saveButtonState, setSaveButtonState] = useState<SaveButtonState>('idle');
 
   // Reset local state when dialog reopens or initialSettings change
   useEffect(() => {
     if (open) {
       // Ensure initialSettings is not undefined/null before setting
       setCurrentSettings(initialSettings || {}); // Use initial or empty object
-      setSettingsTab("availability"); // Reset to first tab
+      setSettingsTab("general"); // Reset to first tab
+      setSaveButtonState('idle'); // Reset button state
     }
   }, [open, initialSettings]);
 
   // Generic handler for updating flat state properties
   const handleSettingChange = (
-    key: keyof CalendarSettingsInput,
+    key: keyof (CalendarSettingsInput & { name?: string }),
     value: any
   ) => {
-    // Handle number conversion for reminderTimeMinutes
-    const updatedValue = key === 'reminderTimeMinutes' ? Number(value) : value;
+    // Handle number conversions for numeric fields
+    let updatedValue = value;
+    if (['reminderTimeMinutes', 'defaultDuration', 'bufferBetweenAppointments', 'minimumAdvanceNotice', 'maxBookingsPerSlot'].includes(key)) {
+      updatedValue = Number(value);
+    }
     setCurrentSettings(prev => ({
       ...prev,
       [key]: updatedValue,
     }));
   };
 
-  const handleSaveChanges = () => {
-    onSave(currentSettings);
+  const handleSaveChanges = async () => {
+    setSaveButtonState('loading');
+    
+    try {
+      await onSave(currentSettings);
+      setSaveButtonState('success');
+      
+      // Show success state for 2 seconds, then back to idle (but keep dialog open)
+      setTimeout(() => {
+        setSaveButtonState('idle');
+      }, 2000);
+      
+    } catch (error) {
+      setSaveButtonState('error');
+      
+      // Show error state for 2 seconds, then back to idle
+      setTimeout(() => {
+        setSaveButtonState('idle');
+      }, 2000);
+    }
+  };
+
+  // Get button content based on state
+  const getButtonContent = () => {
+    switch (saveButtonState) {
+      case 'loading':
+        return (
+          <>
+            <Icons.spinner className="h-4 w-4 mr-2 animate-spin" />
+            Saving...
+          </>
+        );
+      case 'success':
+        return (
+          <>
+            <Icons.check className="h-4 w-4 mr-2" />
+            Saved!
+          </>
+        );
+      case 'error':
+        return (
+          <>
+            <Icons.close className="h-4 w-4 mr-2" />
+            Save Failed
+          </>
+        );
+      default:
+        return (
+          <>
+            <Icons.check className="h-4 w-4 mr-2" />
+            Save Changes
+          </>
+        );
+    }
+  };
+
+  // Get button variant based on state
+  const getButtonVariant = () => {
+    switch (saveButtonState) {
+      case 'success':
+        return 'primary'; // Use primary color for success
+      case 'error':
+        return 'destructive';
+      default:
+        return 'primary';
+    }
   };
 
   return (
@@ -78,21 +150,42 @@ export function CalendarSettingsDialog({
         </DialogHeader>
         
         <Tabs value={settingsTab} onValueChange={setSettingsTab} className="mt-4">
-          <TabsList className="grid grid-cols-2 mb-4"> {/* Changed to 2 columns */}
-            {/* Remove General Tab for now */}
-            {/* <TabsTrigger value="general" className="flex items-center gap-2"> ... </TabsTrigger> */}
+          <TabsList className="grid grid-cols-4 mb-4">
+            <TabsTrigger value="general" className="flex items-center gap-2">
+              <Icons.settings className="h-4 w-4" />
+              <span>General</span>
+            </TabsTrigger>
             <TabsTrigger value="availability" className="flex items-center gap-2">
               <Icons.clock className="h-4 w-4" />
-              <span>Availability</span>
+              <span>Hours</span>
+            </TabsTrigger>
+            <TabsTrigger value="booking" className="flex items-center gap-2">
+              <Icons.calendar className="h-4 w-4" />
+              <span>Booking</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Icons.bell className="h-4 w-4" />
-              <span>Notifications</span>
+              <span>Alerts</span>
             </TabsTrigger>
           </TabsList>
           
-          {/* Remove General Settings Tab Content */}
-          {/* <TabsContent value="general" className="space-y-4"> ... </TabsContent> */}
+          {/* General Settings */}
+          <TabsContent value="general" className="space-y-6 pt-2">
+            <div>
+              <h3 className="text-sm font-medium mb-2">Calendar Information</h3>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Calendar Name</label>
+                  <Input 
+                    type="text"
+                    placeholder="Enter calendar name"
+                    value={currentSettings.name || ''}
+                    onChange={(e) => handleSettingChange('name', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
           
           {/* Availability Settings - Use flat properties */} 
           <TabsContent value="availability" className="space-y-6 pt-2">
@@ -184,51 +277,152 @@ export function CalendarSettingsDialog({
             </div>
           </TabsContent>
           
-          {/* Notification Settings - Use flat properties */} 
-          <TabsContent value="notifications" className="space-y-6 pt-2">
-             <div className="space-y-1">
-                 <label htmlFor="notificationEmail" className="text-sm text-gray-500">Notification Email Address</label>
-                 <Input 
-                     id="notificationEmail"
-                     type="email"
-                     placeholder="Enter email for notifications" 
-                     value={currentSettings.notificationEmail || ''}
-                     onChange={(e) => handleSettingChange('notificationEmail', e.target.value)}
-                 />
-             </div>
-
+          {/* Booking Configuration Settings */}
+          <TabsContent value="booking" className="space-y-6 pt-2">
             <div>
-              <h3 className="text-sm font-medium mb-2">Notification Preferences</h3>
+              <h3 className="text-sm font-medium mb-2">Booking Preferences</h3>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">Email Booking Notifications</label>
+                  <label className="text-sm text-gray-700">Ask for appointment duration</label>
                   <input 
                     type="checkbox" 
-                     // Use notificationEmailEnabled
-                    checked={!!currentSettings.notificationEmailEnabled}
-                    onChange={(e) => handleSettingChange('notificationEmailEnabled', e.target.checked)}
+                    checked={!!currentSettings.askForDuration}
+                    onChange={(e) => handleSettingChange('askForDuration', e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                   />
                 </div>
-                {/* Remove Push Notifications toggle */}
-                {/* <div className="flex items-center justify-between"> ... </div> */}
-                 <div className="flex items-center justify-between p-3 border rounded-md">
-                   <label className="text-sm text-gray-700">Email Appointment Reminders</label>
-                   <input 
-                     type="checkbox" 
-                     // Use emailReminderEnabled
-                     checked={!!currentSettings.emailReminderEnabled}
-                     onChange={(e) => handleSettingChange('emailReminderEnabled', e.target.checked)}
-                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                   />
-                 </div>
                 <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">SMS Appointment Reminders (Requires Setup)</label>
+                  <label className="text-sm text-gray-700">Ask for appointment notes</label>
                   <input 
                     type="checkbox" 
-                     // Use smsReminderEnabled
+                    checked={!!currentSettings.askForNotes}
+                    onChange={(e) => handleSettingChange('askForNotes', e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-md">
+                  <label className="text-sm text-gray-700">Require phone number</label>
+                  <input 
+                    type="checkbox" 
+                    checked={!!currentSettings.requirePhoneNumber}
+                    onChange={(e) => handleSettingChange('requirePhoneNumber', e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-2">Scheduling Settings</h3>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Default Duration (minutes)</label>
+                  <Input 
+                    type="number"
+                    min="15"
+                    max="240"
+                    value={currentSettings.defaultDuration || 30}
+                    onChange={(e) => handleSettingChange('defaultDuration', parseInt(e.target.value) || 30)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Buffer Between Appointments (minutes)</label>
+                  <Input 
+                    type="number"
+                    min="0"
+                    max="120"
+                    value={currentSettings.bufferBetweenAppointments || 15}
+                    onChange={(e) => handleSettingChange('bufferBetweenAppointments', parseInt(e.target.value) || 15)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Minimum Advance Notice (minutes)</label>
+                  <Input 
+                    type="number"
+                    min="0"
+                    max="10080"
+                    value={currentSettings.minimumAdvanceNotice || 60}
+                    onChange={(e) => handleSettingChange('minimumAdvanceNotice', parseInt(e.target.value) || 60)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Max Bookings Per Slot</label>
+                  <Input 
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={currentSettings.maxBookingsPerSlot || 1}
+                    onChange={(e) => handleSettingChange('maxBookingsPerSlot', parseInt(e.target.value) || 1)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Default Location</label>
+                  <Input 
+                    type="text"
+                    placeholder="Office, Zoom link, etc."
+                    value={currentSettings.defaultLocation || ''}
+                    onChange={(e) => handleSettingChange('defaultLocation', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-medium mb-2">Custom Messages</h3>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Booking Prompt</label>
+                  <Input 
+                    type="text"
+                    placeholder="e.g., Please provide your reason for the appointment"
+                    value={currentSettings.bookingPrompt || ''}
+                    onChange={(e) => handleSettingChange('bookingPrompt', e.target.value)}
+                  />
+                  <p className="text-xs text-gray-400">Custom message shown during booking process</p>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm text-gray-500">Confirmation Message</label>
+                  <Input 
+                    type="text"
+                    placeholder="e.g., Your appointment has been confirmed! We'll send a reminder."
+                    value={currentSettings.confirmationMessage || ''}
+                    onChange={(e) => handleSettingChange('confirmationMessage', e.target.value)}
+                  />
+                  <p className="text-xs text-gray-400">Message shown after successful booking</p>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+          
+          {/* Notification Settings - Use flat properties */} 
+          <TabsContent value="notifications" className="space-y-6 pt-2">
+            <div>
+              <h3 className="text-sm font-medium mb-2">SMS Notification Settings</h3>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between p-3 border rounded-md">
+                  <label className="text-sm text-gray-700">Send SMS Confirmations</label>
+                  <input 
+                    type="checkbox" 
+                    checked={!!currentSettings.notificationSmsEnabled}
+                    onChange={(e) => handleSettingChange('notificationSmsEnabled', e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-md">
+                  <label className="text-sm text-gray-700">Send SMS Reminders</label>
+                  <input 
+                    type="checkbox" 
                     checked={!!currentSettings.smsReminderEnabled}
                     onChange={(e) => handleSettingChange('smsReminderEnabled', e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-md">
+                  <label className="text-sm text-gray-700">Require SMS Confirmation</label>
+                  <input 
+                    type="checkbox" 
+                    checked={!!currentSettings.confirmationRequired}
+                    onChange={(e) => handleSettingChange('confirmationRequired', e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                   />
                 </div>
@@ -238,9 +432,7 @@ export function CalendarSettingsDialog({
             <div className="space-y-1">
               <label className="text-sm text-gray-500">Reminder Time</label>
               <Select 
-                // Use reminderTimeMinutes (convert to string for value)
                 value={currentSettings.reminderTimeMinutes?.toString() || '30'} 
-                // Pass number back in handler
                 onValueChange={(value) => handleSettingChange('reminderTimeMinutes', value)}
               >
                 <SelectTrigger>
@@ -257,6 +449,28 @@ export function CalendarSettingsDialog({
                 </SelectContent>
               </Select>
             </div>
+            
+            <div className="space-y-1">
+              <label className="text-sm text-gray-500">Auto-Cancel Timeout (hours)</label>
+              <Input 
+                type="number"
+                min="1"
+                max="72"
+                value={currentSettings.confirmationTimeoutHours || 24}
+                onChange={(e) => handleSettingChange('confirmationTimeoutHours', parseInt(e.target.value) || 24)}
+              />
+              <p className="text-xs text-gray-400">Unconfirmed appointments will be cancelled after this time</p>
+            </div>
+            
+            <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>How SMS Notifications Work:</strong><br/>
+                • Clients receive SMS to confirm appointments<br/>
+                • They reply YES to confirm or NO to cancel<br/>
+                • Reminders are sent before appointments<br/>
+                • Requires a phone number assigned to your agent
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
         
@@ -267,9 +481,11 @@ export function CalendarSettingsDialog({
           >
             Cancel
           </Button>
-          <Button onClick={handleSaveChanges}>
-            <Icons.check className="h-4 w-4 mr-2" />
-            Save Changes
+          <Button 
+            variant={getButtonVariant()}
+            onClick={handleSaveChanges}
+          >
+            {getButtonContent()}
           </Button>
         </DialogFooter>
       </DialogContent>

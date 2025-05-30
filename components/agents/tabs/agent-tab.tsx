@@ -31,10 +31,9 @@ import { SettingsTabWrapper } from "@/components/agents/settings-tab-wrapper";
 interface AgentTabProps {
   agent: Agent;
   onSave: (data: Partial<Agent>) => Promise<void>;
-  form: ReturnType<typeof useForm<AgentFormValues>>;
 }
 
-export function AgentTab({ agent, onSave, form }: AgentTabProps) {
+export function AgentTab({ agent, onSave }: AgentTabProps) {
   const languageOptions = [
     { label: 'English', value: 'en' },
     { label: 'Spanish', value: 'es' },
@@ -48,6 +47,31 @@ export function AgentTab({ agent, onSave, form }: AgentTabProps) {
     { label: 'Arabic', value: 'ar' },
     { label: 'Hindi', value: 'hi' },
   ];
+  
+  // Create the form instance within the component
+  const form = useForm<AgentFormValues>({
+    resolver: zodResolver(agentSchema),
+    defaultValues: {
+      name: agent.name,
+      welcomeMessage: agent.welcomeMessage,
+      prompt: agent.prompt,
+      errorMessage: agent.errorMessage,
+      language: agent.language || 'en',
+      secondLanguage: agent.secondLanguage || 'none',
+    },
+  });
+  
+  // Reset form when agent changes
+  useEffect(() => {
+    form.reset({
+      name: agent.name,
+      welcomeMessage: agent.welcomeMessage,
+      prompt: agent.prompt,
+      errorMessage: agent.errorMessage,
+      language: agent.language || 'en',
+      secondLanguage: agent.secondLanguage || 'none',
+    });
+  }, [agent, form]);
   
   // State variables for tracking form changes
   const [isDirty, setIsDirty] = useState(false);
@@ -78,10 +102,16 @@ export function AgentTab({ agent, onSave, form }: AgentTabProps) {
       await onSave(saveData);
       
       form.reset(values);
-      toast.success("Basic settings saved successfully");
+      toast.success("Basic settings saved successfully", {
+        duration: 5000, // Increased from default to stay longer (5 seconds)
+        icon: <Icons.check className="h-5 w-5 text-green-500 animate-bounce" />,
+      });
     } catch (error) {
       console.error("Error saving settings:", error);
-      toast.error("Failed to save settings");
+      toast.error("Failed to save settings", {
+        duration: 5000,
+        icon: <Icons.warning className="h-5 w-5 text-red-500" />,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -105,176 +135,210 @@ export function AgentTab({ agent, onSave, form }: AgentTabProps) {
       onSave={handleSaveSettings}
       onCancel={handleCancel}
     >
-      <div className="space-y-6 pt-4">
-        {/* Basic Info */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
-            <div className="flex items-center gap-2">
-              <Icons.user className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-50">Basic Info</Label>
+      <Form {...form}>
+        <div className="space-y-6 pt-0 overflow-x-hidden w-full">
+          {/* Basic Info */}
+          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900 w-full">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+              <div className="flex items-center gap-2">
+                <Icons.user className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Label className="font-medium text-gray-900 dark:text-gray-50">Basic Info</Label>
+              </div>
             </div>
-          </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input 
-                      {...field}
-                      placeholder="Customer Service Agent"
-                      className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
-                    This name will be displayed to users when they interact with your agent.
-                  </p>
-                </FormItem>
-              )}
-            />
-          </div>
-        </Card>
-
-        {/* Welcome Message */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
-            <div className="flex items-center gap-2">
-              <Icons.message className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-50">Welcome Message</Label>
-            </div>
-          </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
-            <FormField
-              control={form.control}
-              name="welcomeMessage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input 
-                      {...field}
-                      placeholder="Hello, how can I help you today?"
-                      className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
-                    The welcome message that will be sent to the user when they start a conversation.
-                  </p>
-                </FormItem>
-              )}
-            />
-          </div>
-        </Card>
-
-        {/* Default Prompt */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
-            <div className="flex items-center gap-2">
-              <Icons.post className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-50">Default Prompt</Label>
-            </div>
-          </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
-            <FormField
-              control={form.control}
-              name="prompt"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Textarea 
-                      {...field}
-                      placeholder="You are a helpful assistant..."
-                      className="min-h-32 resize-y bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
-                    The system prompt that guides your agent's behavior. This is not seen by the user.
-                  </p>
-                </FormItem>
-              )}
-            />
-          </div>
-        </Card>
-
-        {/* Error Message */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
-            <div className="flex items-center gap-2">
-              <Icons.warning className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-50">Error Message</Label>
-            </div>
-          </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
-            <FormField
-              control={form.control}
-              name="errorMessage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input 
-                      {...field}
-                      placeholder="I'm sorry, I encountered an error. Please try again later."
-                      className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
-                    This message will be shown to users if there's an error processing their request.
-                  </p>
-                </FormItem>
-              )}
-            />
-          </div>
-        </Card>
-
-        {/* Language Settings */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
-            <div className="flex items-center gap-2">
-              <Icons.speech className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-50">Language Settings</Label>
-            </div>
-          </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
-            <div className="grid gap-6">
+            <div className="p-4 bg-white dark:bg-gray-900/50">
               <FormField
                 control={form.control}
-                name="language"
+                name="name"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Primary Language</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900">
-                          <SelectValue placeholder="Select language" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {languageOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <FormItem className="w-full">
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field}
+                        placeholder="Customer Service Agent"
+                        className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900 w-full"
+                      />
+                    </FormControl>
                     <FormMessage />
                     <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
-                      The primary language your agent will use to communicate.
+                      This name will be displayed to users when they interact with your agent.
                     </p>
                   </FormItem>
                 )}
               />
             </div>
-          </div>
-        </Card>
-      </div>
+          </Card>
+
+          {/* Welcome Message */}
+          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+              <div className="flex items-center gap-2">
+                <Icons.message className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Label className="font-medium text-gray-900 dark:text-gray-50">Welcome Message</Label>
+              </div>
+            </div>
+            <div className="p-4 bg-white dark:bg-gray-900/50">
+              <FormField
+                control={form.control}
+                name="welcomeMessage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input 
+                        {...field}
+                        placeholder="Hello, how can I help you today?"
+                        className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                      The welcome message that will be sent to the user when they start a conversation.
+                    </p>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Card>
+
+          {/* Default Prompt */}
+          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+              <div className="flex items-center gap-2">
+                <Icons.post className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Label className="font-medium text-gray-900 dark:text-gray-50">Default Prompt</Label>
+              </div>
+            </div>
+            <div className="p-4 bg-white dark:bg-gray-900/50">
+              <FormField
+                control={form.control}
+                name="prompt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea 
+                        {...field}
+                        placeholder="You are a helpful assistant..."
+                        className="min-h-32 resize-y bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                      The system prompt that guides your agent's behavior. This is not seen by the user.
+                    </p>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Card>
+
+          {/* Error Message */}
+          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+              <div className="flex items-center gap-2">
+                <Icons.warning className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Label className="font-medium text-gray-900 dark:text-gray-50">Error Message</Label>
+              </div>
+            </div>
+            <div className="p-4 bg-white dark:bg-gray-900/50">
+              <FormField
+                control={form.control}
+                name="errorMessage"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input 
+                        {...field}
+                        placeholder="I'm sorry, I encountered an error. Please try again later."
+                        className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                      This message will be shown to users if there's an error processing their request.
+                    </p>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </Card>
+
+          {/* Language Settings */}
+          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
+            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+              <div className="flex items-center gap-2">
+                <Icons.speech className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Label className="font-medium text-gray-900 dark:text-gray-50">Language Settings</Label>
+              </div>
+            </div>
+            <div className="p-4 bg-white dark:bg-gray-900/50">
+              <div className="grid gap-6">
+                <FormField
+                  control={form.control}
+                  name="language"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Primary Language</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900">
+                            <SelectValue placeholder="Select language" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {languageOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                      <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                        The primary language your agent will use to communicate.
+                      </p>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="secondLanguage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Secondary Language</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900">
+                            <SelectValue placeholder="Select secondary language" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {languageOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                      <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                        Optional secondary language support for your agent.
+                      </p>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          </Card>
+        </div>
+      </Form>
     </SettingsTabWrapper>
   );
 } 

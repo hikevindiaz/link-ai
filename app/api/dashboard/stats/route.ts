@@ -1,55 +1,60 @@
 import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-
-// Define our own colors
-const colorCombinations = [
-  { text: 'text-fuchsia-800 dark:text-fuchsia-500', bg: 'bg-fuchsia-100 dark:bg-fuchsia-500/20' },
-  { text: 'text-blue-800 dark:text-blue-500', bg: 'bg-blue-100 dark:bg-blue-500/20' },
-  { text: 'text-pink-800 dark:text-pink-500', bg: 'bg-pink-100 dark:bg-pink-500/20' },
-  { text: 'text-emerald-800 dark:text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-500/20' },
-  { text: 'text-orange-800 dark:text-orange-500', bg: 'bg-orange-100 dark:bg-orange-500/20' },
-  { text: 'text-indigo-800 dark:text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-500/20' },
-];
-
-interface UserInquiry {
-  id: string;
-  name: string;
-  initial: string;
-  textColor: string;
-  bgColor: string;
-  email: string;
-  href: string;
-  details: { type: string; value: string }[];
-}
-
-interface ChatbotError {
-  agent: string;
-  chatbotId: string;
-  threadId: string;
-  error: string;
-  date: string;
-}
 
 interface MessageData {
   createdAt: Date;
 }
 
-interface DailyData {
-  name: string;
-  total: number;
+// ADDED: Type for channel breakdown
+interface ChannelData {
+  [channel: string]: number;
 }
 
-interface ChatbotId {
-  id: string;
+// UPDATE: DailyData now includes channel breakdown
+interface DailyData {
+  name: string; // Date string YYYY-MM-DD
+  channels: ChannelData;
+}
+
+// ADDED: Interface for integration settings map
+interface IntegrationSettingsMap {
+  [integrationId: string]: {
+    isEnabled: boolean;
+  };
+}
+
+interface KpiDataFromApi {
+  name: string;
+  stat: string;
+  change: string;
+  changeType: 'positive' | 'negative';
+}
+
+// ADDED: Helper function to calculate percentage change
+function calculateChange(current: number, previous: number): { change: string; changeType: 'positive' | 'negative' } {
+  if (previous === 0) {
+    // Handle case where previous value was 0
+    if (current > 0) {
+      return { change: '+Inf%', changeType: 'positive' }; // Or some other indicator like '+100%' or 'New'
+    } else {
+      return { change: '0.0%', changeType: 'positive' }; // No change from zero
+    }
+  }
+
+  const changePercent = ((current - previous) / previous) * 100;
+  const changeType = changePercent >= 0 ? 'positive' : 'negative';
+  const changeString = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(1)}%`;
+
+  return { change: changeString, changeType };
 }
 
 // Mark this route as dynamic to avoid static generation errors
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -62,216 +67,278 @@ export async function GET() {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const fromParam = searchParams.get('from');
+    const toParam = searchParams.get('to');
+
+    let startDate = new Date();
+    startDate.setDate(startDate.getDate() - 29);
+    let endDate = new Date();
+
+    if (fromParam && !isNaN(Date.parse(fromParam))) {
+        startDate = new Date(fromParam);
+        startDate.setHours(0, 0, 0, 0);
+    }
+    if (toParam && !isNaN(Date.parse(toParam))) {
+        endDate = new Date(toParam);
+        endDate.setHours(23, 59, 59, 999);
+    }
+
+    if (endDate < startDate) {
+        endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999);
+    }
+
+    const periodDuration = endDate.getTime() - startDate.getTime();
+    const prevEndDate = new Date(startDate.getTime() - 1);
+    const prevStartDate = new Date(prevEndDate.getTime() - periodDuration);
+    prevEndDate.setHours(23, 59, 59, 999);
+    prevStartDate.setHours(0, 0, 0, 0);
+
+    // ADDED BACK: Define todayStart and todayEnd
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // --- Fetch Counts --- 
     let totalAgents = 0;
-    let totalFiles = 0;
-    let messageCountLast30Days = 0;
+    let totalKnowledgeSources = 0;
+    let messageCountPeriod = 0;
+    let messageCountToday = 0;
     let messages: MessageData[] = [];
+    let appointmentsCount = 0;
+    let formsCount = 0;
+    let formSubmissionsCount = 0;
+    let integrationSettings: IntegrationSettingsMap = {};
 
-    try {
-      totalAgents = await db.chatbot.count({
+    // ADDED: Variables for previous period counts
+    let prevMessageCountPeriod = 0;
+    let prevAppointmentsCount = 0;
+    let prevFormsCount = 0; // Assuming forms are not time-sensitive for change calc
+    let prevFormSubmissionsCount = 0;
+    // ADDED: Variables for phone number counts
+    let phoneNumberCount = 0;
+    let prevPhoneNumberCount = 0;
+
+    // Use Promise.all for concurrent fetching
+    await Promise.all([
+      // Fetch agent count (total)
+      db.chatbot.count({
         where: { userId: session.user.id },
-      });
-    } catch (error) {
-      console.error('Error counting chatbots:', error);
-    }
-
-    try {
-      totalFiles = await db.file.count({
+      }).then(count => totalAgents = count).catch(err => console.error('Error counting chatbots:', err)),
+      
+      // Fetch knowledge source count (total)
+      db.knowledgeSource.count({
         where: { userId: session.user.id },
-      });
-    } catch (error) {
-      console.error('Error counting files:', error);
-    }
+      }).then(count => totalKnowledgeSources = count).catch(err => console.error('Error counting knowledge sources:', err)),
 
-    try {
-      messageCountLast30Days = await db.message.count({
+      // Fetch message counts (current period, previous period, today)
+      db.message.count({
         where: {
           userId: session.user.id,
-          createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) },
+          createdAt: { gte: startDate, lte: endDate },
         },
-      });
+      }).then(count => messageCountPeriod = count).catch(err => console.error('Error counting current messages:', err)),
 
-      messages = await db.message.findMany({
+      db.message.count({
         where: {
           userId: session.user.id,
-          createdAt: { gte: new Date(new Date().setDate(new Date().getDate() - 30)) },
+          createdAt: { gte: prevStartDate, lte: prevEndDate },
         },
-        select: {
-          createdAt: true,
+      }).then(count => prevMessageCountPeriod = count).catch(err => console.error('Error counting previous messages:', err)),
+      
+      db.message.count({
+        where: {
+          userId: session.user.id,
+          createdAt: { gte: todayStart, lte: todayEnd },
         },
-      });
-    } catch (error) {
-      console.error('Error fetching messages:', error);
+      }).then(count => messageCountToday = count).catch(err => console.error('Error counting today messages:', err)),
+
+      // Fetch detailed messages for chart
+      db.message.findMany({
+        where: {
+          userId: session.user.id,
+          createdAt: { gte: startDate, lte: endDate },
+        },
+        select: { createdAt: true },
+        orderBy: { createdAt: 'asc' }
+      }).then(data => messages = data).catch(err => console.error('Error fetching message details:', err)),
+
+      // Fetch integration settings
+      db.userIntegrationSetting.findMany({
+        where: { userId: session.user.id },
+        select: { integrationId: true, isEnabled: true },
+      }).then(settings => {
+        integrationSettings = settings.reduce((acc, setting) => {
+          acc[setting.integrationId] = { isEnabled: setting.isEnabled };
+          return acc;
+        }, {} as IntegrationSettingsMap);
+      }).catch(err => console.error('Error fetching integration settings:', err)),
+
+      // ADDED: Fetch phone number counts (current and previous period - assuming registration date matters)
+      // Note: Adjust the `where` clause if change should be based on active status changes rather than purchase date.
+      db.twilioPhoneNumber.count({
+        where: { userId: session.user.id, status: 'active', purchasedAt: { gte: startDate, lte: endDate } },
+      }).then(count => phoneNumberCount = count).catch(err => console.error('Error counting current phone numbers:', err)),
+
+      db.twilioPhoneNumber.count({
+        where: { userId: session.user.id, status: 'active', purchasedAt: { gte: prevStartDate, lte: prevEndDate } },
+      }).then(count => prevPhoneNumberCount = count).catch(err => console.error('Error counting previous phone numbers:', err)),
+    ]);
+
+    // --- Fetch Conditional Counts (based on integration settings) --- 
+    const conditionalFetchPromises: Promise<number | void>[] = [];
+
+    if (integrationSettings['module-calendar']?.isEnabled) {
+      conditionalFetchPromises.push(
+        db.appointment.count({
+          where: { calendar: { userId: session.user.id }, createdAt: { gte: startDate, lte: endDate } },
+        }).then(count => appointmentsCount = count).catch(err => console.error('Error counting current appointments:', err)),
+        db.appointment.count({
+          where: { calendar: { userId: session.user.id }, createdAt: { gte: prevStartDate, lte: prevEndDate } },
+        }).then(count => prevAppointmentsCount = count).catch(err => console.error('Error counting previous appointments:', err))
+      );
     }
 
-    const data: DailyData[] = [];
-    for (let i = 0; i < 30; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const formattedDate = date.toISOString().split("T")[0];
-      data.push({ name: formattedDate, total: 0 });
+    if (integrationSettings['module-forms']?.isEnabled) {
+      conditionalFetchPromises.push(
+        db.form.count({ where: { userId: session.user.id } })
+          .then(count => formsCount = count).catch(err => console.error('Error counting forms:', err)),
+        
+        db.formSubmission.count({
+          where: { chatbot: { userId: session.user.id }, createdAt: { gte: startDate, lte: endDate } },
+        }).then(count => formSubmissionsCount = count).catch(err => console.error('Error counting current submissions:', err)),
+        db.formSubmission.count({
+          where: { chatbot: { userId: session.user.id }, createdAt: { gte: prevStartDate, lte: prevEndDate } },
+        }).then(count => prevFormSubmissionsCount = count).catch(err => console.error('Error counting previous submissions:', err))
+      );
     }
 
-    messages.forEach((message) => {
+    await Promise.all<number | void>(conditionalFetchPromises);
+
+    // --- Prepare Chart Data (with Channel Breakdown) --- 
+    // Fetch all messages within the period with their channel
+    const messagesWithChannel = await db.message.findMany({
+      where: {
+        userId: session.user.id,
+        createdAt: { gte: startDate, lte: endDate },
+      },
+      select: {
+        createdAt: true,
+        from: true, // Include the channel
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    // Initialize messagesPerDay map with all dates in the range
+    const messagesPerDayMap: Map<string, ChannelData> = new Map();
+    let tempCurrentDate = new Date(startDate);
+    tempCurrentDate.setHours(0, 0, 0, 0);
+    while (tempCurrentDate <= endDate) {
+      const formattedDate = tempCurrentDate.toISOString().split("T")[0];
+      messagesPerDayMap.set(formattedDate, {}); // Initialize channels object
+      tempCurrentDate.setDate(tempCurrentDate.getDate() + 1);
+    }
+
+    // Aggregate counts per channel per day
+    messagesWithChannel.forEach((message) => {
       const messageDate = message.createdAt.toISOString().split("T")[0];
-      const dataEntry = data.find((entry) => entry.name === messageDate);
-      if (dataEntry) {
-        dataEntry.total++;
+      const channel = message.from || 'unknown'; // Use 'unknown' if from is null/empty
+      const dayData = messagesPerDayMap.get(messageDate);
+      if (dayData) {
+        dayData[channel] = (dayData[channel] || 0) + 1;
       }
     });
 
-    data.reverse();
-
-    // Get chatbot IDs first
-    let chatbotIds: ChatbotId[] = [];
-    try {
-      chatbotIds = await db.chatbot.findMany({
-        where: { userId: session.user.id },
-        select: { id: true },
-      });
-      console.log('Found chatbot IDs:', chatbotIds);
-    } catch (error) {
-      console.error('Error fetching chatbot IDs:', error);
-    }
-
-    // Fetch user inquiries
-    let userInquiries: UserInquiry[] = [];
-    try {
-      const inquiriesData = await db.clientInquiries.findMany({
-        where: {
-          chatbotId: { in: chatbotIds.map((chatbot) => chatbot.id) },
-           deletedAt: null,
-        },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        select: {
-          id: true,
-          email: true,
-          threadId: true,
-          inquiry: true,
-          createdAt: true,
-          chatbotId: true,
-          chatbot: {
-            select: {
-              id: true,
-              name: true,
-            },
-          },
-        },
-      });
-
-      console.log('Raw inquiries data:', inquiriesData);
-
-      userInquiries = inquiriesData.map((inquiry) => {
-        // Get username from email (everything before @)
-    const emailUsername = inquiry.email.split('@')[0];
-    // Capitalize first letter and clean up any numbers or special chars for display
-    const nameToUse = emailUsername.replace(/[0-9_.-]/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+    // Convert map to the final array structure
+    const messagesPerDay: DailyData[] = Array.from(messagesPerDayMap.entries()).map(([date, channels]) => ({
+      name: date,
+      channels: channels,
+    }));
     
-    // Just use first letter for initial
-    const initial = nameToUse.charAt(0).toUpperCase();
-  
-    const daysAgo = Math.floor((Date.now() - new Date(inquiry.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-    const daysAgoText = daysAgo === 0 ? 'today' : daysAgo === 1 ? 'yesterday' : `${daysAgo}d ago`;
-  
-    // Use consistent color based on the initial letter
-    const colorIndex = initial.charCodeAt(0) % colorCombinations.length;
-    const color = colorCombinations[colorIndex];
+    // --- Prepare KPI Data with Change Calculation --- 
+    const kpiDataResult: KpiDataFromApi[] = [];
 
-    return {
-      id: inquiry.id,
-      name: nameToUse,
-      initial: initial,
-      textColor: color.text,
-      bgColor: color.bg,
-      email: inquiry.email,
-      href: `/dashboard/chatbots/${inquiry.chatbotId}/inquiries`,  // Added proper href
-      details: [
-        {
-          type: 'Agent',
-          value: inquiry.chatbot?.name || 'Unknown Agent',  // Using optional chaining
-        },
-        {
-          type: 'Date',
-          value: daysAgoText,
-        },
-      ],
-    };
-  });
+    // Agents (Total - Placeholder Change)
+    kpiDataResult.push({ 
+      name: 'Agents', 
+      stat: totalAgents.toString(), 
+      change: '', // Or some other indicator if needed
+      changeType: 'positive' 
+    });
 
-  console.log('Formatted user inquiries:', userInquiries);
-    } catch (error) {
-      console.error('Error fetching inquiries:', error);
+    // Knowledge Sources (Total - Placeholder Change)
+    kpiDataResult.push({ 
+      name: 'Knowledge Sources', 
+      stat: totalKnowledgeSources.toString(), 
+      change: '', 
+      changeType: 'positive' 
+    });
+
+    // Messages (Today vs Yesterday)
+    const yesterdayStart = new Date(todayStart);
+    yesterdayStart.setDate(todayStart.getDate() - 1);
+    const yesterdayEnd = new Date(todayEnd);
+    yesterdayEnd.setDate(todayEnd.getDate() - 1);
+    const messagesYesterday = await db.message.count({ 
+      where: { userId: session.user.id, createdAt: { gte: yesterdayStart, lte: yesterdayEnd } } 
+    });
+    const messagesTodayChange = calculateChange(messageCountToday, messagesYesterday);
+    kpiDataResult.push({ 
+      name: 'Messages', 
+      stat: messageCountToday.toString(), 
+      change: messagesTodayChange.change, 
+      changeType: messagesTodayChange.changeType 
+    });
+
+    // Conditional KPIs
+    if (integrationSettings['module-calendar']?.isEnabled) {
+      const appointmentsChange = calculateChange(appointmentsCount, prevAppointmentsCount);
+      kpiDataResult.push({ 
+        name: 'Appointments', 
+        stat: appointmentsCount.toString(), 
+        change: appointmentsChange.change, 
+        changeType: appointmentsChange.changeType 
+      });
+    }
+    if (integrationSettings['module-forms']?.isEnabled) {
+      // Forms (Total - Placeholder Change)
+      kpiDataResult.push({ 
+        name: 'Forms', 
+        stat: formsCount.toString(), 
+        change: '', 
+        changeType: 'positive' 
+      });
+      // Form Submissions (Period vs Previous Period)
+      const submissionsChange = calculateChange(formSubmissionsCount, prevFormSubmissionsCount);
+      kpiDataResult.push({ 
+        name: 'Form Submissions', 
+        stat: formSubmissionsCount.toString(), 
+        change: submissionsChange.change, 
+        changeType: submissionsChange.changeType 
+      });
     }
 
-    // Fetch chatbot errors
-    let chatbotErrors: ChatbotError[] = [];
-    try {
-      const errors = await db.chatbotErrors.findMany({
-        where: {
-          chatbotId: { in: chatbotIds.map((chatbot) => chatbot.id) },
-        },
-        orderBy: { createdAt: "desc" },
-        take: 6,
-        select: {
-          id: true,
-          chatbotId: true,
-          threadId: true,
-          errorMessage: true,
-          createdAt: true,
-        },
-      });
+    // ADDED: Phone Numbers KPI
+    const phoneNumbersChange = calculateChange(phoneNumberCount, prevPhoneNumberCount);
+    kpiDataResult.push({ 
+      name: 'Phone Numbers', 
+      stat: phoneNumberCount.toString(), 
+      change: phoneNumbersChange.change, 
+      changeType: phoneNumbersChange.changeType 
+    });
 
-      // Get chatbot names separately
-      const chatbotNamesForIds = await db.chatbot.findMany({
-        where: { 
-          id: { in: errors.map(error => error.chatbotId) } 
-        },
-        select: { 
-          id: true, 
-          name: true 
-        },
-      });
-
-      console.log('Raw errors data:', errors);
-
-      chatbotErrors = errors.map(error => ({
-        agent: chatbotNamesForIds.find(chatbot => chatbot.id === error.chatbotId)?.name || 'Unknown',
-        chatbotId: error.chatbotId,
-        threadId: error.threadId || 'N/A',
-        error: error.errorMessage || 'Unknown error',
-        date: new Date(error.createdAt).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
-      }));
-
-      console.log('Formatted errors:', chatbotErrors);
-    } catch (error) {
-      console.error('Error fetching chatbot errors:', error);
-    }
-
-    const stats = {
-      totalAgents,
-      totalFiles,
-      messageCountLast30Days,
-      messagesPerDay: data,
-      userInquiries,
-      chatbotErrors,
-    };
-
-    return NextResponse.json(stats);
+    return NextResponse.json({
+      kpiData: kpiDataResult,
+      messagesPerDay: messagesPerDay,
+      totalMessages: messageCountPeriod,
+    });
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
     return new NextResponse(
       JSON.stringify({
-        error: "Internal Server Error",
+        error: "Failed to fetch dashboard statistics",
       }),
       { status: 500 }
     );

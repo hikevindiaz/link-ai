@@ -13,5 +13,15 @@
     "ENABLE_EXPERIMENTAL_COREPACK": "0"
   },
   "framework": "nextjs",
-  "installCommand": "npm install --legacy-peer-deps"
+  "installCommand": "npm install --legacy-peer-deps",
+  "crons": [
+    {
+      "path": "/api/cron/calendar-notifications",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/phone-number-billing",
+      "schedule": "0 2 * * *"
+    }
+  ]
 } 

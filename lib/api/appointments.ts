@@ -42,27 +42,35 @@ export type AppointmentInput = {
 };
 
 
-// Type for Calendar settings input - Where should these live?
-// These fields are NOT currently in the Calendar model in schema.prisma
-// TODO: Decide where/how to store these settings. Add them to Calendar model?
+// Type for Calendar settings input - Now includes booking configuration
 export type CalendarSettingsInput = {
-    workingHoursStart?: string; // Already in schema
-    workingHoursEnd?: string; // Already in schema
-    includeSaturday?: boolean; // Already in schema
-    includeSunday?: boolean; // Already in schema
-    notificationEmail?: string; // Already in schema
-    notificationEmailEnabled?: boolean; // Already in schema
-    emailReminderEnabled?: boolean; // Already in schema
-    smsReminderEnabled?: boolean; // Already in schema
-    reminderTimeMinutes?: number; // Already in schema
-
-    // Fields used previously but NOT in schema:
-    // appointmentAutoConfirm?: boolean;
-    // showClientName?: boolean;
-    // allowCancellation?: boolean;
-    // allowRescheduling?: boolean;
-    // showTimeZone?: boolean;
-    // callTimeout?: number;
+    // Name field for calendar
+    name?: string;
+    
+    // Availability Settings
+    workingHoursStart?: string;
+    workingHoursEnd?: string;
+    includeSaturday?: boolean;
+    includeSunday?: boolean;
+    
+    // Notification Settings
+    notificationSmsEnabled?: boolean;
+    smsReminderEnabled?: boolean;
+    reminderTimeMinutes?: number;
+    confirmationRequired?: boolean;
+    confirmationTimeoutHours?: number;
+    
+    // Booking Configuration (new fields)
+    askForDuration?: boolean;
+    askForNotes?: boolean;
+    defaultDuration?: number;
+    bufferBetweenAppointments?: number;
+    maxBookingsPerSlot?: number;
+    minimumAdvanceNotice?: number;
+    requirePhoneNumber?: boolean;
+    defaultLocation?: string;
+    bookingPrompt?: string;
+    confirmationMessage?: string;
 };
 
 // --- Calendar Functions ---
@@ -94,24 +102,33 @@ export const updateCalendarSettings = async (
         throw new Error("Calendar not found or access denied.");
     }
 
-    // Update only the fields that actually exist in the Calendar model
+    // Update all fields including new booking configuration
     return prisma.calendar.update({
         where: { id: calendarId },
         data: {
-            // Fields from CalendarSettingsInput that match Calendar model
+            name: settings.name,
+            // Availability Settings
             workingHoursStart: settings.workingHoursStart,
             workingHoursEnd: settings.workingHoursEnd,
             includeSaturday: settings.includeSaturday,
             includeSunday: settings.includeSunday,
-            notificationEmail: settings.notificationEmail,
-            notificationEmailEnabled: settings.notificationEmailEnabled,
-            emailReminderEnabled: settings.emailReminderEnabled,
+            // Notification Settings
+            notificationSmsEnabled: settings.notificationSmsEnabled,
             smsReminderEnabled: settings.smsReminderEnabled,
             reminderTimeMinutes: settings.reminderTimeMinutes,
-            // Cannot update fields not in the schema like:
-            // appointmentAutoConfirm: settings.appointmentAutoConfirm,
-            // showClientName: settings.showClientName,
-            // etc.
+            confirmationRequired: settings.confirmationRequired,
+            confirmationTimeoutHours: settings.confirmationTimeoutHours,
+            // Booking Configuration
+            askForDuration: settings.askForDuration,
+            askForNotes: settings.askForNotes,
+            defaultDuration: settings.defaultDuration,
+            bufferBetweenAppointments: settings.bufferBetweenAppointments,
+            maxBookingsPerSlot: settings.maxBookingsPerSlot,
+            minimumAdvanceNotice: settings.minimumAdvanceNotice,
+            requirePhoneNumber: settings.requirePhoneNumber,
+            defaultLocation: settings.defaultLocation,
+            bookingPrompt: settings.bookingPrompt,
+            confirmationMessage: settings.confirmationMessage,
         },
     });
 };
@@ -331,15 +348,28 @@ export async function createCalendar(data: CalendarCreateInput): Promise<Calenda
     const calendarData = {
         userId,
         name: data.name,
+        // Availability Settings
         workingHoursStart: data.workingHoursStart ?? "09:00",
         workingHoursEnd: data.workingHoursEnd ?? "17:00",
         includeSaturday: data.includeSaturday ?? true,
         includeSunday: data.includeSunday ?? false,
-        notificationEmail: data.notificationEmail,
-        notificationEmailEnabled: data.notificationEmailEnabled ?? true,
-        emailReminderEnabled: data.emailReminderEnabled ?? true,
+        // Notification Settings
+        notificationSmsEnabled: data.notificationSmsEnabled ?? false,
         smsReminderEnabled: data.smsReminderEnabled ?? false,
         reminderTimeMinutes: data.reminderTimeMinutes ?? 30,
+        confirmationRequired: data.confirmationRequired ?? false,
+        confirmationTimeoutHours: data.confirmationTimeoutHours ?? 24,
+        // Booking Configuration (with defaults)
+        askForDuration: data.askForDuration ?? true,
+        askForNotes: data.askForNotes ?? true,
+        defaultDuration: data.defaultDuration ?? 30,
+        bufferBetweenAppointments: data.bufferBetweenAppointments ?? 15,
+        maxBookingsPerSlot: data.maxBookingsPerSlot ?? 1,
+        minimumAdvanceNotice: data.minimumAdvanceNotice ?? 60,
+        requirePhoneNumber: data.requirePhoneNumber ?? true,
+        defaultLocation: data.defaultLocation ?? null,
+        bookingPrompt: data.bookingPrompt ?? null,
+        confirmationMessage: data.confirmationMessage ?? null,
     };
 
     return prisma.calendar.create({ data: calendarData });

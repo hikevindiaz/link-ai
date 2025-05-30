@@ -7,7 +7,10 @@ interface DashboardHeaderProps {
   userFirstName: string;
 }
 
-export function DashboardHeader({ loading, userFirstName }: DashboardHeaderProps) {
+export function DashboardHeader({ 
+  loading, 
+  userFirstName, 
+}: DashboardHeaderProps) {
   const greet = () => {
     const h = new Date().getHours();
     if (h < 12) return `Good morning, ${userFirstName}!`;
@@ -22,15 +25,17 @@ export function DashboardHeader({ loading, userFirstName }: DashboardHeaderProps
           <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
             {loading ? 'Loading…' : greet()}
           </h1>
-          <Button asChild className="ml-4">
-            <a href="/dashboard/agents" className="flex items-center gap-2">
-              <LinkAIAgentIcon 
-                className="size-5 text-white dark:text-black" 
-                aria-hidden="true"
-              />
-              My Agents
-            </a>
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button asChild className="ml-auto">
+              <a href="/dashboard/agents" className="flex items-center gap-2">
+                <LinkAIAgentIcon 
+                  className="size-5 text-white dark:text-black" 
+                  aria-hidden="true"
+                />
+                My Agents
+              </a>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

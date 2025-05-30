@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useContext, createContext } from 'react';
+import React, { useState, useContext, createContext, useEffect } from 'react';
 import { SourceSidebar } from '@/components/knowledge-base/source-sidebar';
 import { ErrorHandlerProvider } from '@/components/knowledge-base/error-handler';
 import { toast } from 'sonner';
 import { FloatingActionBar } from "@/components/ui/floating-action-bar";
+import { Button } from '@/components/ui/button';
+import { RiArrowLeftLine } from '@remixicon/react';
+import { cn } from '@/lib/utils';
 
 // Knowledge Base Context
 export interface KnowledgeBaseState {
@@ -15,6 +18,9 @@ export interface KnowledgeBaseState {
   addPendingChange: (sourceId: string, data: any) => void;
   resetPendingChanges: () => void;
   saveAllChanges: () => Promise<void>;
+  isMobileView: boolean;
+  showDetailsOnMobile: boolean;
+  setShowDetailsOnMobile: (show: boolean) => void;
 }
 
 const KnowledgeBaseContext = createContext<KnowledgeBaseState | undefined>(undefined);
@@ -37,6 +43,30 @@ export default function KnowledgeBaseLayout({
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Mobile responsiveness state
+  const [isMobileView, setIsMobileView] = useState<boolean>(false);
+  const [showDetailsOnMobile, setShowDetailsOnMobile] = useState<boolean>(false);
+
+  // Check for mobile view on mount and window resize
+  useEffect(() => {
+    const checkMobileView = () => {
+      setIsMobileView(window.innerWidth < 768); // Use 768px as breakpoint
+    };
+    
+    checkMobileView();
+    window.addEventListener('resize', checkMobileView);
+    return () => {
+      window.removeEventListener('resize', checkMobileView);
+    };
+  }, []);
+
+  // Effect to hide details if switching back to desktop view
+  useEffect(() => {
+    if (!isMobileView) {
+      setShowDetailsOnMobile(false);
+    }
+  }, [isMobileView]);
 
   // Add a pending change for a specific source
   const addPendingChange = (sourceId: string, data: any) => {
@@ -290,40 +320,65 @@ export default function KnowledgeBaseLayout({
     }
   };
   
-  // Create context value
-  const knowledgeBaseContextValue: KnowledgeBaseState = {
+  const contextValue: KnowledgeBaseState = {
     isDirty,
     isLoading,
     isSaving,
     pendingChanges,
     addPendingChange,
     resetPendingChanges,
-    saveAllChanges
+    saveAllChanges,
+    isMobileView,
+    showDetailsOnMobile,
+    setShowDetailsOnMobile,
   };
 
   return (
-    <ErrorHandlerProvider>
-      <KnowledgeBaseContext.Provider value={knowledgeBaseContextValue}>
+    <KnowledgeBaseContext.Provider value={contextValue}>
+      <ErrorHandlerProvider>
         <div className="flex h-full">
-          {/* Left Sidebar - Always visible */}
-          <SourceSidebar />
+          {/* Sidebar - Conditionally Rendered */} 
+          {(!isMobileView || (isMobileView && !showDetailsOnMobile)) && (
+            <div className={cn(
+              "border-r border-gray-200 dark:border-gray-800 flex-shrink-0", 
+              isMobileView ? "w-full" : "w-80"
+            )}>
+              <SourceSidebar />
+            </div>
+          )}
           
-          {/* Main Content Area */}
-          <div className="flex-1 overflow-auto relative">
-            {children}
-            
-            {/* Display the floating action bar when changes are pending */}
-            {isDirty && (
-              <FloatingActionBar
-                isSaving={isSaving}
-                onSave={saveAllChanges}
-                onCancel={resetPendingChanges}
-                message={`You have unsaved changes in ${Object.keys(pendingChanges).length} knowledge source(s)`}
-              />
-            )}
-          </div>
+          {/* Main Content Area - Conditionally Rendered */} 
+          {(!isMobileView || (isMobileView && showDetailsOnMobile)) && (
+            <main className="flex-1 overflow-auto relative">
+              {/* Mobile Back Button */} 
+              {isMobileView && showDetailsOnMobile && (
+                <div className="border-b border-gray-200 dark:border-gray-800 p-2 sticky top-0 bg-background z-10">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowDetailsOnMobile(false)}
+                    className="flex items-center text-gray-600 dark:text-gray-300"
+                  >
+                    <RiArrowLeftLine className="mr-1 h-4 w-4" />
+                    Back to sources
+                  </Button>
+                </div>
+              )}
+              {children}
+            </main>
+          )}
         </div>
-      </KnowledgeBaseContext.Provider>
-    </ErrorHandlerProvider>
+        
+        {/* Floating Action Bar for saving changes - Conditionally Rendered */} 
+        {isDirty && (
+          <FloatingActionBar
+            isSaving={isSaving}
+            onSave={saveAllChanges}
+            onCancel={resetPendingChanges}
+            // You might want to add a message prop here if the component supports it
+            // message={`You have unsaved changes in ${Object.keys(pendingChanges).length} knowledge source(s)`}
+          />
+        )}
+      </ErrorHandlerProvider>
+    </KnowledgeBaseContext.Provider>
   );
 } 

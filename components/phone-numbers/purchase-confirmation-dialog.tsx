@@ -14,14 +14,7 @@ import { Icons } from '@/components/icons';
 import { addMonths, formatDate } from '@/lib/date-utils';
 import { formatPrice } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, CheckCircle, AlertCircle, CreditCard, Info } from "lucide-react";
-import { loadStripe } from "@stripe/stripe-js";
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+import { Loader2, CheckCircle, AlertCircle, CreditCard, Info, Calendar, DollarSign } from "lucide-react";
 import axios from "axios";
 // Remove simple-icons import and define paths directly
 
@@ -69,143 +62,6 @@ type PurchaseState =
 
 // Define constants for the state values to avoid TypeScript literal comparison issues
 const PROCESSING_STATE = "processing" as PurchaseState;
-
-// Load Stripe outside of component to avoid recreating it on renders
-const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
-);
-
-/**
- * Stripe Payment Form Component
- * Handles credit card input and payment submission
- */
-function StripePaymentForm({
-  phoneNumber,
-  monthlyCost,
-  clientSecret,
-  selectedAgentId,
-  onSuccess,
-  onError,
-}: {
-  phoneNumber: string;
-  monthlyCost: number;
-  clientSecret: string;
-  selectedAgentId: string | null;
-  onSuccess: () => void;
-  onError: (message: string) => void;
-}) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
-
-    try {
-      // Confirm the payment with Stripe
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/dashboard/phone-numbers`,
-        },
-        redirect: "if_required",
-      });
-
-      if (error) {
-        console.error("Payment error:", error);
-        onError(error.message || "An error occurred during payment processing");
-        toast({
-          title: "Payment Failed",
-          description: error.message || "An error occurred during payment processing",
-          variant: "destructive",
-        });
-        return;
-      } 
-      
-      if (paymentIntent && paymentIntent.status === "succeeded") {
-        console.log("Payment succeeded, completing phone number purchase");
-        
-        // After successful payment, make API call to provision the phone number
-        try {
-          console.log("Making phone number purchase API call with data:", {
-            phoneNumber,
-            monthlyPrice: monthlyCost,
-            country: "US",
-            selectedAgentId
-          });
-          
-          const response = await axios.post("/api/twilio/phone-numbers", {
-            phoneNumber: phoneNumber,
-            monthlyPrice: monthlyCost,
-            country: "US", // Default to US or extract from phoneNumber
-            selectedAgentId: selectedAgentId || null,
-            testMode: 'development_testing_mode', // Add test mode for free purchases
-            // Add proper formatting for the API
-            // Don't include any undefined or null values
-          });
-          
-          console.log("Phone number purchase API response:", response.data);
-          
-          if (response.data.success) {
-            onSuccess();
-            toast({
-              title: "Purchase Successful",
-              description: `Your phone number ${phoneNumber} has been purchased successfully!`,
-            });
-          } else {
-            throw new Error(response.data.error || "Failed to provision phone number");
-          }
-        } catch (provisionError: any) {
-          console.error("Phone number provisioning error:", provisionError);
-          onError(provisionError.message || "Payment succeeded but phone number provisioning failed");
-          toast({
-            title: "Provisioning Failed",
-            description: "Your payment was processed but we couldn't provision the phone number. Our team will contact you.",
-            variant: "destructive",
-          });
-        }
-      } else {
-        console.warn("Payment intent returned but status is not succeeded:", paymentIntent?.status);
-        onError("Payment process did not complete successfully");
-      }
-    } catch (submitError: any) {
-      console.error("Form submission error:", submitError);
-      onError(submitError.message || "An unexpected error occurred");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="mt-4">
-      <div className="mb-6 bg-background dark:bg-gray-800 rounded-md p-4 border border-border dark:border-gray-700">
-        <PaymentElement />
-      </div>
-      <div className="flex flex-col space-y-2">
-        <Button
-          type="submit"
-          disabled={!stripe || !elements || isProcessing}
-          className="w-full"
-        >
-          {isProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
-            </>
-          ) : (
-            `Pay ${formatPrice(monthlyCost)}`
-          )}
-        </Button>
-      </div>
-    </form>
-  );
-}
 
 /**
  * Card Brand Icon Component
@@ -319,6 +175,30 @@ const formatCardBrand = (brand?: string) => {
 };
 
 /**
+ * Helper function to detect country from phone number
+ */
+const detectCountryFromPhoneNumber = (phoneNumber: string): string => {
+  if (!phoneNumber.startsWith('+')) return 'US';
+  
+  // Remove the + and get the first few digits
+  const number = phoneNumber.substring(1);
+  
+  // Common country codes
+  if (number.startsWith('1787') || number.startsWith('1939')) return 'PR'; // Puerto Rico
+  if (number.startsWith('1')) return 'US'; // United States
+  if (number.startsWith('44')) return 'GB'; // United Kingdom
+  if (number.startsWith('33')) return 'FR'; // France
+  if (number.startsWith('49')) return 'DE'; // Germany
+  if (number.startsWith('34')) return 'ES'; // Spain
+  if (number.startsWith('39')) return 'IT'; // Italy
+  if (number.startsWith('61')) return 'AU'; // Australia
+  if (number.startsWith('81')) return 'JP'; // Japan
+  
+  // Default to US if we can't detect
+  return 'US';
+};
+
+/**
  * Main Purchase Confirmation Dialog Component
  */
 export function PurchaseConfirmationDialog({
@@ -334,15 +214,18 @@ export function PurchaseConfirmationDialog({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [purchasedPhoneNumber, setPurchasedPhoneNumber] = useState<string | null>(null);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isLoadingPaymentMethods, setIsLoadingPaymentMethods] = useState(false);
   const [hasPaymentMethod, setHasPaymentMethod] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [subscriptionInfo, setSubscriptionInfo] = useState<{
+    renewalDate: Date | null;
+    proratedAmount: number;
+    daysRemaining: number;
+    totalDays: number;
+    subscriptionStatus?: string;
+  } | null>(null);
   const router = useRouter();
   
-  // Compute the next billing date (one month from now)
-  const nextBillingDate = formatDate(addMonths(new Date(), 1));
-
   // When we pass phoneNumber to StripePaymentForm, ensure it's a string
   const safePhoneNumber = phoneNumber || '';
 
@@ -353,85 +236,100 @@ export function PurchaseConfirmationDialog({
       // Small delay to avoid visual flickering when closing
       setTimeout(() => {
         setPurchaseState("idle");
-        setClientSecret(null);
         setErrorMessage(null);
+        setSubscriptionInfo(null);
       }, 300);
     }
   };
 
-  // Check payment methods when dialog opens
+  // Check payment methods and subscription info when dialog opens
   useEffect(() => {
     if (open) {
       setPurchaseState("checking_payment");
       setErrorMessage(null);
-      checkPaymentMethods();
+      checkPaymentMethodsAndSubscription();
     }
   }, [open]);
 
   /**
-   * Check if user has existing payment methods
+   * Check if user has existing payment methods and subscription info
    */
-  const checkPaymentMethods = async () => {
+  const checkPaymentMethodsAndSubscription = async () => {
     setIsLoadingPaymentMethods(true);
     try {
-      const response = await axios.get("/api/billing/payment-methods");
-      const methods = response.data.paymentMethods || [];
-      console.log("Payment methods fetched:", JSON.stringify(methods, null, 2)); // Detailed logging
+      // Fetch both payment methods and subscription info in parallel
+      const [paymentResponse, subscriptionResponse] = await Promise.all([
+        axios.get("/api/billing/payment-methods"),
+        axios.get("/api/billing/subscription-info")
+      ]);
+      
+      const methods = paymentResponse.data.paymentMethods || [];
+      console.log("Payment methods fetched:", JSON.stringify(methods, null, 2));
       setPaymentMethods(methods);
+      
+      // Calculate proration based on subscription info
+      if (subscriptionResponse.data.subscription) {
+        const subscription = subscriptionResponse.data.subscription;
+        const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+        const currentPeriodStart = new Date(subscription.current_period_start * 1000);
+        
+        // For trial subscriptions, we need to calculate based on the actual billing period (monthly)
+        // not the trial period duration
+        let totalDaysInPeriod = Math.ceil((currentPeriodEnd.getTime() - currentPeriodStart.getTime()) / (1000 * 60 * 60 * 24));
+        let daysRemaining = Math.ceil((currentPeriodEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        
+        // Special handling for trial subscriptions
+        if (subscription.status === 'trialing') {
+          // For trials, use a standard 30-day billing period for proration calculation
+          // since the user will be billed monthly after the trial ends
+          totalDaysInPeriod = 30; // Standard monthly billing period
+          // Keep the actual days remaining in trial for display
+        }
+        
+        const proratedAmount = (monthlyCost * daysRemaining / totalDaysInPeriod);
+        
+        console.log('[Proration Debug]', {
+          subscriptionStatus: subscription.status,
+          originalPeriod: Math.ceil((currentPeriodEnd.getTime() - currentPeriodStart.getTime()) / (1000 * 60 * 60 * 24)),
+          adjustedTotalDays: totalDaysInPeriod,
+          daysRemaining,
+          monthlyCost,
+          proratedAmount: proratedAmount.toFixed(2)
+        });
+        
+        setSubscriptionInfo({
+          renewalDate: currentPeriodEnd,
+          proratedAmount,
+          daysRemaining,
+          totalDays: totalDaysInPeriod,
+          subscriptionStatus: subscription.status
+        });
+      }
       
       if (methods.length > 0) {
         setHasPaymentMethod(true);
         // Find default payment method or use the first one
         const defaultMethod = methods.find((m: PaymentMethod) => m.isDefault) || methods[0];
-        console.log("Selected payment method:", JSON.stringify(defaultMethod, null, 2)); // Detailed logging
-        
-        // Log specifically card details to debug
-        if (defaultMethod.card) {
-          console.log("Card details:", JSON.stringify(defaultMethod.card, null, 2));
-        } else {
-          console.log("No card property found in payment method");
-        }
+        console.log("Selected payment method:", JSON.stringify(defaultMethod, null, 2));
         
         setSelectedPaymentMethod(defaultMethod);
         setPurchaseState("confirming");
       } else {
         setHasPaymentMethod(false);
-        // Create a payment intent for adding a new card
-        createPaymentIntent();
+        setPurchaseState("error");
+        setErrorMessage("You need a payment method to purchase phone numbers.");
       }
-    } catch (error) {
-      console.error("Error checking payment methods:", error);
-      setErrorMessage("Failed to load payment methods. Please try again.");
+    } catch (error: any) {
+      console.error("Error checking payment methods and subscription:", error);
+      
+      if (error.response?.status === 404 || error.response?.data?.error?.includes("subscription")) {
+        setErrorMessage("You need an active subscription to purchase phone numbers.");
+      } else {
+        setErrorMessage("Failed to load payment methods. Please try again.");
+      }
       setPurchaseState("error");
     } finally {
       setIsLoadingPaymentMethods(false);
-    }
-  };
-
-  /**
-   * Create a payment intent for new card payment
-   */
-  const createPaymentIntent = async () => {
-    try {
-      const response = await axios.post("/api/billing/create-payment-intent", {
-        amount: monthlyCost,
-        phoneNumber,
-        metadata: {
-          type: "phone_number_purchase"
-        }
-      });
-
-      if (response.data.success && response.data.clientSecret) {
-        setClientSecret(response.data.clientSecret);
-        setPurchaseState("ready_to_pay");
-      } else {
-        setErrorMessage(response.data.message || "Failed to create payment intent");
-        setPurchaseState("error");
-      }
-    } catch (error: any) {
-      console.error("Error creating payment intent:", error);
-      setErrorMessage(error.response?.data?.message || "Failed to create payment intent");
-      setPurchaseState("error");
     }
   };
 
@@ -449,43 +347,18 @@ export function PurchaseConfirmationDialog({
     console.log("Starting purchase with existing payment method for:", safePhoneNumber);
 
     try {
-      // If onConfirm prop is provided, call it first
-      if (onConfirm) {
-        try {
-          console.log("Using onConfirm callback provided by parent component");
-          const success = await onConfirm();
-          console.log("onConfirm callback result:", success);
-          
-          if (success) {
-            setPurchasedPhoneNumber(safePhoneNumber);
-            setPurchaseState("success");
-            toast({
-              title: "Success",
-              description: 'Phone number purchased successfully!',
-            });
-            return;
-          } else {
-            throw new Error("Failed to purchase phone number");
-          }
-        } catch (error: any) {
-          console.error("Error in onConfirm callback:", error);
-          throw error; // Rethrow to be caught by outer catch block
-        }
-      } else {
-        // Direct API call to purchase the phone number with existing payment method
+      // FIXED: Do the actual purchase FIRST, then call onConfirm only if successful
         console.log("Making direct API call to purchase phone number:", {
           phoneNumber: safePhoneNumber,
           monthlyCost,
           selectedAgentId: selectedAgentId
         });
         
-        try {
           const response = await axios.post("/api/twilio/phone-numbers", {
             phoneNumber: safePhoneNumber,
             monthlyPrice: monthlyCost,
-            country: "US", // Default to US
+            country: detectCountryFromPhoneNumber(safePhoneNumber),
             selectedAgentId: selectedAgentId || null,
-            testMode: 'development_testing_mode' // Add test mode for free purchases
           });
 
           console.log("Phone number purchase API response:", response.data);
@@ -502,6 +375,18 @@ export function PurchaseConfirmationDialog({
             
             setPurchasedPhoneNumber(safePhoneNumber);
             setPurchaseState("success");
+        
+        // ONLY call onConfirm after successful purchase
+        if (onConfirm) {
+          try {
+            console.log("Calling onConfirm after successful purchase");
+            await onConfirm();
+          } catch (onConfirmError) {
+            console.warn("onConfirm callback failed, but purchase was successful:", onConfirmError);
+            // Don't fail the entire process if onConfirm fails
+          }
+        }
+        
             toast({
               title: "Success",
               description: 'Phone number purchased successfully!',
@@ -509,16 +394,22 @@ export function PurchaseConfirmationDialog({
           } else {
             console.error("API returned success: false", response.data);
             throw new Error(response.data.error || "Failed to purchase phone number");
-          }
-        } catch (error: any) {
-          console.error("Error in API call:", error);
-          const apiErrorMessage = error.response?.data?.error || error.message;
-          console.error("API error details:", apiErrorMessage);
-          throw error; // Rethrow for the outer catch
-        }
       }
     } catch (error: any) {
       console.error("Error purchasing phone number:", error);
+      
+      // Check if the error indicates a missing payment method
+      if (error.response?.data?.requiresPaymentMethod) {
+        setErrorMessage(error.response.data.error || "You need a payment method to purchase phone numbers.");
+        setPurchaseState("error");
+        
+        toast({
+          title: "Payment Method Required",
+          description: "Please add a payment method to purchase phone numbers. Go to Settings > Billing to add one.",
+          variant: "destructive",
+        });
+        return;
+      }
       
       // Extract most informative error message
       let errorMsg = "Failed to purchase phone number. Please try again.";
@@ -547,20 +438,10 @@ export function PurchaseConfirmationDialog({
     }
   };
 
-  const handleSuccess = () => {
-    setPurchasedPhoneNumber(phoneNumber);
-    setPurchaseState("success");
-  };
-
-  const handleError = (message: string) => {
-    setErrorMessage(message);
-    setPurchaseState("error");
-  };
-
   const handleRetry = () => {
     setPurchaseState("checking_payment");
     setErrorMessage(null);
-    checkPaymentMethods();
+    checkPaymentMethodsAndSubscription();
   };
 
   const handleClose = () => {
@@ -575,8 +456,8 @@ export function PurchaseConfirmationDialog({
   };
 
   const handleAddPaymentMethod = () => {
-    // Switch to adding a new payment method form regardless
-    createPaymentIntent();
+    // Redirect to settings to add payment method
+    router.push("/dashboard/settings?tab=billing");
   };
 
   if (!phoneNumber && purchaseState !== 'success') {
@@ -601,7 +482,9 @@ export function PurchaseConfirmationDialog({
               ? errorMessage || "An error occurred during the purchase process."
               : purchaseState === "checking_payment" || purchaseState === "processing"
               ? "Please wait while we process your request..."
-              : `Purchase ${phoneNumber} for ${formatPrice(monthlyCost)}/month. Your first renewal will be on ${formatDate(addMonths(new Date(), 1))}.`}
+              : subscriptionInfo
+              ? `Pay ${formatPrice(subscriptionInfo.proratedAmount)} today, then ${formatPrice(monthlyCost)}/month starting ${formatDate(subscriptionInfo.renewalDate!)}`
+              : "Confirm your phone number purchase"}
           </DialogDescription>
         </DialogHeader>
 
@@ -615,7 +498,7 @@ export function PurchaseConfirmationDialog({
           )}
 
           {/* Confirmation state with existing payment method */}
-          {purchaseState === "confirming" && selectedPaymentMethod && (
+          {purchaseState === "confirming" && selectedPaymentMethod && subscriptionInfo && (
             <div className="space-y-4">
               <div className="p-4 rounded-md border border-border dark:border-gray-700 bg-background dark:bg-gray-800">
                 <h3 className="text-base font-medium text-foreground dark:text-gray-100 mb-4">Purchase Details</h3>
@@ -624,17 +507,32 @@ export function PurchaseConfirmationDialog({
                     <span className="text-muted-foreground dark:text-gray-400">Phone Number:</span> 
                     <span className="font-medium text-foreground dark:text-gray-100">{phoneNumber}</span>
                   </li>
+                  <li className="flex justify-between items-center">
+                    <span className="text-muted-foreground dark:text-gray-400 flex items-center">
+                      <DollarSign className="h-3 w-3 mr-1" />
+                      Today's Charge:
+                    </span> 
+                    <span className="font-medium text-foreground dark:text-gray-100 text-lg">
+                      {formatPrice(subscriptionInfo.proratedAmount)}
+                    </span>
+                  </li>
+                  <li className="flex justify-between text-xs">
+                    <span className="text-muted-foreground dark:text-gray-400 ml-4">
+                      ({subscriptionInfo.daysRemaining} days remaining)
+                    </span>
+                  </li>
                   <li className="flex justify-between">
                     <span className="text-muted-foreground dark:text-gray-400">Monthly Cost:</span> 
-                    <span className="font-medium text-foreground dark:text-gray-100">{formatPrice(monthlyCost)}</span>
+                    <span className="font-medium text-foreground dark:text-gray-100">{formatPrice(monthlyCost)}/mo</span>
                   </li>
-                  <li className="flex justify-between">
-                    <span className="text-muted-foreground dark:text-gray-400">Billing Cycle:</span> 
-                    <span className="font-medium text-foreground dark:text-gray-100">Monthly</span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-muted-foreground dark:text-gray-400">Next Billing Date:</span> 
-                    <span className="font-medium text-foreground dark:text-gray-100">{nextBillingDate}</span>
+                  <li className="flex justify-between items-center">
+                    <span className="text-muted-foreground dark:text-gray-400 flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Subscription Renews:
+                    </span> 
+                    <span className="font-medium text-foreground dark:text-gray-100">
+                      {formatDate(subscriptionInfo.renewalDate!)}
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -681,7 +579,22 @@ export function PurchaseConfirmationDialog({
               <div className="flex items-start p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-700 dark:text-blue-300">
                 <Info className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p>Your payment method will be charged immediately and this number will be available for use right away. A Twilio subaccount will be created for you if you don't have one.</p>
+                  <p className="font-medium mb-1">How billing works:</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    {subscriptionInfo.subscriptionStatus === 'trialing' ? (
+                      <>
+                        <li>You'll be charged {formatPrice(subscriptionInfo.proratedAmount)} today (prorated for {subscriptionInfo.daysRemaining} days of a 30-day period)</li>
+                        <li>After your trial ends on {formatDate(subscriptionInfo.renewalDate!)}, {formatPrice(monthlyCost)} will be added to your monthly bill</li>
+                        <li>The phone number will be available immediately and continue working after your trial</li>
+                      </>
+                    ) : (
+                      <>
+                        <li>You'll be charged {formatPrice(subscriptionInfo.proratedAmount)} today (prorated for {subscriptionInfo.daysRemaining} days)</li>
+                        <li>Starting {formatDate(subscriptionInfo.renewalDate!)}, {formatPrice(monthlyCost)} will be added to your monthly bill</li>
+                        <li>The phone number will be available immediately after purchase</li>
+                      </>
+                    )}
+                  </ul>
                 </div>
               </div>
 
@@ -696,69 +609,10 @@ export function PurchaseConfirmationDialog({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...
                   </>
                 ) : (
-                  `Buy Now (${formatPrice(monthlyCost)}/month)`
+                  `Pay ${formatPrice(subscriptionInfo.proratedAmount)} Now`
                 )}
               </Button>
             </div>
-          )}
-
-          {/* Payment entry form for new payment method */}
-          {purchaseState === "ready_to_pay" && clientSecret && (
-            <>
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-3 flex items-start mb-4 text-sm text-blue-700 dark:text-blue-300">
-                <Info className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p>Please add a payment method to purchase this phone number. Your card will be charged immediately.</p>
-                </div>
-              </div>
-              <Elements
-                stripe={stripePromise}
-                options={{
-                  clientSecret,
-                  appearance: {
-                    theme: "flat",
-                    variables: {
-                      colorPrimary: '#0284c7',
-                      colorBackground: 'var(--background)',
-                      colorText: 'var(--foreground)',
-                      colorDanger: '#ef4444',
-                      fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-                      fontSizeSm: '0.875rem',
-                      fontSizeBase: '1rem',
-                      fontSizeXl: '1.125rem',
-                      borderRadius: '0.5rem',
-                      spacingUnit: '4px',
-                    },
-                    rules: {
-                      '.Input': {
-                        backgroundColor: 'var(--background)',
-                        border: '1px solid var(--border, #e2e8f0)',
-                        color: 'var(--foreground)',
-                        fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
-                      },
-                      '.Input:focus': {
-                        border: '1px solid #0284c7'
-                      },
-                      '.Label': {
-                        color: 'var(--foreground)',
-                        fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
-                        fontSize: '0.875rem',
-                        fontWeight: '500'
-                      }
-                    }
-                  },
-                }}
-              >
-                <StripePaymentForm
-                  phoneNumber={safePhoneNumber}
-                  monthlyCost={monthlyCost}
-                  clientSecret={clientSecret}
-                  selectedAgentId={selectedAgentId}
-                  onSuccess={handleSuccess}
-                  onError={handleError}
-                />
-              </Elements>
-            </>
           )}
 
           {/* Success state */}
@@ -769,9 +623,11 @@ export function PurchaseConfirmationDialog({
               <p className="mt-2 text-muted-foreground dark:text-gray-400">
                 Your new phone number {purchasedPhoneNumber || phoneNumber} is now active and ready to use.
               </p>
-              <p className="mt-2 text-sm text-muted-foreground dark:text-gray-400">
-                The phone number has been provisioned in your Twilio subaccount for better usage tracking.
-              </p>
+              <div className="mt-4 p-3 rounded-md bg-gray-50 dark:bg-gray-800 text-sm">
+                <p className="text-muted-foreground dark:text-gray-400">
+                  The phone number has been added to your subscription and will appear on your next invoice.
+                </p>
+              </div>
             </div>
           )}
 
@@ -779,28 +635,43 @@ export function PurchaseConfirmationDialog({
           {purchaseState === "error" && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <AlertCircle className="h-16 w-16 text-destructive mb-4" />
-              <p className="text-lg font-semibold text-foreground dark:text-gray-100">Purchase Failed</p>
+              <p className="text-lg font-semibold text-foreground dark:text-gray-100">
+                {errorMessage?.includes("payment method") ? "Payment Method Required" : "Purchase Failed"}
+              </p>
               <p className="mt-2 text-muted-foreground dark:text-gray-400">
                 {errorMessage || "An error occurred during the purchase process."}
               </p>
+              {/* Show specific help for payment method issues */}
+              {errorMessage?.includes("payment method") && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => {
+                    router.push("/dashboard/settings?tab=billing");
+                  }}
+                >
+                  Add Payment Method
+                </Button>
+              )}
+              {/* Show help for subscription issues */}
+              {errorMessage?.includes("subscription") && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="mt-4"
+                  onClick={() => {
+                    router.push("/dashboard/settings?tab=billing");
+                  }}
+                >
+                  View Subscription
+                </Button>
+              )}
             </div>
           )}
         </div>
 
         <DialogFooter>
-          {/* Ready to pay footer */}
-          {purchaseState === "ready_to_pay" && (
-            <div className="flex w-full space-x-2">
-              <Button 
-                variant="secondary" 
-                onClick={() => handleClose()}
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-            </div>
-          )}
-
           {/* Idle/checking footer */}
           {(purchaseState === "idle" || purchaseState === "checking_payment") && (
             <Button 
@@ -838,12 +709,14 @@ export function PurchaseConfirmationDialog({
               >
                 Close
               </Button>
-              <Button 
-                onClick={handleRetry}
-                className="flex-1"
-              >
-                Try Again
-              </Button>
+              {!errorMessage?.includes("payment method") && !errorMessage?.includes("subscription") && (
+                <Button 
+                  onClick={handleRetry}
+                  className="flex-1"
+                >
+                  Try Again
+                </Button>
+              )}
             </div>
           )}
         </DialogFooter>

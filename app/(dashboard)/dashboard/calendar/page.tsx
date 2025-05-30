@@ -114,7 +114,17 @@ const defaultCalendarSettings: CalendarSettingsInput = {
   notificationEmailEnabled: true,
   emailReminderEnabled: true,
   smsReminderEnabled: false,
-  reminderTimeMinutes: 30
+  reminderTimeMinutes: 30,
+  askForDuration: true,
+  askForNotes: true,
+  defaultDuration: 30,
+  bufferBetweenAppointments: 15,
+  maxBookingsPerSlot: 1,
+  minimumAdvanceNotice: 60,
+  requirePhoneNumber: true,
+  defaultLocation: "",
+  bookingPrompt: "",
+  confirmationMessage: ""
 };
 
 // Color combinations for appointment cards
@@ -141,7 +151,28 @@ export default function CalendarPage() {
   const [selectedCalendarId, setSelectedCalendarId] = useState<string | null | 'all'>('all');
   const [createCalendarOpen, setCreateCalendarOpen] = useState<boolean>(false);
   const [newCalendarName, setNewCalendarName] = useState<string>("");
+  const [newCalendarSettings, setNewCalendarSettings] = useState<CalendarSettingsInput>({
+    workingHoursStart: "09:00",
+    workingHoursEnd: "17:00",
+    includeSaturday: true,
+    includeSunday: false,
+    notificationEmailEnabled: true,
+    emailReminderEnabled: true,
+    smsReminderEnabled: false,
+    reminderTimeMinutes: 30,
+    askForDuration: true,
+    askForNotes: true,
+    defaultDuration: 30,
+    bufferBetweenAppointments: 15,
+    maxBookingsPerSlot: 1,
+    minimumAdvanceNotice: 60,
+    requirePhoneNumber: true,
+    defaultLocation: "",
+    bookingPrompt: "",
+    confirmationMessage: ""
+  });
   const [isDeletingCalendar, setIsDeletingCalendar] = useState<boolean>(false);
+  const [isCreatingCalendar, setIsCreatingCalendar] = useState<boolean>(false);
 
   // Add mobile responsiveness state
   const [isMobileView, setIsMobileView] = useState<boolean>(false);
@@ -283,9 +314,10 @@ export default function CalendarPage() {
   }, [currentDate, selectedCalendarId, calendars]); // Depend on calendars too, ensures fetch after calendars load
 
   // Get current selected calendar's settings (only if a specific calendar is selected)
-  const currentCalendarSettings = selectedCalendarId && selectedCalendarId !== 'all' 
-      ? calendars.find(cal => cal.id === selectedCalendarId) ?? defaultCalendarSettings
-      : defaultCalendarSettings; // Use default if 'all' or none selected
+  const currentCalendar = selectedCalendarId && selectedCalendarId !== 'all' 
+      ? calendars.find(cal => cal.id === selectedCalendarId)
+      : null;
+  const currentCalendarSettings = currentCalendar ?? defaultCalendarSettings;
 
   // Filter appointments based on status filter AND selected calendar ('all' means no calendar filter)
   const filteredAppointments = appointments
@@ -321,12 +353,15 @@ export default function CalendarPage() {
         toast.error("Calendar name cannot be empty.");
         return;
      }
-     setIsLoading(true); // Indicate loading
+     setIsCreatingCalendar(true);
      try {
         const response = await fetch('/api/calendars', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: newCalendarName }),
+            body: JSON.stringify({ 
+              name: newCalendarName,
+              ...newCalendarSettings 
+            }),
         });
 
         if (!response.ok) {
@@ -339,6 +374,26 @@ export default function CalendarPage() {
         setSelectedCalendarId(newCalendar.id); // Select the newly created calendar
         setCreateCalendarOpen(false); // Close dialog
         setNewCalendarName(""); // Reset name input
+        setNewCalendarSettings({ // Reset settings to defaults
+          workingHoursStart: "09:00",
+          workingHoursEnd: "17:00",
+          includeSaturday: true,
+          includeSunday: false,
+          notificationEmailEnabled: true,
+          emailReminderEnabled: true,
+          smsReminderEnabled: false,
+          reminderTimeMinutes: 30,
+          askForDuration: true,
+          askForNotes: true,
+          defaultDuration: 30,
+          bufferBetweenAppointments: 15,
+          maxBookingsPerSlot: 1,
+          minimumAdvanceNotice: 60,
+          requirePhoneNumber: true,
+          defaultLocation: "",
+          bookingPrompt: "",
+          confirmationMessage: ""
+        });
         toast.success("Calendar created successfully!");
 
      } catch (err) {
@@ -346,46 +401,34 @@ export default function CalendarPage() {
         const message = err instanceof Error ? err.message : "Unknown error occurred";
         toast.error(`Failed to create calendar: ${message}`);
      } finally {
-         setIsLoading(false);
+         setIsCreatingCalendar(false);
      }
   };
 
   // Handle save settings - TODO: Needs API route
   const handleSaveSettings = async (updatedSettings: CalendarUpdateInput) => {
     if (!selectedCalendarId) {
-      toast.error("No calendar selected to save settings for.");
-      return;
+      throw new Error("No calendar selected to save settings for.");
     }
     console.log('Saving calendar settings/name via API for:', selectedCalendarId, updatedSettings);
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/calendars/${selectedCalendarId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedSettings),
-      });
+    
+    const response = await fetch(`/api/calendars/${selectedCalendarId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedSettings),
+    });
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `API Error: ${response.statusText}`);
-      }
-
-      const updatedCalendar: Calendar = await response.json();
-
-      // Update the calendar in the state
-      setCalendars(prev => 
-          prev.map(cal => cal.id === selectedCalendarId ? updatedCalendar : cal)
-      );
-      setSettingsDialogOpen(false); // Close dialog
-      toast.success("Calendar settings updated successfully!");
-
-    } catch (err) {
-       console.error("Failed to save settings:", err);
-       const message = err instanceof Error ? err.message : "Unknown error occurred";
-       toast.error(`Failed to save settings: ${message}`);
-    } finally {
-        setIsLoading(false);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API Error: ${response.statusText}`);
     }
+
+    const updatedCalendar: Calendar = await response.json();
+
+    // Update the calendar in the state
+    setCalendars(prev => 
+        prev.map(cal => cal.id === selectedCalendarId ? updatedCalendar : cal)
+    );
   };
 
   // Handle delete via API
@@ -394,8 +437,8 @@ export default function CalendarPage() {
         toast.error("No calendar selected to delete.");
         return;
     }
-    setIsDeletingCalendar(true); // Show loading/confirmation state if needed
-    setIsLoading(true);
+    setIsDeletingCalendar(true);
+    
     try {
         const response = await fetch(`/api/calendars/${selectedCalendarId}`, {
             method: 'DELETE',
@@ -424,7 +467,6 @@ export default function CalendarPage() {
         const message = err instanceof Error ? err.message : "Unknown error occurred";
         toast.error(`Failed to delete calendar: ${message}`);
     } finally {
-        setIsLoading(false);
         setIsDeletingCalendar(false);
     }
   };
@@ -658,6 +700,7 @@ export default function CalendarPage() {
         status: appointmentData.status ?? AppointmentStatus.PENDING,
         color: appointmentData.color ?? 'indigo',
         description: appointmentData.description ?? '',
+        source: 'Manual', // Add the missing source field
         createdAt: new Date(),
         updatedAt: new Date(), 
     } as Appointment; // Cast needed for optimistic update
@@ -930,6 +973,7 @@ return (
           selectedCalendarId={selectedCalendarId}
           onCalendarSelectChange={handleCalendarSelectChange}
           onCreateCalendar={() => setCreateCalendarOpen(true)}
+          onOpenCalendarSettings={() => setSettingsDialogOpen(true)}
           isLoading={isLoading}
           className={cn(isMobileView ? "w-full h-full" : "w-80 h-full")} // Adjust width for mobile
         />
@@ -1034,7 +1078,7 @@ return (
       <CalendarSettingsDialog 
         open={settingsDialogOpen} 
         onOpenChange={setSettingsDialogOpen}
-        initialSettings={currentCalendarSettings}
+        initialSettings={{...currentCalendarSettings, name: currentCalendar?.name}}
         onSave={handleSaveSettings}
       />
 
@@ -1047,32 +1091,133 @@ return (
       />
 
       <Dialog open={createCalendarOpen} onOpenChange={setCreateCalendarOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Calendar</DialogTitle>
             <DialogDescription>
-              Give your new calendar a name.
+              Set up your calendar with basic configuration. You can customize these settings later.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="calendar-name" className="text-right">
-                Name
+          
+          <div className="space-y-6 py-4">
+            {/* Calendar Name */}
+            <div className="space-y-2">
+              <Label htmlFor="calendar-name" className="text-sm font-medium">
+                Calendar Name *
               </Label>
               <Input
                 id="calendar-name"
                 value={newCalendarName}
                 onChange={(e) => setNewCalendarName(e.target.value)}
-                className="col-span-3"
                 placeholder="e.g., Work Schedule, Personal Appointments"
+                className="w-full"
               />
             </div>
+
+            {/* Quick Setup Section */}
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Quick Setup</Label>
+                <p className="text-xs text-gray-500 mt-1">Configure the most important settings now</p>
+              </div>
+
+              {/* Working Hours */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-500">Start Time</Label>
+                  <Select 
+                    value={newCalendarSettings.workingHoursStart || '09:00'}
+                    onValueChange={(value) => setNewCalendarSettings(prev => ({...prev, workingHoursStart: value}))}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="08:00">8:00 AM</SelectItem>
+                      <SelectItem value="09:00">9:00 AM</SelectItem>
+                      <SelectItem value="10:00">10:00 AM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-500">End Time</Label>
+                  <Select 
+                    value={newCalendarSettings.workingHoursEnd || '17:00'}
+                    onValueChange={(value) => setNewCalendarSettings(prev => ({...prev, workingHoursEnd: value}))}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="16:00">4:00 PM</SelectItem>
+                      <SelectItem value="17:00">5:00 PM</SelectItem>
+                      <SelectItem value="18:00">6:00 PM</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Weekend Availability */}
+              <div className="flex items-center justify-between py-2 px-3 border rounded-md">
+                <Label className="text-sm text-gray-700">Include weekends</Label>
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs text-gray-500">Sat</Label>
+                  <input 
+                    type="checkbox" 
+                    checked={!!newCalendarSettings.includeSaturday}
+                    onChange={(e) => setNewCalendarSettings(prev => ({...prev, includeSaturday: e.target.checked}))}
+                    className="h-3 w-3 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  />
+                  <Label className="text-xs text-gray-500 ml-2">Sun</Label>
+                  <input 
+                    type="checkbox" 
+                    checked={!!newCalendarSettings.includeSunday}
+                    onChange={(e) => setNewCalendarSettings(prev => ({...prev, includeSunday: e.target.checked}))}
+                    className="h-3 w-3 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  />
+                </div>
+              </div>
+
+              {/* Default Duration */}
+              <div className="flex items-center justify-between py-2 px-3 border rounded-md">
+                <Label className="text-sm text-gray-700">Default appointment duration</Label>
+                <Select 
+                  value={newCalendarSettings.defaultDuration?.toString() || '30'}
+                  onValueChange={(value) => setNewCalendarSettings(prev => ({...prev, defaultDuration: parseInt(value)}))}
+                >
+                  <SelectTrigger className="w-24 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 min</SelectItem>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="60">60 min</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Phone Requirement */}
+              <div className="flex items-center justify-between py-2 px-3 border rounded-md">
+                <Label className="text-sm text-gray-700">Require phone number for bookings</Label>
+                <input 
+                  type="checkbox" 
+                  checked={!!newCalendarSettings.requirePhoneNumber}
+                  onChange={(e) => setNewCalendarSettings(prev => ({...prev, requirePhoneNumber: e.target.checked}))}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                />
+              </div>
             </div>
+            
+            <div className="text-xs text-gray-500 bg-gray-50 dark:bg-gray-900 p-3 rounded-md">
+              💡 You can customize all settings including notifications, booking rules, and more after creating the calendar.
+            </div>
+          </div>
+
           <DialogFooter>
             <Button variant="secondary" onClick={() => setCreateCalendarOpen(false)}>Cancel</Button>
-            <Button onClick={handleCreateCalendar} disabled={isLoading || !newCalendarName.trim()}>
-              {isLoading ? <Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Create Calendar
+            <Button onClick={handleCreateCalendar} disabled={isCreatingCalendar || !newCalendarName.trim()}>
+              {isCreatingCalendar ? <Icons.spinner className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isCreatingCalendar ? "Creating..." : "Create Calendar"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -1,4 +1,3 @@
-
 import { User, Message } from "@prisma/client"
 import type { Icon } from "lucide-react"
 
@@ -115,27 +114,44 @@ export type SubscriptionPlan = {
   description: string
   stripePriceId: string
 
-  // Specs
+  // Core Specs (existing)
   maxChatbots: number
-
   unlimitedMessages: boolean
   maxMessagesPerMonth: number | undefined
-
   maxFiles: number
-
   maxCrawlers: number
 
+  // New Usage Limits for Pricing Strategy
+  maxSMSPerMonth?: number
+  maxWebSearchesPerMonth?: number
+  maxConversationSummariesPerMonth?: number
+  maxWhatsAppConversationsPerMonth?: number
+  maxVoiceMinutesPerMonth?: number
+  maxVoices?: number
+  maxOrders?: number // -1 for unlimited
+  maxForms?: number
+  maxSchedulingAppointments?: number // -1 for unlimited
+  maxCustomerTickets?: number // -1 for unlimited
+
+  // Features (existing)
   premiumSupport?: boolean
-
   basicCustomization: boolean
-
   brandingCustomization: boolean
-
   userInquiries: boolean
-
   chatFileAttachments: boolean
 
+  // Pricing
   price: number | undefined
+
+  // Overage Pricing Structure
+  overagePricing?: {
+    messagesPerUnit?: number
+    webSearchesPerUnit?: number
+    summariesPerUnit?: number
+    whatsAppConversationsPerUnit?: number
+    voiceMinutesPerUnit?: number
+    smsPerUnit?: number
+  }
 }
 
 export type UserSubscriptionPlan = SubscriptionPlan &

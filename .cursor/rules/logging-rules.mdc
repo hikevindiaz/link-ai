@@ -1,0 +1,133 @@
+---
+description: loggin, log rules
+globs: 
+alwaysApply: false
+---
+# Logging Guidelines
+
+## Logging Files and Structure
+- **lib/logger.ts**: Core logging implementation with module-based filtering
+- **lib/log-config.ts**: Configuration utility with helper functions
+- **app/(dashboard)/dashboard/settings/debug/page.tsx**: UI for configuring logging in development
+
+## Setup and Initialization
+Logging is automatically configured based on environment:
+```typescript
+// In app/layout.tsx
+import { disableDebugLogging } from "@/lib/log-config";
+
+// Disable excessive debug logging in production
+if (process.env.NODE_ENV === 'production') {
+  disableDebugLogging();
+}
+```
+
+## How to Use the Logger
+Import and use the logger in any component:
+```typescript
+import { logger } from "@/lib/logger";
+
+// Basic usage with module
+logger.info("Operation completed", { result: "success" }, "module-name");
+
+// Error with context
+logger.error("Operation failed", { 
+  error: error.message, 
+  details: error.stack 
+}, "module-name");
+```
+
+## Configuration Utilities
+Import these functions to control logging behavior:
+```typescript
+import { 
+  configureLogging, 
+  disableDebugLogging, 
+  enableDebugForModules,
+  resetLoggingToDefaults
+} from "@/lib/log-config";
+
+// Disable all debug logs
+disableDebugLogging();
+
+// Enable specific modules with high verbosity
+enableDebugForModules(['api', 'auth', 'database']);
+
+// Custom configuration
+configureLogging({
+  verbosity: 'medium',  // 'low', 'medium', or 'high'
+  enabledModules: ['core', 'api', 'auth']
+});
+
+// Reset to defaults
+resetLoggingToDefaults();
+```
+
+## Logging Levels
+- **debug**: For detailed debugging information, only shown in development with high verbosity
+- **info**: For general information about application flow
+- **warn**: For non-critical issues that should be reviewed
+- **error**: For critical issues that need immediate attention
+
+## Module-Based Logging
+Always include the module name as the third parameter:
+```typescript
+logger.info("User authenticated", { userId: "123" }, "auth");
+logger.error("API request failed", { endpoint: "/api/users", status: 500 }, "api");
+```
+
+## Best Practices
+1. **DO** include a module identifier with each log
+2. **DO** include relevant data as a structured object
+3. **DO** sanitize sensitive information before logging
+4. **DO** use the appropriate log level for the message
+5. **DON'T** log passwords, tokens, or full user data
+6. **DON'T** log verbose information in production
+7. **DON'T** add debug logs for routine operations
+
+## Noisy Modules to Avoid
+Avoid logging routine operations in these noisy modules:
+- `animation`: Animation state changes
+- `ui-updates`: React component re-renders
+- `sidebar`: Sidebar state changes
+- `matching`: Agent matching operations
+
+## Data Sanitization
+Sensitive fields are automatically redacted by the logger:
+```typescript
+// This will automatically redact id, userId, openaiId, openaiKey, phoneNumber
+logger.info("User data", userData, "users");
+// Output: [INFO]: User data Data: { "id": "[REDACTED]", ... }
+```
+
+## Template Examples
+```typescript
+// API request logging
+logger.info(`${method} request to ${endpoint}`, { 
+  requestId, 
+  params: sanitizedParams 
+}, "api");
+
+// Error logging with context
+logger.error(`Failed to ${operation}`, { 
+  error: error.message, 
+  code: error.code, 
+  context: { resource, action } 
+}, "core");
+
+// User action logging
+logger.info(`User ${action}`, { 
+  userId: user.id, 
+  result: outcome 
+}, "user");
+```
+
+## Debug UI
+A dedicated debug UI is available at `/dashboard/settings/debug` that allows:
+- Changing verbosity levels
+- Enabling/disabling specific modules
+- Adding custom modules to monitor
+- Testing log output
+- Resetting to default configuration
+
+This page is only effective in development mode.

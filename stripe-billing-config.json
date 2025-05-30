@@ -1,0 +1,197 @@
+{
+  "subscriptionPlans": [
+    {
+      "planId": "starter",
+      "productId": "prod_SP1cniYdT6naVy",
+      "priceId": "price_1RUDYnBMnxCzo29MYxGrDWG7",
+      "name": "Starter Plan",
+      "price": 69
+    },
+    {
+      "planId": "growth",
+      "productId": "prod_SP1c7H1mlmPiEG",
+      "priceId": "price_1RUDYoBMnxCzo29MXVYvVNNv",
+      "name": "Growth Plan",
+      "price": 199
+    },
+    {
+      "planId": "scale",
+      "productId": "prod_SP1coXvy7DtdxN",
+      "priceId": "price_1RUDYpBMnxCzo29MpWmyrw6f",
+      "name": "Scale Plan",
+      "price": 499
+    }
+  ],
+  "overagePricing": [
+    {
+      "unit": "message",
+      "productId": "prod_SP1cDXgiN6oYer",
+      "name": "Message Overage",
+      "prices": [
+        {
+          "planTier": "starter",
+          "priceId": "price_1RUDYpBMnxCzo29M72gH4Xzf",
+          "unitAmount": 3
+        },
+        {
+          "planTier": "growth",
+          "priceId": "price_1RUDYpBMnxCzo29Mic7OlrGC",
+          "unitAmount": 3
+        },
+        {
+          "planTier": "scale",
+          "priceId": "price_1RUDYqBMnxCzo29M72v4c2go",
+          "unitAmount": 2
+        }
+      ]
+    },
+    {
+      "unit": "search",
+      "productId": "prod_SP1c7TlD5een5p",
+      "name": "Web Search Overage",
+      "prices": [
+        {
+          "planTier": "starter",
+          "priceId": "price_1RUDYqBMnxCzo29MHAChzdF4",
+          "unitAmount": 10
+        },
+        {
+          "planTier": "growth",
+          "priceId": "price_1RUDYrBMnxCzo29M7cU79sDw",
+          "unitAmount": 8
+        },
+        {
+          "planTier": "scale",
+          "priceId": "price_1RUDYrBMnxCzo29M60EpXJY9",
+          "unitAmount": 6
+        }
+      ]
+    },
+    {
+      "unit": "summary",
+      "productId": "prod_SP1c4uKRY2iSDV",
+      "name": "Conversation Summary Overage",
+      "prices": [
+        {
+          "planTier": "starter",
+          "priceId": "price_1RUDYsBMnxCzo29MUXYFwTBZ",
+          "unitAmount": 5
+        },
+        {
+          "planTier": "growth",
+          "priceId": "price_1RUDYsBMnxCzo29MbCVsuUSk",
+          "unitAmount": 4
+        },
+        {
+          "planTier": "scale",
+          "priceId": "price_1RUDYsBMnxCzo29M0Wqp8YBA",
+          "unitAmount": 3
+        }
+      ]
+    },
+    {
+      "unit": "whatsapp_conversation",
+      "productId": "prod_SP1ciaqIlFTVwE",
+      "name": "WhatsApp Conversation Overage",
+      "prices": [
+        {
+          "planTier": "starter",
+          "priceId": "price_1RUDYtBMnxCzo29MwRakJCTD",
+          "unitAmount": 7
+        },
+        {
+          "planTier": "growth",
+          "priceId": "price_1RUDYtBMnxCzo29MQw9kSt6g",
+          "unitAmount": 6
+        },
+        {
+          "planTier": "scale",
+          "priceId": "price_1RUDYtBMnxCzo29MbeQaiu5v",
+          "unitAmount": 5
+        }
+      ]
+    },
+    {
+      "unit": "voice_minute",
+      "productId": "prod_SP1cB2CYnKBtiM",
+      "name": "Voice Minute Overage",
+      "prices": [
+        {
+          "planTier": "starter",
+          "priceId": "price_1RUDYuBMnxCzo29M4J5CNWKC",
+          "unitAmount": 15
+        },
+        {
+          "planTier": "growth",
+          "priceId": "price_1RUDYuBMnxCzo29MZCmj14fu",
+          "unitAmount": 12
+        },
+        {
+          "planTier": "scale",
+          "priceId": "price_1RUDYuBMnxCzo29M2nIhzzmA",
+          "unitAmount": 10
+        }
+      ]
+    },
+    {
+      "unit": "sms",
+      "productId": "prod_SP1cX8bS0hETEr",
+      "name": "SMS Overage",
+      "prices": [
+        {
+          "planTier": "starter",
+          "priceId": "price_1RUDYvBMnxCzo29MqtNp0IsM",
+          "unitAmount": 8
+        },
+        {
+          "planTier": "growth",
+          "priceId": "price_1RUDYvBMnxCzo29McOS7RFEU",
+          "unitAmount": 8
+        },
+        {
+          "planTier": "scale",
+          "priceId": "price_1RUDYvBMnxCzo29MwCeBBrkP",
+          "unitAmount": 6
+        }
+      ]
+    }
+  ],
+  "addons": [
+    {
+      "name": "Zapier Integration",
+      "productId": "prod_SP1cm9iYyfbE1h",
+      "priceId": "price_1RUDYwBMnxCzo29MXNrQlbhc",
+      "price": 15,
+      "integration": "zapier"
+    },
+    {
+      "name": "Slack Integration",
+      "productId": "prod_SP1c6edhRMLrCL",
+      "priceId": "price_1RUDYwBMnxCzo29MwFOqRKp3",
+      "price": 10,
+      "integration": "slack"
+    },
+    {
+      "name": "Microsoft Teams Integration",
+      "productId": "prod_SP1cnTwa7r08Xd",
+      "priceId": "price_1RUDYxBMnxCzo29MIFxqttcI",
+      "price": 15,
+      "integration": "teams"
+    },
+    {
+      "name": "Advanced Analytics",
+      "productId": "prod_SP1c0woGiRo5ia",
+      "priceId": "price_1RUDYyBMnxCzo29MNogcjhTr",
+      "price": 25,
+      "integration": "analytics"
+    },
+    {
+      "name": "Custom Model Training",
+      "productId": "prod_SP1c015JUINSj9",
+      "priceId": "price_1RUDYyBMnxCzo29MnNL5Q8zZ",
+      "price": 100,
+      "integration": "custom_training"
+    }
+  ],
+  "generatedAt": "2025-05-29T21:00:32.512Z"
+}

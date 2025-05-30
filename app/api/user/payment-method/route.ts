@@ -27,8 +27,9 @@ export async function GET(req: NextRequest) {
     // In a real implementation, you would also check with Stripe API if the customer has a valid payment method
     const hasPaymentMethod = Boolean(user?.stripeCustomerId);
     
-    // Check if subscription is active
-    const hasActiveSubscription = user?.stripeSubscriptionStatus === 'active';
+    // Check if subscription is active (including trials and beta users)
+    const validSubscriptionStatuses = ['active', 'trialing', 'beta_active'];
+    const hasActiveSubscription = user?.stripeSubscriptionStatus && validSubscriptionStatuses.includes(user.stripeSubscriptionStatus);
     
     return NextResponse.json({
       hasPaymentMethod,

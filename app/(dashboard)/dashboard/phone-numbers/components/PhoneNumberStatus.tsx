@@ -3,6 +3,7 @@ import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 interface PhoneNumberStatusProps {
   phoneNumber: {
@@ -10,34 +11,24 @@ interface PhoneNumberStatusProps {
     number: string;
     status: 'active' | 'suspended' | 'pending';
     twilioSid?: string;
+    calculatedStatus?: 'active' | 'pending' | 'warning' | 'suspended';
+    warningMessage?: string;
+    statusReason?: string;
   };
 }
 
 export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isForceActivating, setIsForceActivating] = useState(false);
+  const router = useRouter();
 
-  // Function to refresh the status directly from Twilio
+  // Function to refresh the status
   const refreshStatus = async () => {
-    // Removed check for twilioSid - rely on internal ID
-    // if (!phoneNumber.twilioSid) return; 
-    
     try {
       setIsRefreshing(true);
       
-      const response = await fetch(`/api/twilio/phone-numbers/${phoneNumber.id}/refresh-status`, {
-        method: 'POST',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to refresh phone number status');
-      }
-      
+      // Refresh the page to get updated status
+      router.refresh();
       toast.success('Phone number status refreshed');
-      
-      // You would typically refresh the page or update state here
-      // For now, we'll just show a success message and reload the page
-      setTimeout(() => window.location.reload(), 1500);
       
     } catch (error) {
       console.error('Error refreshing phone number status:', error);
@@ -47,64 +38,48 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
     }
   };
 
-  // Function to force activate a suspended phone number
-  const forceActivate = async () => {
-    try {
-      setIsForceActivating(true);
-      
-      const response = await fetch(`/api/twilio/phone-numbers/refresh-all-statuses`, {
-        method: 'POST',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to activate phone number');
-      }
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        toast.success('Phone number status updated');
-        // Reload the page after a short delay to show updated status
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        toast.error(data.message || 'Failed to update phone number status');
-      }
-    } catch (error) {
-      console.error('Error activating phone number:', error);
-      toast.error('Failed to activate phone number');
-    } finally {
-      setIsForceActivating(false);
-    }
-  };
-
   const getStatusDetails = () => {
-    switch (phoneNumber.status) {
+    // Use calculated status if available, otherwise fall back to regular status
+    const effectiveStatus = phoneNumber.calculatedStatus || phoneNumber.status;
+    
+    switch (effectiveStatus) {
       case 'active':
         return {
           icon: <Icons.check className="h-5 w-5 text-green-500" />,
           title: 'Active',
-          description: 'This phone number is active and ready to use.',
+          description: phoneNumber.warningMessage || 'This phone number is active and ready to use.',
           color: 'text-green-600 dark:text-green-500',
           bgColor: 'bg-green-50 dark:bg-green-900/20',
         };
-      case 'suspended':
+      case 'warning':
         return {
           icon: <Icons.warning className="h-5 w-5 text-yellow-500" />,
-          title: 'Suspended',
-          description: 'This phone number has been suspended. Please check your billing information.',
+          title: 'Action Required',
+          description: phoneNumber.warningMessage || 'Please add a payment method to keep this number.',
           color: 'text-yellow-600 dark:text-yellow-500',
           bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
           action: {
-            label: 'Force Activate',
-            handler: forceActivate,
-            isLoading: isForceActivating
+            label: 'Add Payment Method',
+            handler: () => router.push('/dashboard/billing'),
+          }
+        };
+      case 'suspended':
+        return {
+          icon: <Icons.warning className="h-5 w-5 text-red-500" />,
+          title: 'Suspended',
+          description: phoneNumber.warningMessage || 'This phone number has been suspended due to payment issues.',
+          color: 'text-red-600 dark:text-red-500',
+          bgColor: 'bg-red-50 dark:bg-red-900/20',
+          action: {
+            label: 'Add Payment Method',
+            handler: () => router.push('/dashboard/billing'),
           }
         };
       case 'pending':
         return {
           icon: <Icons.clock className="h-5 w-5 text-indigo-500" />,
           title: 'Pending',
-          description: 'This phone number is being provisioned. It will be available soon.',
+          description: 'This phone number is ready to use but waiting to be assigned to an agent.',
           color: 'text-indigo-600 dark:text-indigo-500',
           bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
         };
@@ -135,7 +110,7 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
             variant="ghost" 
             size="sm" 
             onClick={refreshStatus}
-            disabled={isRefreshing || !phoneNumber.twilioSid}
+            disabled={isRefreshing}
             className="h-8 w-8 p-0"
             title="Refresh status"
           >
@@ -161,26 +136,23 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
                 {statusDetails.description}
               </p>
               
-              {/* Action button for suspended numbers */}
+              {/* Show status reason if available */}
+              {phoneNumber.statusReason && (
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  Reason: {phoneNumber.statusReason}
+                </p>
+              )}
+              
+              {/* Action button */}
               {statusDetails.action && (
                 <Button 
                   variant="secondary" 
                   size="sm" 
                   className="mt-3"
                   onClick={statusDetails.action.handler}
-                  disabled={statusDetails.action.isLoading}
                 >
-                  {statusDetails.action.isLoading ? (
-                    <>
-                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mr-2"></div>
-                      Activating...
-                    </>
-                  ) : (
-                    <>
-                      <Icons.refresh className="h-3.5 w-3.5 mr-1.5" />
-                      {statusDetails.action.label}
-                    </>
-                  )}
+                  <Icons.billing className="h-3.5 w-3.5 mr-1.5" />
+                  {statusDetails.action.label}
                 </Button>
               )}
             </div>
@@ -189,17 +161,12 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
 
         <div className="mt-4">
           <h5 className="font-medium text-sm text-gray-900 dark:text-gray-50 mb-2">
-            Status Monitoring
+            Billing Information
           </h5>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Status changes are automatically synced via webhooks. 
-            Any changes in phone number status—such as purchase, modification, or deletion—are 
-            immediately reflected in your system.
-          </p>
-          
-          <div className="mt-3 text-xs text-gray-500 border-l-2 border-gray-200 pl-3 py-1">
-            <p>Last status update: {new Date().toLocaleString()}</p>
-            {/* {phoneNumber.twilioSid && <p>Twilio SID: {phoneNumber.twilioSid}</p>} */}
+          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-xs text-gray-500 mt-2">
+              Phone numbers are billed monthly. Add a payment method to ensure uninterrupted service.
+            </p>
           </div>
         </div>
       </div>

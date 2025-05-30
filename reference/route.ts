@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     const chatbot = await chatbotResponse.json();
 
     // Get the model name from the chatbot's model relation
-    let modelName = 'gpt-4o-mini'; // Default model
+    let modelName = 'gpt-4.1-mini-2025-04-14'; // Default model
     if (chatbot.model && chatbot.model.name) {
       modelName = chatbot.model.name;
     }
