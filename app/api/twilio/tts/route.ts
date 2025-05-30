@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateSpeech } from '@/lib/elevenlabs';
 
+// Runtime configuration for this route
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
  * Text-to-speech endpoint that generates ElevenLabs audio on demand
  * and serves it to Twilio as MP3 audio
@@ -51,11 +55,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// Increase the body size limit for this route
-export const config = {
-  api: {
-    responseLimit: '10mb',
-  },
-}; 
+} 
