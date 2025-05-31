@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import OpenAI from "openai";
-import { OpenAIStream, StreamingTextResponse } from 'ai';
 
 
 export const maxDuration = 300;
@@ -168,15 +167,18 @@ export async function POST(
     // Extract the assistant's response
     const assistantResponse = completion.choices[0].message.content;
     
-    // Create a stream with the assistant's response
-    const stream = createStream(assistantResponse);
-    
-    // Return a streaming response
-    return StreamingTextResponse(stream, {
-      headers: {
-        'X-Thread-ID': threadId,
+    // Return the response with the thread ID in headers
+    return NextResponse.json(
+      {
+        message: assistantResponse,
+        threadId: threadId,
       },
-    });
+      {
+        headers: {
+          'X-Thread-ID': threadId,
+        },
+      }
+    );
   } catch (error) {
     console.error("Error in chat API:", error);
     

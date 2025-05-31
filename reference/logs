@@ -1,89 +1,549 @@
-Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
-2v3:1 You may test your Stripe.js integration over HTTP. However, live Stripe.js integrations must use HTTPS.
-value @ v3:1Understand this warning
-script.debug.js:1 [Vercel Speed Insights] Debug mode is enabled by default in development. No requests will be sent to the server.
-warn-once.js:16 Image with src "/LINK AI ICON DARK.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-warnOnce @ warn-once.js:16Understand this warning
-warn-once.js:16 Image with src "/LINK AI LOGO DARK.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-warnOnce @ warn-once.js:16Understand this warning
-AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
-AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=true, Value=true, Enabled=true
-AppSidebar.tsx:180 [AppSidebar] Session Data: Object
-AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
-page.tsx:388 🔍 [DEBUG] Fetching subscription...
-page.tsx:390 📊 [DEBUG] Response status: 200
-page.tsx:392 📊 [DEBUG] Response data: {
-  "success": true,
-  "subscription": null,
-  "isSubscribed": false
-}
-page.tsx:398 ⚠️ [DEBUG] No subscription found or data.success is false
-page.tsx:399 ⚠️ [DEBUG] data.success: true
-page.tsx:400 ⚠️ [DEBUG] data.subscription: null
-page.tsx:401 ⚠️ [DEBUG] data.isSubscribed: false
-app-index.js:33 Warning: In HTML, <button> cannot be a descendant of <button>.
-This will cause a hydration error.
-    at button
-    at button
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-primitive/dist/index.mjs:36:13)
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-slot/dist/index.mjs:34:11)
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-slot/dist/index.mjs:15:11)
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-primitive/dist/index.mjs:36:13)
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-popper/dist/index.mjs:69:13)
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-tooltip/dist/index.mjs:204:13)
-    at Provider (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-context/dist/index.mjs:34:15)
-    at Provider (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-context/dist/index.mjs:34:15)
-    at Popper (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-popper/dist/index.mjs:54:13)
-    at Tooltip (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-tooltip/dist/index.mjs:95:13)
-    at div
-    at td
-    at _c12 (webpack-internal:///(app-pages-browser)/./components/ui/table.tsx:122:11)
-    at tr
-    at _c10 (webpack-internal:///(app-pages-browser)/./components/ui/table.tsx:108:11)
-    at tbody
-    at _c8 (webpack-internal:///(app-pages-browser)/./components/ui/table.tsx:92:11)
-    at table
-    at _c2 (webpack-internal:///(app-pages-browser)/./components/ui/table.tsx:44:11)
-    at div
-    at PaymentMethodsSection (webpack-internal:///(app-pages-browser)/./app/(dashboard)/dashboard/settings/components/PaymentMethodsSection.tsx:22:11)
-    at div
-    at div
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-primitive/dist/index.mjs:36:13)
-    at Presence (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-presence/dist/index.mjs:26:13)
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-tabs/dist/index.mjs:175:13)
-    at _c5 (webpack-internal:///(app-pages-browser)/./components/ui/tabs.tsx:100:11)
-    at div
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-primitive/dist/index.mjs:36:13)
-    at Provider (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-context/dist/index.mjs:34:15)
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-tabs/dist/index.mjs:44:13)
-    at Tabs
-    at div
-    at SettingsPage (webpack-internal:///(app-pages-browser)/./app/(dashboard)/dashboard/settings/page.tsx:199:90)
-    at ClientPageRoot (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/client-page.js:14:11)
-    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:243:11)
-    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:74:9)
-    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:82:11)
-    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:84:11)
-    at Suspense
-    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:349:11)
-    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:160:11)
-    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:153:9)
-    at ScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:228:11)
-    at RenderFromTemplateContext (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/render-from-template-context.js:16:44)
-    at OuterLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:370:11)
-    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:243:11)
-    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:74:9)
-    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:82:11)
-    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:84:11)
-    at Suspense
-    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:34
-window.console.error @ app-index.js:33Understand this error
-
-                
-          
-          
-          
-         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning
+[23:34:40.008] Running build in Washington, D.C., USA (East) – iad1
+[23:34:40.009] Build machine configuration: 4 cores, 8 GB
+[23:34:40.025] Cloning github.com/hikevindiaz/tru-ai (Branch: main, Commit: 7d4c3d1)
+[23:34:41.137] Cloning completed: 1.112s
+[23:34:47.342] Restored build cache from previous deployment (v15YeY1dYn3rxVMZ6C1MLXJHqDho)
+[23:34:50.896] Running "vercel build"
+[23:34:51.344] Vercel CLI 42.2.0
+[23:34:51.470] Detected OpenTelemetry dependency: @opentelemetry/api@1.9.0, which meets the minimum version requirement of 1.7.0
+[23:34:51.741] Running "install" command: `npm install --legacy-peer-deps`...
+[23:34:53.733] npm warn EBADENGINE Unsupported engine {
+[23:34:53.734] npm warn EBADENGINE   package: 'jlick@0.0.4',
+[23:34:53.734] npm warn EBADENGINE   required: { node: '~0.9.12 || ~0.10.0' },
+[23:34:53.734] npm warn EBADENGINE   current: { node: 'v20.19.2', npm: '10.8.2' }
+[23:34:53.734] npm warn EBADENGINE }
+[23:35:02.442] 
+[23:35:02.442] changed 1 package, and audited 2672 packages in 11s
+[23:35:02.442] 
+[23:35:02.443] 494 packages are looking for funding
+[23:35:02.443]   run `npm fund` for details
+[23:35:02.548] 
+[23:35:02.548] 42 vulnerabilities (4 low, 29 moderate, 4 high, 5 critical)
+[23:35:02.549] 
+[23:35:02.549] To address issues that do not require attention, run:
+[23:35:02.549]   npm audit fix
+[23:35:02.549] 
+[23:35:02.549] To address all issues possible (including breaking changes), run:
+[23:35:02.549]   npm audit fix --force
+[23:35:02.549] 
+[23:35:02.549] Some issues need review, and may require choosing
+[23:35:02.549] a different dependency.
+[23:35:02.549] 
+[23:35:02.549] Run `npm audit` for details.
+[23:35:02.567] Detected Next.js version: 14.2.26
+[23:35:02.567] Running "npx prisma generate && NEXT_SKIP_TYPE_CHECK=1 NEXT_IGNORE_ESLINT=1 next build"
+[23:35:03.535] Prisma schema loaded from prisma/schema.prisma
+[23:35:04.480] 
+[23:35:04.481] ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 488ms
+[23:35:04.481] 
+[23:35:04.481] Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+[23:35:04.481] 
+[23:35:04.481] Help us improve the Prisma ORM for everyone. Share your feedback in a short 2-min survey: https://pris.ly/orm/survey/release-5-22
+[23:35:04.481] 
+[23:35:05.389]   ▲ Next.js 14.2.26
+[23:35:05.389]   - Environments: .env.production
+[23:35:05.389]   - Experiments (use with caution):
+[23:35:05.389]     · memoryBasedWorkersCount
+[23:35:05.389] 
+[23:35:05.420]    Creating an optimized production build ...
+[23:35:43.752] 
+[23:35:43.753] [1m[33mwarn[39m[22m - The class `ease-[cubic-bezier(0.16,1,0.3,1.03)]` is ambiguous and matches multiple utilities.
+[23:35:43.753] [1m[33mwarn[39m[22m - If this is content and not a class, replace it with `ease-&lsqb;cubic-bezier(0.16,1,0.3,1.03)&rsqb;` to silence this warning.
+[23:35:43.753] 
+[23:35:43.753] [1m[33mwarn[39m[22m - The class `ease-[cubic-bezier(0.87,_0,_0.13,_1)]` is ambiguous and matches multiple utilities.
+[23:35:43.753] [1m[33mwarn[39m[22m - If this is content and not a class, replace it with `ease-&lsqb;cubic-bezier(0.87,_0,_0.13,_1)&rsqb;` to silence this warning.
+[23:35:49.301]  ⚠ Compiled with warnings
+[23:35:49.302] 
+[23:35:49.302] ./app/api/chatbots/[chatbotId]/chat/route.ts
+[23:35:49.302] Attempted import error: 'StreamingTextResponse' is not exported from 'ai' (imported as 'StreamingTextResponse').
+[23:35:49.302] 
+[23:35:49.302] Import trace for requested module:
+[23:35:49.302] ./app/api/chatbots/[chatbotId]/chat/route.ts
+[23:35:49.302] 
+[23:35:49.302] ./app/api/cron/phone-number-billing/route.ts
+[23:35:49.302] Attempted import error: 'updatePhoneNumberStatuses' is not exported from '@/lib/phone-number-status' (imported as 'updatePhoneNumberStatuses').
+[23:35:49.302] 
+[23:35:49.302] Import trace for requested module:
+[23:35:49.302] ./app/api/cron/phone-number-billing/route.ts
+[23:35:49.302] 
+[23:35:49.302] ./lib/chat-interface/db/queries.ts
+[23:35:49.303] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.303] 
+[23:35:49.303] Import trace for requested module:
+[23:35:49.303] ./lib/chat-interface/db/queries.ts
+[23:35:49.303] ./app/(chat)/api/document/route.ts
+[23:35:49.303] 
+[23:35:49.303] ./lib/chat-interface/db/queries.ts
+[23:35:49.303] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.303] 
+[23:35:49.303] Import trace for requested module:
+[23:35:49.303] ./lib/chat-interface/db/queries.ts
+[23:35:49.303] ./app/(chat)/api/document/route.ts
+[23:35:49.303] 
+[23:35:49.303] ./lib/chat-interface/db/queries.ts
+[23:35:49.303] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.303] 
+[23:35:49.303] Import trace for requested module:
+[23:35:49.304] ./lib/chat-interface/db/queries.ts
+[23:35:49.304] ./app/(chat)/api/document/route.ts
+[23:35:49.304] 
+[23:35:49.304] ./lib/chat-interface/db/queries.ts
+[23:35:49.304] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.304] 
+[23:35:49.304] Import trace for requested module:
+[23:35:49.304] ./lib/chat-interface/db/queries.ts
+[23:35:49.304] ./app/(chat)/api/document/route.ts
+[23:35:49.304] 
+[23:35:49.304] ./lib/chat-interface/db/queries.ts
+[23:35:49.304] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.304] 
+[23:35:49.304] Import trace for requested module:
+[23:35:49.304] ./lib/chat-interface/db/queries.ts
+[23:35:49.304] ./app/(chat)/api/document/route.ts
+[23:35:49.304] 
+[23:35:49.304] ./lib/chat-interface/db/queries.ts
+[23:35:49.304] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.304] 
+[23:35:49.304] Import trace for requested module:
+[23:35:49.304] ./lib/chat-interface/db/queries.ts
+[23:35:49.305] ./app/(chat)/api/document/route.ts
+[23:35:49.305] 
+[23:35:49.305] ./lib/chat-interface/db/queries.ts
+[23:35:49.305] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.305] 
+[23:35:49.305] Import trace for requested module:
+[23:35:49.305] ./lib/chat-interface/db/queries.ts
+[23:35:49.305] ./app/(chat)/api/document/route.ts
+[23:35:49.305] 
+[23:35:49.305] ./lib/chat-interface/db/queries.ts
+[23:35:49.305] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.305] 
+[23:35:49.305] Import trace for requested module:
+[23:35:49.305] ./lib/chat-interface/db/queries.ts
+[23:35:49.306] ./app/(chat)/api/document/route.ts
+[23:35:49.306] 
+[23:35:49.306] ./lib/chat-interface/db/queries.ts
+[23:35:49.306] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.306] 
+[23:35:49.306] Import trace for requested module:
+[23:35:49.306] ./lib/chat-interface/db/queries.ts
+[23:35:49.306] ./app/(chat)/api/document/route.ts
+[23:35:49.306] 
+[23:35:49.307] ./lib/chat-interface/db/queries.ts
+[23:35:49.307] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.307] 
+[23:35:49.307] Import trace for requested module:
+[23:35:49.307] ./lib/chat-interface/db/queries.ts
+[23:35:49.307] ./app/(chat)/api/document/route.ts
+[23:35:49.307] 
+[23:35:49.307] ./lib/chat-interface/db/queries.ts
+[23:35:49.307] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.307] 
+[23:35:49.307] Import trace for requested module:
+[23:35:49.307] ./lib/chat-interface/db/queries.ts
+[23:35:49.307] ./app/(chat)/api/document/route.ts
+[23:35:49.307] 
+[23:35:49.307] ./lib/chat-interface/db/queries.ts
+[23:35:49.307] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.309] 
+[23:35:49.309] Import trace for requested module:
+[23:35:49.309] ./lib/chat-interface/db/queries.ts
+[23:35:49.309] ./app/(chat)/api/document/route.ts
+[23:35:49.309] 
+[23:35:49.309] ./lib/chat-interface/db/queries.ts
+[23:35:49.309] Attempted import error: 'vote' is not exported from './schema' (imported as 'vote').
+[23:35:49.309] 
+[23:35:49.309] Import trace for requested module:
+[23:35:49.309] ./lib/chat-interface/db/queries.ts
+[23:35:49.310] ./app/(chat)/api/document/route.ts
+[23:35:49.310] 
+[23:35:49.310]    Skipping validation of types
+[23:35:49.310]    Skipping linting
+[23:35:49.621]    Collecting page data ...
+[23:35:51.184] Auth module initializing
+[23:35:51.185] DATABASE_URL format check: postgresql:/
+[23:35:51.185] DIRECT_URL format check: postgresql:/
+[23:35:51.185] Initializing Magic SDK on server
+[23:35:51.211] Auth module initializing
+[23:35:51.212] DATABASE_URL format check: postgresql:/
+[23:35:51.212] DIRECT_URL format check: postgresql:/
+[23:35:51.212] Initializing Magic SDK on server
+[23:35:51.234] Auth module initializing
+[23:35:51.235] DATABASE_URL format check: postgresql:/
+[23:35:51.235] DIRECT_URL format check: postgresql:/
+[23:35:51.235] Initializing Magic SDK on server
+[23:35:51.242] MAGIC_SECRET_KEY is configured [Key hidden]
+[23:35:51.243] Magic admin client initialized successfully
+[23:35:51.244] Prisma client initialized: true
+[23:35:51.276] MAGIC_SECRET_KEY is configured [Key hidden]
+[23:35:51.277] Magic admin client initialized successfully
+[23:35:51.278] Prisma client initialized: true
+[23:35:51.291] MAGIC_SECRET_KEY is configured [Key hidden]
+[23:35:51.292] Magic admin client initialized successfully
+[23:35:51.293] Prisma client initialized: true
+[23:35:51.317] Auth module initializing
+[23:35:51.317] DATABASE_URL format check: postgresql:/
+[23:35:51.317] DIRECT_URL format check: postgresql:/
+[23:35:51.318] Initializing Magic SDK on server
+[23:35:51.379] MAGIC_SECRET_KEY is configured [Key hidden]
+[23:35:51.380] Magic admin client initialized successfully
+[23:35:51.380] Prisma client initialized: true
+[23:35:51.745]  ⚠ Using edge runtime on a page currently disables static generation for that page
+[23:35:56.635]    Generating static pages (0/123) ...
+[23:35:59.176] TypeError: Cannot destructure property 'data' of '(0 , b.useSession)(...)' as it is undefined.
+[23:35:59.176]     at g (/vercel/path0/.next/server/pages/debug-subscription.js:1:799)
+[23:35:59.177]     at Wc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:68:44)
+[23:35:59.177]     at Zc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:70:253)
+[23:35:59.177]     at Z (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:76:89)
+[23:35:59.177]     at Xc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:68:409)
+[23:35:59.180]     at Zc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:70:210)
+[23:35:59.180]     at Z (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:76:89)
+[23:35:59.180]     at Zc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:70:481)
+[23:35:59.180]     at Z (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:76:89)
+[23:35:59.180]     at $c (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:78:98)
+[23:35:59.180] 
+[23:35:59.180] Error occurred prerendering page "/debug-subscription". Read more: https://nextjs.org/docs/messages/prerender-error
+[23:35:59.180] 
+[23:35:59.180] TypeError: Cannot destructure property 'data' of '(0 , b.useSession)(...)' as it is undefined.
+[23:35:59.181]     at g (/vercel/path0/.next/server/pages/debug-subscription.js:1:799)
+[23:35:59.181]     at Wc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:68:44)
+[23:35:59.182]     at Zc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:70:253)
+[23:35:59.182]     at Z (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:76:89)
+[23:35:59.182]     at Xc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:68:409)
+[23:35:59.182]     at Zc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:70:210)
+[23:35:59.182]     at Z (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:76:89)
+[23:35:59.182]     at Zc (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:70:481)
+[23:35:59.182]     at Z (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:76:89)
+[23:35:59.182]     at $c (/vercel/path0/node_modules/react-dom/cjs/react-dom-server.browser.production.min.js:78:98)
+[23:36:05.402] Magic callback error: B [Error]: Dynamic server usage: Route /api/auth/callback/magic couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:05.402]     at V (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+[23:36:05.402]     at Object.get (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+[23:36:05.402]     at l (/vercel/path0/.next/server/app/api/auth/callback/magic/route.js:1:1447)
+[23:36:05.402]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:05.403]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:05.403]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:05.403]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:05.403]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:05.403]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+[23:36:05.403]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+[23:36:05.403]   description: "Route /api/auth/callback/magic couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:05.403]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:05.403] }
+[23:36:05.403] Error fetching invoices: n [Error]: Dynamic server usage: Route /api/billing/invoices couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:05.403]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:05.403]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:05.403]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:05.404]     at d (/vercel/path0/.next/server/app/api/billing/invoices/route.js:1:1820)
+[23:36:05.404]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:05.404]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:05.404]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:05.404]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:05.404]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:05.404]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:05.404]   description: "Route /api/billing/invoices couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:05.404]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:05.404] }
+[23:36:05.560] Error fetching payment methods from DB: n [Error]: Dynamic server usage: Route /api/billing/payment-methods couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:05.560]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:05.560]     at c (/vercel/path0/.next/server/app/api/webhooks/stripe/route.js:1:7643)
+[23:36:05.561]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:05.561]     at c (/vercel/path0/.next/server/app/api/billing/payment-methods/route.js:1:1694)
+[23:36:05.561]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:05.561]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:05.561]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:05.561]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:05.561]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:05.561]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:05.562]   description: "Route /api/billing/payment-methods couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:05.562]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:05.562] }
+[23:36:05.562] Error getting message count: n [Error]: Dynamic server usage: Route /api/billing/message-count couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:05.562]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:05.562]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:05.562]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:05.562]     at l (/vercel/path0/.next/server/app/api/billing/message-count/route.js:1:1695)
+[23:36:05.562]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:05.562]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:05.563]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:05.563]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:05.563]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:05.563]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:05.563]   description: "Route /api/billing/message-count couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:05.563]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:05.563] }
+[23:36:06.892] Error fetching subscription info: n [Error]: Dynamic server usage: Route /api/billing/subscription-info couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:06.892]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:06.892]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:06.892]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:06.893]     at d (/vercel/path0/.next/server/app/api/billing/subscription-info/route.js:1:1820)
+[23:36:06.893]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:06.893]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:06.893]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:06.893]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:06.893]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:06.893]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:06.893]   description: "Route /api/billing/subscription-info couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:06.893]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:06.893] }
+[23:36:06.893] Error fetching subscription: n [Error]: Dynamic server usage: Route /api/billing/subscription couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:06.893]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:06.893]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:06.893]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:06.893]     at d (/vercel/path0/.next/server/app/api/billing/subscription/route.js:1:1820)
+[23:36:06.893]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:06.893]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:06.894]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:06.894]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:06.894]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:06.894]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:06.894]   description: "Route /api/billing/subscription couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:06.894]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:06.894] }
+[23:36:07.181]    Generating static pages (30/123) 
+[23:36:07.297] [Cron] Error in calendar notifications job: B [Error]: Dynamic server usage: Route /api/cron/calendar-notifications couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:07.298]     at V (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+[23:36:07.298]     at Object.get (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+[23:36:07.298]     at l (/vercel/path0/.next/server/app/api/cron/calendar-notifications/route.js:1:1478)
+[23:36:07.298]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:07.298]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:07.298]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:07.299]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:07.299]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:07.299]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+[23:36:07.299]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+[23:36:07.299]   description: "Route /api/cron/calendar-notifications couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:07.299]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:07.299] }
+[23:36:07.405] [Cron] Error in phone number billing job: B [Error]: Dynamic server usage: Route /api/cron/phone-number-billing couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:07.406]     at V (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+[23:36:07.406]     at Object.get (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+[23:36:07.406]     at p (/vercel/path0/.next/server/app/api/cron/phone-number-billing/route.js:1:1627)
+[23:36:07.406]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:07.406]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:07.406]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:07.406]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:07.406]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:07.406]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+[23:36:07.406]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+[23:36:07.406]   description: "Route /api/cron/phone-number-billing couldn't be rendered statically because it used `request.headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:07.407]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:07.407] }
+[23:36:07.854] Error checking knowledge source vector status: n [Error]: Dynamic server usage: Route /api/knowledge-sources/vector-status couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:07.854]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:07.854]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:07.855]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:07.855]     at f (/vercel/path0/.next/server/app/api/knowledge-sources/vector-status/route.js:1:1800)
+[23:36:07.855]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:07.855]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:07.855]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:07.855]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:07.855]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:07.855]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:07.855]   description: "Route /api/knowledge-sources/vector-status couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:07.855]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:07.855] }
+[23:36:07.856] Error fetching models: n [Error]: Dynamic server usage: Route /api/models couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:07.856]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:07.857]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:07.857]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:07.857]     at d (/vercel/path0/.next/server/app/api/models/route.js:1:1694)
+[23:36:07.857]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:07.857]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:07.857]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:07.857]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:07.857]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:07.857]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:07.857]   description: "Route /api/models couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:07.857]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:07.857] }
+[23:36:08.053] [API] Error checking onboarding status: n [Error]: Dynamic server usage: Route /api/onboarding/status couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:08.054]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:08.054]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:08.054]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:08.054]     at l (/vercel/path0/.next/server/app/api/onboarding/status/route.js:1:1723)
+[23:36:08.054]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:08.054]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:08.054]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:08.055]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:08.055]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:08.055]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:08.055]   description: "Route /api/onboarding/status couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:08.055]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:08.056] }
+[23:36:08.056] Testing OpenAI API...
+[23:36:08.230] Testing Assistants API...
+[23:36:08.520]    Generating static pages (61/123) 
+[23:36:08.619] Error getting display pricing: B [Error]: Dynamic server usage: Route /api/twilio/pricing/display couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:08.619]     at V (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+[23:36:08.619]     at Object.get (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+[23:36:08.619]     at u (/vercel/path0/.next/server/app/api/twilio/pricing/display/route.js:1:1502)
+[23:36:08.619]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:08.619]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:08.619]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:08.619]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:08.619]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:08.619]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+[23:36:08.619]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+[23:36:08.619]   description: "Route /api/twilio/pricing/display couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:08.619]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:08.619] }
+[23:36:08.758] Created test assistant: asst_MAe24Cs0WJVRQUwyAKIxufCJ
+[23:36:09.149] Created test thread: thread_MV4yahIxtsutBew95rsd0j6J
+[23:36:09.614] Added test message to thread
+[23:36:09.640] Error fetching user profile: n [Error]: Dynamic server usage: Route /api/user/profile couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:09.640]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:09.640]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:09.640]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:09.640]     at l (/vercel/path0/.next/server/app/api/user/profile/route.js:1:1695)
+[23:36:09.640]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:09.641]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:09.641]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:09.641]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:09.641]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:09.641]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:09.641]   description: "Route /api/user/profile couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:09.641]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:09.641] }
+[23:36:09.813] [WELCOME_STATUS_ERROR] n [Error]: Dynamic server usage: Route /api/user/welcome-status couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:09.813]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:09.813]     at c (/vercel/path0/.next/server/app/api/webhooks/stripe/route.js:1:7643)
+[23:36:09.814]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:09.814]     at d (/vercel/path0/.next/server/app/api/user/welcome-status/route.js:1:1723)
+[23:36:09.814]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:09.814]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:09.814]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:09.814]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:09.814]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:09.814]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:09.814]   description: "Route /api/user/welcome-status couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:09.814]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:09.814] }
+[23:36:09.814] Error checking payment method: n [Error]: Dynamic server usage: Route /api/user/payment-method couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:09.814]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:09.814]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:09.814]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:09.814]     at l (/vercel/path0/.next/server/app/api/user/payment-method/route.js:1:1696)
+[23:36:09.814]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:09.814]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:09.814]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:09.814]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:09.815]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:09.815]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:09.815]   description: "Route /api/user/payment-method couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:09.815]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:09.815] }
+[23:36:09.889] Error checking user existence: B [Error]: Dynamic server usage: Route /api/users/check-exists couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:09.889]     at V (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+[23:36:09.889]     at Object.get (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+[23:36:09.889]     at l (/vercel/path0/.next/server/app/api/users/check-exists/route.js:1:1692)
+[23:36:09.889]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:09.889]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:09.889]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:09.889]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:09.889]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:09.889]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+[23:36:09.890]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+[23:36:09.890]   description: "Route /api/users/check-exists couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:09.890]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:09.890] }
+[23:36:09.935] Error fetching user preferences: n [Error]: Dynamic server usage: Route /api/user/preferences couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:09.935]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:09.936]     at c (/vercel/path0/.next/server/app/api/webhooks/stripe/route.js:1:7643)
+[23:36:09.936]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:09.936]     at l (/vercel/path0/.next/server/app/api/user/preferences/route.js:1:1693)
+[23:36:09.936]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:09.936]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:09.936]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:09.936]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:09.936]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:09.936]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:09.936]   description: "Route /api/user/preferences couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:09.936]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:09.936] }
+[23:36:09.975] Error testing voice services: n [Error]: Dynamic server usage: Route /api/voice/test couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:09.975]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:09.975]     at d (/vercel/path0/.next/server/chunks/6862.js:27:27146)
+[23:36:09.975]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:09.976]     at c (/vercel/path0/.next/server/app/api/voice/test/route.js:1:1682)
+[23:36:09.976]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:09.976]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:09.976]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:09.976]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:09.976]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:09.976]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:09.977]   description: "Route /api/voice/test couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:09.977]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:09.977] }
+[23:36:09.977] [Voice API] Error fetching voice credentials: n [Error]: Dynamic server usage: Route /api/voice/credentials couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:09.977]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:09.977]     at c (/vercel/path0/.next/server/app/api/webhooks/stripe/route.js:1:7643)
+[23:36:09.977]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:09.978]     at c (/vercel/path0/.next/server/app/api/voice/credentials/route.js:1:1740)
+[23:36:09.978]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:09.978]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:09.978]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:09.978]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:09.978]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:09.978]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+[23:36:09.978]   description: "Route /api/voice/credentials couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:09.978]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:09.978] }
+[23:36:09.978] [Voice API] Processing credentials request
+[23:36:10.026] [Voice API] Error fetching voice credentials: B [Error]: Dynamic server usage: Route /api/voice-credentials couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:10.026]     at V (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+[23:36:10.026]     at Object.get (/vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+[23:36:10.026]     at c (/vercel/path0/.next/server/app/api/voice-credentials/route.js:1:1667)
+[23:36:10.026]     at /vercel/path0/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+[23:36:10.026]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+[23:36:10.027]     at NoopContextManager.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+[23:36:10.027]     at ContextAPI.with (/vercel/path0/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+[23:36:10.027]     at NoopTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+[23:36:10.027]     at ProxyTracer.startActiveSpan (/vercel/path0/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+[23:36:10.027]     at /vercel/path0/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+[23:36:10.028]   description: "Route /api/voice-credentials couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:10.028]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:10.028] }
+[23:36:10.028]    Generating static pages (92/123) 
+[23:36:10.814] Created run: run_ZMPySXGrIoyqj3W4bIBHvT5Q
+[23:36:11.062] [ROOT] Accessing root page
+[23:36:11.063] [ROOT] Accessing root page
+[23:36:11.063] [ROOT] Error in root page redirection: n [Error]: Dynamic server usage: Route / couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:11.063]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:11.063]     at c (/vercel/path0/.next/server/app/api/webhooks/stripe/route.js:1:7643)
+[23:36:11.063]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:11.063]     at s (/vercel/path0/.next/server/app/page.js:1:2977)
+[23:36:11.063]     at eh (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:134660)
+[23:36:11.063]     at e (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:137545)
+[23:36:11.063]     at ek (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:138019)
+[23:36:11.063]     at Array.toJSON (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:135629)
+[23:36:11.063]     at stringify (<anonymous>)
+[23:36:11.063]     at eP (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:142093) {
+[23:36:11.063]   description: "Route / couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:11.063]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:11.063] }
+[23:36:11.063] [ROOT] Error in root page redirection: n [Error]: Dynamic server usage: Route / couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+[23:36:11.063]     at l (/vercel/path0/.next/server/chunks/8948.js:1:56267)
+[23:36:11.063]     at c (/vercel/path0/.next/server/app/api/webhooks/stripe/route.js:1:7643)
+[23:36:11.063]     at a (/vercel/path0/.next/server/chunks/6862.js:27:19236)
+[23:36:11.063]     at s (/vercel/path0/.next/server/app/page.js:1:2977)
+[23:36:11.064]     at eh (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:134660)
+[23:36:11.064]     at e (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:137545)
+[23:36:11.064]     at ek (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:138019)
+[23:36:11.064]     at Array.toJSON (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:135629)
+[23:36:11.064]     at stringify (<anonymous>)
+[23:36:11.064]     at eP (/vercel/path0/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:142093) {
+[23:36:11.064]   description: "Route / couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+[23:36:11.064]   digest: 'DYNAMIC_SERVER_USAGE'
+[23:36:11.064] }
+[23:36:11.328] Initial run status: queued
+[23:36:12.642] Updated run status: in_progress
+[23:36:24.326] Updated run status: completed
+[23:36:24.326] Retrieved 2 messages from thread
+[23:36:24.326] Deleted test assistant
+[23:36:24.745]  ✓ Generating static pages (123/123)
+[23:36:24.767] 
+[23:36:24.768] > Export encountered errors on following paths:
+[23:36:24.768] 	/debug-subscription
+[23:36:24.938] Error: Command "npx prisma generate && NEXT_SKIP_TYPE_CHECK=1 NEXT_IGNORE_ESLINT=1 next build" exited with 1
+[23:36:26.379] 
+[23:36:29.836] Exiting build container
