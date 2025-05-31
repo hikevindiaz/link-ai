@@ -1,6 +1,7 @@
 import { twilio } from './twilio';
 import prisma from './prisma';
 import { Appointment, Calendar, TwilioPhoneNumber } from '@prisma/client';
+import * as Twilio from 'twilio';
 
 // Format appointment details for SMS
 export function formatAppointmentSMS(appointment: Appointment & { calendar: Calendar }, type: 'confirmation' | 'reminder') {
@@ -28,7 +29,9 @@ export async function sendAppointmentSMS(
   type: 'confirmation' | 'reminder'
 ): Promise<boolean> {
   try {
-    // Get appointment with calendar and chatbot details
+    console.log(`[SMS] Sending ${type} SMS for appointment: ${appointmentId}`);
+    
+    // Get appointment with calendar and chatbot details, including user for subaccount info
     const appointment = await prisma.appointment.findUnique({
       where: { id: appointmentId },
       include: {
@@ -36,7 +39,15 @@ export async function sendAppointmentSMS(
           include: {
             chatbots: {
               include: {
-                twilioPhoneNumber: true
+                twilioPhoneNumber: {
+                  include: {
+                    user: {
+                      select: {
+                        twilioSubaccountSid: true
+                      }
+                    }
+                  }
+                }
               }
             }
           }
@@ -45,42 +56,66 @@ export async function sendAppointmentSMS(
     });
 
     if (!appointment || !appointment.clientPhoneNumber) {
-      console.error('Appointment not found or no phone number');
+      console.error('[SMS] Appointment not found or no phone number');
       return false;
     }
 
+    console.log(`[SMS] Found appointment for client: ${appointment.clientName}`);
+    console.log(`[SMS] Client phone: ${appointment.clientPhoneNumber}`);
+
     // Check if SMS notifications are enabled
     if (type === 'confirmation' && !appointment.calendar.notificationSmsEnabled) {
-      console.log('SMS notifications disabled for calendar');
+      console.log('[SMS] SMS notifications disabled for calendar');
       return false;
     }
 
     if (type === 'reminder' && !appointment.calendar.smsReminderEnabled) {
-      console.log('SMS reminders disabled for calendar');
+      console.log('[SMS] SMS reminders disabled for calendar');
       return false;
     }
 
-    // Find the phone number to send from (first chatbot with a phone number)
-    const fromPhoneNumber = appointment.calendar.chatbots
-      .map(cb => cb.twilioPhoneNumber)
-      .find(pn => pn !== null);
+    console.log(`[SMS] SMS ${type} enabled for calendar: ${appointment.calendar.name}`);
 
-    if (!fromPhoneNumber) {
-      console.error('No phone number configured for calendar chatbots');
+    // Find the phone number to send from (first chatbot with a phone number)
+    const chatbotWithPhone = appointment.calendar.chatbots
+      .find(cb => cb.twilioPhoneNumber);
+
+    if (!chatbotWithPhone?.twilioPhoneNumber) {
+      console.error('[SMS] No phone number configured for calendar chatbots');
       return false;
+    }
+
+    const fromPhoneNumber = chatbotWithPhone.twilioPhoneNumber;
+    console.log(`[SMS] Using phone number: ${fromPhoneNumber.phoneNumber}`);
+
+    // Determine which Twilio client to use based on subaccount
+    let twilioClient = twilio; // Default to main account
+    const subaccountSid = fromPhoneNumber.user?.twilioSubaccountSid;
+    
+    if (subaccountSid) {
+      console.log(`[SMS] Using Twilio subaccount: ${subaccountSid}`);
+      twilioClient = Twilio.default(
+        process.env.TWILIO_ACCOUNT_SID as string,
+        process.env.TWILIO_AUTH_TOKEN as string,
+        { accountSid: subaccountSid }
+      );
+    } else {
+      console.log('[SMS] Using main Twilio account');
     }
 
     // Format the message
     const message = formatAppointmentSMS(appointment, type);
+    console.log(`[SMS] Message content: ${message}`);
 
     // Send SMS via Twilio
-    const result = await twilio.messages.create({
+    console.log(`[SMS] Sending SMS from ${fromPhoneNumber.phoneNumber} to ${appointment.clientPhoneNumber}`);
+    const result = await twilioClient.messages.create({
       body: message,
       from: fromPhoneNumber.phoneNumber,
       to: appointment.clientPhoneNumber
     });
 
-    console.log(`SMS ${type} sent for appointment ${appointmentId}:`, result.sid);
+    console.log(`[SMS] SMS ${type} sent successfully for appointment ${appointmentId}:`, result.sid);
 
     // Log the SMS in the database
     await prisma.message.create({
@@ -96,7 +131,7 @@ export async function sendAppointmentSMS(
 
     return true;
   } catch (error) {
-    console.error(`Error sending SMS ${type}:`, error);
+    console.error(`[SMS] Error sending SMS ${type}:`, error);
     return false;
   }
 }
@@ -108,6 +143,8 @@ export async function processAppointmentSMSReply(
   to: string
 ): Promise<string> {
   try {
+    console.log(`[SMS Reply] Processing reply from ${from} to ${to}: "${body}"`);
+    
     // Normalize the reply
     const normalizedReply = body.trim().toUpperCase();
     
@@ -132,6 +169,8 @@ export async function processAppointmentSMSReply(
       }
     });
 
+    console.log(`[SMS Reply] Found ${recentAppointments.length} pending appointments for ${from}`);
+
     // Find the appointment to update
     let appointment = null;
     
@@ -140,14 +179,19 @@ export async function processAppointmentSMSReply(
       appointment = recentAppointments.find(apt => 
         apt.id.endsWith(appointmentIdSuffix.toLowerCase())
       );
+      console.log(`[SMS Reply] Looking for appointment ending with ID: ${appointmentIdSuffix}`);
     } else if (recentAppointments.length === 1) {
       // If only one pending appointment, use it
       appointment = recentAppointments[0];
+      console.log(`[SMS Reply] Using single pending appointment: ${appointment.id}`);
     }
 
     if (!appointment) {
+      console.log(`[SMS Reply] No matching appointment found`);
       return "No pending appointment found. Please include the appointment ID from your confirmation message.";
     }
+
+    console.log(`[SMS Reply] Processing reply for appointment: ${appointment.id}`);
 
     // Process the reply
     if (normalizedReply === 'YES' || normalizedReply === 'Y') {
@@ -156,6 +200,8 @@ export async function processAppointmentSMSReply(
         where: { id: appointment.id },
         data: { status: 'CONFIRMED' }
       });
+
+      console.log(`[SMS Reply] Appointment ${appointment.id} confirmed`);
 
       const date = appointment.startTime.toLocaleDateString('en-US', {
         weekday: 'short',
@@ -176,12 +222,15 @@ export async function processAppointmentSMSReply(
         data: { status: 'CANCELLED' }
       });
 
+      console.log(`[SMS Reply] Appointment ${appointment.id} cancelled`);
+
       return "Appointment cancelled. Thank you for letting us know.";
     } else {
+      console.log(`[SMS Reply] Invalid reply: "${normalizedReply}"`);
       return "Please reply YES to confirm or NO to cancel your appointment.";
     }
   } catch (error) {
-    console.error('Error processing appointment SMS reply:', error);
+    console.error('[SMS Reply] Error processing appointment SMS reply:', error);
     return "Sorry, there was an error processing your reply. Please try again.";
   }
 }

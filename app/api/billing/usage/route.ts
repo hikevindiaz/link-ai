@@ -25,39 +25,28 @@ const checkLimitSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
+    
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const userId = session.user.id;
     
-    console.log(`[Usage API] Getting usage summary for user: ${userId}`);
-    
     const summary = await getUsageSummary(userId);
     
-    return NextResponse.json({
-      success: true,
-      summary: {
-        billingPeriodStart: summary.billingPeriodStart,
-        billingPeriodEnd: summary.billingPeriodEnd,
-        planLimits: summary.planLimits,
-        usage: summary.usage,
-        overages: summary.overages,
-        overageCosts: summary.overageCosts,
-        utilizationPercentage: {
-          messages: summary.planLimits.messages ? Math.round((summary.usage.messages / summary.planLimits.messages) * 100) : null,
-          sms: summary.planLimits.sms ? Math.round((summary.usage.sms / summary.planLimits.sms) * 100) : null,
-          webSearches: summary.planLimits.webSearches ? Math.round((summary.usage.webSearches / summary.planLimits.webSearches) * 100) : null,
-          summaries: summary.planLimits.summaries ? Math.round((summary.usage.summaries / summary.planLimits.summaries) * 100) : null,
-          whatsappConversations: summary.planLimits.whatsappConversations ? Math.round((summary.usage.whatsappConversations / summary.planLimits.whatsappConversations) * 100) : null,
-          voiceMinutes: summary.planLimits.voiceMinutes ? Math.round((summary.usage.voiceMinutes / summary.planLimits.voiceMinutes) * 100) : null,
-        }
-      }
+    return NextResponse.json({ 
+      success: true, 
+      data: summary 
     });
+    
   } catch (error) {
-    console.error('[Usage API] Error getting usage summary:', error);
+    console.error('Error fetching usage summary:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json(
-      { success: false, error: 'Failed to get usage summary' },
+      { error: 'Failed to fetch usage summary', details: error instanceof Error ? error.message : 'Unknown error' }, 
       { status: 500 }
     );
   }

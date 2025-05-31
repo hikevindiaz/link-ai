@@ -103,10 +103,10 @@ export async function getUserPlan(userId: string): Promise<'starter' | 'growth' 
 
   if (!user?.stripePriceId) return 'starter';
 
-  // Map Stripe price IDs to plans
-  if (user.stripePriceId === process.env.NEXT_PUBLIC_STRIPE_HOBBY_PRICE_ID) return 'starter';
-  if (user.stripePriceId === process.env.NEXT_PUBLIC_STRIPE_BASIC_PRICE_ID) return 'growth';
-  if (user.stripePriceId === process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID) return 'scale';
+  // Direct mapping to new plans only
+  if (user.stripePriceId === process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID) return 'starter';
+  if (user.stripePriceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID) return 'growth';
+  if (user.stripePriceId === process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID) return 'scale';
 
   return 'starter';
 }
@@ -370,10 +370,41 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
       // Fallback to free plan instead of throwing
       const freePlan = getPlanByName('FREE');
       if (!freePlan) {
-        throw new Error('Could not load free plan fallback');
+        console.error('[getUsageSummary] Could not load free plan fallback, using minimal defaults');
+        // If even free plan fails, create a minimal plan
+        plan = {
+          name: 'FREE',
+          description: 'Fallback plan',
+          stripePriceId: '',
+          maxChatbots: 1,
+          maxCrawlers: 1,
+          maxFiles: 3,
+          unlimitedMessages: false,
+          maxMessagesPerMonth: 500,
+          basicCustomization: false,
+          userInquiries: false,
+          brandingCustomization: false,
+          chatFileAttachments: false,
+          price: 0,
+          // Add required new fields with defaults
+          maxSMSPerMonth: 0,
+          maxWebSearchesPerMonth: 0,
+          maxConversationSummariesPerMonth: 0,
+          maxWhatsAppConversationsPerMonth: 0,
+          maxVoiceMinutesPerMonth: 0,
+          overagePricing: {
+            messagesPerUnit: 0,
+            smsPerUnit: 0,
+            webSearchesPerUnit: 0,
+            summariesPerUnit: 0,
+            whatsAppConversationsPerUnit: 0,
+            voiceMinutesPerUnit: 0,
+          }
+        };
+      } else {
+        console.log('[getUsageSummary] Using free plan as fallback');
+        plan = freePlan;
       }
-      console.log('[getUsageSummary] Using free plan as fallback');
-      plan = freePlan;
     }
 
     console.log('[getUsageSummary] Using plan:', plan?.name);
@@ -422,7 +453,7 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
       }
     });
 
-    // Plan limits (convert undefined to null for unlimited)
+    // Plan limits (convert undefined to null for unlimited, with safe defaults)
     const planLimits = {
       messages: plan.maxMessagesPerMonth || null,
       sms: plan.maxSMSPerMonth || null,
@@ -442,7 +473,7 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
       voiceMinutes: planLimits.voiceMinutes ? Math.max(0, usage.voiceMinutes - planLimits.voiceMinutes) : 0,
     };
 
-    // Calculate overage costs using plan-specific pricing
+    // Calculate overage costs using plan-specific pricing with safe defaults
     const overagePricing = plan.overagePricing || {};
     const overageCosts = {
       messages: overages.messages * (overagePricing.messagesPerUnit || 0),
@@ -485,8 +516,7 @@ export async function getCurrentBillingPeriod(userId: string): Promise<{
     where: { id: userId },
     select: { 
       stripeSubscriptionId: true,
-      stripeCurrentPeriodEnd: true,
-      createdAt: true
+      stripeCurrentPeriodEnd: true
     }
   });
 

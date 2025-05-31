@@ -76,11 +76,13 @@ export function getCalendarTools(calendarConfig: CalendarConfig | null) {
           },
           attendee_email: {
             type: "string",
-            description: "Email of the person attending the appointment (optional)"
+            description: "Email of the person attending the appointment (required for confirmation)"
           },
           attendee_phone: {
             type: "string",
-            description: "Phone number of the person attending the appointment"
+            description: calendarConfig.requirePhoneNumber 
+              ? "Phone number of the person attending the appointment (required)" 
+              : "Phone number of the person attending the appointment (optional)"
           },
           notes: {
             type: "string",
@@ -92,7 +94,9 @@ export function getCalendarTools(calendarConfig: CalendarConfig | null) {
             default: calendarConfig.defaultLocation || ""
           }
         },
-        required: ["title", "start_time", "attendee_name", "attendee_phone"]
+        required: calendarConfig.requirePhoneNumber 
+          ? ["title", "start_time", "attendee_name", "attendee_email", "attendee_phone"]
+          : ["title", "start_time", "attendee_name", "attendee_email"]
       }
     },
     {

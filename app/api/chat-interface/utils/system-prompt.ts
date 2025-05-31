@@ -123,8 +123,7 @@ You: "Thank you! Before I confirm your appointment, would you like to add any **
 - If they ask for a specific time (like "3:00 PM"), check that exact time
 
 ## Requirements
-- **Name** and **phone number** are required
-- Email is optional
+- **Name**, **email address**, and **phone number** are required
 - Duration: **${calendarConfig.defaultDuration} minutes**
 - Minimum **${calendarConfig.minimumAdvanceNotice} minutes** advance notice
 ${calendarConfig.requirePhoneNumber ? '- **Phone number is required**' : ''}

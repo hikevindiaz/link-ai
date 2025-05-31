@@ -246,6 +246,10 @@ export default function SettingsPage() {
 
   const [showPricingDialog, setShowPricingDialog] = useState(false);
 
+  const [isBillingOverviewLoading, setIsBillingOverviewLoading] = useState(true);
+  const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] = useState(true);
+  const [isInvoicesLoading, setIsInvoicesLoading] = useState(true);
+
   const fetchPhoneNumbers = async () => {
     try {
       const response = await fetch('/api/twilio/phone-numbers');
@@ -298,6 +302,16 @@ export default function SettingsPage() {
       fetchUsageData();
     }
   }, [currentPlan]);
+
+  // Add a separate effect to handle invoices loading
+  useEffect(() => {
+    if (session?.user) {
+      // Simulate invoice loading - replace with actual API call when invoice API is ready
+      setTimeout(() => {
+        setIsInvoicesLoading(false);
+      }, 1000);
+    }
+  }, [session]);
 
   // Check for Stripe redirect completion
   useEffect(() => {
@@ -366,7 +380,7 @@ export default function SettingsPage() {
 
   const fetchPaymentMethods = async () => {
     try {
-      setIsLoading(true);
+      setIsPaymentMethodsLoading(true);
       const response = await fetch('/api/billing/payment-methods');
       const data = await response.json();
       
@@ -379,20 +393,35 @@ export default function SettingsPage() {
       console.error('Failed to fetch payment methods:', error);
       toast.error('An error occurred while loading your payment methods');
     } finally {
-      setIsLoading(false);
+      setIsPaymentMethodsLoading(false);
     }
   };
 
   const fetchSubscription = async () => {
     try {
+      setIsBillingOverviewLoading(true);
+      console.log('🔍 [DEBUG] Fetching subscription...');
       const response = await fetch('/api/billing/subscription');
+      console.log('📊 [DEBUG] Response status:', response.status);
       const data = await response.json();
+      console.log('📊 [DEBUG] Response data:', JSON.stringify(data, null, 2));
       
       if (data.success && data.subscription) {
+        console.log('✅ [DEBUG] Setting currentPlan:', data.subscription);
         setCurrentPlan(data.subscription);
+      } else {
+        console.log('⚠️ [DEBUG] No subscription found or data.success is false');
+        console.log('⚠️ [DEBUG] data.success:', data.success);
+        console.log('⚠️ [DEBUG] data.subscription:', data.subscription);
+        console.log('⚠️ [DEBUG] data.isSubscribed:', data.isSubscribed);
+        setCurrentPlan(null);
       }
     } catch (error) {
-      console.error('Failed to fetch subscription:', error);
+      console.error('❌ [DEBUG] Failed to fetch subscription:', error);
+      setCurrentPlan(null);
+    } finally {
+      // Don't set loading to false here, let the useEffect handle it
+      // setIsBillingOverviewLoading(false);
     }
   };
 
@@ -424,6 +453,7 @@ export default function SettingsPage() {
 
   const fetchUsageData = async () => {
     try {
+      console.log('[fetchUsageData] Starting to fetch usage data...');
       // Fetch both usage tracking data and real database counts
       const [usageResponse, agentsResponse, messageCountResponse] = await Promise.all([
         fetch('/api/billing/usage'),
@@ -435,12 +465,19 @@ export default function SettingsPage() {
       const agentsData = await agentsResponse.json();
       const messageCountData = await messageCountResponse.json();
       
-      if (usageData.success && usageData.summary) {
-        const summary = usageData.summary;
+      if (usageData.success && usageData.data) {
+        const summary = usageData.data;
         
-        // Get current plan for proper limits - more robust detection
+        // Get current plan for proper limits - direct comparison only
         const priceId = currentPlan?.priceId || currentPlan?.stripePriceId || '';
         let planType = 'starter'; // default
+        
+        console.log('[fetchUsageData] Price ID:', priceId);
+        console.log('[fetchUsageData] Environment variables:', {
+          STARTER: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID,
+          GROWTH: process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID,
+          SCALE: process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID
+        });
         
         if (priceId === process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID) {
           planType = 'starter';
@@ -448,17 +485,9 @@ export default function SettingsPage() {
           planType = 'growth';
         } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID) {
           planType = 'scale';
-        } else {
-          // Fallback: try to detect from plan name or other properties
-          const planName = currentPlan?.name?.toLowerCase() || '';
-          if (planName.includes('scale')) {
-            planType = 'scale';
-          } else if (planName.includes('growth')) {
-            planType = 'growth';
-          } else if (planName.includes('starter')) {
-            planType = 'starter';
-          }
         }
+        
+        console.log('[fetchUsageData] Detected plan type:', planType);
         
         // Define correct plan limits based on pricing
         const planLimits = {
@@ -468,12 +497,16 @@ export default function SettingsPage() {
         };
         
         const currentLimits = planLimits[planType as keyof typeof planLimits];
+        console.log('[fetchUsageData] Plan limits:', currentLimits);
         
         // Get real agent count from API response
         const actualAgentCount = agentsData.chatbots ? agentsData.chatbots.length : (Array.isArray(agentsData) ? agentsData.length : 0);
         
         // Get real message count from API response
         const actualMessageCount = messageCountData.success ? (messageCountData.messageCount || 0) : 0;
+        
+        console.log('[fetchUsageData] Usage summary:', summary);
+        console.log('[fetchUsageData] Actual counts:', { agents: actualAgentCount, messages: actualMessageCount });
         
         // Format usage data for display
         const formattedUsage = [
@@ -531,6 +564,8 @@ export default function SettingsPage() {
       // Use empty array as fallback
       setUsageData([]);
       setOverageCost(0);
+    } finally {
+      setIsBillingOverviewLoading(false);
     }
   };
 
@@ -799,6 +834,8 @@ export default function SettingsPage() {
       nextBillingDate: undefined as string | undefined
     };
     
+    console.log('[getPlanDetails] Current plan:', currentPlan);
+    
     // Map Stripe price IDs to plan details
     const planInfo = {
       starter: {
@@ -818,28 +855,26 @@ export default function SettingsPage() {
       }
     };
     
-    // Determine which plan the user is on based on their stripePriceId
+    // Simple direct comparison
     const priceId = currentPlan.priceId || currentPlan.stripePriceId || '';
     let selectedPlan = planInfo.starter;
     
-    // Use the correct environment variables
+    console.log('[getPlanDetails] Price ID:', priceId);
+    console.log('[getPlanDetails] Environment variables:', {
+      STARTER: process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID,
+      GROWTH: process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID,
+      SCALE: process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID
+    });
+    
     if (priceId === process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID) {
       selectedPlan = planInfo.starter;
     } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID) {
       selectedPlan = planInfo.growth;
     } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID) {
       selectedPlan = planInfo.scale;
-    } else {
-      // Fallback: try to detect from plan name or other properties
-      const planName = currentPlan?.name?.toLowerCase() || '';
-      if (planName.includes('scale')) {
-        selectedPlan = planInfo.scale;
-      } else if (planName.includes('growth')) {
-        selectedPlan = planInfo.growth;
-      } else if (planName.includes('starter')) {
-        selectedPlan = planInfo.starter;
-      }
     }
+    
+    console.log('[getPlanDetails] Selected plan:', selectedPlan.name);
     
     // Return plan details with optional billing date
     return {
@@ -955,6 +990,7 @@ export default function SettingsPage() {
                 phoneNumbers={phoneNumbers}
                 overageCost={overageCost}
                 onShowPricingDialog={() => setShowPricingDialog(true)}
+                isLoading={isBillingOverviewLoading}
               />
             </div>
             
@@ -965,9 +1001,10 @@ export default function SettingsPage() {
                 setSelectedPaymentMethodDetails(details);
                 setIsDeletePaymentMethodDialogOpen(true);
               }}
+              isLoading={isPaymentMethodsLoading}
             />
 
-            <InvoicesSection />
+            <InvoicesSection isLoading={isInvoicesLoading} />
           </div>
         </TabsContent>
       </Tabs>

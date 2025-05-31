@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma';
 import { sendAppointmentSMS } from '@/lib/calendar-sms';
+import { sendAppointmentConfirmationEmail, scheduleAppointmentReminders } from '@/lib/emails/send-appointment-emails';
 
 // TODO: Get timezone from user/calendar settings instead of hardcoding
 const DEFAULT_TIMEZONE = 'America/New_York'; // Default timezone - should be from user settings
@@ -422,6 +423,7 @@ export async function handleBookAppointment(params: any, calendarConfig: Calenda
       calendarId: calendarConfig.defaultCalendarId,
       clientName: params.attendee_name,
       clientPhoneNumber: params.attendee_phone,
+      clientEmail: params.attendee_email,
       description: params.notes || params.title || 'Appointment',
       date: startDateTime.toISOString().split('T')[0], // Extract date part
       startTime: startDateTime.toTimeString().substring(0, 5), // Extract time part (HH:MM)
@@ -435,6 +437,15 @@ export async function handleBookAppointment(params: any, calendarConfig: Calenda
       return JSON.stringify({
         success: false,
         message: "Missing required fields: name, date, and time are required"
+      });
+    }
+    
+    // Check email requirement if enabled
+    const requireEmailAddress = (calendarConfig as any).requireEmailAddress ?? true;
+    if (requireEmailAddress && !appointmentData.clientEmail) {
+      return JSON.stringify({
+        success: false,
+        message: "Email address is required for booking appointments"
       });
     }
     
@@ -471,6 +482,7 @@ export async function handleBookAppointment(params: any, calendarConfig: Calenda
         calendarId: appointmentData.calendarId,
         clientName: appointmentData.clientName,
         clientPhoneNumber: appointmentData.clientPhoneNumber,
+        clientEmail: appointmentData.clientEmail,
         description: fullDescription,
         startTime: new Date(`${appointmentData.date}T${appointmentData.startTime}:00`),
         endTime: new Date(`${appointmentData.date}T${appointmentData.endTime}:00`),
@@ -487,6 +499,17 @@ export async function handleBookAppointment(params: any, calendarConfig: Calenda
     // Send SMS confirmation if enabled
     if (appointment.calendar.notificationSmsEnabled && appointment.clientPhoneNumber) {
       await sendAppointmentSMS(appointment.id, 'confirmation');
+    }
+
+    // Send email confirmation if enabled and email is provided
+    if (appointment.clientEmail) {
+      try {
+        await sendAppointmentConfirmationEmail(appointment.id);
+        await scheduleAppointmentReminders(appointment.id);
+      } catch (error) {
+        console.error('Error sending email confirmation:', error);
+        // Don't fail the booking if email fails
+      }
     }
     
     // Format the appointment details for confirmation
@@ -516,6 +539,9 @@ export async function handleBookAppointment(params: any, calendarConfig: Calenda
     confirmationMessage += `👤 **Name:** ${appointmentData.clientName}\n\n`;
     if (appointmentData.clientPhoneNumber) {
       confirmationMessage += `📱 **Phone:** ${appointmentData.clientPhoneNumber}\n\n`;
+    }
+    if (appointmentData.clientEmail) {
+      confirmationMessage += `📧 **Email:** ${appointmentData.clientEmail}\n\n`;
     }
     if (params.location) {
       confirmationMessage += `📍 **Location:** ${params.location}\n\n`;
@@ -553,7 +579,8 @@ export async function handleViewAppointment(params: any) {
       where: {
         id: appointment_id,
         OR: [
-          { clientPhoneNumber: verification_info }
+          { clientPhoneNumber: verification_info },
+          { clientEmail: verification_info }
         ]
       },
       include: {
@@ -564,7 +591,7 @@ export async function handleViewAppointment(params: any) {
     if (!appointment) {
       return JSON.stringify({
         success: false,
-        message: "Appointment not found or verification failed. Please check your appointment ID and phone number."
+        message: "Appointment not found or verification failed. Please check your appointment ID and email or phone number."
       });
     }
     
@@ -600,6 +627,9 @@ export async function handleViewAppointment(params: any) {
     if (appointment.clientPhoneNumber) {
       message += `📱 **Phone:** ${appointment.clientPhoneNumber}\n\n`;
     }
+    if (appointment.clientEmail) {
+      message += `📧 **Email:** ${appointment.clientEmail}\n\n`;
+    }
     if (appointment.description) {
       message += `📝 **Details:** ${appointment.description}\n\n`;
     }
@@ -632,7 +662,8 @@ export async function handleModifyAppointment(params: any, calendarConfig: Calen
       where: {
         id: appointment_id,
         OR: [
-          { clientPhoneNumber: verification_info }
+          { clientPhoneNumber: verification_info },
+          { clientEmail: verification_info }
         ]
       },
       include: {
@@ -735,7 +766,8 @@ export async function handleCancelAppointment(params: any) {
       where: {
         id: appointment_id,
         OR: [
-          { clientPhoneNumber: verification_info }
+          { clientPhoneNumber: verification_info },
+          { clientEmail: verification_info }
         ]
       }
     });

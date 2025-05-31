@@ -1,10 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/Button';
-import { Table, TableBody, TableCell, TableHead, TableRow } from '@/components/ui/table';
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableRow 
+} from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { RiAddLine, RiDeleteBin6Line, RiCheckboxCircleFill } from '@remixicon/react';
 
@@ -22,22 +28,52 @@ interface PaymentMethod {
 interface PaymentMethodsSectionProps {
   onAddPaymentMethod: () => void;
   onDeletePaymentMethod: (id: string, details: { brand: string; last4: string }) => void;
+  isLoading?: boolean;
+}
+
+// Loading component with indigo theme
+function PaymentMethodsLoading() {
+  return (
+    <div className="space-y-6">
+      <div className="sm:flex sm:items-start sm:justify-between sm:space-x-10">
+        <div>
+          <h2 className="font-semibold text-gray-900 dark:text-gray-50">
+            Payment method
+          </h2>
+        </div>
+      </div>
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mb-4"></div>
+        <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-2">
+          Loading payment methods
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+          Please wait while we retrieve your saved payment methods.
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export function PaymentMethodsSection({ 
   onAddPaymentMethod, 
-  onDeletePaymentMethod 
+  onDeletePaymentMethod,
+  isLoading = false 
 }: PaymentMethodsSectionProps) {
+  const { data: session } = useSession();
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
+  const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] = useState(true);
+
+  // All hooks must come before any conditional returns
   useEffect(() => {
-    fetchPaymentMethods();
-  }, []);
+    if (!isLoading) {
+      fetchPaymentMethods();
+    }
+  }, [isLoading]);
 
   const fetchPaymentMethods = async () => {
     try {
-      setIsLoading(true);
+      setIsPaymentMethodsLoading(true);
       const response = await fetch('/api/billing/payment-methods');
       const data = await response.json();
       
@@ -50,7 +86,7 @@ export function PaymentMethodsSection({
       console.error('Error fetching payment methods:', error);
       toast.error('Failed to load payment methods');
     } finally {
-      setIsLoading(false);
+      setIsPaymentMethodsLoading(false);
     }
   };
 
@@ -89,7 +125,13 @@ export function PaymentMethodsSection({
     }
   };
 
+  // Show loading state from parent
   if (isLoading) {
+    return <PaymentMethodsLoading />;
+  }
+
+  // Show loading state from internal fetch
+  if (isPaymentMethodsLoading) {
     return (
       <div className="space-y-6">
         <div className="sm:flex sm:items-start sm:justify-between sm:space-x-10">
@@ -99,8 +141,14 @@ export function PaymentMethodsSection({
             </h2>
           </div>
         </div>
-        <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-          Loading payment methods...
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mb-4"></div>
+          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-2">
+            Loading payment methods
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+            Please wait while we retrieve your saved payment methods.
+          </p>
         </div>
       </div>
     );
@@ -196,12 +244,11 @@ export function PaymentMethodsSection({
                     {method.isDefault ? (
                       <Tooltip>
                         <TooltipTrigger>
-                          <button
-                            disabled={true}
+                          <span
                             className="font-medium text-gray-400 cursor-not-allowed dark:text-gray-600"
                           >
                             Cannot Delete
-                          </button>
+                          </span>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">

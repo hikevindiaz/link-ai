@@ -284,6 +284,12 @@ model User {
   integrationSettings      UserIntegrationSetting[]
   voices                   UserVoice[]
   usageRecords             UsageRecord[]
+  
+  // A2P 10DLC Registration relationships
+  twilioA2PBrand           TwilioA2PBrand?
+  twilioA2PCampaigns       TwilioA2PCampaign[]
+
+  @@map("users")
 }
 
 model VerificationToken {
@@ -490,6 +496,13 @@ model TwilioPhoneNumber {
   // Additional data storage
   metadata     Json?    // Store purchase details, pricing info, etc.
   
+  // A2P 10DLC Registration Status
+  a2pRegistrationStatus String? @default("not_started") // not_started, pending, approved, rejected, requires_attention
+  a2pCampaignSid        String? // Twilio Campaign SID
+  a2pBrandSid          String? // Twilio Brand SID  
+  a2pRegistrationError String? // Error message if registration fails
+  a2pRegisteredAt      DateTime? // When A2P registration was completed
+  
   invoices          Invoice[]
   chatbot           Chatbot?         @relation(fields: [chatbotId], references: [id])
   user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -659,4 +672,64 @@ model UsageRecord {
   @@index([userId, usageType, billingPeriodStart])
   @@index([createdAt])
   @@map("usage_records")
+}
+
+// New model to track A2P 10DLC Brand registrations per user
+model TwilioA2PBrand {
+  id                    String   @id @default(cuid())
+  userId                String   @unique // One brand per user
+  twilioAccountSid      String   // Which Twilio account (main or subaccount)
+  brandSid             String   @unique // Twilio Brand SID
+  brandStatus          String   // draft, pending, approved, failed, suspended
+  brandType            String   @default("standard") // standard, low_volume, starter
+  companyName          String
+  businessWebsite      String?
+  entityType           String   @default("private_for_profit") // private_for_profit, public_for_profit, non_profit, government
+  registrationReason   String   @default("marketing") // marketing, mixed, political, charity, 2fa, higher_education, emergency
+  vertical             String   // healthcare, finance, retail, etc.
+  ein                  String?  // Tax ID (optional)
+  address              Json     // Address information
+  contactInfo          Json     // Contact information  
+  registrationData     Json?    // Full registration payload
+  submittedAt          DateTime?
+  approvedAt           DateTime?
+  rejectedAt           DateTime?
+  errorMessage         String?
+  reviewNotes          String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns            TwilioA2PCampaign[]
+
+  @@map("twilio_a2p_brands")
+}
+
+// New model to track A2P 10DLC Campaign registrations
+model TwilioA2PCampaign {
+  id                    String   @id @default(cuid())
+  userId                String   
+  brandId               String   // Reference to TwilioA2PBrand
+  twilioAccountSid      String   // Which Twilio account (main or subaccount)
+  campaignSid          String   @unique // Twilio Campaign SID
+  campaignStatus       String   // draft, pending, approved, failed, suspended
+  useCaseCategory      String   @default("mixed") // mixed, marketing, 2fa, higher_education, public_service_announcement, emergency, charity, low_volume
+  description          String
+  messageFlow          String   // Description of message flow
+  helpMessage          String   // Help/STOP message
+  optInMessage         String   // Opt-in confirmation
+  sampleMessages       Json     // Array of sample messages
+  registrationData     Json?    // Full campaign registration payload
+  submittedAt          DateTime?
+  approvedAt           DateTime?
+  rejectedAt           DateTime?
+  errorMessage         String?
+  reviewNotes          String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  brand                TwilioA2PBrand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@map("twilio_a2p_campaigns")
 }

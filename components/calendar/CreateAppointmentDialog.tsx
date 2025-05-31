@@ -26,6 +26,7 @@ interface CreateAppointmentDialogProps {
 const defaultNewAppointmentState: AppointmentInput = {
   clientName: "",
   clientPhoneNumber: "",
+  clientEmail: "",
   description: "",
   date: new Date().toISOString().split('T')[0],
   startTime: "09:00",
@@ -63,8 +64,8 @@ export function CreateAppointmentDialog({
 
   const handleSubmit = async () => {
     setError(null);
-    if (!newAppointment.clientName || !newAppointment.date || !newAppointment.startTime || !newAppointment.endTime) {
-      setError("Please fill in all required fields (Client Name, Date, Start Time, End Time).");
+    if (!newAppointment.clientName || !newAppointment.clientEmail || !newAppointment.date || !newAppointment.startTime || !newAppointment.endTime) {
+      setError("Please fill in all required fields (Client Name, Client Email, Date, Start Time, End Time).");
       return;
     }
     if (!newAppointment.calendarId) {
@@ -143,6 +144,20 @@ export function CreateAppointmentDialog({
                 value={newAppointment.clientPhoneNumber}
                 onChange={(e) => handleInputChange('clientPhoneNumber', e.target.value)}
                 placeholder="Enter client's phone number"
+                disabled={isSubmitting}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="clientEmail" className="text-sm font-medium">
+                Client Email <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="clientEmail"
+                type="email"
+                value={newAppointment.clientEmail}
+                onChange={(e) => handleInputChange('clientEmail', e.target.value)}
+                placeholder="Enter client's email"
                 disabled={isSubmitting}
               />
             </div>

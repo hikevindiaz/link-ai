@@ -1,7 +1,7 @@
 // @ts-nocheck
 // TODO: Fix this when we turn strict mode on.
 import { UserSubscriptionPlan } from "@/types"
-import { basicPlan, freePlan, hobbyPlan, legacyBasicPlan, proPlan } from "@/config/subscriptions"
+import { freePlan, starterPlan, growthPlan, scalePlan } from "@/config/subscriptions"
 import { db } from "@/lib/db"
 import { stripe } from "@/lib/stripe"
 
@@ -25,57 +25,27 @@ export async function getUserSubscriptionPlan(
     }
 
     const hasPlan = user.stripePriceId &&
-        user.stripeCurrentPeriodEnd?.getTime() + 86_400_000 > Date.now()
+        user.stripeCurrentPeriodEnd?.getTime() > Date.now()
 
-    let plan = freePlan
-    if (hasPlan) {
-        try {
-            const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId)
-            
-            // Modern Stripe API: subscription.items.data contains the pricing info
-            const priceId = subscription.items?.data?.[0]?.price?.id
-            
-            if (priceId) {
-                // Map price IDs to plans (using environment variables if available)
-                if (priceId === process.env.NEXT_PUBLIC_STRIPE_STARTER_PRICE_ID || 
-                    priceId === process.env.STRIPE_STARTER_PRICE_ID) {
-                    plan = basicPlan // Starter = Basic
-                } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_GROWTH_PRICE_ID || 
-                          priceId === process.env.STRIPE_GROWTH_PRICE_ID) {
-                    plan = hobbyPlan // Growth = Hobby  
-                } else if (priceId === process.env.NEXT_PUBLIC_STRIPE_SCALE_PRICE_ID || 
-                          priceId === process.env.STRIPE_SCALE_PRICE_ID) {
-                    plan = proPlan // Scale = Pro
-                }
-            } else {
-                // Fallback to legacy method if available
-                const legacyPlan = subscription.plan
-                if (legacyPlan?.nickname) {
-                    if (legacyPlan.nickname === "Pro plan") {
-                        plan = proPlan
-                    } else if (legacyPlan.nickname === "Hobby plan") {
-                        plan = hobbyPlan
-                    } else if (legacyPlan.nickname === "Basic plan") {
-                        // if subscription is created before 2024-05-01, it's a legacy plan
-                        console.log(subscription.created)
-                        if (subscription.created < 1717200000) {
-                            plan = legacyBasicPlan
-                        } else {
-                            plan = basicPlan
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error retrieving subscription:', error)
-            // If we can't retrieve the subscription, fall back to free plan
+    // Direct price ID mapping - no complex logic needed
+    let plan = freePlan;
+    if (hasPlan && user.stripePriceId) {
+        if (user.stripePriceId === starterPlan.stripePriceId) {
+            plan = starterPlan;
+        } else if (user.stripePriceId === growthPlan.stripePriceId) {
+            plan = growthPlan;
+        } else if (user.stripePriceId === scalePlan.stripePriceId) {
+            plan = scalePlan;
         }
     }
 
     return {
         ...plan,
-        ...user,
-        stripeCurrentPeriodEnd: user.stripeCurrentPeriodEnd?.getTime(),
+        stripeSubscriptionId: user.stripeSubscriptionId,
+        stripeCurrentPeriodEnd: user.stripeCurrentPeriodEnd,
+        stripeCustomerId: user.stripeCustomerId,
+        isSubscribed: hasPlan,
+        isCanceled: false,
     }
 }
 

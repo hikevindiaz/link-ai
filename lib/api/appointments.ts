@@ -31,6 +31,7 @@ const getCurrentUserId = async (): Promise<string> => {
 export type AppointmentInput = {
     clientName: string;
     clientPhoneNumber?: string;
+    clientEmail: string; // Required email field
     description?: string; // Added from schema
     date: string; // YYYY-MM-DD (Keep for frontend ease)
     startTime: string; // HH:MM (Keep for frontend ease, map to startTime)
@@ -68,6 +69,7 @@ export type CalendarSettingsInput = {
     maxBookingsPerSlot?: number;
     minimumAdvanceNotice?: number;
     requirePhoneNumber?: boolean;
+    requireEmailAddress?: boolean;
     defaultLocation?: string;
     bookingPrompt?: string;
     confirmationMessage?: string;
@@ -222,6 +224,7 @@ export const createAppointment = async (
         bookedByUserId: userId, // Should be the authenticated user's ID
         clientName: input.clientName,
         clientPhoneNumber: input.clientPhoneNumber,
+        clientEmail: input.clientEmail,
         description: input.description ?? '',
         startTime: startTime,
         endTime: endTime,
@@ -302,6 +305,7 @@ export const updateAppointment = async (
             ...(input.calendarId && { calendarId: input.calendarId }),
             ...(input.clientName && { clientName: input.clientName }),
             ...(input.clientPhoneNumber && { clientPhoneNumber: input.clientPhoneNumber }),
+            ...(input.clientEmail && { clientEmail: input.clientEmail }),
             ...(input.description && { description: input.description }),
             ...(startTime && { startTime: startTime }),
             ...(endTime && { endTime: endTime }),

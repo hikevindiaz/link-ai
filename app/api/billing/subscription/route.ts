@@ -47,6 +47,7 @@ export async function GET() {
       status: subscription.status,
       currentPeriodEnd: subscription.current_period_end * 1000, // Convert to milliseconds
       priceId: user.stripePriceId,
+      stripePriceId: user.stripePriceId, // Add for compatibility
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
     };
 

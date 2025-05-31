@@ -1,0 +1,356 @@
+import * as React from 'react';
+import {
+  Body,
+  Button,
+  Container,
+  Head,
+  Heading,
+  Html,
+  Img,
+  Link,
+  Preview,
+  Section,
+  Text,
+  Tailwind,
+  Hr,
+  Row,
+  Column,
+} from '@react-email/components';
+
+const BookingConfirmationEmail = (props) => {
+  const {
+    businessName = "Your Business Name",
+    bookingId = "BK-2024-001234",
+    customerName = "John Doe",
+    customerEmail = "john.doe@example.com",
+    customerPhone = "+1 (555) 123-4567",
+    agentName = "Sarah Johnson",
+    agentEmail = "sarah@yourbusiness.com",
+    serviceType = "Consultation",
+    bookingDate = "June 15, 2024",
+    bookingTime = "2:00 PM - 3:00 PM EST",
+    location = "123 Main Street, Suite 100, City, State 12345",
+    notes = "Please bring valid ID and any relevant documents",
+    companyAddress = "123 Business Ave, Suite 200, City, State 12345",
+    companyPhone = "+1 (555) 987-6543",
+    companyEmail = "info@yourbusiness.com",
+    bookedOn = "May 30, 2024 at 8:05 PM",
+    reminderDate = "June 13, 2024",
+    reminderTime = "10:00 AM EST"
+  } = props;
+
+  return (
+    <Html lang="en" dir="ltr">
+      <Tailwind>
+        <Head />
+        <Preview>Booking Confirmation - {bookingId}</Preview>
+        <Body className="bg-gray-100 font-sans py-[40px]">
+          <Container className="bg-black mx-auto rounded-[8px] max-w-[600px] overflow-hidden border border-gray-800">
+            {/* Top Powered By Frame */}
+            <Section className="bg-black text-center py-[8px] px-[20px] border-b border-gray-800">
+              <Text className="text-[12px] text-white m-0">
+                Powered by{' '}
+                <Link
+                  href="https://getlinkai.com"
+                  className="text-white no-underline font-semibold"
+                >
+                  Link AI
+                </Link>
+              </Text>
+            </Section>
+
+            {/* Header with White Background */}
+            <Section className="bg-white text-center py-[40px] px-[40px]">
+              <Heading className="text-[32px] font-bold text-black mb-[16px] m-0">
+                {businessName}
+              </Heading>
+              <Text className="text-[18px] text-gray-700 font-semibold m-0">
+                ✅ Booking Confirmed
+              </Text>
+            </Section>
+
+            {/* Main Content with Black Background */}
+            <Section className="bg-black px-[40px] py-[40px]">
+              {/* Booking ID */}
+              <Section className="bg-gray-900 p-[24px] rounded-[8px] mb-[32px] border border-gray-800">
+                <Text className="text-[16px] text-white mb-[8px] m-0">
+                  <strong>Booking ID:</strong> {bookingId}
+                </Text>
+                <Text className="text-[14px] text-gray-400 m-0">
+                  Please save this ID for future reference
+                </Text>
+              </Section>
+
+              {/* Timeline Section */}
+              <Section className="mb-[32px]">
+                <Heading className="text-[20px] font-bold text-white mb-[24px] m-0">
+                  Booking Timeline
+                </Heading>
+                
+                {/* Timeline Item 1 - Booking Confirmed */}
+                <Row className="mb-[24px]">
+                  <Column className="w-[40px]">
+                    <div className="w-[24px] h-[24px] bg-green-500 rounded-full flex items-center justify-center">
+                      <Text className="text-[12px] text-white font-bold m-0">✓</Text>
+                    </div>
+                  </Column>
+                  <Column className="pl-[16px]">
+                    <Text className="text-[16px] font-bold text-white mb-[4px] m-0">
+                      Booking Confirmed
+                    </Text>
+                    <Text className="text-[14px] text-gray-400 mb-[4px] m-0">
+                      {bookedOn}
+                    </Text>
+                    <Text className="text-[12px] text-green-400 m-0">
+                      ✅ Completed
+                    </Text>
+                  </Column>
+                </Row>
+
+                {/* Timeline Connector */}
+                <Row className="mb-[24px]">
+                  <Column className="w-[40px]">
+                    <div className="w-[2px] h-[32px] bg-gray-700 ml-[11px]"></div>
+                  </Column>
+                  <Column></Column>
+                </Row>
+
+                {/* Timeline Item 2 - Reminder */}
+                <Row className="mb-[24px]">
+                  <Column className="w-[40px]">
+                    <div className="w-[24px] h-[24px] bg-blue-500 rounded-full flex items-center justify-center">
+                      <Text className="text-[12px] text-white font-bold m-0">🔔</Text>
+                    </div>
+                  </Column>
+                  <Column className="pl-[16px]">
+                    <Text className="text-[16px] font-bold text-white mb-[4px] m-0">
+                      Appointment Reminder
+                    </Text>
+                    <Text className="text-[14px] text-gray-400 mb-[4px] m-0">
+                      {reminderDate} at {reminderTime}
+                    </Text>
+                    <Text className="text-[12px] text-blue-400 m-0">
+                      📧 Email reminder will be sent
+                    </Text>
+                  </Column>
+                </Row>
+
+                {/* Timeline Connector */}
+                <Row className="mb-[24px]">
+                  <Column className="w-[40px]">
+                    <div className="w-[2px] h-[32px] bg-gray-700 ml-[11px]"></div>
+                  </Column>
+                  <Column></Column>
+                </Row>
+
+                {/* Timeline Item 3 - Appointment */}
+                <Row>
+                  <Column className="w-[40px]">
+                    <div className="w-[24px] h-[24px] bg-purple-500 rounded-full flex items-center justify-center">
+                      <Text className="text-[12px] text-white font-bold m-0">📅</Text>
+                    </div>
+                  </Column>
+                  <Column className="pl-[16px]">
+                    <Text className="text-[16px] font-bold text-white mb-[4px] m-0">
+                      Your Appointment
+                    </Text>
+                    <Text className="text-[14px] text-gray-400 mb-[4px] m-0">
+                      {bookingDate} at {bookingTime}
+                    </Text>
+                    <Text className="text-[12px] text-purple-400 m-0">
+                      📍 {location}
+                    </Text>
+                  </Column>
+                </Row>
+              </Section>
+
+              {/* Booking Details */}
+              <Section className="mb-[32px]">
+                <Heading className="text-[20px] font-bold text-white mb-[16px] m-0">
+                  Booking Details
+                </Heading>
+                
+                <Row className="mb-[12px]">
+                  <Column>
+                    <Text className="text-[14px] text-gray-400 m-0 font-semibold">Service:</Text>
+                  </Column>
+                  <Column>
+                    <Text className="text-[14px] text-white m-0">{serviceType}</Text>
+                  </Column>
+                </Row>
+
+                <Row className="mb-[12px]">
+                  <Column>
+                    <Text className="text-[14px] text-gray-400 m-0 font-semibold">Duration:</Text>
+                  </Column>
+                  <Column>
+                    <Text className="text-[14px] text-white m-0">{bookingTime}</Text>
+                  </Column>
+                </Row>
+
+                <Row className="mb-[12px]">
+                  <Column>
+                    <Text className="text-[14px] text-gray-400 m-0 font-semibold">Location:</Text>
+                  </Column>
+                  <Column>
+                    <Text className="text-[14px] text-white m-0">{location}</Text>
+                  </Column>
+                </Row>
+
+                {notes && (
+                  <Row>
+                    <Column>
+                      <Text className="text-[14px] text-gray-400 m-0 font-semibold">Notes:</Text>
+                    </Column>
+                    <Column>
+                      <Text className="text-[14px] text-white m-0">{notes}</Text>
+                    </Column>
+                  </Row>
+                )}
+              </Section>
+
+              {/* Customer Information */}
+              <Section className="mb-[32px]">
+                <Heading className="text-[20px] font-bold text-white mb-[16px] m-0">
+                  Customer Information
+                </Heading>
+                
+                <Row className="mb-[12px]">
+                  <Column>
+                    <Text className="text-[14px] text-gray-400 m-0 font-semibold">Name:</Text>
+                  </Column>
+                  <Column>
+                    <Text className="text-[14px] text-white m-0">{customerName}</Text>
+                  </Column>
+                </Row>
+
+                <Row className="mb-[12px]">
+                  <Column>
+                    <Text className="text-[14px] text-gray-400 m-0 font-semibold">Email:</Text>
+                  </Column>
+                  <Column>
+                    <Text className="text-[14px] text-white m-0">{customerEmail}</Text>
+                  </Column>
+                  </Row>
+
+                <Row>
+                  <Column>
+                    <Text className="text-[14px] text-gray-400 m-0 font-semibold">Phone:</Text>
+                  </Column>
+                  <Column>
+                    <Text className="text-[14px] text-white m-0">{customerPhone}</Text>
+                  </Column>
+                </Row>
+              </Section>
+
+              {/* Agent Information */}
+              <Section className="mb-[32px]">
+                <Heading className="text-[20px] font-bold text-white mb-[16px] m-0">
+                  Your Agent
+                </Heading>
+                
+                <Row className="mb-[12px]">
+                  <Column>
+                    <Text className="text-[14px] text-gray-400 m-0 font-semibold">Agent Name:</Text>
+                  </Column>
+                  <Column>
+                    <Text className="text-[14px] text-white m-0">{agentName}</Text>
+                  </Column>
+                </Row>
+
+                <Row>
+                  <Column>
+                    <Text className="text-[14px] text-gray-400 m-0 font-semibold">Agent Email:</Text>
+                  </Column>
+                  <Column>
+                    <Text className="text-[14px] text-white m-0">{agentEmail}</Text>
+                  </Column>
+                </Row>
+              </Section>
+
+              {/* Calendar Buttons */}
+              <Section className="text-center mb-[32px]">
+                <Heading className="text-[18px] font-bold text-white mb-[16px] m-0">
+                  Add to Calendar
+                </Heading>
+                
+                <Row>
+                  <Column className="text-center pr-[8px]">
+                    <Button
+                      href="#"
+                      className="bg-white text-black px-[24px] py-[12px] rounded-[6px] text-[14px] font-semibold box-border"
+                    >
+                      Add to Google Calendar
+                    </Button>
+                  </Column>
+                  <Column className="text-center pl-[8px]">
+                    <Button
+                      href="#"
+                      className="bg-gray-700 text-white px-[24px] py-[12px] rounded-[6px] text-[14px] font-semibold box-border"
+                    >
+                      Download iCal
+                    </Button>
+                  </Column>
+                </Row>
+              </Section>
+
+              {/* Instructions */}
+              <Section className="bg-gray-900 border-l-[4px] border-gray-600 p-[20px] mb-[32px] rounded-[4px]">
+                <Heading className="text-[16px] font-bold text-white mb-[12px] m-0">
+                  Need to Make Changes?
+                </Heading>
+                <Text className="text-[14px] text-gray-300 mb-[8px] m-0">
+                  To reschedule, cancel, or modify your booking, please contact us with your booking ID: <strong className="text-white">{bookingId}</strong>
+                </Text>
+                <Text className="text-[14px] text-gray-300 m-0">
+                  Email: {companyEmail} | Phone: {companyPhone}
+                </Text>
+              </Section>
+
+              <Hr className="border-gray-700 my-[32px]" />
+
+              {/* Footer */}
+              <Section className="text-center">
+                <Text className="text-[12px] text-white mb-[8px] m-0 font-semibold">
+                  {businessName}
+                </Text>
+                <Text className="text-[12px] text-gray-400 mb-[4px] m-0">
+                  {companyAddress}
+                </Text>
+                <Text className="text-[12px] text-gray-400 mb-[4px] m-0">
+                  Phone: {companyPhone} | Email: {companyEmail}
+                </Text>
+                <Text className="text-[12px] text-gray-400 m-0">
+                  © {new Date().getFullYear()} {businessName}. All rights reserved.
+                </Text>
+              </Section>
+            </Section>
+          </Container>
+        </Body>
+      </Tailwind>
+    </Html>
+  );
+};
+
+BookingConfirmationEmail.PreviewProps = {
+  businessName: "Premium Services Co.",
+  bookingId: "BK-2024-001234",
+  customerName: "John Doe",
+  customerEmail: "john.doe@example.com",
+  customerPhone: "+1 (555) 123-4567",
+  agentName: "Sarah Johnson",
+  agentEmail: "sarah@premiumservices.com",
+  serviceType: "Business Consultation",
+  bookingDate: "June 15, 2024",
+  bookingTime: "2:00 PM - 3:00 PM EST",
+  location: "123 Main Street, Suite 100, New York, NY 10001",
+  notes: "Please bring valid ID and any relevant business documents",
+  companyAddress: "123 Business Ave, Suite 200, New York, NY 10001",
+  companyPhone: "+1 (555) 987-6543",
+  companyEmail: "info@premiumservices.com",
+  bookedOn: "May 30, 2024 at 8:05 PM",
+  reminderDate: "June 13, 2024",
+  reminderTime: "10:00 AM EST"
+};
+
+export default BookingConfirmationEmail;
