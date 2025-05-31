@@ -244,6 +244,7 @@ model User {
   emailVerified            DateTime?
   image                    String?
   createdAt                DateTime                 @default(now()) @map("created_at")
+  updatedAt                DateTime                 @updatedAt
   inquiryEmailEnabled      Boolean                  @default(true)
   marketingEmailEnabled    Boolean                  @default(true)
   stripeSubscriptionStatus String?
@@ -252,19 +253,23 @@ model User {
   stripePriceId            String?                  @map("stripe_price_id")
   stripeSubscriptionId     String?                  @unique @map("stripe_subscription_id")
   twilioSubaccountSid      String?                  @unique @map("twilio_subaccount_sid")
+  twilioSubaccountAuthToken String?
   addressLine1             String?
   addressLine2             String?
-  businessTasks            String[]                 @default([])
+  businessAddress          String?
+  businessName             String?
   businessWebsite          String?
+  businessRegistrationNumber String?
   city                     String?
-  communicationChannels    String[]                 @default([])
   companyName              String?
+  companyType              String?    // 'standard' | 'sole_proprietor'
   companySize              String?
-  country                  String?
-  industryType             String?
+  country                  String?                  @default("US")
+  industryType             String?                  @default("other")
   onboardingCompleted      Boolean                  @default(false)
   postalCode               String?
   state                    String?
+  taxId                    String?
   accounts                 Account[]
   openAIConfig             OpenAIConfig?
   sessions                 Session[]
@@ -288,7 +293,12 @@ model User {
   // A2P 10DLC Registration relationships
   twilioA2PBrand           TwilioA2PBrand?
   twilioA2PCampaigns       TwilioA2PCampaign[]
-
+  
+  // 10DLC Trust Hub fields
+  trustHubProfileSid       String?    // Primary Customer Profile SID
+  a2pProfileBundleSid      String?    // A2P Messaging Profile Bundle SID
+  a2pBrandSid              String?    // Brand Registration SID
+  
   @@map("users")
 }
 
@@ -502,6 +512,9 @@ model TwilioPhoneNumber {
   a2pBrandSid          String? // Twilio Brand SID  
   a2pRegistrationError String? // Error message if registration fails
   a2pRegisteredAt      DateTime? // When A2P registration was completed
+  
+  // Additional 10DLC fields
+  messagingServiceSid   String?   // Messaging Service SID
   
   invoices          Invoice[]
   chatbot           Chatbot?         @relation(fields: [chatbotId], references: [id])
