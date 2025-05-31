@@ -16,6 +16,8 @@ import { formatPrice } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, CheckCircle, AlertCircle, CreditCard, Info, Calendar, DollarSign } from "lucide-react";
 import axios from "axios";
+import { Divider } from "@/components/Divider";
+import { RiInformationLine } from "@remixicon/react";
 // Remove simple-icons import and define paths directly
 
 // Type definitions
@@ -502,39 +504,30 @@ export function PurchaseConfirmationDialog({
             <div className="space-y-4">
               <div className="p-4 rounded-md border border-border dark:border-gray-700 bg-background dark:bg-gray-800">
                 <h3 className="text-base font-medium text-foreground dark:text-gray-100 mb-4">Purchase Details</h3>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex justify-between">
-                    <span className="text-muted-foreground dark:text-gray-400">Phone Number:</span> 
-                    <span className="font-medium text-foreground dark:text-gray-100">{phoneNumber}</span>
-                  </li>
-                  <li className="flex justify-between items-center">
-                    <span className="text-muted-foreground dark:text-gray-400 flex items-center">
-                      <DollarSign className="h-3 w-3 mr-1" />
-                      Today's Charge:
-                    </span> 
-                    <span className="font-medium text-foreground dark:text-gray-100 text-lg">
-                      {formatPrice(subscriptionInfo.proratedAmount)}
-                    </span>
-                  </li>
-                  <li className="flex justify-between text-xs">
-                    <span className="text-muted-foreground dark:text-gray-400 ml-4">
-                      ({subscriptionInfo.daysRemaining} days remaining)
-                    </span>
-                  </li>
-                  <li className="flex justify-between">
-                    <span className="text-muted-foreground dark:text-gray-400">Monthly Cost:</span> 
-                    <span className="font-medium text-foreground dark:text-gray-100">{formatPrice(monthlyCost)}/mo</span>
-                  </li>
-                  <li className="flex justify-between items-center">
-                    <span className="text-muted-foreground dark:text-gray-400 flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      Subscription Renews:
-                    </span> 
-                    <span className="font-medium text-foreground dark:text-gray-100">
-                      {formatDate(subscriptionInfo.renewalDate!)}
-                    </span>
-                  </li>
-                </ul>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Phone Number</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-50">{safePhoneNumber}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Monthly Cost</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-50">{formatPrice(monthlyCost)}</span>
+                  </div>
+                  
+                  {subscriptionInfo && (
+                    <>
+                      <Divider />
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-gray-400">Due Today (Prorated)</span>
+                        <span className="font-semibold text-gray-900 dark:text-gray-50">{formatPrice(subscriptionInfo.proratedAmount)}</span>
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {subscriptionInfo.daysRemaining} of {subscriptionInfo.totalDays} days remaining in billing period
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Payment method card display */}
@@ -595,6 +588,23 @@ export function PurchaseConfirmationDialog({
                       </>
                     )}
                   </ul>
+                </div>
+              </div>
+
+              {/* 10DLC Verification Notice */}
+              <div className="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <RiInformationLine className="h-5 w-5 text-blue-400" aria-hidden="true" />
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                      Verification Required for SMS
+                    </h4>
+                    <div className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                      <p>After purchase, you'll need to complete a quick verification process to enable SMS messaging. This is a one-time requirement by mobile carriers to prevent spam.</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 

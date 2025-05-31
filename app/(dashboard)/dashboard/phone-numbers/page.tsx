@@ -34,6 +34,7 @@ import { PhoneNumberStatus } from './components/PhoneNumberStatus';
 import { PaymentMethodDisplay } from '@/components/billing/payment-method-display';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { RiAlertLine } from '@remixicon/react';
+import { PhoneNumber10DLCForm } from '@/components/phone-numbers/10dlc-registration-form';
 
 interface PhoneNumber {
   id: string;
@@ -48,6 +49,9 @@ interface PhoneNumber {
   calculatedStatus?: 'active' | 'pending' | 'warning' | 'suspended';
   warningMessage?: string;
   statusReason?: string;
+  a2pRegistrationStatus?: string | null;
+  a2pRegistrationError?: string | null;
+  a2pRegisteredAt?: string | null;
 }
 
 interface Agent {
@@ -167,35 +171,36 @@ const PhoneNumbersPage = () => {
     }
   }, [selectedPhoneNumber, isMobileView]);
 
-  // Load phone numbers
-  useEffect(() => {
-    const loadPhoneNumbers = async () => {
-      setIsLoading(true);
+  // Load phone numbers function
+  const loadPhoneNumbers = async () => {
+    setIsLoading(true);
+    try {
+      // First refresh all phone number statuses to ensure they're up-to-date
       try {
-        // First refresh all phone number statuses to ensure they're up-to-date
-        try {
-          await fetch('/api/twilio/phone-numbers/refresh-all-statuses', {
-            method: 'POST'
-          });
-        } catch (error) {
-          console.error('Error refreshing phone number statuses:', error);
-          // Continue even if refresh fails
-        }
-        
-        // Then fetch the phone numbers with updated statuses
-        const response = await fetch('/api/twilio/phone-numbers');
-        if (!response.ok) throw new Error('Failed to load phone numbers');
-        const data = await response.json();
-        setPhoneNumbers(data.phoneNumbers || []);
+        await fetch('/api/twilio/phone-numbers/refresh-all-statuses', {
+          method: 'POST'
+        });
       } catch (error) {
-        console.error('Error loading phone numbers:', error);
-        toast.error('Failed to load phone numbers. Please try again later.');
-        setPhoneNumbers([]);
-      } finally {
-        setIsLoading(false);
+        console.error('Error refreshing phone number statuses:', error);
+        // Continue even if refresh fails
       }
-    };
+      
+      // Then fetch the phone numbers with updated statuses
+      const response = await fetch('/api/twilio/phone-numbers');
+      if (!response.ok) throw new Error('Failed to load phone numbers');
+      const data = await response.json();
+      setPhoneNumbers(data.phoneNumbers || []);
+    } catch (error) {
+      console.error('Error loading phone numbers:', error);
+      toast.error('Failed to load phone numbers. Please try again later.');
+      setPhoneNumbers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Load phone numbers on mount
+  useEffect(() => {
     loadPhoneNumbers();
   }, []);
 
@@ -410,43 +415,6 @@ const PhoneNumbersPage = () => {
     toast.success(`Phone number ${newPhoneNumber} purchased successfully!`);
     
     // Refresh the phone numbers list
-    const loadPhoneNumbers = async () => {
-      setIsLoading(true);
-      try {
-        // First refresh all phone number statuses to ensure they're up-to-date
-        console.log('Refreshing phone number statuses...');
-        await fetch('/api/twilio/phone-numbers/refresh-all-statuses', {
-          method: 'POST'
-        });
-        
-        // Add a small delay to ensure database updates are complete
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Then fetch the phone numbers with updated statuses
-        console.log('Fetching updated phone number list...');
-        const response = await fetch('/api/twilio/phone-numbers');
-        
-        if (!response.ok) throw new Error('Failed to load phone numbers');
-        
-        const data = await response.json();
-        console.log('Fetched phone numbers:', data.phoneNumbers);
-        
-        setPhoneNumbers(data.phoneNumbers || []);
-        
-        // Find the newly purchased phone number to select it
-        const newlyPurchased = data.phoneNumbers?.find((p: PhoneNumber) => p.number === newPhoneNumber);
-        if (newlyPurchased) {
-          setSelectedPhoneNumber(newlyPurchased);
-          console.log('Selected newly purchased phone number:', newlyPurchased);
-        }
-      } catch (error) {
-        console.error('Error refreshing phone numbers:', error);
-        toast.error('Failed to refresh phone number list. Please reload the page.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadPhoneNumbers();
   };
 
@@ -781,13 +749,28 @@ const PhoneNumbersPage = () => {
                       <div className="flex-shrink-0">
                         <RiInformationLine className="h-5 w-5 text-indigo-600 dark:text-indigo-500" />
                       </div>
-                      <div className="ml-3">
+                      <div className="ml-3 flex-1">
                         <h3 className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
-                          Ready for Agent Assignment
+                          Verification Required
                         </h3>
                         <p className="mt-1 text-sm text-indigo-700 dark:text-indigo-300">
-                          Your phone number is active and ready to use. Assign it to an agent below to start receiving calls and messages.
+                          Complete the verification process to enable SMS messaging for this phone number.
                         </p>
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          className="mt-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border-indigo-300 dark:bg-indigo-900/50 dark:hover:bg-indigo-900/70 dark:text-indigo-200 dark:border-indigo-700"
+                          onClick={() => {
+                            // Scroll to verification section
+                            const verificationSection = document.getElementById('verification-section');
+                            if (verificationSection) {
+                              verificationSection.scrollIntoView({ behavior: 'smooth' });
+                            }
+                          }}
+                        >
+                          <Icons.check className="h-3.5 w-3.5 mr-1.5" />
+                          Start Verification
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -869,6 +852,15 @@ const PhoneNumbersPage = () => {
                     )}
                   </div>
                 </Card>
+
+                {/* 10DLC Registration Form */}
+                <PhoneNumber10DLCForm 
+                  phoneNumber={selectedPhoneNumber}
+                  onStatusUpdate={() => {
+                    // Refresh phone numbers to get updated status
+                    loadPhoneNumbers();
+                  }}
+                />
 
                 {/* Simplified Billing Info */}
                 {selectedPhoneNumber.status === 'active' && (
