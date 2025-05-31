@@ -44,12 +44,9 @@ export async function sendAppointmentConfirmationEmail(appointmentId: string): P
       return false;
     }
 
-    // Check if email notifications are enabled (use existing field as fallback)
-    const emailNotificationsEnabled = (appointment.calendar as any).notificationEmailEnabled ?? true;
-    if (!emailNotificationsEnabled) {
-      console.log('Email notifications disabled for calendar:', appointment.calendar.id);
-      return false;
-    }
+    // Email notifications are always enabled since there's no field to control this
+    // If you want to add this control later, add notificationEmailEnabled to the Calendar model
+    console.log('Sending confirmation email for appointment:', appointmentId);
 
     // Format date and time for display
     const appointmentDate = appointment.startTime.toLocaleDateString('en-US', {
@@ -180,12 +177,9 @@ export async function sendAppointmentReminderEmail(appointmentId: string): Promi
       return false;
     }
 
-    // Check if email reminders are enabled (use existing field as fallback)
-    const emailRemindersEnabled = (appointment.calendar as any).emailReminderEnabled ?? true;
-    if (!emailRemindersEnabled) {
-      console.log('Email reminders disabled for calendar:', appointment.calendar.id);
-      return false;
-    }
+    // Email reminders are always enabled since there's no field to control this
+    // If you want to add this control later, add emailReminderEnabled to the Calendar model
+    console.log('Sending reminder email for appointment:', appointmentId);
 
     // Check if appointment is in the future
     const now = new Date();
@@ -305,9 +299,9 @@ export async function scheduleAppointmentReminders(appointmentId: string): Promi
       return;
     }
 
-    // Check if email reminders are enabled
-    const emailRemindersEnabled = (appointment.calendar as any).emailReminderEnabled ?? true;
-    if (!emailRemindersEnabled) {
+    // Schedule reminders for all appointments with email addresses
+    if (!appointment.clientEmail) {
+      console.log('No email address provided, skipping reminder scheduling');
       return;
     }
 

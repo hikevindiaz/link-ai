@@ -406,17 +406,38 @@ export async function handleBookAppointment(params: any, calendarConfig: Calenda
     
     // Parse the start_time - it might be in ISO format or we need to construct it
     let startDateTime;
+    
+    // Log all parameters for debugging
+    console.log('[Calendar Tool] Raw booking parameters:', JSON.stringify(params, null, 2));
+    
     if (params.start_time && params.start_time.includes('T')) {
       // Already in ISO format
       startDateTime = new Date(params.start_time);
+    } else if (params.date && params.time) {
+      // Construct from separate date and time parameters
+      startDateTime = new Date(`${params.date}T${params.time}:00`);
+    } else if (params.start_time) {
+      // Try to parse whatever format was provided
+      startDateTime = new Date(params.start_time);
     } else {
-      // Construct from date and time
-      // For now, assume tomorrow at the specified time
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(14, 0, 0, 0); // Default to 2 PM if not specified
-      startDateTime = tomorrow;
+      // Only use tomorrow as last resort if no date info provided
+      return JSON.stringify({
+        success: false,
+        message: "Missing required date and time information. Please provide when you'd like to book the appointment."
+      });
     }
+    
+    // Validate the parsed date
+    if (isNaN(startDateTime.getTime())) {
+      console.error('[Calendar Tool] Invalid date parsing result:', params);
+      return JSON.stringify({
+        success: false,
+        message: "Invalid date/time format. Please provide a valid date and time."
+      });
+    }
+    
+    console.log('[Calendar Tool] Parsed start time:', startDateTime.toISOString());
+    console.log('[Calendar Tool] Current time:', new Date().toISOString());
     
     // Convert parameters from snake_case to camelCase and match API format
     const appointmentData = {
@@ -460,10 +481,19 @@ export async function handleBookAppointment(params: any, calendarConfig: Calenda
     // Check minimum advance notice
     const now = new Date();
     const minutesDifference = Math.floor((startDateTime.getTime() - now.getTime()) / (1000 * 60));
+    
+    console.log('[Calendar Tool] Advance notice check:', {
+      requestedTime: startDateTime.toISOString(),
+      currentTime: now.toISOString(),
+      minutesDifference,
+      minimumRequired: calendarConfig.minimumAdvanceNotice,
+      willPass: minutesDifference >= calendarConfig.minimumAdvanceNotice
+    });
+    
     if (minutesDifference < calendarConfig.minimumAdvanceNotice) {
       return JSON.stringify({
         success: false,
-        message: `Appointments must be booked at least ${calendarConfig.minimumAdvanceNotice} minutes in advance. Please choose a later time.`
+        message: `Appointments must be booked at least ${calendarConfig.minimumAdvanceNotice} minutes in advance. The requested time is only ${minutesDifference} minutes from now. Please choose a later time.`
       });
     }
     
