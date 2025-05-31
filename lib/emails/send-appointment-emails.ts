@@ -17,6 +17,20 @@ export interface AppointmentWithDetails extends Appointment {
  */
 export async function sendAppointmentConfirmationEmail(appointmentId: string): Promise<boolean> {
   try {
+    console.log('[Email] Starting confirmation email process for appointment:', appointmentId);
+    
+    // Check if Resend is properly initialized
+    if (!email) {
+      console.error('[Email] Resend email client not initialized');
+      return false;
+    }
+    
+    // Check if API key exists
+    if (!process.env.RESEND_API_KEY) {
+      console.error('[Email] RESEND_API_KEY environment variable not found');
+      return false;
+    }
+    
     // Fetch appointment with related data
     const appointment = await prisma.appointment.findUnique({
       where: { id: appointmentId },
@@ -35,18 +49,20 @@ export async function sendAppointmentConfirmationEmail(appointmentId: string): P
     });
 
     if (!appointment) {
-      console.error('Appointment not found:', appointmentId);
+      console.error('[Email] Appointment not found:', appointmentId);
       return false;
     }
 
     if (!appointment.clientEmail) {
-      console.error('No client email found for appointment:', appointmentId);
+      console.error('[Email] No client email found for appointment:', appointmentId);
       return false;
     }
 
+    console.log('[Email] Sending to:', appointment.clientEmail);
+
     // Email notifications are always enabled since there's no field to control this
     // If you want to add this control later, add notificationEmailEnabled to the Calendar model
-    console.log('Sending confirmation email for appointment:', appointmentId);
+    console.log('[Email] Preparing email content for appointment:', appointmentId);
 
     // Format date and time for display
     const appointmentDate = appointment.startTime.toLocaleDateString('en-US', {
@@ -129,18 +145,40 @@ export async function sendAppointmentConfirmationEmail(appointmentId: string): P
     }));
 
     // Send the email
-    const result = await email.emails.send({
-      from: `${appointment.calendar.user.companyName || appointment.calendar.user.name || 'Link AI'} <no-reply@getlinkai.com>`,
-      to: appointment.clientEmail,
-      subject: `${appointment.clientName}, your appointment is confirmed ✅`,
-      html: emailHtml,
-      reply_to: appointment.calendar.user.email || 'hello@getlinkai.com',
-    });
+    console.log('[Email] Attempting to send via Resend API...');
+    console.log('[Email] From:', `${appointment.calendar.user.companyName || appointment.calendar.user.name || 'Link AI'} <no-reply@getlinkai.com>`);
+    console.log('[Email] To:', appointment.clientEmail);
+    console.log('[Email] Subject:', `${appointment.clientName}, your appointment is confirmed ✅`);
+    console.log('[Email] Reply-to:', appointment.calendar.user.email || 'hello@getlinkai.com');
+    console.log('[Email] HTML length:', emailHtml.length);
+    
+    try {
+      const result = await email.emails.send({
+        from: `${appointment.calendar.user.companyName || appointment.calendar.user.name || 'Link AI'} <no-reply@getlinkai.com>`,
+        to: appointment.clientEmail,
+        subject: `${appointment.clientName}, your appointment is confirmed ✅`,
+        html: emailHtml,
+        reply_to: appointment.calendar.user.email || 'hello@getlinkai.com',
+      });
 
-    console.log('Appointment confirmation email sent:', result);
-    return true;
+      console.log('[Email] Appointment confirmation email sent successfully:', result);
+      console.log('[Email] Result details:', JSON.stringify(result));
+      return true;
+    } catch (resendError: any) {
+      console.error('[Email] Resend API error:', resendError?.message || resendError);
+      if (resendError?.response) {
+        console.error('[Email] Resend response status:', resendError.response.status);
+        console.error('[Email] Resend response data:', resendError.response.data);
+      }
+      throw resendError; // Re-throw to be caught by outer catch
+    }
   } catch (error) {
-    console.error('Error sending appointment confirmation email:', error);
+    console.error('[Email] Error sending appointment confirmation email:', error);
+    console.error('[Email] Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      fullError: error
+    });
     return false;
   }
 }

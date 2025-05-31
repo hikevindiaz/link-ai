@@ -41,8 +41,14 @@ export async function handleCheckAvailability(params: any, calendarConfig: Calen
       const targetDay = days.indexOf(dayName.toLowerCase());
       if (targetDay === -1) return null;
       
-      const result = new Date(now);
+      // Use a clean date without time component to avoid timezone issues
+      const today = new Date(now);
+      today.setHours(0, 0, 0, 0);
+      
+      const result = new Date(today);
       const currentDay = result.getDay();
+      
+      console.log(`[Calendar Tool] getNextWeekday - Looking for ${dayName} (${targetDay}) from ${days[currentDay]} (${currentDay})`);
       
       if (fromNextWeek) {
         // Get to next Monday first
@@ -54,12 +60,16 @@ export async function handleCheckAvailability(params: any, calendarConfig: Calen
       } else {
         // Get next occurrence of this day
         let daysUntilTarget = targetDay - currentDay;
-        if (daysUntilTarget <= 0) daysUntilTarget += 7;
+        
+        // If it's the same day or in the past this week, get next week's occurrence
+        if (daysUntilTarget <= 0) {
+          daysUntilTarget += 7;
+        }
+        
         result.setDate(result.getDate() + daysUntilTarget);
       }
       
-      // Reset time to start of day to avoid timezone issues
-      result.setHours(0, 0, 0, 0);
+      console.log(`[Calendar Tool] getNextWeekday - Result date: ${result.toISOString().split('T')[0]}`);
       
       return result;
     };
@@ -320,7 +330,10 @@ export async function handleCheckAvailability(params: any, calendarConfig: Calen
     const actualStartHour = (!preferAM && !preferPM) ? 9 : startHour;
     const actualEndHour = (!preferAM && !preferPM) ? 17 : endHour;
     
-    for (let hour = actualStartHour; hour < actualEndHour; hour++) {
+    // For PM preference, skip noon and start at 1 PM for better afternoon times
+    const pmStartHour = preferPM ? 13 : actualStartHour; // 1 PM instead of noon for PM
+    
+    for (let hour = pmStartHour; hour < actualEndHour; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
         const slotTime = new Date(checkDate + 'T00:00:00');
         slotTime.setHours(hour, minute, 0, 0);

@@ -19,22 +19,22 @@ export function getCalendarTools(calendarConfig: CalendarConfig | null) {
     {
       type: "function",
       name: "check_availability",
-      description: "Check available time slots for a specific date. Pass relative dates as-is (e.g., 'tomorrow', 'next week', 'Wednesday of next week', 'this Thursday')",
+      description: "Check available time slots for a specific date. Pass relative dates as-is (e.g., 'tomorrow', 'next week', 'Wednesday of next week', 'this Thursday'). IMPORTANT: If the user previously mentioned AM or PM preference in the conversation, always pass prefer_am or prefer_pm accordingly.",
       parameters: {
         type: "object",
         properties: {
           date: {
             type: "string",
-            description: "Date to check - can be: YYYY-MM-DD format, 'tomorrow', 'today', 'next week', 'Wednesday of next week', 'this Thursday', or just a day name like 'Monday'"
+            description: "Date to check - can be: YYYY-MM-DD format, 'tomorrow', 'today', 'next week', 'Wednesday of next week', 'this Thursday', or just a day name like 'Monday', 'Tuesday', etc."
           },
           prefer_am: {
             type: "boolean",
-            description: "Whether to look for morning (AM) slots",
+            description: "Set to true if the user wants morning slots (9 AM - 12 PM). If user said 'morning' or 'AM' at any point, this should be true.",
             default: false
           },
           prefer_pm: {
             type: "boolean",
-            description: "Whether to look for afternoon (PM) slots",
+            description: "Set to true if the user wants afternoon slots (12 PM - 5 PM). If user said 'afternoon' or 'PM' at any point, this should be true.",
             default: false
           },
           specific_time: {
