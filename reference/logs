@@ -1,60 +1,42 @@
-i need to make a booking
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+2v3:1 You may test your Stripe.js integration over HTTP. However, live Stripe.js integrations must use HTTPS.
+value @ v3:1Understand this warning
+script.debug.js:1 [Vercel Speed Insights] Debug mode is enabled by default in development. No requests will be sent to the server.
+warn-once.js:16 Image with src "/LINK AI ICON DARK.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+warnOnce @ warn-once.js:16Understand this warning
+warn-once.js:16 Image with src "/LINK AI LOGO DARK.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+warnOnce @ warn-once.js:16Understand this warning
+AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
+AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=false, Value=undefined, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=false, Value=undefined, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=false, Value=undefined, Enabled=false
+AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=false, Value=undefined, Enabled=false
+AppSidebar.tsx:180 [AppSidebar] Session Data: Object
+AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
+page.tsx:403 🔍 [DEBUG] Fetching subscription...
+:3000/api/user/profile:1 
+            
+            
+           Failed to load resource: the server responded with a status of 500 (Internal Server Error)Understand this error
+page.tsx:405 📊 [DEBUG] Response status: 200
+page.tsx:407 📊 [DEBUG] Response data: {
+  "success": true,
+  "subscription": null,
+  "isSubscribed": false
+}
+page.tsx:413 ⚠️ [DEBUG] No subscription found or data.success is false
+page.tsx:414 ⚠️ [DEBUG] data.success: true
+page.tsx:415 ⚠️ [DEBUG] data.subscription: null
+page.tsx:416 ⚠️ [DEBUG] data.isSubscribed: false
+:3000/api/user/profile:1 
+            
+            
+           Failed to load resource: the server responded with a status of 500 (Internal Server Error)Understand this error
 
-I'd be happy to help you book an appointment!
-
-Would you prefer a morning (AM) or afternoon (PM) time slot?
-
-
-pm
-
-Perfect! I have 4:30 PM available on Friday, May 30, 2025.
-
-Does this time work for you?
-
-
-tuesday is better
-
-Perfect! I have 12:00 PM available on Monday, June 2, 2025.
-
-Does this time work for you?
-
-
-sure
-
-Great! Would you like to add any notes or special requests for your visit? If not, we can proceed to the next step.
-
-
-no
-
-Thank you! Could you please provide your full name, email address, and phone number to complete the booking?
-
-
-Kevin Diaz, kevinxdiaz96@gmail.com, 7873825481
-
-I've successfully scheduled your appointment! You will receive a confirmation email.
-
-📋 Appointment Summary:
-
-━━━━━━━━━━━━━━━━━━━━━
-
-📅 Date: Monday, June 2, 2025
-
-🕐 Time: 12:00 PM
-
-⏱️ Duration: 30 minutes
-
-👤 Name: Kevin Diaz
-
-📱 Phone: 7873825481
-
-📧 Email: kevinxdiaz96@gmail.com
-
-━━━━━━━━━━━━━━━━━━━━━
-
-🔖 Appointment ID:
-cmbce0w5a000bju5j73yp5wrd
-
-💡 Keep this ID to view, modify, or cancel your appointment.
-
-
-No file chosen
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning
+hot-reloader-client.js:187 [Fast Refresh] rebuilding
+hot-reloader-client.js:44 [Fast Refresh] done in 17ms

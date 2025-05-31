@@ -29,8 +29,6 @@ export async function GET() {
         businessWebsite: true,
         companySize: true,
         industryType: true,
-        businessTasks: true,
-        communicationChannels: true,
       },
     });
     
@@ -52,8 +50,6 @@ export async function GET() {
       businessWebsite: user.businessWebsite || '',
       companySize: user.companySize || '',
       industryType: user.industryType || '',
-      businessTasks: user.businessTasks || [],
-      communicationChannels: user.communicationChannels || [],
     };
     
     return NextResponse.json({ success: true, profile });

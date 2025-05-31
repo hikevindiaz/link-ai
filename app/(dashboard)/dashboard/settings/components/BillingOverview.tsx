@@ -27,14 +27,11 @@ interface BillingOverviewProps {
 // Loading component with indigo theme
 function BillingOverviewLoading() {
   return (
-    <div className="mt-8 rounded-lg border border-gray-200 bg-white text-gray-950 shadow-sm dark:border-gray-800 dark:bg-gray-950 dark:text-gray-50 p-8">
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mb-4"></div>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50 mb-2">
-          Loading billing information
-        </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-          Please wait while we retrieve your subscription details and usage data.
+    <div className="mt-8 rounded-lg border border-gray-200 bg-white text-gray-950 shadow-sm dark:border-gray-800 dark:bg-gray-950 dark:text-gray-50 p-6">
+      <div className="flex items-center justify-center space-x-3">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Loading billing information...
         </p>
       </div>
     </div>

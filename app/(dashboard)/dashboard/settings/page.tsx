@@ -18,12 +18,7 @@ import {
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { loadStripe } from '@stripe/stripe-js';
-import { 
-  Elements, 
-  PaymentElement, 
-  useStripe, 
-  useElements 
-} from '@stripe/react-stripe-js';
+import { useStripe, useElements, PaymentElement, Elements } from '@stripe/react-stripe-js';
 import { PaymentMethodDialog } from './components/PaymentMethodDialog';
 import { InvoiceList } from "@/components/billing/invoice-list";
 import { 
@@ -41,6 +36,7 @@ import { BusinessInformationTab } from './components/BusinessInformationTab';
 import { BillingOverview } from './components/BillingOverview';
 import { PaymentMethodsSection } from './components/PaymentMethodsSection';
 import { InvoicesSection } from './components/InvoicesSection';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 // Initialize Stripe
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
@@ -300,6 +296,11 @@ export default function SettingsPage() {
   useEffect(() => {
     if (currentPlan) {
       fetchUsageData();
+    } else {
+      // If there's no plan, set empty usage data and stop loading
+      setUsageData([]);
+      setOverageCost(0);
+      setIsBillingOverviewLoading(false);
     }
   }, [currentPlan]);
 
@@ -419,10 +420,9 @@ export default function SettingsPage() {
     } catch (error) {
       console.error('❌ [DEBUG] Failed to fetch subscription:', error);
       setCurrentPlan(null);
-    } finally {
-      // Don't set loading to false here, let the useEffect handle it
-      // setIsBillingOverviewLoading(false);
     }
+    // Don't set loading to false here, let the useEffect handle it
+    // This ensures proper coordination with the usage data loading
   };
 
   const fetchUserProfile = async () => {
@@ -1096,6 +1096,45 @@ export default function SettingsPage() {
           }
         }}
       />
+
+      {/* Payment Form Modal */}
+      {showPaymentForm && clientSecret && (
+        <Dialog open={showPaymentForm} onOpenChange={(open) => !open && handlePaymentCancel()}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add Payment Method</DialogTitle>
+              <DialogDescription>
+                Enter your card details to add a new payment method to your account.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Elements 
+                stripe={loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)} 
+                options={{ 
+                  clientSecret,
+                  appearance: {
+                    theme: 'stripe',
+                    variables: {
+                      colorPrimary: '#6366f1',
+                      colorBackground: '#ffffff',
+                      colorText: '#1f2937',
+                      colorDanger: '#ef4444',
+                      fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+                      borderRadius: '6px',
+                    },
+                  },
+                }}
+              >
+                <PaymentMethodForm 
+                  clientSecret={clientSecret}
+                  onSuccess={handlePaymentSuccess}
+                  onCancel={handlePaymentCancel}
+                />
+              </Elements>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
