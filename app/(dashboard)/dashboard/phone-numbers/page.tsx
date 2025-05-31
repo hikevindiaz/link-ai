@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Divider } from '@/components/Divider';
 import EmptyState from '@/components/ui/empty-state';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
-import { RiDeleteBinLine, RiPencilLine, RiAddLine, RiMoreFill, RiPhoneLine, RiInformationLine, RiCheckboxCircleFill, RiErrorWarningLine } from '@remixicon/react';
+import { RiDeleteBinLine, RiPencilLine, RiAddLine, RiMoreFill, RiPhoneLine, RiInformationLine, RiCheckboxCircleFill, RiErrorWarningLine, RiWhatsappFill } from '@remixicon/react';
 import { Icons } from '@/components/icons';
 import {
   DropdownMenu,
@@ -34,7 +34,7 @@ import { PhoneNumberStatus } from './components/PhoneNumberStatus';
 import { PaymentMethodDisplay } from '@/components/billing/payment-method-display';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { RiAlertLine } from '@remixicon/react';
-import { PhoneNumber10DLCForm } from '@/components/phone-numbers/10dlc-registration-form';
+import { WhatsAppConfigurationForm } from '@/components/phone-numbers/whatsapp-configuration-form';
 
 interface PhoneNumber {
   id: string;
@@ -49,9 +49,9 @@ interface PhoneNumber {
   calculatedStatus?: 'active' | 'pending' | 'warning' | 'suspended';
   warningMessage?: string;
   statusReason?: string;
-  a2pRegistrationStatus?: string | null;
-  a2pRegistrationError?: string | null;
-  a2pRegisteredAt?: string | null;
+  whatsappEnabled?: boolean;
+  whatsappBusinessId?: string | null;
+  whatsappDisplayName?: string | null;
 }
 
 interface Agent {
@@ -692,6 +692,24 @@ const PhoneNumbersPage = () => {
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {selectedPhoneNumber.monthlyFee}/month • Purchased {selectedPhoneNumber.boughtOn}
                     </p>
+                    {/* Status indicators */}
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <RiPhoneLine className="h-3.5 w-3.5 text-green-600 dark:text-green-500" />
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Calling ready</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <RiWhatsappFill className={cn(
+                          "h-3.5 w-3.5",
+                          selectedPhoneNumber.whatsappEnabled 
+                            ? "text-green-600 dark:text-green-500" 
+                            : "text-gray-400 dark:text-gray-600"
+                        )} />
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          WhatsApp {selectedPhoneNumber.whatsappEnabled ? 'configured' : 'not configured'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <Button
                     variant="destructive"
@@ -749,27 +767,20 @@ const PhoneNumbersPage = () => {
                       <div className="flex-shrink-0">
                         <RiInformationLine className="h-5 w-5 text-indigo-600 dark:text-indigo-500" />
                       </div>
-                      <div className="ml-3 flex-1">
+                      <div className="ml-3">
                         <h3 className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
-                          Verification Required
+                          Ready for Agent Assignment
                         </h3>
                         <p className="mt-1 text-sm text-indigo-700 dark:text-indigo-300">
-                          Complete the verification process to enable SMS messaging for this phone number.
+                          Your phone number is ready to use! Assign it to an agent to start receiving calls and messages.
                         </p>
                         <Button 
-                          variant="secondary" 
+                          className="mt-3"
                           size="sm"
-                          className="mt-3 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border-indigo-300 dark:bg-indigo-900/50 dark:hover:bg-indigo-900/70 dark:text-indigo-200 dark:border-indigo-700"
-                          onClick={() => {
-                            // Scroll to verification section
-                            const verificationSection = document.getElementById('verification-section');
-                            if (verificationSection) {
-                              verificationSection.scrollIntoView({ behavior: 'smooth' });
-                            }
-                          }}
+                          onClick={() => setIsAssignDialogOpen(true)}
                         >
-                          <Icons.check className="h-3.5 w-3.5 mr-1.5" />
-                          Start Verification
+                          <Icons.bot className="h-3.5 w-3.5 mr-1.5" />
+                          Assign to Agent
                         </Button>
                       </div>
                     </div>
@@ -853,8 +864,8 @@ const PhoneNumbersPage = () => {
                   </div>
                 </Card>
 
-                {/* 10DLC Registration Form */}
-                <PhoneNumber10DLCForm 
+                {/* WhatsApp Configuration Form */}
+                <WhatsAppConfigurationForm 
                   phoneNumber={selectedPhoneNumber}
                   onStatusUpdate={() => {
                     // Refresh phone numbers to get updated status

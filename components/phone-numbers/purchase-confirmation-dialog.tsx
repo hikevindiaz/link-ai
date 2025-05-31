@@ -591,19 +591,19 @@ export function PurchaseConfirmationDialog({
                 </div>
               </div>
 
-              {/* 10DLC Verification Notice */}
-              <div className="mt-4 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+              {/* Add divider before important information */}
+              <Divider className="my-3" />
+              
+              <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/20 p-3 border border-indigo-200 dark:border-indigo-800">
                 <div className="flex">
-                  <div className="flex-shrink-0">
-                    <RiInformationLine className="h-5 w-5 text-blue-400" aria-hidden="true" />
-                  </div>
+                  <RiInformationLine className="h-5 w-5 text-indigo-400 flex-shrink-0" />
                   <div className="ml-3">
-                    <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                      Verification Required for SMS
-                    </h4>
-                    <div className="mt-1 text-xs text-blue-700 dark:text-blue-300">
-                      <p>After purchase, you'll need to complete a quick verification process to enable SMS messaging. This is a one-time requirement by mobile carriers to prevent spam.</p>
-                    </div>
+                    <h3 className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                      WhatsApp Configuration
+                    </h3>
+                    <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
+                      After purchase, you can configure this phone number to work with WhatsApp for messaging your customers. Enable the WhatsApp integration from the integrations page to get started.
+                    </p>
                   </div>
                 </div>
               </div>

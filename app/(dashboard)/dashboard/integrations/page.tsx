@@ -46,6 +46,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { LoadingState } from "@/components/LoadingState";
+import { WhatsAppConfigDialog } from "@/components/integrations/whatsapp-config-dialog";
 
 interface IntegrationItem {
   id: string;
@@ -143,9 +144,9 @@ const allIntegrationsData: IntegrationItem[] = [
     name: 'WhatsApp',
     description: 'Message customers through WhatsApp',
     icon: RiWhatsappFill,
-    status: 'Coming Soon',
+    status: 'Enable',
     isModule: false,
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     id: 'ext-google-calendar',
@@ -200,6 +201,7 @@ export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
   const [isInitializing, setIsInitializing] = useState(true);
+  const [showWhatsAppConfig, setShowWhatsAppConfig] = useState(false);
 
   useEffect(() => {
     if (sessionStatus === 'authenticated' && session?.user) {
@@ -214,6 +216,14 @@ export default function IntegrationsPage() {
             ...item, 
             isEnabled: isEnabled, 
             status: newStatus
+          };
+        } else if (item.id === 'ext-whatsapp') {
+          // Handle WhatsApp integration
+          const isEnabled = userSettings[item.id] ?? false;
+          return {
+            ...item,
+            isEnabled: isEnabled,
+            status: (isEnabled ? 'Connected' : 'Enable') as IntegrationItem['status']
           };
         } else {
           return item;
@@ -232,7 +242,7 @@ export default function IntegrationsPage() {
     const originalIntegrations = [...integrations];
     setIntegrations(prev => 
       prev.map(item => 
-        item.id === id ? { ...item, isEnabled: enabled, status: enabled ? 'Enabled' : 'Disabled' } : item
+        item.id === id ? { ...item, isEnabled: enabled, status: enabled ? (item.isModule ? 'Enabled' : 'Connected') : (item.isModule ? 'Disabled' : 'Enable') } : item
       )
     );
     setIsLoading(prev => ({ ...prev, [id]: true }));
@@ -249,12 +259,18 @@ export default function IntegrationsPage() {
         throw new Error(errorData.error || `API Error: ${response.statusText}`);
       }
 
-      toast.success(`Module ${enabled ? 'enabled' : 'disabled'} successfully.`);
+      // Show configuration dialog for WhatsApp when enabling
+      if (id === 'ext-whatsapp' && enabled) {
+        setShowWhatsAppConfig(true);
+      }
+
+      const item = integrations.find(i => i.id === id);
+      toast.success(`${item?.isModule ? 'Module' : 'Integration'} ${enabled ? 'enabled' : 'disabled'} successfully.`);
 
     } catch (err) {
-      console.error(`Failed to toggle module ${id}:`, err);
+      console.error(`Failed to toggle ${id}:`, err);
       const message = err instanceof Error ? err.message : "Unknown error occurred";
-      toast.error(`Failed to ${enabled ? 'enable' : 'disable'} module: ${message}`);
+      toast.error(`Failed to ${enabled ? 'enable' : 'disable'}: ${message}`);
       setIntegrations(originalIntegrations);
     } finally {
       setIsLoading(prev => ({ ...prev, [id]: false }));
@@ -375,9 +391,34 @@ export default function IntegrationsPage() {
                   ) : item.comingSoon === true ? (
                     <Badge variant="secondary" className="text-xs font-normal py-0.5">Coming Soon</Badge>
                   ) : item.status === 'Connected' ? (
-                    <Badge variant="success" className="text-xs font-normal py-0.5">Connected</Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="success" className="text-xs font-normal py-0.5">Connected</Badge>
+                      {item.id === 'ext-whatsapp' && (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="p-1"
+                          onClick={() => setShowWhatsAppConfig(true)}
+                        >
+                          <RiSettings3Line className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   ) : (
-                    <Button variant="secondary" size="sm" className="text-xs">Connect</Button>
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className="text-xs"
+                      onClick={() => {
+                        if (item.id === 'ext-whatsapp') {
+                          handleModuleToggle(item.id, true);
+                        } else {
+                          // Handle other integrations
+                        }
+                      }}
+                    >
+                      Connect
+                    </Button>
                   )}
                 </div>
               </>
@@ -425,6 +466,12 @@ export default function IntegrationsPage() {
               animation: border 4s linear infinite;
           }
       `}</style>
+      
+      {/* WhatsApp Configuration Dialog */}
+      <WhatsAppConfigDialog 
+        open={showWhatsAppConfig}
+        onOpenChange={setShowWhatsAppConfig}
+      />
     </div>
   );
 }

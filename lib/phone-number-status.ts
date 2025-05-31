@@ -189,54 +189,28 @@ export async function calculatePhoneNumberStatus(
       }
     }
 
-    // 3. CHECK 10DLC REGISTRATION STATUS (Required for SMS functionality)
+    // 3. CHECK WHATSAPP STATUS (Optional enhancement)
     if (calculatedStatus === 'active' || calculatedStatus === 'pending') {
-      const phoneNumberWithA2P = phoneNumber as any; // Type assertion for a2p fields
-      const a2pStatus = phoneNumberWithA2P.a2pRegistrationStatus || 'not_started';
-      
-      switch (a2pStatus) {
-        case 'not_started':
-        case 'requires_attention':
-          // Force to pending state for 10DLC registration
-          calculatedStatus = 'pending';
-          statusReason = '10DLC registration required';
-          warningMessage = 'Phone number verification is required to send SMS messages. Complete the verification process to activate SMS functionality.';
-          console.log(`[Status Calc] Number ${phoneNumber.phoneNumber} marked as pending - needs 10DLC registration`);
-          break;
-          
-        case 'pending':
-          // Keep in pending state while registration is processing
-          calculatedStatus = 'pending';
-          statusReason = '10DLC registration in progress';
-          warningMessage = 'Your phone number verification is being processed. This typically takes 1-2 business days.';
-          console.log(`[Status Calc] Number ${phoneNumber.phoneNumber} marked as pending - 10DLC registration processing`);
-          break;
-          
-        case 'rejected':
-          // Show as warning state
-          calculatedStatus = 'warning';
-          statusReason = '10DLC registration rejected';
-          warningMessage = phoneNumberWithA2P.a2pRegistrationError || 'Your phone number verification was rejected. Please review and resubmit your business information.';
-          console.log(`[Status Calc] Number ${phoneNumber.phoneNumber} marked as warning - 10DLC registration rejected`);
-          break;
-          
-        case 'approved':
-          // Check agent assignment after 10DLC is approved
-          if (!phoneNumber.chatbotId) {
-            calculatedStatus = 'pending';
-            statusReason = 'Waiting for agent assignment';
-            warningMessage = 'Your phone number is verified! Assign it to an agent to start receiving calls and messages.';
-            console.log(`[Status Calc] Number ${phoneNumber.phoneNumber} marked as pending - verified but needs agent assignment`);
-          } else {
-            // Fully active only when both 10DLC approved AND agent assigned
-            calculatedStatus = 'active';
-            statusReason = 'Active and verified';
-            console.log(`[Status Calc] Number ${phoneNumber.phoneNumber} is fully active with 10DLC approval and agent assignment`);
-          }
-          break;
-          
-        default:
-          console.warn(`[Status Calc] Unknown 10DLC status: ${a2pStatus}`);
+      // WhatsApp is optional, so we don't force pending state
+      // Just add information about WhatsApp configuration
+      const phoneNumberWithWhatsApp = phoneNumber as any; // Type assertion for WhatsApp fields
+      if (phoneNumberWithWhatsApp.whatsappEnabled) {
+        statusReason = statusReason ? `${statusReason}, WhatsApp enabled` : 'WhatsApp enabled';
+      }
+    }
+
+    // 4. AGENT ASSIGNMENT CHECK (Final determinant for active vs pending)
+    if (calculatedStatus === 'active') {
+      if (!phoneNumber.chatbotId) {
+        // Change status to pending if no agent is assigned
+        calculatedStatus = 'pending';
+        statusReason = 'Waiting for agent assignment';
+        warningMessage = 'Assign this number to an agent to activate it for conversations.';
+        console.log(`[Status Calc] Number ${phoneNumber.phoneNumber} marked as pending - waiting for agent assignment`);
+      } else {
+        // Keep as active and update reason
+        statusReason = 'Active and assigned to agent';
+        console.log(`[Status Calc] Number ${phoneNumber.phoneNumber} is fully active with agent assignment`);
       }
     }
 

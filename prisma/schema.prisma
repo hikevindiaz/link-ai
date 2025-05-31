@@ -506,15 +506,19 @@ model TwilioPhoneNumber {
   // Additional data storage
   metadata     Json?    // Store purchase details, pricing info, etc.
   
-  // A2P 10DLC Registration Status
-  a2pRegistrationStatus String? @default("not_started") // not_started, pending, approved, rejected, requires_attention
-  a2pCampaignSid        String? // Twilio Campaign SID
-  a2pBrandSid          String? // Twilio Brand SID  
-  a2pRegistrationError String? // Error message if registration fails
-  a2pRegisteredAt      DateTime? // When A2P registration was completed
+  // WhatsApp Configuration
+  whatsappEnabled      Boolean  @default(false)
+  whatsappBusinessId   String?  // WhatsApp Business Account ID
+  whatsappDisplayName  String?  // Display name for WhatsApp
+  whatsappConfiguredAt DateTime?
   
-  // Additional 10DLC fields
-  messagingServiceSid   String?   // Messaging Service SID
+  // Legacy 10DLC fields (to be removed)
+  // Keep temporarily for migration
+  a2pRegistrationStatus String?
+  a2pRegistrationError  String?
+  a2pRegisteredAt       DateTime?
+  a2pCampaignSid        String?
+  a2pBrandSid           String?
   
   invoices          Invoice[]
   chatbot           Chatbot?         @relation(fields: [chatbotId], references: [id])
