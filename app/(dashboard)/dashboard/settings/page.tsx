@@ -297,10 +297,9 @@ export default function SettingsPage() {
     if (currentPlan) {
       fetchUsageData();
     } else {
-      // If there's no plan, set empty usage data and stop loading
+      // If there's no plan, set empty usage data - loading is handled in fetchSubscription
       setUsageData([]);
       setOverageCost(0);
-      setIsBillingOverviewLoading(false);
     }
   }, [currentPlan]);
 
@@ -416,13 +415,13 @@ export default function SettingsPage() {
         console.log('⚠️ [DEBUG] data.subscription:', data.subscription);
         console.log('⚠️ [DEBUG] data.isSubscribed:', data.isSubscribed);
         setCurrentPlan(null);
+        setIsBillingOverviewLoading(false);
       }
     } catch (error) {
       console.error('❌ [DEBUG] Failed to fetch subscription:', error);
       setCurrentPlan(null);
+      setIsBillingOverviewLoading(false);
     }
-    // Don't set loading to false here, let the useEffect handle it
-    // This ensures proper coordination with the usage data loading
   };
 
   const fetchUserProfile = async () => {
