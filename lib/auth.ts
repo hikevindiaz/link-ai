@@ -146,9 +146,57 @@ export const authOptions: NextAuthOptions = {
                 },
               });
               console.log("New user created successfully:", user.id);
-              // Trigger createUser event manually after successful creation if needed
-              // This assumes you have specific logic in the createUser *event*
-              // await options.events?.createUser?.({ user }); 
+              
+              // Manually trigger createUser event for Magic Link users
+              console.log("Triggering createUser event for Magic Link user");
+              try {
+                await sendWelcomeEmail({ 
+                    email: user.email, 
+                    name: user.name ?? user.email.split('@')[0]
+                });
+                console.log("Welcome email sent to:", user.email);
+                
+                // Generate and send verification code
+                const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+                
+                // Create verification token
+                await db.emailVerificationToken.upsert({
+                  where: { userId: user.id },
+                  update: {
+                    code: verificationCode,
+                    expiresAt: expiresAt
+                  },
+                  create: {
+                    userId: user.id,
+                    code: verificationCode,
+                    expiresAt: expiresAt
+                  }
+                });
+                
+                // Send verification email
+                if (email && user.email) {
+                  const { render } = await import('@react-email/render');
+                  const EmailConfirmationEmail = (await import('@/emails/confirm-email')).default;
+                  
+                  const emailHtml = await render(EmailConfirmationEmail({
+                    confirmationCode: verificationCode,
+                    theme: 'light'
+                  }));
+
+                  await email.emails.send({
+                    from: 'Link AI <no-reply@getlinkai.com>',
+                    to: user.email,
+                    subject: `Your Link AI confirmation code: ${verificationCode}`,
+                    html: emailHtml,
+                  });
+                  
+                  console.log("Verification email sent to:", user.email);
+                }
+              } catch (emailError) {
+                console.error("Failed to send welcome/verification email for Magic Link user:", emailError);
+              }
+              
             } catch (createError) {
               console.error("Error creating user:", createError);
               throw createError;

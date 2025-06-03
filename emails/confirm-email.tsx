@@ -16,49 +16,19 @@ import {
 const EmailConfirmationEmail = (props: { confirmationCode?: string; theme?: 'light' | 'dark' }) => {
   const { confirmationCode = '123456', theme = 'light' } = props;
   
-  const logoSrc = theme === 'dark' 
-    ? 'https://ugnyocjdcpdlneirkfiq.supabase.co/storage/v1/object/public/brand-assets/logos/link-ai-logo-dark.png'
-    : 'https://ugnyocjdcpdlneirkfiq.supabase.co/storage/v1/object/public/brand-assets/logos/link-ai-logo-light.png';
-
-  const iconSrc = theme === 'dark'
-    ? 'https://ugnyocjdcpdlneirkfiq.supabase.co/storage/v1/object/public/brand-assets/logos/link-ai-icon-light.png'
-    : 'https://ugnyocjdcpdlneirkfiq.supabase.co/storage/v1/object/public/brand-assets/logos/link-ai-icon-dark.png';
-
-  const frameColor = theme === 'dark' ? 'bg-white' : 'bg-black';
-
   return (
     <Html lang="en" dir="ltr">
       <Tailwind>
-        <Head>
-          <style>{`
-            @media (prefers-color-scheme: dark) {
-              .light-logo { display: none !important; }
-              .dark-logo { display: block !important; }
-            }
-            @media (prefers-color-scheme: light) {
-              .light-logo { display: block !important; }
-              .dark-logo { display: none !important; }
-            }
-            .dark-logo { display: none; }
-            .light-logo { display: block; }
-          `}</style>
-        </Head>
+        <Head />
         <Preview>Your Link AI confirmation code: {confirmationCode}</Preview>
         <Body className="bg-gray-100 font-sans py-[40px]">
           <Container className="bg-white rounded-[8px] shadow-lg max-w-[600px] mx-auto overflow-hidden">
-            {/* Top Frame with Logo */}
-            <Section className={`${frameColor} w-full py-[12px] text-center`}>
-              {/* Light mode logo */}
+            {/* Top Frame with Light Logo */}
+            <Section className="bg-black w-full py-[12px] text-center">
               <Img
                 src="https://ugnyocjdcpdlneirkfiq.supabase.co/storage/v1/object/public/brand-assets/logos/link-ai-logo-light.png"
                 alt="Link AI"
-                className="light-logo w-full h-auto object-cover max-w-[60px] mx-auto"
-              />
-              {/* Dark mode logo */}
-              <Img
-                src="https://ugnyocjdcpdlneirkfiq.supabase.co/storage/v1/object/public/brand-assets/logos/link-ai-logo-dark.png"
-                alt="Link AI"
-                className="dark-logo w-full h-auto object-cover max-w-[60px] mx-auto"
+                className="w-full h-auto object-cover max-w-[60px] mx-auto"
               />
             </Section>
 
@@ -176,7 +146,7 @@ const EmailConfirmationEmail = (props: { confirmationCode?: string; theme?: 'lig
                 </Text>
                 <Section className="text-center mb-[16px]">
                   <Img
-                    src={iconSrc}
+                    src="https://ugnyocjdcpdlneirkfiq.supabase.co/storage/v1/object/public/brand-assets/logos/link-ai-icon-dark.png"
                     alt="Link AI Icon"
                     className="w-full h-auto object-cover max-w-[20px] mx-auto"
                   />
