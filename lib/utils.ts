@@ -102,7 +102,7 @@ export function getSafeGitHubConfig() {
       email: "",
     },
     links: {
-      github: "https://github.com/hikevindiaz/tru-ai"
+      github: "https://github.com/hikevindiaz/link-ai"
     }
   }
 }

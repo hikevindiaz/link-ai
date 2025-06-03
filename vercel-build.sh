@@ -290,12 +290,12 @@ EOF
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TRU AI</title>
+  <title>Link AI</title>
 </head>
 <body>
   <div id="__next">
     <div>
-      <h1>TRU AI Application</h1>
+      <h1>Link AI Application</h1>
       <p>Application is running.</p>
     </div>
   </div>
@@ -750,7 +750,7 @@ import React from 'react';
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <h1 className="text-3xl font-bold mb-4">Welcome to TRU AI</h1>
+      <h1 className="text-3xl font-bold mb-4">Welcome to Link AI</h1>
       <p className="text-gray-600 mb-8">Your AI application is running successfully.</p>
     </div>
   );
@@ -837,7 +837,7 @@ if [ ! -f "package.json" ]; then
   echo "Creating a default package.json file..."
   cat > package.json << EOF
 {
-  "name": "tru-ai-app",
+  "name": "link-ai-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {

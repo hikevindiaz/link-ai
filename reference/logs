@@ -1,0 +1,411 @@
+Production logs cleared - sensitive data removed for security
+
+Jun 03 10:19:45.82
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+9
+Session callback completed with session: { user: { name: 'Tru Digital Agency', email: 'hello@weretru.com', image: null, id: 'cmbg41c1l0000onzcb9w19r2r', integrationSettings: {}, emailVerified: false, onboardingCompleted: false }, expires: '2025-07-03T14:19:46.005Z' }
+Jun 03 10:19:40.28
+POST
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:19:40.12
+POST
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:19:35.97
+POST
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:19:34.77
+POST
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:19:31.85
+POST
+200
+dashboard.getlinkai.com
+/api/auth/verify-email/send
+11
+Verification email sent to: hello@weretru.com
+Jun 03 10:19:31.08
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+9
+Session callback completed with session: { user: { name: 'Tru Digital Agency', email: 'hello@weretru.com', image: null, id: 'cmbg41c1l0000onzcb9w19r2r', integrationSettings: {}, emailVerified: false, onboardingCompleted: false }, expires: '2025-07-03T14:19:31.320Z' }
+Jun 03 10:19:01.45
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+9
+Session callback completed with session: { user: { name: 'Tru Digital Agency', email: 'hello@weretru.com', image: null, id: 'cmbg41c1l0000onzcb9w19r2r', integrationSettings: {}, emailVerified: false, onboardingCompleted: false }, expires: '2025-07-03T14:19:01.643Z' }
+Jun 03 10:19:01.20
+GET
+200
+dashboard.getlinkai.com
+/verify-email
+[Middleware] Request: { pathname: '/verify-email', hasToken: true, tokenData: { email: 'hello@weretru.com', emailVerified: false, onboardingCompleted: false }, cookies: [ { name: '__Secure-next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:19:01.07
+GET
+307
+dashboard.getlinkai.com
+/login
+[Middleware] Request: { pathname: '/login', hasToken: true, tokenData: { email: 'hello@weretru.com', emailVerified: false, onboardingCompleted: false }, cookies: [ { name: '__Secure-next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:19:00.39
+GET
+302
+dashboard.getlinkai.com
+/api/auth/callback/google
+12
+JWT callback completed. Returning token: { name: 'Tru Digital Agency', email: 'hello@weretru.com', picture: null, sub: 'cmbg41c1l0000onzcb9w19r2r', id: 'cmbg41c1l0000onzcb9w19r2r', emailVerified: false, onboardingCompleted: false, integrationSettings: {} }
+Jun 03 10:18:57.03
+POST
+200
+dashboard.getlinkai.com
+/api/auth/signin/google
+5
+[Auth Debug] GET_AUTHORIZATION_URL: { url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=677741256072-d8eop5pvfe6f6jdnjbft6j2h3he47c8a.apps.googleusercontent.com&scope=openid%20email%20profile&response_type=code&redirect_uri=https%3A%2F%2Fdashboard.getlinkai.com%2Fapi%2Fauth%2Fcallback%2Fgoogle&state=6EdgaoDG3OnDnUEh9s2rJ0khJ339i_fL2uNI7jOQK8U&code_challenge=200wwwBp6pbegfCHp3PPPPDEO9b0qzQe5i0JoquHO88&code_challenge_method=S256', cookies: [ { name: '__Secure-next-auth.state', value: 'eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..dc7ypeL3A3yYFprl.9-yy_YGOTrLxzD9xhTzgT-Ei1oLY5a0aIbCRBls-4WF6mAdwgz-XtfNx8nWVosDG0Fw2NxzIvKZCizRaqSMOoHQrxm1twZ4QMbpphHeYF21S8J1HHOXeWfPaiDSEkGTID6w6XMmzB2JVsgHrjCVekz0q3zsvP9sDuFrdHxjWFFRPfXwdKbw.i1n1mUHnPqCSC0jEB5CuOQ', options: [Object] }, { name: '__Secure-next-auth.pkce.code_verifier', value: 'eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..c9RvnrDjXJ-h-nqI.Myeo1DmqTMshcgI5HL8VL_JFgF74sbvmM9DHl6lTi1IIfPw11_qt1_TExk3hLHk6L5Cc5uUFc-FPgp8-72oo3vm7AWCgBZIS1MGx6fgVa_P3BeYe9aA3OzT61T6UD4Q4RRKs3FX5WVB4cB540X9BO513Pfl47V3mkybJOtXR0epjYxBOIGY.ZbZo0bMC68Nihk1b_yJnHA', options: [Object] } ], provider: { id: 'google', name: 'Google', type: 'oauth', wellKnown: 'https://accounts.google.com/.well-known/openid-configuration', authorization: { params: [Object] }, idToken: true, checks: [ 'pkce', 'state' ], profile: [Function: profile], style: { logo: '/google.svg', bg: '#fff', text: '#000' }, clientId: '677741256072-d8eop5pvfe6f6jdnjbft6j2h3he47c8a.apps.googleusercontent.com', clientSecret: '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', allowDangerousEmailAccountLinking: true, signinUrl: 'https://dashboard.getlinkai.com/api/auth/signin/google', callbackUrl: 'https://dashboard.getlinkai.com/api/auth/callback/google' } }
+Jun 03 10:18:56.86
+GET
+200
+dashboard.getlinkai.com
+/api/auth/csrf
+[Middleware] Request: { pathname: '/api/auth/csrf', hasToken: false, tokenData: null, cookies: [ { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '__stripe_sid', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:18:56.50
+GET
+200
+dashboard.getlinkai.com
+/api/auth/providers
+[Middleware] Request: { pathname: '/api/auth/providers', hasToken: false, tokenData: null, cookies: [ { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '__stripe_sid', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:18:55.06
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+[Middleware] Request: { pathname: '/api/auth/session', hasToken: false, tokenData: null, cookies: [ { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '__stripe_sid', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:18:54.75
+GET
+200
+dashboard.getlinkai.com
+/login
+[Middleware] Request: { pathname: '/login', hasToken: false, tokenData: null, cookies: [ { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '__stripe_sid', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:18:54.58
+POST
+200
+dashboard.getlinkai.com
+/api/auth/signout
+2
+signOut event: { token: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', picture: null, sub: 'cmbg3oe5v0000g1z2r3xszkz5', id: 'cmbg3oe5v0000g1z2r3xszkz5', emailVerified: true, onboardingCompleted: false, integrationSettings: {}, iat: 1748960331, exp: 1751552331, jti: '8900a896-4eeb-4a33-9972-7551b46a7cce' } }
+Jun 03 10:18:54.38
+GET
+200
+dashboard.getlinkai.com
+/api/auth/csrf
+[Middleware] Request: { pathname: '/api/auth/csrf', hasToken: true, tokenData: { email: 'kevindiaz@weretru.com', emailVerified: true, onboardingCompleted: false }, cookies: [ { name: '__Secure-next-auth.session-token', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '__stripe_sid', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:18:50.80
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:18:51.183Z' }
+Jun 03 10:18:34.34
+POST
+200
+dashboard.getlinkai.com
+/api/billing/create-setup-intent
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:18:34.738Z' }
+Jun 03 10:17:43.35
+POST
+200
+dashboard.getlinkai.com
+/api/billing/create-setup-intent
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:17:43.683Z' }
+Jun 03 10:17:38.65
+GET
+200
+dashboard.getlinkai.com
+/api/billing/payment-methods
+10
+[GET /billing/payment-methods] User: cmbg3oe5v0000g1z2r3xszkz5, Returning 0 methods from DB.
+Jun 03 10:17:36.55
+POST
+200
+dashboard.getlinkai.com
+/api/onboarding/save-progress
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:17:36.722Z' }
+Jun 03 10:17:36.13
+POST
+200
+dashboard.getlinkai.com
+/api/onboarding/save-progress
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:17:36.312Z' }
+Jun 03 10:17:31.30
+POST
+200
+dashboard.getlinkai.com
+/api/onboarding/save-progress
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:17:31.471Z' }
+Jun 03 10:17:27.06
+POST
+200
+dashboard.getlinkai.com
+/api/onboarding/save-progress
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:17:27.239Z' }
+Jun 03 10:17:21.99
+POST
+200
+dashboard.getlinkai.com
+/api/onboarding/save-progress
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:17:22.241Z' }
+Jun 03 10:17:10.44
+POST
+200
+dashboard.getlinkai.com
+/api/onboarding/save-progress
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:17:10.615Z' }
+Jun 03 10:17:10.02
+POST
+200
+dashboard.getlinkai.com
+/api/onboarding/save-progress
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:17:10.223Z' }
+Jun 03 10:17:02.65
+POST
+200
+dashboard.getlinkai.com
+/api/onboarding/save-progress
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:17:02.904Z' }
+Jun 03 10:16:56.05
+POST
+200
+dashboard.getlinkai.com
+/api/onboarding/save-progress
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:16:56.267Z' }
+Jun 03 10:16:50.66
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:16:50.848Z' }
+Jun 03 10:16:50.36
+GET
+200
+dashboard.getlinkai.com
+/onboarding
+[Middleware] Request: { pathname: '/onboarding', hasToken: true, tokenData: { email: 'kevindiaz@weretru.com', emailVerified: true, onboardingCompleted: false }, cookies: [ { name: '__stripe_mid', hasValue: true }, { name: '__Secure-next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:16:48.85
+GET
+200
+dashboard.getlinkai.com
+/onboarding
+[Middleware] Request: { pathname: '/onboarding', hasToken: true, tokenData: { email: 'kevindiaz@weretru.com', emailVerified: true, onboardingCompleted: false }, cookies: [ { name: '__Secure-next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:16:48.47
+POST
+200
+dashboard.getlinkai.com
+/api/auth/session
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: true, onboardingCompleted: false }, expires: '2025-07-03T14:16:48.689Z' }
+Jun 03 10:16:48.32
+GET
+200
+dashboard.getlinkai.com
+/api/auth/csrf
+[Middleware] Request: { pathname: '/api/auth/csrf', hasToken: true, tokenData: { email: 'kevindiaz@weretru.com', emailVerified: false, onboardingCompleted: false }, cookies: [ { name: '__Secure-next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:16:47.34
+POST
+200
+dashboard.getlinkai.com
+/api/auth/verify-email/verify
+10
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: false, onboardingCompleted: false }, expires: '2025-07-03T14:16:47.563Z' }
+Jun 03 10:16:45.42
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: false, onboardingCompleted: false }, expires: '2025-07-03T14:16:45.698Z' }
+Jun 03 10:16:40.11
+POST
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:16:38.70
+POST
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:16:34.85
+POST
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:16:34.20
+POST
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:16:30.34
+POST
+200
+dashboard.getlinkai.com
+/api/auth/verify-email/send
+11
+Verification email sent to: kevindiaz@weretru.com
+Jun 03 10:16:29.77
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: false, onboardingCompleted: false }, expires: '2025-07-03T14:16:30.038Z' }
+Jun 03 10:16:01.23
+GET
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:15:48.98
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+9
+Session callback completed with session: { user: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', image: null, id: 'cmbg3oe5v0000g1z2r3xszkz5', integrationSettings: {}, emailVerified: false, onboardingCompleted: false }, expires: '2025-07-03T14:15:49.201Z' }
+Jun 03 10:15:48.58
+GET
+200
+dashboard.getlinkai.com
+/verify-email
+[Middleware] Request: { pathname: '/verify-email', hasToken: true, tokenData: { email: 'kevindiaz@weretru.com', emailVerified: false, onboardingCompleted: false }, cookies: [ { name: '__Secure-next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:15:48.42
+GET
+307
+dashboard.getlinkai.com
+/login
+[Middleware] Request: { pathname: '/login', hasToken: true, tokenData: { email: 'kevindiaz@weretru.com', emailVerified: false, onboardingCompleted: false }, cookies: [ { name: '__Secure-next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:15:46.88
+GET
+302
+dashboard.getlinkai.com
+/api/auth/callback/google
+12
+JWT callback completed. Returning token: { name: 'Kevin Diaz', email: 'kevindiaz@weretru.com', picture: null, sub: 'cmbg3oe5v0000g1z2r3xszkz5', id: 'cmbg3oe5v0000g1z2r3xszkz5', emailVerified: false, onboardingCompleted: false, integrationSettings: {} }
+Jun 03 10:15:36.84
+POST
+200
+dashboard.getlinkai.com
+/api/auth/signin/google
+5
+[Auth Debug] GET_AUTHORIZATION_URL: { url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=677741256072-d8eop5pvfe6f6jdnjbft6j2h3he47c8a.apps.googleusercontent.com&scope=openid%20email%20profile&response_type=code&redirect_uri=https%3A%2F%2Fdashboard.getlinkai.com%2Fapi%2Fauth%2Fcallback%2Fgoogle&state=6-7M4Rz6G186l-HYXkdlaDnJGWASbas7JSMtxeo78Yg&code_challenge=DhQtIk8SPx3dgKNSzlWa4LHuuwEPsxDEeVwXPlTYY9s&code_challenge_method=S256', cookies: [ { name: '__Secure-next-auth.state', value: 'eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..exX2A2KKnytj0KNZ.5L2Fv9lLJw3SEeDrvtVtq5rtEoslJIQWPmQIGudFXA3rFDaoD_Mvyo1BG5pUu9BrXxfp6y70DFL7bNjFq7tfvIobgAhsmDaMC3FwrvcEbcm-kzKCJmERI8SFBBa3X0dU863RcJr0EYju6o3JVXhRlYGEWSTVWkCWzIsxcZ6ahmCU80wWtXc.FBbrsqcaxE8_rsTx_hqOlw', options: [Object] }, { name: '__Secure-next-auth.pkce.code_verifier', value: 'eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..xdB8cBSr5kpdkraE.N9IOrxSM8ED3Hwz36fHOi5YIwgG5yXD1czmQlqUbZb69ueiqjLsARU76FIh_X9mjy1FoNqrRhlkwDxyk9Mr_DQCey3AV5yAZLjgUOnRIoLlukGyalsHZfcoaG26ORr8onwXLoNyvr1Hz4QSx_4jJDgxw8gmC_pDUVqdhz2c1K1K8-ubeO_A.mw8xT4Saj8V5luUCIQDDRw', options: [Object] } ], provider: { id: 'google', name: 'Google', type: 'oauth', wellKnown: 'https://accounts.google.com/.well-known/openid-configuration', authorization: { params: [Object] }, idToken: true, checks: [ 'pkce', 'state' ], profile: [Function: profile], style: { logo: '/google.svg', bg: '#fff', text: '#000' }, clientId: '677741256072-d8eop5pvfe6f6jdnjbft6j2h3he47c8a.apps.googleusercontent.com', clientSecret: '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', allowDangerousEmailAccountLinking: true, signinUrl: 'https://dashboard.getlinkai.com/api/auth/signin/google', callbackUrl: 'https://dashboard.getlinkai.com/api/auth/callback/google' } }
+Jun 03 10:15:36.64
+GET
+200
+dashboard.getlinkai.com
+/api/auth/csrf
+[Middleware] Request: { pathname: '/api/auth/csrf', hasToken: false, tokenData: null, cookies: [ { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:15:36.29
+GET
+200
+dashboard.getlinkai.com
+/api/auth/providers
+[Middleware] Request: { pathname: '/api/auth/providers', hasToken: false, tokenData: null, cookies: [ { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:15:35.18
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+[Middleware] Request: { pathname: '/api/auth/session', hasToken: false, tokenData: null, cookies: [ { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:15:34.73
+GET
+200
+dashboard.getlinkai.com
+/login
+[Middleware] Request: { pathname: '/login', hasToken: false, tokenData: null, cookies: [ { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:15:34.51
+GET
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [ { name: 'next-auth.callback-url', hasValue: true }, { name: 'next-auth.csrf-token', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true }, { name: '__stripe_mid', hasValue: true }, { name: '_ga', hasValue: true }, { name: '_ga_1F634S43X6', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:15:26.85
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+8
+Prisma client initialized: true
+Jun 03 10:15:24.62
+GET
+200
+dashboard.getlinkai.com
+/login
+8
+Prisma client initialized: true
+Jun 03 10:15:24.40
+GET
+307
+dashboard.getlinkai.com
+/
+[Middleware] Request: { pathname: '/', hasToken: false, tokenData: null, cookies: [ { name: '__Secure-next-auth.callback-url', hasValue: true }, { name: 'next-auth.session-token', hasValue: true }, { name: '__Host-next-auth.csrf-token', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:15:03.08
+GET
+307
+truai-nz5mv1wxq-hikevindiazs-projects.vercel.app
+/api/cron/calendar-notifications
+[Middleware] Request: { pathname: '/api/cron/calendar-notifications', hasToken: false, tokenData: null, cookies: [ { name: '_vercel_jwt', hasValue: true } ], nextAuthUrl: 'https://dashboard.getlinkai.com/', hasSecret: true, nodeEnv: 'production' }
+Jun 03 10:13:39.07
+GET
+200
+truai-nz5mv1wxq-hikevindiazs-projects.vercel.app
+/favicon.ico
+Jun 03 10:13:39.02
+GET
+200
+truai-nz5mv1wxq-hikevindiazs-projects.vercel.app
+/api/auth/session
+8
+Prisma client initialized: true
+Jun 03 10:13:38.59
+GET
+200
+truai-nz5mv1wxq-hikevindiazs-projects.vercel.app
+/api/auth/session
+8
+Prisma client initialized: true
+Jun 03 10:13:38.59
+GET
+200
+truai-nz5mv1wxq-hikevindiazs-projects.vercel.app
+/favicon.i

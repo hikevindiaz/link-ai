@@ -94,7 +94,7 @@ const createBasicServer = () => {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>TRU AI</title>
+          <title>Link AI</title>
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <style>
             body {
@@ -123,7 +123,7 @@ const createBasicServer = () => {
           </style>
         </head>
         <body>
-          <h1>TRU AI Application</h1>
+          <h1>Link AI Application</h1>
           <p>The application is running but Next.js could not be initialized. This is a fallback page to ensure deployment succeeds.</p>
         </body>
       </html>
