@@ -1,15 +1,9 @@
 import { getToken } from "next-auth/jwt";
-import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 // Pages that don't require authentication
-const publicPages = ["/login", "/register", "/"];
-
-// Pages that require authentication but not email verification
-const authOnlyPages = ["/verify-email"];
-
-// Pages that require email verification but not onboarding
-const verifiedOnlyPages = ["/onboarding"];
+const publicPages = ["/", "/login", "/register"];
 
 // API routes that are allowed during onboarding
 const onboardingApiRoutes = [
@@ -20,99 +14,94 @@ const onboardingApiRoutes = [
   "/api/onboarding",
 ];
 
-// Very simple middleware implementation
-export default withAuth(
-  async function middleware(req) {
-    const token = await getToken({ req });
-    const isAuth = Boolean(token);
-    const pathname = req.nextUrl.pathname;
-
-    // Public pages
-    if (publicPages.includes(pathname)) {
-      return null;
-    }
-
-    // If not authenticated, redirect to login
-    if (!isAuth) {
-      let from = pathname;
-      if (req.nextUrl.search) {
-        from += req.nextUrl.search;
-      }
-      return NextResponse.redirect(
-        new URL(`/login?from=${encodeURIComponent(from)}`, req.url)
-      );
-    }
-
-    // For authenticated users, check email verification and onboarding status
-    if (isAuth && token) {
-      // Get status from token (set in auth.ts JWT callback)
+export async function middleware(req: NextRequest) {
+  const token = await getToken({ req });
+  const pathname = req.nextUrl.pathname;
+  
+  // Allow public pages
+  if (publicPages.includes(pathname)) {
+    // If authenticated user tries to access login, redirect them appropriately
+    if (pathname === "/login" && token) {
       const emailVerified = token.emailVerified as boolean ?? false;
       const onboardingCompleted = token.onboardingCompleted as boolean ?? false;
-
-      // Check if this is an API route allowed during onboarding
-      const isOnboardingApi = onboardingApiRoutes.some(route => pathname.startsWith(route));
-
-      // Check if trying to access dashboard or protected routes
-      const isProtectedRoute = pathname.startsWith("/dashboard") || 
-                             (pathname.startsWith("/api/") && 
-                             !pathname.startsWith("/api/auth/") &&
-                             !isOnboardingApi);
-
-      // If user is on login page but authenticated, redirect based on their status
-      if (pathname === "/login") {
-        if (!emailVerified) {
-          return NextResponse.redirect(new URL("/verify-email", req.url));
-        } else if (!onboardingCompleted) {
-          return NextResponse.redirect(new URL("/onboarding", req.url));
-        } else {
-          return NextResponse.redirect(new URL("/dashboard", req.url));
-        }
-      }
-
-      // Email not verified - redirect to verify-email for all pages except verify-email itself
-      if (!emailVerified && pathname !== "/verify-email") {
+      
+      if (!emailVerified) {
         return NextResponse.redirect(new URL("/verify-email", req.url));
-      }
-
-      // Email verified but onboarding not completed
-      if (emailVerified && !onboardingCompleted) {
-        if (pathname === "/verify-email") {
-          // If email is verified but they're on verify-email page, redirect to onboarding
-          return NextResponse.redirect(new URL("/onboarding", req.url));
-        }
-        if (isProtectedRoute && pathname !== "/onboarding") {
-          return NextResponse.redirect(new URL("/onboarding", req.url));
-        }
-      }
-
-      // Redirect to dashboard if trying to access auth pages when already verified/onboarded
-      if (emailVerified && onboardingCompleted) {
-        if (pathname === "/verify-email" || pathname === "/onboarding") {
-          return NextResponse.redirect(new URL("/dashboard", req.url));
-        }
+      } else if (!onboardingCompleted) {
+        return NextResponse.redirect(new URL("/onboarding", req.url));
+      } else {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }
-
-    return null;
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => true, // We handle auth in the middleware function
-    },
-    pages: {
-      signIn: "/login",
-    },
+    return NextResponse.next();
   }
-);
+  
+  // Allow auth API routes
+  if (pathname.startsWith("/api/auth/")) {
+    return NextResponse.next();
+  }
+  
+  // Check if user is authenticated
+  if (!token) {
+    // Not authenticated - redirect to login
+    let from = pathname;
+    if (req.nextUrl.search) {
+      from += req.nextUrl.search;
+    }
+    return NextResponse.redirect(
+      new URL(`/login?from=${encodeURIComponent(from)}`, req.url)
+    );
+  }
+  
+  // User is authenticated - check email verification and onboarding
+  const emailVerified = token.emailVerified as boolean ?? false;
+  const onboardingCompleted = token.onboardingCompleted as boolean ?? false;
+  
+  // Allow onboarding API routes during onboarding
+  if (onboardingApiRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
+  
+  // Handle email verification flow
+  if (!emailVerified) {
+    if (pathname === "/verify-email") {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/verify-email", req.url));
+  }
+  
+  // Handle onboarding flow
+  if (!onboardingCompleted) {
+    // If email is verified but on verify-email page, redirect to onboarding
+    if (pathname === "/verify-email") {
+      return NextResponse.redirect(new URL("/onboarding", req.url));
+    }
+    // Allow onboarding page
+    if (pathname === "/onboarding") {
+      return NextResponse.next();
+    }
+    // Redirect everything else to onboarding
+    return NextResponse.redirect(new URL("/onboarding", req.url));
+  }
+  
+  // User is fully authenticated and onboarded
+  if (pathname === "/verify-email" || pathname === "/onboarding") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+  
+  return NextResponse.next();
+}
 
-// Update matcher to include all routes
+// Update matcher to include all routes except static files
 export const config = {
   matcher: [
-    "/dashboard/:path*",
-    "/login",
-    "/register", 
-    "/verify-email",
-    "/onboarding",
-    "/api/:path*",
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
