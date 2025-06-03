@@ -58,15 +58,28 @@ export default withAuth(
                              !pathname.startsWith("/api/auth/") &&
                              !isOnboardingApi);
 
-      // Email not verified
-      if (!emailVerified && !authOnlyPages.includes(pathname)) {
-        if (pathname !== "/verify-email") {
+      // If user is on login page but authenticated, redirect based on their status
+      if (pathname === "/login") {
+        if (!emailVerified) {
           return NextResponse.redirect(new URL("/verify-email", req.url));
+        } else if (!onboardingCompleted) {
+          return NextResponse.redirect(new URL("/onboarding", req.url));
+        } else {
+          return NextResponse.redirect(new URL("/dashboard", req.url));
         }
+      }
+
+      // Email not verified - redirect to verify-email for all pages except verify-email itself
+      if (!emailVerified && pathname !== "/verify-email") {
+        return NextResponse.redirect(new URL("/verify-email", req.url));
       }
 
       // Email verified but onboarding not completed
       if (emailVerified && !onboardingCompleted) {
+        if (pathname === "/verify-email") {
+          // If email is verified but they're on verify-email page, redirect to onboarding
+          return NextResponse.redirect(new URL("/onboarding", req.url));
+        }
         if (isProtectedRoute && pathname !== "/onboarding") {
           return NextResponse.redirect(new URL("/onboarding", req.url));
         }
