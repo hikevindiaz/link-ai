@@ -15,7 +15,10 @@ const onboardingApiRoutes = [
 ];
 
 export async function middleware(req: NextRequest) {
-  const token = await getToken({ req });
+  const token = await getToken({ 
+    req, 
+    secret: process.env.NEXTAUTH_SECRET 
+  });
   const pathname = req.nextUrl.pathname;
   
   // Debug logging for production
@@ -29,7 +32,8 @@ export async function middleware(req: NextRequest) {
         onboardingCompleted: token.onboardingCompleted
       } : null,
       cookies: req.cookies.getAll().map(c => c.name),
-      nextAuthUrl: process.env.NEXTAUTH_URL
+      nextAuthUrl: process.env.NEXTAUTH_URL,
+      hasSecret: !!process.env.NEXTAUTH_SECRET
     });
   }
   

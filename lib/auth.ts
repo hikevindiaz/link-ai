@@ -55,29 +55,9 @@ export const authOptions: NextAuthOptions = {
       name: `next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: undefined // Let Next.js handle domain automatically
-      }
-    },
-    callbackUrl: {
-      name: `next-auth.callback-url`,
-      options: {
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: undefined
-      }
-    },
-    csrfToken: {
-      name: `next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: undefined
+        secure: process.env.NODE_ENV === 'production'
       }
     }
   },
