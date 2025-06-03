@@ -1,116 +1,101 @@
-Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
-script.debug.js:1 [Vercel Speed Insights] Debug mode is enabled by default in development. No requests will be sent to the server.
-v3:1 You may test your Stripe.js integration over HTTP. However, live Stripe.js integrations must use HTTPS.
-value @ v3:1Understand this warning
-warn-once.js:16 Image with src "https://ugnyocjdcpdlneirkfiq.supabase.co/storage/v1/object/public/brand-assets/logos/link-ai-icon-dark.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-warnOnce @ warn-once.js:16Understand this warning
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
-hot-reloader-client.js:44 [Fast Refresh] done in 11ms
-app-index.js:33 Warning: A component is changing an uncontrolled input to be controlled. This is likely caused by the value changing from undefined to a defined value, which should not happen. Decide between using a controlled or uncontrolled input element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components
-    at input
-    at div
-    at eval (webpack-internal:///(app-pages-browser)/./components/ui/input.tsx:59:11)
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-slot/dist/index.mjs:34:11)
-    at eval (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-slot/dist/index.mjs:15:11)
-    at eval (webpack-internal:///(app-pages-browser)/./components/ui/form.tsx:124:14)
-    at div
-    at eval (webpack-internal:///(app-pages-browser)/./components/ui/form.tsx:74:11)
-    at Controller (webpack-internal:///(app-pages-browser)/./node_modules/react-hook-form/dist/index.esm.mjs:576:37)
-    at FormField (webpack-internal:///(app-pages-browser)/./components/ui/form.tsx:29:14)
-    at div
-    at MotionComponent (webpack-internal:///(app-pages-browser)/./node_modules/framer-motion/dist/es/motion/index.mjs:54:65)
-    at PresenceChild (webpack-internal:///(app-pages-browser)/./node_modules/framer-motion/dist/es/components/AnimatePresence/PresenceChild.mjs:18:11)
-    at AnimatePresence (webpack-internal:///(app-pages-browser)/./node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs:55:11)
-    at form
-    at FormProvider (webpack-internal:///(app-pages-browser)/./node_modules/react-hook-form/dist/index.esm.mjs:213:13)
-    at div
-    at AccountStep (webpack-internal:///(app-pages-browser)/./app/(welcome)/welcome/components/AccountStep.tsx:43:11)
-    at div
-    at MotionComponent (webpack-internal:///(app-pages-browser)/./node_modules/framer-motion/dist/es/motion/index.mjs:54:65)
-    at PresenceChild (webpack-internal:///(app-pages-browser)/./node_modules/framer-motion/dist/es/components/AnimatePresence/PresenceChild.mjs:18:11)
-    at AnimatePresence (webpack-internal:///(app-pages-browser)/./node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs:55:11)
-    at div
-    at div
-    at MotionComponent (webpack-internal:///(app-pages-browser)/./node_modules/framer-motion/dist/es/motion/index.mjs:54:65)
-    at div
-    at OnboardingPage (webpack-internal:///(app-pages-browser)/./app/(onboarding)/onboarding/page.tsx:85:78)
-    at ClientPageRoot (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/client-page.js:14:11)
-    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:243:11)
-    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:74:9)
-    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:82:11)
-    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:84:11)
-    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:349:11)
-    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:160:11)
-    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:153:9)
-    at ScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:228:11)
-    at RenderFromTemplateContext (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/render-from-template-context.js:16:44)
-    at OuterLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:370:11)
-    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:243:11)
-    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:74:9)
-    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:82:11)
-    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:76:9)
-    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:84:11)
-    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:349:11)
-    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:160:11)
-    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:153:9)
-    at ScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:228:11)
-    at RenderFromTemplateContext (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/render-from-template-context.js:16:44)
-    at OuterLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:370:11)
-    at div
-    at OnboardingLayout (Server)
-    at InnerLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:243:11)
-    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:74:9)
-    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:82:11)
-    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:76:9)
-    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:84:11)
-    at LoadingBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:349:11)
-    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:160:11)
-    at InnerScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:153:9)
-    at ScrollAndFocusHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:228:11)
-    at RenderFromTemplateContext (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/render-from-template-context.js:16:44)
-    at OuterLayoutRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/layout-router.js:370:11)
-    at Provider (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-context/dist/index.mjs:34:15)
-    at TooltipProvider (webpack-internal:///(app-pages-browser)/./node_modules/@radix-ui/react-tooltip/dist/index.mjs:58:13)
-    at f (webpack-internal:///(app-pages-browser)/./node_modules/next-themes/dist/index.module.js:8:597)
-    at $ (webpack-internal:///(app-pages-browser)/./node_modules/next-themes/dist/index.module.js:8:348)
-    at ThemeProvider (webpack-internal:///(app-pages-browser)/./components/theme-provider.tsx:13:11)
-    at SessionProvider (webpack-internal:///(app-pages-browser)/./node_modules/next-auth/react/index.js:365:24)
-    at SessionWrapper (webpack-internal:///(app-pages-browser)/./components/providers/SessionWrapper.tsx:11:11)
-    at body
-    at html
-    at RootLayout (Server)
-    at RedirectErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:74:9)
-    at RedirectBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/redirect-boundary.js:82:11)
-    at NotFoundErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:76:9)
-    at NotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/not-found-boundary.js:84:11)
-    at DevRootNotFoundBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/dev-root-not-found-boundary.js:33:11)
-    at ReactDevOverlay (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/ReactDevOverlay.js:87:9)
-    at HotReload (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:321:11)
-    at Router (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js:207:11)
-    at ErrorBoundaryHandler (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:113:9)
-    at ErrorBoundary (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/error-boundary.js:160:11)
-    at AppRouter (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/app-router.js:585:13)
-    at ServerRoot (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:112:27)
-    at Root (webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:117:11)
-window.console.error @ app-index.js:33Understand this error
-script.debug.js:1 [Vercel Speed Insights] [vitals] Object
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
-hot-reloader-client.js:44 [Fast Refresh] done in 937ms
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
-v3:1 You may test your Stripe.js integration over HTTP. However, live Stripe.js integrations must use HTTPS.
-value @ v3:1Understand this warning
-hot-reloader-client.js:44 [Fast Refresh] done in 792ms
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
-v3:1 You may test your Stripe.js integration over HTTP. However, live Stripe.js integrations must use HTTPS.
-value @ v3:1Understand this warning
-hot-reloader-client.js:44 [Fast Refresh] done in 783ms
-index.mjs:466 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
-eval @ index.mjs:466Understand this warning
-
-                
-          
-          
-          
-         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warning
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
-hot-reloader-client.js:44 [Fast Refresh] done in 176ms
+Jun 03 09:08:38.70
+GET
+302
+dashboard.getlinkai.com
+/api/auth/callback/google
+11
+JWT callback completed. Returning token: { name: 'Tru Digital Agency', email: 'hello@weretru.com', picture: null, sub: 'cmbg41c1l0000onzcb9w19r2r', id: 'cmbg41c1l0000onzcb9w19r2r', emailVerified: false, onboardingCompleted: false, integrationSettings: {} }
+Jun 03 09:08:30.38
+POST
+200
+dashboard.getlinkai.com
+/api/auth/signin/google
+4
+[Auth Debug] GET_AUTHORIZATION_URL: { url: 'https://accounts.google.com/o/oauth2/v2/auth?client_id=677741256072-d8eop5pvfe6f6jdnjbft6j2h3he47c8a.apps.googleusercontent.com&scope=openid%20email%20profile&response_type=code&redirect_uri=https%3A%2F%2Fdashboard.getlinkai.com%2Fapi%2Fauth%2Fcallback%2Fgoogle&state=DlorAJSRMQ-hF2Z0IjkWg9u7md-7Z-plcSbL_igvdpU&code_challenge=H04svb7wW6UkUOBfxmMJWQuA6Z614zz6T3aF5ax_OmA&code_challenge_method=S256', cookies: [ { name: '__Secure-next-auth.state', value: 'eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..Mlq_Y7bloIzdV6Oy.R0Wkj6NF99c46Oab0dxBCFh1IcWMHyTG5DdQDdC1ei1-mBh62gLhJ1Yszm-5NNt-VdrJE5cAyTPafansXunIn5XTpfXYhgDntfLGHt9k6VCNBA8_jE5JwVR5kYUrLIiWnptCgzEd8lrTEDY6YwykZKLDEbuNjBJ5mBBVlUhBurG8PKqg-m0.phjfyZ8oXF657uAauUz-qw', options: [Object] }, { name: '__Secure-next-auth.pkce.code_verifier', value: 'eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..e77fLwayKpM5Yt0S.uxr1eVlBAEUjMPZKas49BkqfAstBNQ9irhRujzWnhQuAYhEHLtAj1vXKnxL5F6K3xEdOF4VbmyzcrKiVvkCdrzmvkCZjXasRe-SsqFjIO5MoY8sor64Dhd82WJJyv29InmHhRO_d42KmkZ1CeCZ9l5ET76Cz2ZipHvr_z_Kb8PahVApz-U0.WlwQ4dUeIko9aZimODjQoQ', options: [Object] } ], provider: { id: 'google', name: 'Google', type: 'oauth', wellKnown: 'https://accounts.google.com/.well-known/openid-configuration', authorization: { params: [Object] }, idToken: true, checks: [ 'pkce', 'state' ], profile: [Function: profile], style: { logo: '/google.svg', bg: '#fff', text: '#000' }, clientId: '677741256072-d8eop5pvfe6f6jdnjbft6j2h3he47c8a.apps.googleusercontent.com', clientSecret: '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', allowDangerousEmailAccountLinking: true, signinUrl: 'https://dashboard.getlinkai.com/api/auth/signin/google', callbackUrl: 'https://dashboard.getlinkai.com/api/auth/callback/google' } }
+Jun 03 09:08:30.25
+GET
+200
+dashboard.getlinkai.com
+/api/auth/csrf
+Jun 03 09:08:29.60
+GET
+200
+dashboard.getlinkai.com
+/api/auth/providers
+Jun 03 09:08:28.37
+GET
+200
+dashboard.getlinkai.com
+/api/auth/session
+7
+Prisma client initialized: true
+Jun 03 09:08:25.82
+GET
+200
+dashboard.getlinkai.com
+/login
+7
+Prisma client initialized: true
+Jun 03 09:08:25.65
+GET
+200
+dashboard.getlinkai.com
+/login
+Jun 03 09:08:25.62
+GET
+307
+dashboard.getlinkai.com
+/
+4
+[ROOT] Error in root page redirection: Error: NEXT_REDIRECT at a (/var/task/.next/server/app/page.js:1:6265) at c (/var/task/.next/server/app/page.js:1:6480) at s (/var/task/.next/server/app/page.js:1:3275) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) { digest: 'NEXT_REDIRECT;replace;/login;307;', mutableCookies: f { _parsed: Map(3) { '__stripe_mid' => [Object], '_ga' => [Object], '_ga_1F634S43X6' => [Object] }, _headers: Headers { 'set-cookie': '__stripe_mid=a2ea39e9-1098-4666-9938-99473f4ac38a7017ea; Path=/, _ga=GA1.1.1525760635.1740621140; Path=/, _ga_1F634S43X6=GS1.1.1740756900.2.0.1740756900.0.0.0; Path=/' } } }
+Jun 03 09:08:25.51
+GET
+200
+dashboard.getlinkai.com
+/favicon.ico
+Jun 03 09:08:25.51
+GET
+307
+dashboard.getlinkai.com
+/dashboard
+Jun 03 09:06:30.57
+POST
+307
+dashboard.getlinkai.com
+/
+4
+[ROOT] Error in root page redirection: Error: NEXT_REDIRECT at a (/var/task/.next/server/app/page.js:1:6265) at c (/var/task/.next/server/app/page.js:1:6480) at s (/var/task/.next/server/app/page.js:1:3275) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) { digest: 'NEXT_REDIRECT;replace;/login;307;', mutableCookies: f { _parsed: Map(0) {}, _headers: Headers {} } }
+Jun 03 09:05:48.09
+GET
+307
+truai-hlq7k5wm3-hikevindiazs-projects.vercel.app
+/api/cron/calendar-notifications
+Jun 03 09:05:16.78
+POST
+307
+dashboard.getlinkai.com
+/
+4
+[ROOT] Error in root page redirection: Error: NEXT_REDIRECT at a (/var/task/.next/server/app/page.js:1:6265) at c (/var/task/.next/server/app/page.js:1:6480) at s (/var/task/.next/server/app/page.js:1:3275) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) { digest: 'NEXT_REDIRECT;replace;/login;307;', mutableCookies: f { _parsed: Map(0) {}, _headers: Headers {} } }
+Jun 03 09:02:56.57
+POST
+307
+dashboard.getlinkai.com
+/
+4
+[ROOT] Error in root page redirection: Error: NEXT_REDIRECT at a (/var/task/.next/server/app/page.js:1:6265) at c (/var/task/.next/server/app/page.js:1:6480) at s (/var/task/.next/server/app/page.js:1:3275) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) { digest: 'NEXT_REDIRECT;replace;/login;307;', mutableCookies: f { _parsed: Map(0) {}, _headers: Headers {} } }
+Jun 03 09:01:49.42
+POST
+307
+dashboard.getlinkai.com
+/
+4
+[ROOT] Error in root page redirection: Error: NEXT_REDIRECT at a (/var/task/.next/server/app/page.js:1:6265) at c (/var/task/.next/server/app/page.js:1:6480) at s (/var/task/.next/server/app/page.js:1:3275) at process.processTicksAndRejections (node:internal/process/task_queues:95:5) { digest: 'NEXT_REDIRECT;replace;/login;307;', mutableCookies: f { _parsed: Map(0) {}, _headers: Headers {} } }
+Jun 03 09:00:48.35
+GET
+307
+truai-hlq7k5wm3-hikevindiazs-projects.vercel.app
+/api/cron/calendar-notifications
+Jun 03 08:58:19.08
+POST
+307

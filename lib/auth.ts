@@ -55,12 +55,29 @@ export const authOptions: NextAuthOptions = {
       name: `next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: 'none',
+        sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
         path: '/',
-        secure: true,
-        domain: process.env.NODE_ENV === 'production' 
-          ? '.getlinkai.com' // Allows sharing across subdomains
-          : undefined
+        secure: process.env.NODE_ENV === 'production',
+        domain: undefined // Let Next.js handle domain automatically
+      }
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        domain: undefined
+      }
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        domain: undefined
       }
     }
   },

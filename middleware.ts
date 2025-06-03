@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Pages that don't require authentication
-const publicPages = ["/", "/login", "/register"];
+const publicPages = ["/login", "/register"];
 
 // API routes that are allowed during onboarding
 const onboardingApiRoutes = [
@@ -17,6 +17,21 @@ const onboardingApiRoutes = [
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req });
   const pathname = req.nextUrl.pathname;
+  
+  // Debug logging for production
+  if (process.env.NODE_ENV === 'production') {
+    console.log('[Middleware] Request:', {
+      pathname,
+      hasToken: !!token,
+      tokenData: token ? {
+        email: token.email,
+        emailVerified: token.emailVerified,
+        onboardingCompleted: token.onboardingCompleted
+      } : null,
+      cookies: req.cookies.getAll().map(c => c.name),
+      nextAuthUrl: process.env.NEXTAUTH_URL
+    });
+  }
   
   // Allow public pages
   if (publicPages.includes(pathname)) {
