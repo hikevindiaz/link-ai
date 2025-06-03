@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { OPENAI_VOICES, OpenAIVoice } from '@/app/api/openai/tts/route';
 
 // GET /api/user/voices - Get all voices for the current user
 export async function GET() {
@@ -33,10 +34,11 @@ export async function GET() {
     // Map database records to expected format for the frontend
     const voices = (userVoices?.voices || []).map(voice => ({
       id: voice.id,
-      voice_id: voice.voiceId,
       name: voice.name,
+      openaiVoice: voice.openaiVoice,
+      description: voice.description,
       language: voice.language,
-      labels: voice.labels ? JSON.parse(JSON.stringify(voice.labels)) : {},
+      isDefault: voice.isDefault,
       addedOn: voice.addedOn.toISOString(),
     }));
     
@@ -47,7 +49,7 @@ export async function GET() {
   }
 }
 
-// POST /api/user/voices - Add a voice to the user's collection
+// POST /api/user/voices - Create a new custom voice
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -65,61 +67,82 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     
-    const { voice } = await request.json();
+    const { name, openaiVoice, description, language, isDefault } = await request.json();
     
-    if (!voice || !voice.voice_id || !voice.name) {
-      return NextResponse.json({ error: 'Invalid voice data' }, { status: 400 });
+    if (!name?.trim()) {
+      return NextResponse.json({ error: 'Voice name is required' }, { status: 400 });
+    }
+    
+    if (!openaiVoice || !OPENAI_VOICES.includes(openaiVoice)) {
+      return NextResponse.json({ error: 'Valid OpenAI voice is required' }, { status: 400 });
     }
     
     // Use a transaction to check and create
     const userVoice = await db.$transaction(async (tx) => {
-      // Check if voice already exists for this user
+      // Check if voice name already exists for this user
       const existingVoice = await tx.userVoice.findFirst({
         where: {
           userId: user.id,
-          voiceId: voice.voice_id
+          name: name.trim()
         }
       });
       
       if (existingVoice) {
-        throw new Error('Voice already exists');
+        throw new Error('Voice name already exists');
+      }
+      
+      // If this is being set as default, unset any existing default
+      if (isDefault) {
+        await tx.userVoice.updateMany({
+          where: {
+            userId: user.id,
+            isDefault: true
+          },
+          data: {
+            isDefault: false
+          }
+        });
       }
       
       // Create the voice
       return tx.userVoice.create({
         data: {
           userId: user.id,
-          voiceId: voice.voice_id,
-          name: voice.name,
-          language: voice.language || null,
-          labels: voice.labels || null,
+          name: name.trim(),
+          openaiVoice: openaiVoice as OpenAIVoice,
+          description: description?.trim() || null,
+          language: language?.trim() || null,
+          isDefault: isDefault || false,
           addedOn: new Date(),
         }
       });
     }).catch(err => {
-      if (err.message === 'Voice already exists') {
+      if (err.message === 'Voice name already exists') {
         return null;
       }
       throw err;
     });
     
     if (!userVoice) {
-      return NextResponse.json({ error: 'Voice already added' }, { status: 409 });
+      return NextResponse.json({ error: 'Voice name already exists' }, { status: 409 });
     }
     
     return NextResponse.json({
-      success: true,
       voice: {
         id: userVoice.id,
-        voice_id: userVoice.voiceId,
         name: userVoice.name,
+        openaiVoice: userVoice.openaiVoice,
+        description: userVoice.description,
         language: userVoice.language,
-        labels: userVoice.labels ? JSON.parse(JSON.stringify(userVoice.labels)) : {},
-        addedOn: userVoice.addedOn.toISOString()
+        isDefault: userVoice.isDefault,
+        addedOn: userVoice.addedOn.toISOString(),
       }
     });
   } catch (error) {
-    console.error('Error adding user voice:', error);
-    return NextResponse.json({ error: 'Failed to add voice' }, { status: 500 });
+    console.error('Error creating voice:', error);
+    return NextResponse.json({ 
+      error: 'Failed to create voice',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 } 

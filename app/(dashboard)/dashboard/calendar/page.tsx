@@ -110,7 +110,6 @@ const defaultCalendarSettings: CalendarSettingsInput = {
   workingHoursEnd: "17:00",
   includeSaturday: true,
   includeSunday: false,
-  notificationEmail: "",
   notificationEmailEnabled: true,
   emailReminderEnabled: true,
   smsReminderEnabled: false,

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { RiCloseLine, RiArrowRightLine } from '@remixicon/react';
+import { RiCloseLine, RiArrowRightLine, RiFileTextLine, RiGlobalLine, RiQuestionLine, RiShoppingBagLine } from '@remixicon/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { WelcomeModal } from './WelcomeModal';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface StepStatus {
   completed: boolean;
@@ -28,13 +29,14 @@ const WelcomeBanner = ({
   const [isOpen, setIsOpen] = useState(true);
   const [loading, setLoading] = useState(true);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [showKnowledgeDialog, setShowKnowledgeDialog] = useState(false);
   const [activeStepForModal, setActiveStepForModal] = useState(0);
   const [stepStatus, setStepStatus] = useState<{
-    account: StepStatus;
+    onboarding: StepStatus;
     knowledge: StepStatus;
     agent: StepStatus;
   }>({
-    account: { completed: false, nextUrl: '/welcome', buttonText: 'Complete setup' },
+    onboarding: { completed: false, nextUrl: '/onboarding', buttonText: 'Complete onboarding' },
     knowledge: { completed: false, nextUrl: '/dashboard/knowledge-base/', buttonText: 'Add knowledge' },
     agent: { completed: false, nextUrl: '/dashboard/agents/', buttonText: 'Create agent' },
   });
@@ -74,10 +76,10 @@ const WelcomeBanner = ({
           localStorage.setItem('hasChatbot', data.hasChatbot ? 'true' : 'false');
           
           setStepStatus({
-            account: {
+            onboarding: {
               completed: data.onboardingCompleted,
-              nextUrl: '/dashboard/settings',
-              buttonText: data.onboardingCompleted ? 'Completed' : 'Complete setup'
+              nextUrl: data.onboardingCompleted ? '/dashboard' : '/onboarding',
+              buttonText: data.onboardingCompleted ? 'Completed' : 'Complete onboarding'
             },
             knowledge: {
               completed: data.hasKnowledgeSource,
@@ -116,8 +118,8 @@ const WelcomeBanner = ({
       if (hasCompletedOnboardingFromStorage) {
         setStepStatus(prev => ({
           ...prev,
-          account: {
-            ...prev.account,
+          onboarding: {
+            ...prev.onboarding,
             completed: true,
             buttonText: 'Completed'
           }
@@ -131,31 +133,30 @@ const WelcomeBanner = ({
     setIsOpen(false);
   };
 
-  const handleAction = (url: string, stepType: 'account' | 'knowledge' | 'agent') => {
-    // For account step, show the modal instead of redirecting
-    if (stepType === 'account') {
-      setActiveStepForModal(0);
-      setShowWelcomeModal(true);
+  const handleAction = (url: string, stepType: 'onboarding' | 'knowledge' | 'agent') => {
+    // For onboarding step, check if already completed
+    if (stepType === 'onboarding' && stepStatus.onboarding.completed) {
+      toast.info('You have already completed onboarding');
       return;
     }
     
-    // For knowledge step, check if account step is completed first
-    if (stepType === 'knowledge' && !stepStatus.account.completed) {
-      toast.warning('Please complete your account setup first');
-      setActiveStepForModal(0);
-      setShowWelcomeModal(true);
+    // For knowledge step, check if onboarding is completed first
+    if (stepType === 'knowledge' && !stepStatus.onboarding.completed) {
+      toast.warning('Please complete onboarding first');
+      router.push('/onboarding');
       return;
     }
     
     // For agent step, check if knowledge step is completed first
     if (stepType === 'agent' && !stepStatus.knowledge.completed) {
       toast.warning('Please add knowledge sources first');
-      if (!stepStatus.account.completed) {
-        setActiveStepForModal(0);
-        setShowWelcomeModal(true);
-      } else {
-        router.push('/dashboard/knowledge-base');
-      }
+      router.push('/dashboard/knowledge-base');
+      return;
+    }
+    
+    // If it's the knowledge step and onboarding is complete, show the knowledge source dialog
+    if (stepType === 'knowledge' && !stepStatus.knowledge.completed) {
+      setShowKnowledgeDialog(true);
       return;
     }
     
@@ -190,10 +191,10 @@ const WelcomeBanner = ({
         localStorage.setItem('hasChatbot', data.hasChatbot ? 'true' : 'false');
         
         setStepStatus({
-          account: {
+          onboarding: {
             completed: data.onboardingCompleted,
-            nextUrl: '/dashboard/settings',
-            buttonText: data.onboardingCompleted ? 'Completed' : 'Complete setup'
+            nextUrl: data.onboardingCompleted ? '/dashboard' : '/onboarding',
+            buttonText: data.onboardingCompleted ? 'Completed' : 'Complete onboarding'
           },
           knowledge: {
             completed: data.hasKnowledgeSource,
@@ -224,16 +225,16 @@ const WelcomeBanner = ({
   const steps = [
     {
       step: 1,
-      title: 'Create Account',
-      description: 'Set up your account and choose a subscription plan.',
-      ...stepStatus.account
+      title: 'Complete Onboarding',
+      description: 'Set up your account with personal and business information.',
+      ...stepStatus.onboarding
     },
     {
       step: 2,
-      title: 'Add Knowledge Source',
-      description: 'Connect your documents, websites, or create Q&A pairs.',
+      title: 'Create Knowledge Source',
+      description: 'Add documents, websites, or Q&A to train your AI agents.',
       ...stepStatus.knowledge,
-      disabled: !stepStatus.account.completed
+      disabled: !stepStatus.onboarding.completed
     },
     {
       step: 3,
@@ -255,6 +256,91 @@ const WelcomeBanner = ({
         onOpenChange={handleModalClose} 
         initialStep={activeStepForModal} 
       />
+
+      {/* Knowledge Source Dialog */}
+      {showKnowledgeDialog && (
+        <Dialog open={showKnowledgeDialog} onOpenChange={setShowKnowledgeDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Create Your First Knowledge Source</DialogTitle>
+              <DialogDescription>
+                Knowledge Sources are the foundation of your AI agents. They contain all the information your agents will use to answer questions and help your customers.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6 mt-6">
+              <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-6">
+                <h3 className="font-semibold text-gray-900 dark:text-gray-50 mb-3">
+                  What is a Knowledge Source?
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  A Knowledge Source is a collection of information that trains your AI agents. Think of it as the brain of your AI - the more comprehensive and organized your knowledge sources, the better your agents can assist customers.
+                </p>
+                
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <RiFileTextLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-50">Documents & PDFs</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Upload product manuals, FAQs, policies, and guides
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <RiGlobalLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-50">Websites</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Import content from your website, help center, or blog
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <RiQuestionLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-50">Q&A Pairs</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Create custom questions and answers for specific scenarios
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3">
+                    <RiShoppingBagLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-50">Product Catalogs</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Import your product inventory with descriptions and images
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowKnowledgeDialog(false)}
+                >
+                  Maybe later
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowKnowledgeDialog(false);
+                    router.push('/dashboard/knowledge-base');
+                  }}
+                >
+                  Create Knowledge Source
+                  <RiArrowRightLine className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {borderGradient ? (
         <div className="gradient-border-wrapper">
@@ -307,8 +393,8 @@ const WelcomeBanner = ({
                     className={`mt-6 ${item.completed ? 'bg-green-500 hover:bg-green-600' : ''}`}
                     onClick={() => handleAction(
                       item.nextUrl, 
-                      item.title === 'Create Account' ? 'account' : 
-                      item.title === 'Add Knowledge Source' ? 'knowledge' : 'agent'
+                      item.title === 'Complete Onboarding' ? 'onboarding' : 
+                      item.title === 'Create Knowledge Source' ? 'knowledge' : 'agent'
                     )}
                   >
                     {item.buttonText}
@@ -369,8 +455,8 @@ const WelcomeBanner = ({
                   className={`mt-6 ${item.completed ? 'bg-green-500 hover:bg-green-600' : ''}`}
                   onClick={() => handleAction(
                     item.nextUrl, 
-                    item.title === 'Create Account' ? 'account' : 
-                    item.title === 'Add Knowledge Source' ? 'knowledge' : 'agent'
+                    item.title === 'Complete Onboarding' ? 'onboarding' : 
+                    item.title === 'Create Knowledge Source' ? 'knowledge' : 'agent'
                   )}
                 >
                   {item.buttonText}

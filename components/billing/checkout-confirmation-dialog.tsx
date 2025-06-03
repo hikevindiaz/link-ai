@@ -77,6 +77,7 @@ interface CheckoutConfirmationDialogProps {
   }>;
   onConfirm: (planId: string) => Promise<void>;
   onBack: () => void;
+  skipBillingPreview?: boolean;
 }
 
 // Payment Form Component for adding new payment method
@@ -214,7 +215,8 @@ export function CheckoutConfirmationDialog({
   currentPlan,
   paymentMethods, 
   onConfirm, 
-  onBack 
+  onBack,
+  skipBillingPreview = false
 }: CheckoutConfirmationDialogProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -243,10 +245,10 @@ export function CheckoutConfirmationDialog({
 
   // Fetch billing preview when dialog opens
   useEffect(() => {
-    if (open) {
+    if (open && !skipBillingPreview) {
       fetchBillingPreview();
     }
-  }, [open, selectedPlan.id]);
+  }, [open, selectedPlan.id, skipBillingPreview]);
 
   const fetchBillingPreview = async () => {
     try {
@@ -316,12 +318,19 @@ export function CheckoutConfirmationDialog({
     }
   };
 
-  const handlePaymentMethodSuccess = () => {
+  const handlePaymentMethodSuccess = async () => {
     toast.success('Payment method added successfully');
     setShowPaymentForm(false);
     setSetupIntentClientSecret(null);
-    // The parent component should refresh payment methods
-    window.location.reload(); // Simple refresh for now
+    
+    // If this is during onboarding (skipBillingPreview), automatically proceed with subscription
+    if (skipBillingPreview) {
+      // Auto-proceed with subscription creation
+      await handleConfirmCheckout();
+    } else {
+      // For non-onboarding flows, just refresh to update payment methods
+      window.location.reload();
+    }
   };
 
   const handlePaymentMethodCancel = () => {
@@ -352,7 +361,14 @@ export function CheckoutConfirmationDialog({
         throw new Error(result.error || 'Failed to process subscription');
       }
 
-      // Show success animation
+      // For onboarding flow, don't show success animation here - let parent handle it
+      if (skipBillingPreview) {
+        // Just call the onConfirm callback immediately
+        onConfirm(selectedPlan.id);
+        return;
+      }
+
+      // For non-onboarding flows, show success animation
       setIsSuccess(true);
       
       // Success! Close dialog and refresh the page
@@ -467,9 +483,6 @@ export function CheckoutConfirmationDialog({
                     <div className="text-2xl font-bold text-gray-900 dark:text-gray-50">
                       {selectedPlan.price}
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      per month
-                    </div>
                   </div>
                 </div>
 
@@ -518,7 +531,57 @@ export function CheckoutConfirmationDialog({
                   Billing Summary
                 </h3>
                 
-                {billingPreview ? (
+                {skipBillingPreview ? (
+                  // Simple billing summary for onboarding flow
+                  <div className="space-y-3">
+                    {/* Trial Information */}
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <RiCheckLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                        <span className="font-medium text-indigo-900 dark:text-indigo-100">
+                          14-Day Free Trial
+                        </span>
+                      </div>
+                      <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                        A payment method is required to start your trial. You will not be charged during the 14-day trial period.
+                      </p>
+                    </div>
+                    
+                    {/* Trial Details */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Free trial
+                      </span>
+                      <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                        $0.00
+                      </span>
+                    </div>
+                    
+                    <Divider className="my-3" />
+                    
+                    {/* Due Today */}
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-gray-900 dark:text-gray-50">
+                        Due today
+                      </span>
+                      <span className="font-bold text-lg text-green-600 dark:text-green-400">
+                        $0.00
+                      </span>
+                    </div>
+                    
+                    <Divider className="my-3" />
+                    
+                    {/* After Trial */}
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        After trial ends
+                      </span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                        {selectedPlan.price}
+                      </span>
+                    </div>
+                  </div>
+                ) : billingPreview ? (
                   billingPreview.isTrial ? (
                     <div className="space-y-3">
                       {/* Trial Information */}
@@ -532,7 +595,7 @@ export function CheckoutConfirmationDialog({
                         <p className="text-sm text-indigo-700 dark:text-indigo-300">
                           {billingPreview.isChangingPlan 
                             ? 'Your trial will continue with the updated plan. No charges until trial ends.'
-                            : 'Start with a free trial. Cancel anytime before the trial ends to avoid any charges.'
+                            : 'A payment method is required to start your trial. You will not be charged during the 14-day trial period.'
                           }
                         </p>
                       </div>
@@ -709,7 +772,7 @@ export function CheckoutConfirmationDialog({
                           </span>
                         </div>
                         <p className="text-sm text-indigo-700 dark:text-indigo-300">
-                          Start with a free trial. Cancel anytime during the trial period to avoid any charges.
+                          A payment method is required to start your trial. You will not be charged during the 14-day trial period.
                         </p>
                       </div>
                       
@@ -839,7 +902,7 @@ export function CheckoutConfirmationDialog({
                           <p className="mb-2">
                             <strong>Free Trial:</strong> {billingPreview.isChangingPlan 
                               ? 'Your trial will continue with the updated plan. No charges until your trial ends.'
-                              : 'Start with a 14-day free trial. You can cancel anytime during the trial period.'
+                              : 'A payment method is required to start your trial. You will not be charged during the 14-day trial period.'
                             }
                           </p>
                           <p>
@@ -861,17 +924,16 @@ export function CheckoutConfirmationDialog({
                             You'll be charged a prorated amount for the difference.
                           </p>
                           <p>
-                            Your next billing cycle will be at the new plan rate of {selectedPlan.price}/month.
+                            Your next billing cycle will be at the new plan rate of {selectedPlan.price}.
                           </p>
                         </>
                       ) : (
                         <>
                           <p className="mb-2">
-                            <strong>Free Trial:</strong> Start with a 14-day free trial. 
-                            You can cancel anytime during the trial period.
+                            <strong>Free Trial:</strong> A payment method is required to start your trial. You will not be charged during the 14-day trial period.
                           </p>
                           <p>
-                            After the trial, you'll be charged {selectedPlan.price}/month. 
+                            After the trial, you'll be charged {selectedPlan.price}. 
                             Cancel anytime with no long-term commitments.
                           </p>
                         </>

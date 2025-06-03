@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import { Select, SelectItem, DateRangePickerValue } from "@tremor/react";
 import { DashboardHeader } from "@/components/dashboard/header";
@@ -8,7 +8,6 @@ import { DashboardStats } from "@/components/dashboard/stats";
 import { MessagesChart } from "@/components/dashboard/messages-chart";
 import { DashboardOverview } from '@/components/dashboard/overview-header';
 import WelcomeBanner from '@/components/WelcomeBanner';
-import { WelcomeModal } from '@/components/WelcomeModal';
 
 interface KpiData {
   name: string;
@@ -43,9 +42,9 @@ interface DashboardData {
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const [loading, setLoading] = useState(true);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // ADDED: State for selected period (default '30d')
   const [selectedPeriod, setSelectedPeriod] = useState<string>('30d');
@@ -61,59 +60,10 @@ export default function DashboardPage() {
     messageCountToday: 0,
   });
 
-  // Check if user is a first-time visitor - only run once when session is available
+  // Set isClient to true when component mounts
   useEffect(() => {
-    if (session?.user?.id && !onboardingChecked) {
-      // Set flag to prevent multiple checks
-      setOnboardingChecked(true);
-      
-      // Check if should show the welcome modal
-      const checkWelcomeStatus = () => {
-        const hasCompletedOnboarding = localStorage.getItem('hasCompletedOnboarding') === 'true';
-        const welcomeModalPreviouslyShown = localStorage.getItem('welcomeModalShown') === 'true';
-        const onboardingInProgress = localStorage.getItem('onboardingInProgress') === 'true';
-        
-        // If onboarding is already completed, don't show modal
-        if (hasCompletedOnboarding) {
-          return;
-        }
-        
-        // Check onboarding status from the server
-        const checkOnboardingStatus = async () => {
-          try {
-            const response = await fetch('/api/user/welcome-status');
-            const data = await response.json();
-            
-            if (data.success) {
-              // Server says onboarding is not completed and (modal hasn't been shown or is in progress)
-              if (!data.onboardingCompleted && (!welcomeModalPreviouslyShown || onboardingInProgress)) {
-                // Set modal to show after a slight delay
-                setTimeout(() => {
-                  setShowWelcomeModal(true);
-                  localStorage.setItem('welcomeModalShown', 'true');
-                  
-                  // Mark onboarding as in progress
-                  if (!onboardingInProgress) {
-                    localStorage.setItem('onboardingInProgress', 'true');
-                  }
-                }, 800);
-              } else if (data.onboardingCompleted) {
-                // Server says onboarding is complete
-                localStorage.setItem('hasCompletedOnboarding', 'true');
-                localStorage.setItem('onboardingInProgress', 'false');
-              }
-            }
-          } catch (error) {
-            console.error('Failed to check onboarding status:', error);
-          }
-        };
-        
-        checkOnboardingStatus();
-      };
-      
-      checkWelcomeStatus();
-    }
-  }, [session, onboardingChecked]);
+    setIsClient(true);
+  }, []);
 
   // Fetch dashboard data - keep as a separate effect
   useEffect(() => {
@@ -181,16 +131,9 @@ export default function DashboardPage() {
     }
   }, [session, selectedPeriod]);
 
-  // Handle modal state change
-  const handleModalStateChange = (open: boolean) => {
-    setShowWelcomeModal(open);
-    
-    if (!open) {
-      localStorage.setItem('welcomeModalShown', 'true');
-    }
-  };
-
-  const userFirstName = session?.user?.name?.split(' ')[0] || '';
+  if (!isClient) {
+    return null;
+  }
 
   // Split KPI data for rendering order
   // UPDATE: Add 'Phone Numbers' to top KPIs
@@ -198,33 +141,25 @@ export default function DashboardPage() {
   const topKpiData = dashboardData.kpiData.filter(kpi => topKpiKeys.includes(kpi.name));
   const conditionalKpiData = dashboardData.kpiData.filter(kpi => !topKpiKeys.includes(kpi.name));
 
+  const userFirstName = session?.user?.name?.split(' ')[0] || '';
+
   return (
     <div className="flex flex-col p-0">
-      {/* Welcome Modal for first-time users */}
-      <WelcomeModal 
-        isOpen={showWelcomeModal} 
-        onOpenChange={handleModalStateChange}
-      />
-
       <DashboardHeader 
         loading={loading}
         userFirstName={userFirstName}
       />
       <div className="p-4 sm:p-6 lg:p-8">
         <WelcomeBanner />
-        {/* UPDATE: Pass props to DashboardOverview */}
         <DashboardOverview 
           selectedPeriod={selectedPeriod}
           onPeriodChange={setSelectedPeriod}
         />
-        {/* UPDATE: Render top KPIs first */}
         <DashboardStats data={topKpiData} />
-        {/* UPDATE: Render chart next */}
         <MessagesChart 
           data={dashboardData.messageData}
           totalMessages={dashboardData.totalMessages}
         />
-        {/* UPDATE: Render conditional KPIs last (if any) */}
         {conditionalKpiData.length > 0 && (
           <DashboardStats data={conditionalKpiData} />
         )}

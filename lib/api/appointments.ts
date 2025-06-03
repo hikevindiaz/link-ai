@@ -55,6 +55,8 @@ export type CalendarSettingsInput = {
     includeSunday?: boolean;
     
     // Notification Settings
+    notificationEmailEnabled?: boolean;
+    emailReminderEnabled?: boolean;
     notificationSmsEnabled?: boolean;
     smsReminderEnabled?: boolean;
     reminderTimeMinutes?: number;
@@ -115,6 +117,8 @@ export const updateCalendarSettings = async (
             includeSaturday: settings.includeSaturday,
             includeSunday: settings.includeSunday,
             // Notification Settings
+            notificationEmailEnabled: settings.notificationEmailEnabled,
+            emailReminderEnabled: settings.emailReminderEnabled,
             notificationSmsEnabled: settings.notificationSmsEnabled,
             smsReminderEnabled: settings.smsReminderEnabled,
             reminderTimeMinutes: settings.reminderTimeMinutes,
@@ -128,6 +132,7 @@ export const updateCalendarSettings = async (
             maxBookingsPerSlot: settings.maxBookingsPerSlot,
             minimumAdvanceNotice: settings.minimumAdvanceNotice,
             requirePhoneNumber: settings.requirePhoneNumber,
+            requireEmailAddress: settings.requireEmailAddress,
             defaultLocation: settings.defaultLocation,
             bookingPrompt: settings.bookingPrompt,
             confirmationMessage: settings.confirmationMessage,
@@ -358,6 +363,8 @@ export async function createCalendar(data: CalendarCreateInput): Promise<Calenda
         includeSaturday: data.includeSaturday ?? true,
         includeSunday: data.includeSunday ?? false,
         // Notification Settings
+        notificationEmailEnabled: data.notificationEmailEnabled ?? false,
+        emailReminderEnabled: data.emailReminderEnabled ?? false,
         notificationSmsEnabled: data.notificationSmsEnabled ?? false,
         smsReminderEnabled: data.smsReminderEnabled ?? false,
         reminderTimeMinutes: data.reminderTimeMinutes ?? 30,
@@ -371,6 +378,7 @@ export async function createCalendar(data: CalendarCreateInput): Promise<Calenda
         maxBookingsPerSlot: data.maxBookingsPerSlot ?? 1,
         minimumAdvanceNotice: data.minimumAdvanceNotice ?? 60,
         requirePhoneNumber: data.requirePhoneNumber ?? true,
+        requireEmailAddress: data.requireEmailAddress ?? true,
         defaultLocation: data.defaultLocation ?? null,
         bookingPrompt: data.bookingPrompt ?? null,
         confirmationMessage: data.confirmationMessage ?? null,

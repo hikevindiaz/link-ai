@@ -1,5 +1,5 @@
 import { render } from '@react-email/render';
-import { email } from '@/lib/email';
+import { email, isEmailEnabled } from '@/lib/email';
 import AppointmentConfirmationEmail from '@/emails/appointment-confirmation';
 import AppointmentReminderEmail from '@/emails/appointment-reminder';
 import prisma from '@/lib/prisma';
@@ -18,6 +18,12 @@ export interface AppointmentWithDetails extends Appointment {
 export async function sendAppointmentConfirmationEmail(appointmentId: string): Promise<boolean> {
   try {
     console.log('[Email] Starting confirmation email process for appointment:', appointmentId);
+    
+    // Check if email is enabled
+    if (!isEmailEnabled()) {
+      console.warn('[Email] Email service is disabled (missing RESEND_API_KEY or running on client)');
+      return false;
+    }
     
     // Check if Resend is properly initialized
     if (!email) {
@@ -188,6 +194,20 @@ export async function sendAppointmentConfirmationEmail(appointmentId: string): P
  */
 export async function sendAppointmentReminderEmail(appointmentId: string): Promise<boolean> {
   try {
+    console.log('[Email] Starting reminder email process for appointment:', appointmentId);
+    
+    // Check if email is enabled
+    if (!isEmailEnabled()) {
+      console.warn('[Email] Email service is disabled (missing RESEND_API_KEY or running on client)');
+      return false;
+    }
+    
+    // Check if Resend is properly initialized
+    if (!email) {
+      console.error('[Email] Resend email client not initialized');
+      return false;
+    }
+    
     // Fetch appointment with related data
     const appointment = await prisma.appointment.findUnique({
       where: { id: appointmentId },

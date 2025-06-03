@@ -1,0 +1,116 @@
+Link AI – Realtime Voice Agent Architecture (Enhanced for VAD & Interrupts)
+🗣️ 1. USER INITIATES SPEECH INTERACTION
+plaintext
+Copy
+Edit
+🎤 User begins speaking
+    ↓
+🔍 VAD (Voice Activity Detection) activates "listening" state
+    ↓
+[ Realtime API receives audio stream → converts to text ]
+    ↓
+[ Agent determines intent ]
+🧾 2. INTENT CLASSIFICATION & ROUTING
+plaintext
+Copy
+Edit
+[ Is this a structured/simple request? ] → YES → Realtime Tool or DB
+[ Is this a complex/smart request? ]    → YES → Responses API Fallback
+
+  ┌──────────────────────────────────────┐
+  │  ░░ INTENT CLASSIFICATION LOGIC ░░   │
+  │                                      │
+  │  Keywords, pattern matching,         │
+  │  or lightweight AI classification    │
+  └──────────────────────────────────────┘
+🔄 3. STATE MANAGEMENT AND RESPONSE FLOW
+plaintext
+Copy
+Edit
+🟢 STATE: LISTENING
+    → Activated by VAD
+    → Continues listening until silence detected (auto-stop)
+    → Interrupts allowed anytime
+
+🔄 SYSTEM FLOW:
+1. VAD triggers END of speech
+2. System switches to “thinking” (processing)
+3. Agent prepares reply
+
+🔴 STATE: SPEAKING
+    → Activated once response is ready
+    → TTS begins (Nova, Echo, etc.)
+
+    🛑 IF user interrupts while agent is speaking:
+        → VAD detects new speech
+        → Immediately stops TTS
+        → Switches back to LISTENING
+        → Captures new user intent
+🧠 4. SMART RESPONSE PATHS
+plaintext
+Copy
+Edit
+┌────────────────────────────────────────────┐
+│        NORMAL REQUEST (fast, direct)       │
+└────────────────────────────────────────────┘
+   ↓
+[ Realtime API Tool Used (e.g., CRM lookup) ]
+   ↓
+[ Text Response Generated ]
+   ↓
+[ TTS: OpenAI Realtime Voice Output ]
+   ↓
+🔄 Waits for VAD to detect next user input
+
+--------------------------------------------
+
+┌────────────────────────────────────────────┐
+│   COMPLEX REQUEST (requires web/vectors)   │
+└────────────────────────────────────────────┘
+   ↓
+[ Tool Call → get_web_answer / vector_query ]
+   ↓
+[ Server uses Responses API in background ]
+   ↓
+[ Text response extracted ]
+   ↓
+[ Re-injected into Realtime API as tool_output ]
+   ↓
+[ TTS: OpenAI Realtime Voice Output ]
+   ↓
+🔄 Waits for VAD to detect next user input
+🔄 5. CONTINUOUS LOOP WITH INTERRUPTION HANDLING
+plaintext
+Copy
+Edit
+LOOP:
+1. Listening (VAD on)
+2. Speech ends → process intent
+3. If complex → do web/vector lookup
+4. Output response (TTS)
+5. If user starts speaking mid-response:
+     → STOP speaking immediately
+     → Cancel TTS buffer
+     → Re-enter LISTENING mode
+6. Repeat
+🧰 6. COMPONENTS RESPONSIBLE FOR STATE
+Component	Role
+VAD	Detects end of speech, or new speech (interrupts)
+Realtime API	Manages STT, tool calls, state control
+Backend Router	Detects smart requests, triggers Responses API
+TTS Engine	Always uses OpenAI voice (Nova, etc.)
+Agent Controller	Tracks state: listening, thinking, speaking, interrupted
+
+🧠 Final Summary: State Transitions
+plaintext
+Copy
+Edit
+[ Idle ]
+  ↓
+[ Listening (VAD active) ]
+  ↓
+[ Processing (intent classification) ]
+  ↓
+[ Speaking (TTS playback) ]
+    ↓       ↑
+[ VAD interrupt ] → [ Back to Listening ]

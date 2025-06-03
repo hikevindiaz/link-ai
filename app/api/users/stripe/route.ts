@@ -83,7 +83,7 @@ export async function POST(req: Request) {
                             price: payload.priceId,
                         }],
                         default_payment_method: paymentMethods.data[0].id,
-                        trial_period_days: user.stripeSubscriptionStatus === 'canceled' ? undefined : 7,
+                        trial_period_days: user.stripeSubscriptionStatus === 'canceled' ? undefined : 14,
                         expand: ['latest_invoice.payment_intent'],
                     });
 
@@ -159,7 +159,7 @@ export async function POST(req: Request) {
                 quantity: 1,
             }],
             subscription_data: {
-                trial_period_days: 7
+                trial_period_days: 14
             },
             metadata: {
                 userId: session.user.id,

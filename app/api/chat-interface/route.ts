@@ -273,9 +273,7 @@ export async function POST(req: Request) {
       console.log(`[Responses API] Using file_search with vector store IDs:`, vectorStoreIds);
       toolsForResponsesApi.push({ 
           type: "file_search",
-          file_search: {
           vector_store_ids: vectorStoreIds,
-          }
         });
       }
     // Restore web_search tool 
@@ -283,7 +281,7 @@ export async function POST(req: Request) {
       console.log(`[Responses API] Using web_search with options:`, webSearchOptions);
       toolsForResponsesApi.push({ 
           type: "web_search",
-          web_search: webSearchOptions // webSearchOptions is defined earlier
+          ...webSearchOptions // Spread options directly instead of nesting under web_search
       });
     }
     

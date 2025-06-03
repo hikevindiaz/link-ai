@@ -6,6 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/lib/db";
 import { sendWelcomeEmail } from "./emails/send-welcome";
 import { PrismaClient } from "@prisma/client"; // Import Prisma Client
+import { email } from "@/lib/email";
 
 // --- Magic SDK Initialization --- 
 let Magic: any;
@@ -187,6 +188,8 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email;
         session.user.image = token.picture;
         session.user.integrationSettings = token.integrationSettings as IntegrationSettingsMap ?? {};
+        session.user.emailVerified = token.emailVerified as boolean ?? false;
+        session.user.onboardingCompleted = token.onboardingCompleted as boolean ?? false;
         console.log("Integration settings added to session:", session.user.integrationSettings);
       }
       console.log("Session callback completed with session:", session);
@@ -216,6 +219,8 @@ export const authOptions: NextAuthOptions = {
             token.name = dbUser.name;
             token.email = dbUser.email;
             token.picture = dbUser.image;
+            token.emailVerified = Boolean(dbUser.emailVerified);
+            token.onboardingCompleted = dbUser.onboardingCompleted;
 
             // Process integration settings into a map
             const settingsMap: IntegrationSettingsMap = {};
@@ -243,6 +248,9 @@ export const authOptions: NextAuthOptions = {
           token.email = user.email;
           token.picture = user.image;
           token.integrationSettings = {}; // No settings available yet
+          // New users should not be verified or onboarded
+          token.emailVerified = false;
+          token.onboardingCompleted = false;
       }
 
       console.log("JWT callback completed. Returning token:", token);
@@ -265,11 +273,49 @@ export const authOptions: NextAuthOptions = {
                 name: message.user.name ?? message.user.email.split('@')[0] // Use name or derive from email
             });
             console.log("Welcome email sent to:", message.user.email);
+            
+            // Generate and send verification code
+            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+            
+            // Create verification token
+            await db.emailVerificationToken.upsert({
+              where: { userId: message.user.id },
+              update: {
+                code: verificationCode,
+                expiresAt: expiresAt
+              },
+              create: {
+                userId: message.user.id,
+                code: verificationCode,
+                expiresAt: expiresAt
+              }
+            });
+            
+            // Send verification email
+            if (email && message.user.email) {
+              const { render } = await import('@react-email/render');
+              const EmailConfirmationEmail = (await import('@/emails/confirm-email')).default;
+              
+              const emailHtml = await render(EmailConfirmationEmail({
+                confirmationCode: verificationCode,
+                theme: 'light'
+              }));
+
+              await email.emails.send({
+                from: 'Link AI <no-reply@getlinkai.com>',
+                to: message.user.email,
+                subject: `Your Link AI confirmation code: ${verificationCode}`,
+                html: emailHtml,
+              });
+              
+              console.log("Verification email sent to:", message.user.email);
+            }
           } else {
               console.warn("Cannot send welcome email: email is missing.");
           }
         } catch (emailError) {
-          console.error("Failed to send welcome email:", emailError);
+          console.error("Failed to send welcome/verification email:", emailError);
         }
       },
       async signOut(message) {

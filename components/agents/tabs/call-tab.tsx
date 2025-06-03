@@ -24,15 +24,23 @@ interface PhoneNumber {
   status: string
 }
 
-interface Voice {
+interface CustomVoice {
   id: string
-  voice_id: string
   name: string
+  openaiVoice: string
+  description?: string
   language?: string
-  labels?: Record<string, any>
+  isDefault: boolean
+  addedOn: string
 }
 
 export function CallTab({ agent, onSave }: CallTabProps) {
+  // Utility function to capitalize voice names properly
+  const capitalizeVoiceName = (name: string): string => {
+    if (!name) return name;
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
   // Use a ref to track if we've already initialized our local state
   const hasInitialized = useRef(false);
   const saveCount = useRef(0);
@@ -50,7 +58,7 @@ export function CallTab({ agent, onSave }: CallTabProps) {
   
   // Phone and voice settings
   const [phoneNumbers, setPhoneNumbers] = useState<PhoneNumber[]>([])
-  const [voices, setVoices] = useState<Voice[]>([])
+  const [voices, setVoices] = useState<CustomVoice[]>([])
   const [selectedPhoneNumberId, setSelectedPhoneNumberId] = useState<string | null>(null)
   const [selectedVoice, setSelectedVoice] = useState<string | null>(null)
   
@@ -468,8 +476,13 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                     <SelectContent>
                       <SelectItem value="none">Default Voice</SelectItem>
                       {voices.map((voice) => (
-                        <SelectItem key={voice.voice_id} value={voice.voice_id}>
-                          {voice.name} {voice.language ? `(${voice.language})` : ''}
+                        <SelectItem key={voice.id} value={voice.id}>
+                          <div className="flex flex-col items-start text-left w-full">
+                            <span className="font-medium">{capitalizeVoiceName(voice.name)}</span>
+                            <span className="text-xs text-gray-500">
+                              {voice.openaiVoice} {voice.language ? `• ${voice.language}` : ''}
+                            </span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -488,7 +501,7 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                   here
                 </a>
               </div>
-              {initialValues.voice && !voices.some(v => v.voice_id === initialValues.voice) && !isVoicesLoading && (
+              {initialValues.voice && !voices.some(v => v.id === initialValues.voice) && !isVoicesLoading && (
                 <div className="mt-2 text-sm text-yellow-600 dark:text-yellow-500 flex items-center">
                   <AlertCircle className="h-4 w-4 mr-1" />
                   Your agent has a voice assigned in the database, but it's not available in your account.

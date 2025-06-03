@@ -1,0 +1,17 @@
+import OpenAI from 'openai';
+import { playAudio } from 'openai/helpers/audio';
+
+const openai = new OpenAI();
+
+const input = "Greetings, customer. You have selected the option for a sneaker return. Please provide your order number.\n\nThank you. Verifying order. \n\nYour return request has been processed successfully. The sneakers will be returned to our warehouse. A refund will be issued to your original payment method within 5 to 7 business days. \n\nFor any further assistance, press 1. To speak with a human agent, press 2. Thank you for shopping with us.";
+
+const instructions = "Identity: A robot\n\nAffect: Monotone, mechanical, and neutral, reflecting the robotic nature of the customer service agent.\n\nTone: Efficient, direct, and formal, with a focus on delivering information clearly and without emotion.\n\nEmotion: Neutral and impersonal, with no emotional inflection, as the robot voice is focused purely on functionality.\n\nPauses: Brief and purposeful, allowing for processing and separating key pieces of information, such as confirming the return and refund details.\n\nPronunciation: Clear, precise, and consistent, with each word spoken distinctly to ensure the customer can easily follow the automated process.";
+
+const response = await openai.audio.speech.create({
+  model: 'gpt-4o-mini-tts',
+  voice: 'coral',
+  input,
+  instructions,
+});
+
+await playAudio(response);

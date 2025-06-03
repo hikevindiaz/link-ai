@@ -289,6 +289,7 @@ model User {
   integrationSettings      UserIntegrationSetting[]
   voices                   UserVoice[]
   usageRecords             UsageRecord[]
+  emailVerificationToken   EmailVerificationToken?
   
   // A2P 10DLC Registration relationships
   twilioA2PBrand           TwilioA2PBrand?
@@ -308,6 +309,18 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model EmailVerificationToken {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  code       String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("email_verification_tokens")
 }
 
 model KnowledgeSource {
@@ -548,18 +561,19 @@ model SubscriptionItem {
 }
 
 model UserVoice {
-  id        String   @id @default(cuid())
-  voiceId   String
-  name      String
-  language  String?
-  labels    Json?
-  addedOn   DateTime @default(now())
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  name        String   // Custom name given by user
+  openaiVoice String   // OpenAI voice: alloy, ash, ballad, coral, echo, sage, shimmer, verse
+  description String?  // Custom description/instructions for the voice
+  language    String?  // Language code if specified
+  isDefault   Boolean  @default(false) // Whether this is the user's default voice
+  addedOn     DateTime @default(now())
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, voiceId])
+  @@unique([userId, name]) // Each user can have unique voice names
   @@map("user_voices")
 }
 
@@ -606,6 +620,8 @@ model Calendar {
   workingHoursEnd           String        @default("17:00")
   includeSaturday           Boolean       @default(true)
   includeSunday             Boolean       @default(false)
+  notificationEmailEnabled  Boolean       @default(true)
+  emailReminderEnabled      Boolean       @default(true)
   smsReminderEnabled        Boolean       @default(true)
   reminderTimeMinutes       Int           @default(30)
   askForDuration            Boolean       @default(true)

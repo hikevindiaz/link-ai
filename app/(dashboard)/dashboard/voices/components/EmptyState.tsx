@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { RiSoundModuleLine } from '@remixicon/react';
+import { RiSoundModuleLine, RiAddLine } from '@remixicon/react';
 
 interface EmptyStateProps {
   userVoicesCount: number;
@@ -19,19 +19,19 @@ const EmptyState = ({ userVoicesCount, onBrowseClick }: EmptyStateProps) => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
           {userVoicesCount > 0 
             ? 'Select a Voice' 
-            : 'Welcome to Voice Library'}
+            : 'Create Custom Voices'}
         </h1>
         <p className="mt-2 text-gray-500 dark:text-gray-400">
           {userVoicesCount > 0 
-            ? 'Select a voice from the sidebar or browse the library below to add more voices to your collection.' 
-            : 'Browse our premium AI voices to enhance your agents with natural-sounding speech.'}
+            ? 'Select a voice from the sidebar or create a new custom voice to add to your collection.' 
+            : 'Combine OpenAI voices with custom descriptions to create unique voice personalities for your agents.'}
         </p>
         <Button 
           className="mt-6" 
           onClick={onBrowseClick}
         >
-          <RiSoundModuleLine className="mr-2 h-4 w-4" />
-          Browse Voice Library
+          <RiAddLine className="mr-2 h-4 w-4" />
+          Create Your Voice
         </Button>
       </div>
     </div>

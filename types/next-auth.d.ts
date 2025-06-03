@@ -1,5 +1,6 @@
 import { User } from "next-auth"
 import { JWT } from "next-auth/jwt"
+import { type DefaultSession } from "next-auth"
 
 // Define the shape of the integration settings map
 type IntegrationSettingsMap = Record<string, boolean>;
@@ -11,15 +12,26 @@ declare module "next-auth/jwt" {
         id: UserId
         // Add integration settings to the JWT type
         integrationSettings?: IntegrationSettingsMap
+        emailVerified?: boolean
+        onboardingCompleted?: boolean
     }
 }
 
 declare module "next-auth" {
     interface Session {
-        user: User & {
+        user: {
             id: UserId
             // Add integration settings to the Session User type
             integrationSettings?: IntegrationSettingsMap
-        }
+            emailVerified: boolean
+            onboardingCompleted: boolean
+        } & DefaultSession["user"]
+    }
+
+    interface User {
+        id: UserId
+        integrationSettings?: IntegrationSettingsMap
+        emailVerified?: boolean
+        onboardingCompleted?: boolean
     }
 } 

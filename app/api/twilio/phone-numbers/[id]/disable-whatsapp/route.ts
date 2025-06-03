@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { db as prisma } from '@/lib/db';
+import prisma from '@/lib/prisma';
 
 // POST /api/twilio/phone-numbers/[id]/disable-whatsapp - Disable WhatsApp for a phone number
 export async function POST(
@@ -11,62 +11,41 @@ export async function POST(
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const phoneNumberId = params.id;
-    
-    // Get phone number and verify ownership
-    const phoneNumber = await prisma.twilioPhoneNumber.findUnique({
-      where: { id: phoneNumberId },
-      include: { user: true }
+    // Verify the phone number belongs to the user
+    const phoneNumberRecord = await prisma.twilioPhoneNumber.findFirst({
+      where: {
+        id: params.id,
+        userId: session.user.id,
+      },
     });
 
-    if (!phoneNumber) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Phone number not found' 
-      }, { status: 404 });
+    if (!phoneNumberRecord) {
+      return NextResponse.json({ error: 'Phone number not found' }, { status: 404 });
     }
 
-    if (phoneNumber.userId !== session.user.id) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Unauthorized' 
-      }, { status: 403 });
-    }
-
-    // Update phone number to disable WhatsApp
-    const updated = await prisma.twilioPhoneNumber.update({
-      where: { id: phoneNumberId },
-      data: {
-        whatsappEnabled: false,
-        whatsappDisplayName: null,
-        whatsappBusinessId: null,
-        whatsappConfiguredAt: null,
-        updatedAt: new Date()
-      } as any // Type assertion for new fields
-    });
-
-    console.log(`[WhatsApp] Disabled WhatsApp for phone number ${phoneNumber.phoneNumber}`);
+    // Disable WhatsApp for this phone number
+    await prisma.$executeRaw`
+      UPDATE "twilio_phone_numbers" 
+      SET 
+        "whatsappEnabled" = false,
+        "whatsappBusinessId" = NULL,
+        "whatsappDisplayName" = NULL,
+        "whatsappConfiguredAt" = NULL
+      WHERE id = ${params.id}
+    `;
 
     return NextResponse.json({
       success: true,
-      message: 'WhatsApp disabled successfully',
-      phoneNumber: {
-        id: updated.id,
-        number: updated.phoneNumber,
-        whatsappEnabled: false,
-        whatsappDisplayName: null,
-        whatsappBusinessId: null
-      }
+      message: 'WhatsApp disabled successfully'
     });
-
   } catch (error) {
-    console.error('[WhatsApp] Error disabling WhatsApp:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to disable WhatsApp' 
-    }, { status: 500 });
+    console.error('Error disabling WhatsApp:', error);
+    return NextResponse.json(
+      { error: 'Failed to disable WhatsApp' },
+      { status: 500 }
+    );
   }
 } 

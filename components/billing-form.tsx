@@ -191,7 +191,7 @@ export function BillingForm({
                                                 {isLoading && (
                                                     <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                                                 )}
-                                                { plan.name === freePlan.name ? "Start 7 days free trial" : "Upgrade"}
+                                                { plan.name === freePlan.name ? "Start 14 days free trial" : "Upgrade"}
                                             </Button>
                                         </CardFooter>
                                     </Card>
@@ -265,7 +265,7 @@ export function BillingForm({
                                                 {isLoading && (
                                                     <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                                                 )}
-                                                { plan.name === freePlan.name ? "Start 7 days free trial" : "Upgrade"}
+                                                { plan.name === freePlan.name ? "Start 14 days free trial" : "Upgrade"}
                                             </Button>
                                         }
                                     </CardFooter>

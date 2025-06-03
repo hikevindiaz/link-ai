@@ -141,7 +141,7 @@ export async function POST(req: Request) {
                         price: priceId,
                     }],
                     default_payment_method: paymentMethodToUse,
-                    trial_period_days: 7, // Always give trial for new subscriptions
+                    trial_period_days: 14, // Always give trial for new subscriptions
                     expand: ['latest_invoice.payment_intent'],
                 });
 
@@ -183,7 +183,7 @@ export async function POST(req: Request) {
                 console.log('[Confirm Subscription] Database updated successfully');
                 return new Response(JSON.stringify({ 
                     success: true, 
-                    message: 'Subscription created successfully! Your 7-day trial has started.',
+                    message: 'Subscription created successfully! Your 14-day trial has started.',
                     subscription: subscription.id 
                 }));
             } catch (error: any) {

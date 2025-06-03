@@ -1,50 +1,45 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/Input';
 import { Icons } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { RiDeleteBinLine } from '@remixicon/react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
-interface VoiceLabel {
-  [key: string]: string;
-}
-
-interface VoiceSettings {
-  stability: number;
-  similarity_boost: number;
-  style: number;
-  use_speaker_boost: boolean;
-  [key: string]: any;
-}
-
-interface Voice {
-  voice_id: string;
+interface CustomVoice {
+  id: string;
   name: string;
-  labels: VoiceLabel;
+  openaiVoice: string;
+  description?: string;
   language?: string;
-  sampleText?: string;
-  settings?: VoiceSettings;
-}
-
-interface UserVoice extends Voice {
-  id?: string;
-  userId?: string;
+  isDefault: boolean;
   addedOn: string;
 }
 
 interface VoiceDetailProps {
-  voice: UserVoice;
+  voice: CustomVoice;
   isPlaying: boolean;
   isSaving: boolean;
   textInput: string;
   onRemove: (voiceId: string) => void;
+  onEdit: (voice: CustomVoice) => void;
   onTextChange: (voiceId: string, text: string) => void;
-  onPlay: (voice: Voice) => void;
-  getImportantTags: (voice: Voice) => {key: string, value: string}[];
-  getDefaultTextForVoice: (voice: Voice | UserVoice) => string;
+  onPlay: (voice: CustomVoice) => void;
+  getImportantTags: (voice: CustomVoice) => {key: string, value: string}[];
+  getDefaultTextForVoice: (voice: CustomVoice) => string;
 }
 
 const VoiceDetail = ({
@@ -53,18 +48,29 @@ const VoiceDetail = ({
   isSaving,
   textInput,
   onRemove,
+  onEdit,
   onTextChange,
   onPlay,
   getImportantTags,
   getDefaultTextForVoice
 }: VoiceDetailProps) => {
+  // Utility function to capitalize voice names properly
+  const capitalizeVoiceName = (name: string): string => {
+    if (!name) return name;
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
+  const handleDelete = () => {
+    onRemove(voice.id);
+  };
+
   return (
     <div className="p-6">
       <header className="border-b border-gray-200 dark:border-gray-800 pb-4 mb-4">
-        <div className="sm:flex sm:items-center sm:justify-between">
+        <div className="sm:flex sm:items-start sm:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-              {voice.name}
+              {capitalizeVoiceName(voice.name)}
             </h3>
             <div className="flex flex-wrap gap-2 mt-2">
               {getImportantTags(voice).map((tag, tagIndex) => (
@@ -73,15 +79,70 @@ const VoiceDetail = ({
                 </Badge>
               ))}
             </div>
+            
+            {/* Voice Description */}
+            {voice.description && (
+              <div className="mt-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Description:</span> {voice.description}
+                </p>
+              </div>
+            )}
+            
+            {/* Base Voice Info */}
+            <div className="mt-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="font-medium">Base Voice:</span> {capitalizeVoiceName(voice.openaiVoice)}
+                {voice.language && (
+                  <span className="ml-2">
+                    • <span className="font-medium">Language:</span> {voice.language}
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
-          <Button
-            variant="destructive"
-            onClick={() => onRemove(voice.voice_id)}
-            disabled={isSaving}
-          >
-            <RiDeleteBinLine className="mr-2 h-4 w-4" />
-            Remove
-          </Button>
+          
+          <div className="mt-4 sm:mt-0 sm:ml-4">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => onEdit(voice)}
+                disabled={isSaving}
+              >
+                <i className="ri-edit-line mr-2 h-4 w-4" />
+                Edit
+              </Button>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    disabled={isSaving}
+                  >
+                    <RiDeleteBinLine className="mr-2 h-4 w-4" />
+                    Remove
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Voice?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete "{capitalizeVoiceName(voice.name)}"? This action cannot be undone and will permanently remove this custom voice from your account.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDelete}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Delete Voice
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
         </div>
       </header>
       <main>
@@ -99,8 +160,9 @@ const VoiceDetail = ({
               <Input
                 type="text"
                 value={textInput || getDefaultTextForVoice(voice)}
-                onChange={(e) => onTextChange(voice.voice_id, e.target.value)}
+                onChange={(e) => onTextChange(voice.id, e.target.value)}
                 className="flex-1"
+                placeholder="Enter text to test this voice..."
               />
               <Button
                 variant="primary"
@@ -115,8 +177,44 @@ const VoiceDetail = ({
                 )}
               </Button>
             </div>
+            <div className="mt-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                This voice uses <strong>{capitalizeVoiceName(voice.openaiVoice)}</strong> as the base voice
+                {voice.description && ' with your custom personality description'}.
+              </p>
+            </div>
           </div>
         </Card>
+        
+        {/* Voice Statistics */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <Card className="p-4">
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Base Voice</p>
+              <p className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">
+                {capitalizeVoiceName(voice.openaiVoice)}
+              </p>
+            </div>
+          </Card>
+          
+          <Card className="p-4">
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Status</p>
+              <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                {voice.isDefault ? 'Default' : 'Active'}
+              </p>
+            </div>
+          </Card>
+          
+          <Card className="p-4">
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Created</p>
+              <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                {new Date(voice.addedOn).toLocaleDateString()}
+              </p>
+            </div>
+          </Card>
+        </div>
       </main>
     </div>
   );

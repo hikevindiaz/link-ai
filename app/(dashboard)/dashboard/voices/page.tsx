@@ -6,77 +6,42 @@ import { ArrowLeft } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-// Import our new components
+// Import our components
 import EmptyState from './components/EmptyState';
-import VoiceLibrary from './components/VoiceLibrary';
 import VoiceDetail from './components/VoiceDetail';
 import VoiceSidebar from './components/VoiceSidebar';
+import VoiceCreator from './components/VoiceCreator';
 
-// Define types for the voice data
-interface VoiceLabel {
-  [key: string]: string;
-}
-
-interface VoiceSettings {
-  stability: number;
-  similarity_boost: number;
-  style: number;
-  use_speaker_boost: boolean;
-  [key: string]: any;
-}
-
-interface Voice {
-  voice_id: string;
+// Define types for the new voice system
+interface CustomVoice {
+  id: string;
   name: string;
-  labels: VoiceLabel;
+  openaiVoice: string;
+  description?: string;
   language?: string;
-  sampleText?: string;
-  settings?: VoiceSettings;
-}
-
-interface UserVoice extends Voice {
-  id?: string;
-  userId?: string;
+  isDefault: boolean;
   addedOn: string;
 }
 
-// Sample text options by language
-const SampleTextOptions = {
-  en: [
-    "Hello, how can I assist you today?",
-    "Welcome! I'm your virtual assistant.",
-    "Hi there! What can I help you with?",
-    "Thank you for reaching out. How may I help?"
-  ],
-  es: [
-    "¡Hola! ¿Cómo puedo ayudarte hoy?",
-    "¡Bienvenido! Soy tu asistente virtual.",
-    "¿En qué puedo servirte?",
-    "Gracias por contactarme. ¿En qué puedo ayudarte?"
-  ],
-  default: "Hello, how can I help you today?"
-};
-
 const VoicesPage = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isPlaying, setIsPlaying] = useState<Record<string, boolean>>({});
-  const [voices, setVoices] = useState<Voice[]>([]);
-  const [visibleVoices, setVisibleVoices] = useState(15);
-  const [textInputs, setTextInputs] = useState<Record<string, string>>({});
-  const [showBanner, setShowBanner] = useState(true);
+  // Utility function to capitalize voice names properly
+  const capitalizeVoiceName = (name: string): string => {
+    if (!name) return name;
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
+  const [voices, setVoices] = useState<CustomVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<CustomVoice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUserVoicesLoading, setIsUserVoicesLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState<UserVoice | null>(null);
-  const [userVoices, setUserVoices] = useState<UserVoice[]>([]);
+  const [testText, setTestText] = useState<Record<string, string>>({});
+  const [isPlaying, setIsPlaying] = useState<Record<string, boolean>>({});
   
-  // Mobile responsiveness state
+  // View states
+  const [currentView, setCurrentView] = useState<'empty' | 'detail' | 'creator'>('empty');
   const [isMobileView, setIsMobileView] = useState(false);
-  const [showVoiceDetailsOnMobile, setShowVoiceDetailsOnMobile] = useState(false);
-  const [currentAudio, setCurrentAudio] = useState<{ src: string; id: string } | null>(null);
-  
-  // New state for controlling which view is active (library or empty state)
-  const [showLibrary, setShowLibrary] = useState(false);
+  const [showDetailsOnMobile, setShowDetailsOnMobile] = useState(false);
+  const [voiceToEdit, setVoiceToEdit] = useState<CustomVoice | null>(null);
 
   // Check for mobile view on mount and window resize
   useEffect(() => {
@@ -84,156 +49,147 @@ const VoicesPage = () => {
       setIsMobileView(window.innerWidth < 768);
     };
     
-    // Initial check
     checkMobileView();
-    
-    // Set up listener for window resize
     window.addEventListener('resize', checkMobileView);
     
     return () => {
       window.removeEventListener('resize', checkMobileView);
     };
   }, []);
-  
-  // Update mobile view state when voice is selected
+
+  // Load user voices
   useEffect(() => {
-    if (selectedVoice && isMobileView) {
-      setShowVoiceDetailsOnMobile(true);
-    }
-  }, [selectedVoice, isMobileView]);
-
-  // Default voice settings if none available
-  const defaultSettings: VoiceSettings = {
-    stability: 0.75,
-    similarity_boost: 0.75,
-    style: 0,
-    use_speaker_boost: true
-  };
-
-  useEffect(() => {
-    const loadVoices = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/elevenlabs/voices');
-        if (!response.ok) {
-          throw new Error('Failed to fetch voices');
-        }
-        const data = await response.json();
-        console.log('Loaded voices:', data);
-        // Ensure data is an array before setting it
-        setVoices(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Error loading voices:', error);
-        setVoices([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadVoices();
-
-    // Load user voices from API
     loadUserVoices();
   }, []);
 
-  // Load user's voices from the API with localStorage fallback
+  // Update view based on voices and selection
+  useEffect(() => {
+    if (selectedVoice) {
+      setCurrentView('detail');
+      if (isMobileView) {
+        setShowDetailsOnMobile(true);
+      }
+    } else if (voices.length === 0) {
+      setCurrentView('empty');
+    } else {
+      setCurrentView('empty'); // Show empty state even with voices until one is selected
+    }
+  }, [selectedVoice, voices.length, isMobileView]);
+
   const loadUserVoices = async () => {
     try {
-      setIsUserVoicesLoading(true);
-      
-      // Try to fetch from API first
-      try {
-        const response = await fetch('/api/user/voices');
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Loaded voices from API:", data);
-          setUserVoices(data.voices || []);
-          return;
-        }
-      } catch (apiError) {
-        console.error('Error loading voices from API, falling back to localStorage:', apiError);
+      setIsLoading(true);
+      const response = await fetch('/api/user/voices');
+      if (!response.ok) {
+        throw new Error('Failed to fetch voices');
       }
-      
-      // Fallback to localStorage if API fails
-      const savedVoices = localStorage.getItem('userVoices');
-      if (savedVoices) {
-        setUserVoices(JSON.parse(savedVoices));
-      }
+      const data = await response.json();
+      setVoices(data.voices || []);
     } catch (error) {
-      console.error('Error loading user voices:', error);
+      console.error('Error loading voices:', error);
+      toast.error('Failed to load voices');
+      setVoices([]);
     } finally {
-      setIsUserVoicesLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+  const handleVoiceClick = (voice: CustomVoice) => {
+    setSelectedVoice(voice);
+    setCurrentView('detail');
+    if (isMobileView) {
+      setShowDetailsOnMobile(true);
+    }
   };
 
-  const getDefaultTextForVoice = (voice: Voice): string => {
-    // First try to use the sample text from the voice
-    if (voice.sampleText) {
-      return voice.sampleText;
+  const handleCreateVoice = () => {
+    setSelectedVoice(null);
+    setCurrentView('creator');
+    if (isMobileView) {
+      setShowDetailsOnMobile(true);
     }
-    
-    // Check for Spanish language
-    let isSpanish = false;
-    
-    // Check in language field
-    if (voice.language === 'es' || 
-        (voice.language && 
-         (voice.language.toLowerCase().includes('spanish') || 
-          voice.language.toLowerCase().includes('español')))) {
-      isSpanish = true;
+  };
+
+  const handleEditVoice = (voice: CustomVoice) => {
+    setVoiceToEdit(voice);
+    setCurrentView('creator');
+    if (isMobileView) {
+      setShowDetailsOnMobile(true);
     }
-    
-    // Check in labels
-    if (!isSpanish && voice.labels) {
-      const labelValues = Object.values(voice.labels);
-      for (const value of labelValues) {
-        if (typeof value === 'string' && 
-            (value.toLowerCase().includes('spanish') || 
-             value.toLowerCase().includes('español') ||
-             value.toLowerCase().includes('latino') ||
-             value.toLowerCase().includes('latina') ||
-             value.toLowerCase().includes('mexican'))) {
-          isSpanish = true;
-          break;
+  };
+
+  const handleVoiceCreated = (voice: CustomVoice) => {
+    setVoices(prev => [voice, ...prev]);
+    setSelectedVoice(voice);
+    setCurrentView('detail');
+    toast.success('Voice created successfully!');
+  };
+
+  const handleVoiceUpdated = (updatedVoice: CustomVoice) => {
+    setVoices(prev => prev.map(voice => 
+      voice.id === updatedVoice.id ? updatedVoice : voice
+    ));
+    setSelectedVoice(updatedVoice);
+    setVoiceToEdit(null);
+    setCurrentView('detail');
+    if (isMobileView) {
+      setShowDetailsOnMobile(true);
+    }
+  };
+
+  const handleRemoveVoice = async (voiceId: string) => {
+    setIsSaving(true);
+    try {
+      // Find the voice name before removing it
+      const voiceToRemove = voices.find(voice => voice.id === voiceId);
+      const voiceName = voiceToRemove ? capitalizeVoiceName(voiceToRemove.name) : 'voice';
+
+      const response = await fetch(`/api/user/voices/${voiceId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to remove voice');
+      }
+      
+      // Update local state
+      setVoices(prev => prev.filter(voice => voice.id !== voiceId));
+      
+      // Clear selected voice if it's the one being removed
+      if (selectedVoice?.id === voiceId) {
+        setSelectedVoice(null);
+        setCurrentView('empty');
+        if (isMobileView) {
+          setShowDetailsOnMobile(false);
         }
       }
-    }
-    
-    // Return random sample text based on detected language
-    if (isSpanish) {
-      const randomIndex = Math.floor(Math.random() * SampleTextOptions.es.length);
-      return SampleTextOptions.es[randomIndex];
-    } else {
-      const randomIndex = Math.floor(Math.random() * SampleTextOptions.en.length);
-      return SampleTextOptions.en[randomIndex];
-    }
-  };
-
-  const handleTextChange = (voiceId: string, text: string) => {
-    setTextInputs((prev) => ({ ...prev, [voiceId]: text }));
-  };
-
-  const handlePlay = async (voice: Voice) => {
-    const voiceId = voice.voice_id;
-    const text = textInputs[voiceId] || getDefaultTextForVoice(voice);
-    setIsPlaying((prev) => ({ ...prev, [voiceId]: true }));
-
-    try {
-      // Use voice settings from ElevenLabs if available
-      const settings = voice.settings || defaultSettings;
       
-      const response = await fetch('/api/elevenlabs/speak', {
+      toast.success(`Voice "${voiceName}" deleted successfully`);
+    } catch (error) {
+      console.error('Error removing voice:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to remove voice');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleTestVoice = async (voice: CustomVoice) => {
+    const text = testText[voice.id] || getDefaultTestText(voice);
+    
+    setIsPlaying(prev => ({ ...prev, [voice.id]: true }));
+    
+    try {
+      const response = await fetch('/api/openai/tts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          text, 
-          voiceId, 
-          ...settings
+        body: JSON.stringify({
+          text,
+          voice: voice.openaiVoice,
+          instructions: voice.description,
+          language: voice.language,
         }),
       });
 
@@ -247,277 +203,88 @@ const VoicesPage = () => {
       const audio = new Audio(audioUrl);
       
       audio.onended = () => {
-        setIsPlaying((prev) => ({ ...prev, [voiceId]: false }));
-        URL.revokeObjectURL(audioUrl); // Clean up the URL object
+        setIsPlaying(prev => ({ ...prev, [voice.id]: false }));
+        URL.revokeObjectURL(audioUrl);
       };
       
-      audio.onerror = (e) => {
-        console.error('Audio playback error:', e);
-        setIsPlaying((prev) => ({ ...prev, [voiceId]: false }));
+      audio.onerror = () => {
+        setIsPlaying(prev => ({ ...prev, [voice.id]: false }));
         URL.revokeObjectURL(audioUrl);
+        toast.error('Error playing audio');
       };
       
       await audio.play();
     } catch (error) {
-      console.error('Error playing audio:', error);
-      setIsPlaying((prev) => ({ ...prev, [voiceId]: false }));
+      console.error('Error playing voice:', error);
+      setIsPlaying(prev => ({ ...prev, [voice.id]: false }));
+      toast.error('Failed to play voice');
     }
   };
 
-  const loadMoreVoices = () => {
-    setVisibleVoices((prev) => prev + 15);
+  const handleTextChange = (voiceId: string, text: string) => {
+    setTestText(prev => ({ ...prev, [voiceId]: text }));
   };
 
-  const tagMapping: Record<string, string[]> = {
-    es: ['español', 'spanish'],
-    // Add more mappings as needed
-  };
-
-  // Add a safeguard to ensure voices is an array before filtering
-  const filteredVoices = Array.isArray(voices) ? voices.filter((voice) => {
-    if (!voice || typeof voice !== 'object') return false;
+  const getDefaultTestText = (voice: CustomVoice): string => {
+    const capitalizedName = capitalizeVoiceName(voice.name);
+    const baseText = voice.description 
+      ? `Hello! I'm ${capitalizedName}. ${voice.description.slice(0, 100)}` 
+      : `Hello! I'm ${capitalizedName}, your voice assistant.`;
     
-    const searchLower = searchTerm.toLowerCase();
-    const nameMatch = voice.name && typeof voice.name === 'string' 
-      ? voice.name.toLowerCase().includes(searchLower) 
-      : false;
+    return baseText.length > 200 ? baseText.slice(0, 200) + '...' : baseText;
+  };
+
+  const getVoiceTags = (voice: CustomVoice) => {
+    const tags = [];
     
-    const labelMatch = voice.labels && typeof voice.labels === 'object'
-      ? Object.entries(voice.labels).some(([key, value]) => {
-          if (typeof value !== 'string') return false;
-          const labelLower = value.toLowerCase();
-          return (
-            labelLower.includes(searchLower) ||
-            (tagMapping[key] && tagMapping[key].some((term) => term.includes(searchLower)))
-          );
-        })
-      : false;
-      
-    return nameMatch || labelMatch;
-  }) : [];
-
-  const addVoiceToUser = async (voice: Voice) => {
-    // Check if voice is already added
-    if (userVoices.some(v => v.voice_id === voice.voice_id)) {
-      toast.error('This voice is already in your collection');
-      return;
-    }
-
-    setIsSaving(true);
-
-    try {
-      const userVoice: UserVoice = {
-        ...voice,
-        addedOn: new Date().toISOString()
-      };
-      
-      // Try to save to API first
-      try {
-        const response = await fetch('/api/user/voices', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ voice }),
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Voice added to API:", data);
-          
-          // Reload voices from the API to get the correct DB ID
-          loadUserVoices();
-          toast.success(`Added ${voice.name} to your voices`);
-          return;
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to add voice to database');
-        }
-      } catch (apiError) {
-        console.error('Error adding voice to API, using localStorage as fallback:', apiError);
-      }
-      
-      // Fallback to localStorage if API fails
-      const updatedUserVoices = [...userVoices, userVoice];
-      setUserVoices(updatedUserVoices);
-      localStorage.setItem('userVoices', JSON.stringify(updatedUserVoices));
-      
-      toast.success(`Added ${voice.name} to your voices`);
-    } catch (error) {
-      console.error('Error adding voice:', error);
-      toast.error('Failed to add voice');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const removeVoiceFromUser = async (voiceId: string) => {
-    setIsSaving(true);
-    
-    try {
-      // Try to delete from API first
-      try {
-        const response = await fetch(`/api/user/voices/${voiceId}`, {
-          method: 'DELETE',
-        });
-        
-        if (response.ok) {
-          console.log("Voice removed from API:", voiceId);
-          
-          // Update local state
-          const updatedUserVoices = userVoices.filter(voice => voice.voice_id !== voiceId);
-          setUserVoices(updatedUserVoices);
-          
-          // Clear selected voice if it's the one being removed
-          if (selectedVoice?.voice_id === voiceId) {
-            setSelectedVoice(null);
-          }
-          
-          toast.success('Voice removed from your collection');
-          return;
-        } else {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to remove voice from database');
-        }
-      } catch (apiError) {
-        console.error('Error removing voice from API, using localStorage fallback:', apiError);
-      }
-      
-      // Fallback to localStorage if API fails
-      const updatedUserVoices = userVoices.filter(voice => voice.voice_id !== voiceId);
-      setUserVoices(updatedUserVoices);
-      localStorage.setItem('userVoices', JSON.stringify(updatedUserVoices));
-      
-      // Clear selected voice if it's the one being removed
-      if (selectedVoice?.voice_id === voiceId) {
-        setSelectedVoice(null);
-      }
-      
-      toast.success('Voice removed from your collection');
-    } catch (error) {
-      console.error('Error removing voice:', error);
-      toast.error('Failed to remove voice');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const isVoiceAddedToUser = (voiceId: string) => {
-    return userVoices.some(voice => voice.voice_id === voiceId);
-  };
-
-  // Find the original voice data with settings from our list
-  const findOriginalVoice = (userVoice: UserVoice): Voice => {
-    return voices.find(v => v.voice_id === userVoice.voice_id) || userVoice;
-  };
-
-  // Update the filtered categories to prioritize important tags
-  const getImportantTags = (voice: Voice) => {
-    const tags: {key: string, value: string}[] = [];
-    
-    // Add language tag with proper formatting
     if (voice.language) {
-      // Map language codes to full names
-      const languageMap: Record<string, string> = {
-        'en': 'English',
-        'es': 'Spanish',
-        'fr': 'French',
-        'de': 'German',
-        'it': 'Italian',
-        'pt': 'Portuguese',
-        'pl': 'Polish',
-        'hi': 'Hindi',
-        'ja': 'Japanese',
-        'ko': 'Korean',
-        'zh': 'Chinese'
-      };
-      
-      const languageName = languageMap[voice.language.toLowerCase()] || voice.language.toUpperCase();
-      tags.push({key: 'language', value: languageName});
+      tags.push({ key: 'language', value: voice.language });
     }
     
-    // Extract gender from labels
-    if (voice.labels) {
-      // Check for gender
-      const genderLabels = Object.entries(voice.labels).filter(([key, value]) => {
-        const valueLower = String(value).toLowerCase();
-        return key === 'gender' || 
-               valueLower.includes('male') || 
-               valueLower.includes('female') || 
-               valueLower.includes('non-binary');
-      });
-      
-      if (genderLabels.length > 0) {
-        tags.push({key: 'gender', value: String(genderLabels[0][1])});
-      }
-      
-      // Check for accent
-      const accentLabels = Object.entries(voice.labels).filter(([key, value]) => {
-        const valueLower = String(value).toLowerCase();
-        return key === 'accent' || 
-               valueLower.includes('accent') || 
-               valueLower.includes('american') || 
-               valueLower.includes('british') ||
-               valueLower.includes('australian') ||
-               valueLower.includes('indian') ||
-               valueLower.includes('mexican') ||
-               valueLower.includes('spanish');
-      });
-      
-      if (accentLabels.length > 0) {
-        tags.push({key: 'accent', value: String(accentLabels[0][1])});
-      }
+    if (voice.isDefault) {
+      tags.push({ key: 'default', value: 'Default' });
     }
+    
+    // Add the base OpenAI voice with proper capitalization
+    tags.push({ key: 'base', value: capitalizeVoiceName(voice.openaiVoice) });
     
     return tags;
   };
 
-  const handleVoiceClick = (voice: UserVoice) => {
-    setSelectedVoice(voice);
-    setShowVoiceDetailsOnMobile(true);
-    setShowLibrary(false);
-  };
-
-  const handleBrowseLibrary = () => {
+  const handleBackToVoices = () => {
     setSelectedVoice(null);
-    setShowLibrary(true);
-    // Make sure we show the content area on mobile too
+    setVoiceToEdit(null);
+    setCurrentView('empty');
     if (isMobileView) {
-      setShowVoiceDetailsOnMobile(true);
-    }
-  };
-  
-  const handleBackFromLibrary = () => {
-    setShowLibrary(false);
-    if (isMobileView) {
-      setShowVoiceDetailsOnMobile(false);
+      setShowDetailsOnMobile(false);
     }
   };
 
   return (
     <div className="flex h-full">
       {/* Left Sidebar - My Voices */}
-      {(!isMobileView || (isMobileView && !showVoiceDetailsOnMobile)) && (
+      {(!isMobileView || (isMobileView && !showDetailsOnMobile)) && (
         <VoiceSidebar
-          userVoices={userVoices}
-          selectedVoiceId={selectedVoice?.voice_id || null}
-          isLoading={isUserVoicesLoading}
+          userVoices={voices}
+          selectedVoiceId={selectedVoice?.id || null}
+          isLoading={isLoading}
           isSaving={isSaving}
           isMobileView={isMobileView}
           onVoiceSelect={handleVoiceClick}
-          onRemoveVoice={removeVoiceFromUser}
-          onBrowseLibrary={handleBrowseLibrary}
+          onRemoveVoice={handleRemoveVoice}
+          onCreateVoice={handleCreateVoice}
         />
       )}
 
       {/* Main Content */}
-      {(!isMobileView || (isMobileView && (showVoiceDetailsOnMobile || showLibrary))) && (
+      {(!isMobileView || (isMobileView && showDetailsOnMobile)) && (
         <div className="flex-1 overflow-auto">
-          {isMobileView && showVoiceDetailsOnMobile && selectedVoice && (
+          {/* Mobile back button for detail/creator views */}
+          {isMobileView && showDetailsOnMobile && currentView !== 'empty' && (
             <div className="border-b border-gray-200 dark:border-gray-800 p-2">
               <Button
                 variant="ghost"
-                onClick={() => setShowVoiceDetailsOnMobile(false)}
+                onClick={handleBackToVoices}
                 className="flex items-center text-gray-600 dark:text-gray-300"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
@@ -526,46 +293,32 @@ const VoicesPage = () => {
             </div>
           )}
           
-          {selectedVoice ? (
+          {/* Render current view */}
+          {currentView === 'detail' && selectedVoice ? (
             <VoiceDetail
               voice={selectedVoice}
-              isPlaying={!!isPlaying[selectedVoice.voice_id]}
+              isPlaying={!!isPlaying[selectedVoice.id]}
               isSaving={isSaving}
-              textInput={textInputs[selectedVoice.voice_id] || ''}
-              onRemove={removeVoiceFromUser}
+              textInput={testText[selectedVoice.id] || ''}
+              onRemove={handleRemoveVoice}
+              onEdit={handleEditVoice}
               onTextChange={handleTextChange}
-              onPlay={() => handlePlay(findOriginalVoice(selectedVoice))}
-              getImportantTags={getImportantTags}
-              getDefaultTextForVoice={(voice) => getDefaultTextForVoice(findOriginalVoice(voice))}
+              onPlay={handleTestVoice}
+              getImportantTags={getVoiceTags}
+              getDefaultTextForVoice={getDefaultTestText}
             />
-          ) : showLibrary ? (
-            <VoiceLibrary
-              voices={filteredVoices}
-              searchTerm={searchTerm}
-              visibleVoices={visibleVoices}
-              isLoading={isLoading}
-              showBanner={showBanner}
-              isPlaying={isPlaying}
-              textInputs={textInputs}
-              isSaving={isSaving}
-              userVoices={userVoices}
+          ) : currentView === 'creator' ? (
+            <VoiceCreator
+              onBack={handleBackToVoices}
+              onVoiceCreated={handleVoiceCreated}
+              onVoiceUpdated={handleVoiceUpdated}
               isMobileView={isMobileView}
-              onSearchChange={handleSearchChange}
-              onLoadMore={loadMoreVoices}
-              onAddVoice={addVoiceToUser}
-              onRemoveVoice={removeVoiceFromUser}
-              onPlayVoice={handlePlay}
-              onTextChange={handleTextChange}
-              onBannerClose={() => setShowBanner(false)}
-              onBack={handleBackFromLibrary}
-              getDefaultTextForVoice={getDefaultTextForVoice}
-              isVoiceAddedToUser={isVoiceAddedToUser}
-              getImportantTags={getImportantTags}
+              voiceToEdit={voiceToEdit}
             />
           ) : (
             <EmptyState
-              userVoicesCount={userVoices.length}
-              onBrowseClick={handleBrowseLibrary}
+              userVoicesCount={voices.length}
+              onBrowseClick={handleCreateVoice}
             />
           )}
         </div>

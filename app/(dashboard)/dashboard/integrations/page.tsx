@@ -46,7 +46,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { LoadingState } from "@/components/LoadingState";
-import { WhatsAppConfigDialog } from "@/components/integrations/whatsapp-config-dialog";
 
 interface IntegrationItem {
   id: string;
@@ -201,7 +200,6 @@ export default function IntegrationsPage() {
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
   const [isLoading, setIsLoading] = useState<Record<string, boolean>>({});
   const [isInitializing, setIsInitializing] = useState(true);
-  const [showWhatsAppConfig, setShowWhatsAppConfig] = useState(false);
 
   useEffect(() => {
     if (sessionStatus === 'authenticated' && session?.user) {
@@ -217,8 +215,8 @@ export default function IntegrationsPage() {
             isEnabled: isEnabled, 
             status: newStatus
           };
-        } else if (item.id === 'ext-whatsapp') {
-          // Handle WhatsApp integration
+        } else if (item.id === 'ext-whatsapp' || item.id === 'ext-google-drive') {
+          // Handle WhatsApp and Google Drive integrations
           const isEnabled = userSettings[item.id] ?? false;
           return {
             ...item,
@@ -257,11 +255,6 @@ export default function IntegrationsPage() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || `API Error: ${response.statusText}`);
-      }
-
-      // Show configuration dialog for WhatsApp when enabling
-      if (id === 'ext-whatsapp' && enabled) {
-        setShowWhatsAppConfig(true);
       }
 
       const item = integrations.find(i => i.id === id);
@@ -390,19 +383,21 @@ export default function IntegrationsPage() {
                     </div>
                   ) : item.comingSoon === true ? (
                     <Badge variant="secondary" className="text-xs font-normal py-0.5">Coming Soon</Badge>
+                  ) : (item.id === 'ext-whatsapp' || item.id === 'ext-google-drive') ? (
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id={`integration-toggle-${item.id}`}
+                        checked={item.isEnabled}
+                        onCheckedChange={(checked) => handleModuleToggle(item.id, checked)}
+                        disabled={isItemLoading}
+                      />
+                      <Label htmlFor={`integration-toggle-${item.id}`} className={`text-xs ${isItemLoading ? 'text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400'} cursor-pointer`}>
+                        {isItemLoading ? 'Updating...' : item.isEnabled ? 'Enabled' : 'Disabled'}
+                      </Label>
+                    </div>
                   ) : item.status === 'Connected' ? (
                     <div className="flex items-center gap-2">
                       <Badge variant="success" className="text-xs font-normal py-0.5">Connected</Badge>
-                      {item.id === 'ext-whatsapp' && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="p-1"
-                          onClick={() => setShowWhatsAppConfig(true)}
-                        >
-                          <RiSettings3Line className="h-3 w-3" />
-                        </Button>
-                      )}
                     </div>
                   ) : (
                     <Button 
@@ -410,11 +405,7 @@ export default function IntegrationsPage() {
                       size="sm" 
                       className="text-xs"
                       onClick={() => {
-                        if (item.id === 'ext-whatsapp') {
-                          handleModuleToggle(item.id, true);
-                        } else {
-                          // Handle other integrations
-                        }
+                        // Handle other integrations
                       }}
                     >
                       Connect
@@ -466,12 +457,6 @@ export default function IntegrationsPage() {
               animation: border 4s linear infinite;
           }
       `}</style>
-      
-      {/* WhatsApp Configuration Dialog */}
-      <WhatsAppConfigDialog 
-        open={showWhatsAppConfig}
-        onOpenChange={setShowWhatsAppConfig}
-      />
     </div>
   );
 }

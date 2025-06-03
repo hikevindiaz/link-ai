@@ -11,7 +11,7 @@ import { VisibilityType } from '@/components/chat-interface/visibility-selector'
 import { useArtifactSelector } from '@/components/chat-interface/hooks/use-artifact';
 import { SuggestedActions } from '@/components/chat-interface/suggested-actions';
 import { toast } from 'sonner';
-import { VoiceInterfaceV2, VoiceInterfaceHandle } from '@/components/chat-interface/voice-interface-v2';
+import { RealtimeVoiceInterface, RealtimeVoiceInterfaceHandle } from '@/components/chat-interface/realtime-voice-interface';
 
 interface Attachment {
   id: string;
@@ -94,12 +94,7 @@ export function Chat({
         return [...prevMessages];
       });
       
-      // If in voice mode, speak the response
-      if (currentMode === 'voice' && message.role === 'assistant' && message.content) {
-        if (voiceInterfaceRef.current) {
-          voiceInterfaceRef.current.sendTextToSpeak(message.content);
-        }
-      }
+      // Removed automatic TTS when in voice mode - voice interface handles its own responses
     },
     onError: (error) => {
       console.error('[Chat Interface] Streaming error:', error);
@@ -155,8 +150,8 @@ export function Chat({
     }
   }, [currentThreadId, setMessages]);
 
-  // Ref to the voice interface for TTS
-  const voiceInterfaceRef = useRef<VoiceInterfaceHandle>(null);
+  // Refs to the voice interfaces for TTS - only need Realtime now
+  const realtimeVoiceInterfaceRef = useRef<RealtimeVoiceInterfaceHandle>(null);
 
   // Mode change handler
   function handleModeChange(mode: 'text' | 'voice') {
@@ -324,11 +319,13 @@ export function Chat({
           </form>
         </>
       ) : (
-        <VoiceInterfaceV2
+        // Voice interface - WebRTC Realtime API
+        <RealtimeVoiceInterface
           chatbotId={chatbotId}
           welcomeMessage={welcomeMessage}
           onTranscriptReceived={handleTranscriptReceived}
-          ref={voiceInterfaceRef}
+          ref={realtimeVoiceInterfaceRef}
+          debug={false}
         />
       )}
     </div>
