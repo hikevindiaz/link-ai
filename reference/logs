@@ -1,105 +1,21 @@
-Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
-script.debug.js:1 [Vercel Speed Insights] Debug mode is enabled by default in development. No requests will be sent to the server.
-warn-once.js:16 Image with src "/LINK AI ICON DARK.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-warnOnce @ warn-once.js:16Understand this warning
-warn-once.js:16 Image with src "/LINK AI LOGO DARK.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-warnOnce @ warn-once.js:16Understand this warning
-AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
-AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=true, Value=true, Enabled=true
-AppSidebar.tsx:180 [AppSidebar] Session Data: Object
-AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
-page.tsx:358 [AgentPage] Raw API response contains channel fields: Object
-page.tsx:369 [AgentPage] Converted agent contains channel fields: Object
-settings-tab-wrapper.tsx:39 isDirty changed: false
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(0) Agent ID: cmbd2iqj0000gbrq0aav447o5
-settings-tab-wrapper.tsx:39 isDirty changed: false
-VM8046 call-tab.tsx:87 Loaded settings from localStorage: Object
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(0) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(0) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(0) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:148 Phone numbers API response: Object
-VM8046 call-tab.tsx:151 Raw phone numbers: Array(1)
-VM8046 call-tab.tsx:161 Mapped phone numbers: Array(1)
-VM8046 call-tab.tsx:166 Active phone numbers: Array(1)
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-settings-tab-wrapper.tsx:39 isDirty changed: true
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:148 Phone numbers API response: Object
-VM8046 call-tab.tsx:151 Raw phone numbers: Array(1)
-VM8046 call-tab.tsx:161 Mapped phone numbers: Array(1)
-VM8046 call-tab.tsx:166 Active phone numbers: Array(1)
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-settings-tab-wrapper.tsx:39 isDirty changed: false
-script.debug.js:1 [Vercel Speed Insights] [vitals] Object
-AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
-AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=true, Value=true, Enabled=true
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-VM8046 call-tab.tsx:257 Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-AppSidebar.tsx:180 [AppSidebar] Session Data: Object
-AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
- Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
- Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
- Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-hot-reloader-client.js:44 [Fast Refresh] done in 2912ms
- Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
- Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
- Phone numbers API response: Object
- Raw phone numbers: Array(1)
- Mapped phone numbers: Array(1)
- Active phone numbers: Array(1)
- Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
- Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
- Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
- Available phone numbers for agent: Array(1) Agent ID: cmbd2iqj0000gbrq0aav447o5
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
-settings-tab-wrapper.tsx:39 isDirty changed: false
-VM8154 call-tab.tsx:102 Loaded settings from localStorage: Object
-hot-reloader-client.js:44 [Fast Refresh] done in 3780ms
-VM8154 call-tab.tsx:195 Phone numbers API response: Object
-settings-tab-wrapper.tsx:39 isDirty changed: true
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
-settings-tab-wrapper.tsx:39 isDirty changed: false
-hot-reloader-client.js:44 [Fast Refresh] done in 2788ms
- Phone numbers API response: Object
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
-hot-reloader-client.js:44 [Fast Refresh] done in 1490ms
-call-tab.tsx:197 Phone numbers API response: Object
-AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
-AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=true, Value=true, Enabled=true
-AppSidebar.tsx:180 [AppSidebar] Session Data: Object
-AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
-2settings-tab-wrapper.tsx:39 isDirty changed: true
-page.tsx:358 [AgentPage] Raw API response contains channel fields: Object
-page.tsx:369 [AgentPage] Converted agent contains channel fields: Object
-2settings-tab-wrapper.tsx:39 isDirty changed: false
-2settings-tab-wrapper.tsx:39 isDirty changed: true
-page.tsx:358 [AgentPage] Raw API response contains channel fields: Object
-page.tsx:369 [AgentPage] Converted agent contains channel fields: Object
-call-tab.tsx:375 Phone number assignment result: Object
-2settings-tab-wrapper.tsx:39 isDirty changed: false
-AppSidebar.tsx:194 [AppSidebar] Filtering based on settings: Object
-AppSidebar.tsx:199 [AppSidebar] Checking module-orders: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-forms: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-tickets: Found in settings=true, Value=false, Enabled=false
-AppSidebar.tsx:199 [AppSidebar] Checking module-calendar: Found in settings=true, Value=true, Enabled=true
-AppSidebar.tsx:180 [AppSidebar] Session Data: Object
-AppSidebar.tsx:181 [AppSidebar] Integration Settings from Session: Object
-hot-reloader-client.js:187 [Fast Refresh] rebuilding
-hot-reloader-client.js:44 [Fast Refresh] done in 398ms
+[Middleware] Request: {
+  pathname: '/api/twilio/voice',
+  hasToken: false,
+  tokenData: null,
+  cookies: [],
+  nextAuthUrl: 'https://dashboard.getlinkai.com/',
+  hasSecret: true,
+  nodeEnv: 'production'
+}
+
+[Environment Check] NODE_ENV: production
+[Environment Check] TWILIO_AUTH_TOKEN: Set
+[Environment Check] NEXT_PUBLIC_APP_URL: https://dashboard.getlinkai.com
+[Validation] Looking up phone number: +17874764102
+[Validation] Found phone number with subaccount: AC63991c2db51a41638adaa40c2fa6f205
+[Twilio Validation] Starting validation
+[Twilio Validation] Request URL: https://dashboard.getlinkai.com/api/twilio/voice
+[Twilio Validation] Twilio Signature: Present
+[Twilio Validation] Using auth token: Phone-specific token
+[Twilio Validation] Form params: Called, ToState, CallerCountry, Direction, CallerState, ToZip, CallSid, To, CallerZip, ToCountry, StirVerstat, CallToken, CalledZip, ApiVersion, CalledCity, CallStatus, From, AccountSid, CalledCountry, CallerCity, ToCity, FromCountry, Caller, FromCity, CalledState, FromZip, FromState
+[Twilio Validation] Initial validation result: true

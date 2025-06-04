@@ -212,7 +212,7 @@ export async function POST(req: NextRequest) {
     // Add custom parameters to pass to the WebSocket
     const stream = connect.stream({
       url: streamUrl,
-      track: 'both_tracks' // Get both inbound and outbound audio
+      track: 'inbound_track' // Get inbound audio from the caller
     });
     
     // Pass custom parameters
