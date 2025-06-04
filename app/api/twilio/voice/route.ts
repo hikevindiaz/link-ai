@@ -9,7 +9,7 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
   if (process.env.NODE_ENV === 'production') {
     try {
       const twilioSignature = req.headers.get('x-twilio-signature');
-      const url = process.env.NEXT_PUBLIC_APP_URL + '/api/twilio/voice';
+      const url = req.url;
       
       if (!twilioSignature || !process.env.TWILIO_AUTH_TOKEN) {
         console.error('Missing Twilio signature or auth token');
@@ -30,7 +30,21 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
       );
       
       if (!isValid) {
-        console.error('Invalid Twilio signature');
+        console.error('[Twilio Validation] Signature validation failed for URL:', url);
+        
+        // Try without query parameters as a fallback
+        const baseUrl = url.split('?')[0];
+        const baseValid = twilio.validateRequest(
+          process.env.TWILIO_AUTH_TOKEN,
+          twilioSignature,
+          baseUrl,
+          params
+        );
+        
+        if (baseValid) {
+          console.log('[Twilio Validation] Validation succeeded with base URL');
+          return true;
+        }
       }
       
       return isValid;
@@ -134,7 +148,7 @@ export async function POST(req: NextRequest) {
     const connect = twiml.connect();
     
     // Configure the media stream URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000';
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000';
     const streamUrl = `wss://${baseUrl.replace(/^https?:\/\//, '')}/api/twilio/media-stream?agentId=${agent.id}`;
     
     logger.info(`Connecting to media stream: ${streamUrl}`, {}, 'twilio-voice');
