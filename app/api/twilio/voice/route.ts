@@ -11,6 +11,11 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
       const twilioSignature = req.headers.get('x-twilio-signature');
       const url = req.url;
       
+      console.log('[Twilio Validation] Starting validation');
+      console.log('[Twilio Validation] Request URL:', url);
+      console.log('[Twilio Validation] Twilio Signature:', twilioSignature ? 'Present' : 'Missing');
+      console.log('[Twilio Validation] Auth Token:', process.env.TWILIO_AUTH_TOKEN ? 'Present' : 'Missing');
+      
       if (!twilioSignature || !process.env.TWILIO_AUTH_TOKEN) {
         console.error('Missing Twilio signature or auth token');
         return false;
@@ -22,6 +27,8 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
         params[key] = value.toString();
       });
       
+      console.log('[Twilio Validation] Form params:', Object.keys(params).join(', '));
+      
       const isValid = twilio.validateRequest(
         process.env.TWILIO_AUTH_TOKEN,
         twilioSignature,
@@ -29,11 +36,15 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
         params
       );
       
+      console.log('[Twilio Validation] Initial validation result:', isValid);
+      
       if (!isValid) {
         console.error('[Twilio Validation] Signature validation failed for URL:', url);
         
         // Try without query parameters as a fallback
         const baseUrl = url.split('?')[0];
+        console.log('[Twilio Validation] Trying base URL:', baseUrl);
+        
         const baseValid = twilio.validateRequest(
           process.env.TWILIO_AUTH_TOKEN,
           twilioSignature,
@@ -41,8 +52,28 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
           params
         );
         
+        console.log('[Twilio Validation] Base URL validation result:', baseValid);
+        
         if (baseValid) {
           console.log('[Twilio Validation] Validation succeeded with base URL');
+          return true;
+        }
+        
+        // Try with the configured app URL as another fallback
+        const configuredUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/voice`;
+        console.log('[Twilio Validation] Trying configured URL:', configuredUrl);
+        
+        const configValid = twilio.validateRequest(
+          process.env.TWILIO_AUTH_TOKEN,
+          twilioSignature,
+          configuredUrl,
+          params
+        );
+        
+        console.log('[Twilio Validation] Configured URL validation result:', configValid);
+        
+        if (configValid) {
+          console.log('[Twilio Validation] Validation succeeded with configured URL');
           return true;
         }
       }
@@ -62,27 +93,30 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
 export async function POST(req: NextRequest) {
   logger.info('Voice webhook called', {}, 'twilio-voice');
   
+  // Log environment check
+  console.log('[Environment Check] NODE_ENV:', process.env.NODE_ENV);
+  console.log('[Environment Check] TWILIO_AUTH_TOKEN:', process.env.TWILIO_AUTH_TOKEN ? 'Set' : 'Not set');
+  console.log('[Environment Check] NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+  
   try {
     // Parse the request body from Twilio (form data)
     const formData = await req.formData();
     
+    // Log the form data before validation
+    const twilioData: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      twilioData[key] = value.toString();
+    });
+    logger.debug('Received form data before validation', twilioData, 'twilio-voice');
+    
     // Validate the request is from Twilio
     if (!validateTwilioRequest(req, formData)) {
-      logger.error('Invalid Twilio request', {}, 'twilio-voice');
+      logger.error('Invalid Twilio request', twilioData, 'twilio-voice');
       return NextResponse.json(
         { error: 'Unauthorized request' },
         { status: 403 }
       );
     }
-    
-    const twilioData: Record<string, string> = {};
-    
-    // Convert FormData to a plain object
-    formData.forEach((value, key) => {
-      twilioData[key] = value.toString();
-    });
-    
-    logger.debug('Received voice webhook data', twilioData, 'twilio-voice');
     
     // Extract relevant fields from the Twilio request
     const {
