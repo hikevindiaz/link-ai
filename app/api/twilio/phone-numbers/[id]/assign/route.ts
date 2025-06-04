@@ -74,88 +74,99 @@ export async function POST(
       
       // Configure the Twilio phone number with webhooks
       try {
-        // Get the correct Twilio client - use subaccount if available
-        let twilioClient = twilio;
-        if (phoneNumber.user.twilioSubaccountSid) {
-          console.log(`[Webhook Config] Using subaccount: ${phoneNumber.user.twilioSubaccountSid}`);
-          twilioClient = require('twilio')(
-            process.env.TWILIO_ACCOUNT_SID,
-            process.env.TWILIO_AUTH_TOKEN,
-            { accountSid: phoneNumber.user.twilioSubaccountSid }
-          );
-        } else {
-          console.log(`[Webhook Config] Using main Twilio account`);
-        }
+        // For subaccounts, we need to get the phone number purchase info which was done at purchase time
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://dashboard.getlinkai.com';
         
-        // Get webhook URLs with agent ID
-        const baseWebhookUrls = getTwilioWebhookUrls(true); // Force production URLs
+        // Ensure we're using HTTPS in production
+        const webhookBaseUrl = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`;
+        
         const webhookUrls = {
-          voiceUrl: `${baseWebhookUrls.voiceUrl}?agentId=${validatedData.agentId}`,
-          smsUrl: `${baseWebhookUrls.smsUrl}?agentId=${validatedData.agentId}`,
+          voiceUrl: `${webhookBaseUrl}/api/twilio/voice?agentId=${validatedData.agentId}`,
+          smsUrl: `${webhookBaseUrl}/api/twilio/sms?agentId=${validatedData.agentId}`,
+          statusCallback: `${webhookBaseUrl}/api/twilio/status-callback?agentId=${validatedData.agentId}`,
         };
         
-        console.log(`[Webhook Config] Configuring Twilio phone number ${phoneNumber.phoneNumber} with webhooks for agent ${validatedData.agentId}:`);
+        console.log(`[Webhook Config] Configuring phone number ${phoneNumber.phoneNumber} with webhooks for agent ${validatedData.agentId}:`);
         console.log(`[Webhook Config] - Voice URL: ${webhookUrls.voiceUrl}`);
         console.log(`[Webhook Config] - SMS URL: ${webhookUrls.smsUrl}`);
-        console.log(`[Webhook Config] - Twilio SID: ${phoneNumber.twilioSid}`);
-        console.log(`[Webhook Config] - Using ${phoneNumber.user.twilioSubaccountSid ? 'subaccount' : 'main account'}`);
+        console.log(`[Webhook Config] - Phone SID: ${phoneNumber.twilioSid}`);
         
-        // Update the Twilio phone number with the webhook URLs
-        await twilioClient.incomingPhoneNumbers(phoneNumber.twilioSid).update({
-          voiceUrl: webhookUrls.voiceUrl,
-          voiceMethod: 'POST',
-          smsUrl: webhookUrls.smsUrl,
-          smsMethod: 'POST',
-          statusCallback: `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/status-callback?agentId=${validatedData.agentId}`,
-          statusCallbackMethod: 'POST',
-        });
+        if (phoneNumber.user.twilioSubaccountSid) {
+          // For subaccounts, we'll update the database but log that webhook update requires manual configuration
+          console.log(`[Webhook Config] Phone number is in subaccount: ${phoneNumber.user.twilioSubaccountSid}`);
+          console.log(`[Webhook Config] Database will be updated. For subaccount numbers, webhooks should be configured during purchase.`);
+          console.log(`[Webhook Config] Voice endpoint will use database lookup for agent routing.`);
+          
+          // Try to update webhooks using main account credentials
+          // This might work if the main account has permissions
+          try {
+            await twilio.incomingPhoneNumbers(phoneNumber.twilioSid).update({
+              voiceUrl: webhookUrls.voiceUrl,
+              voiceMethod: 'POST',
+              smsUrl: webhookUrls.smsUrl,
+              smsMethod: 'POST',
+              statusCallback: webhookUrls.statusCallback,
+              statusCallbackMethod: 'POST',
+            });
+            console.log(`[Webhook Config] ✓ Successfully updated webhooks using main account credentials`);
+          } catch (subaccountError) {
+            console.log(`[Webhook Config] Could not update webhooks directly. Error: ${subaccountError.message}`);
+            console.log(`[Webhook Config] Phone number will rely on database lookup for routing.`);
+          }
+        } else {
+          // For main account numbers, update normally
+          console.log(`[Webhook Config] Using main account`);
+          
+          await twilio.incomingPhoneNumbers(phoneNumber.twilioSid).update({
+            voiceUrl: webhookUrls.voiceUrl,
+            voiceMethod: 'POST',
+            smsUrl: webhookUrls.smsUrl,
+            smsMethod: 'POST',
+            statusCallback: webhookUrls.statusCallback,
+            statusCallbackMethod: 'POST',
+          });
+          
+          console.log(`[Webhook Config] ✓ Successfully configured webhooks for phone number ${phoneNumber.phoneNumber}`);
+        }
         
         // Verify the configuration was applied
         try {
-          const updatedPhoneNumber = await twilioClient.incomingPhoneNumbers(phoneNumber.twilioSid).fetch();
+          const updatedPhoneNumber = await twilio.incomingPhoneNumbers(phoneNumber.twilioSid).fetch();
           console.log(`[Webhook Config] ✓ Verification - Voice URL set to: ${updatedPhoneNumber.voiceUrl}`);
           console.log(`[Webhook Config] ✓ Verification - SMS URL set to: ${updatedPhoneNumber.smsUrl}`);
         } catch (verifyError) {
           console.error('[Webhook Config] ⚠️  Could not verify webhook configuration:', verifyError);
         }
         
-        console.log(`[Webhook Config] ✓ Successfully configured webhooks for phone number ${phoneNumber.phoneNumber}`);
+        console.log(`[Webhook Config] ✓ Agent assignment completed for: ${validatedData.agentId}`);
         console.log(`[Webhook Config] ✓ Incoming calls will be handled by agent: ${validatedData.agentId}`);
         console.log(`[Webhook Config] ✓ SMS messages will be processed by agent: ${validatedData.agentId}`);
       } catch (twilioError) {
-        console.error('[Webhook Config] ❌ Error updating Twilio phone number webhooks:', twilioError);
-        // We'll still continue with the DB updates even if the webhook configuration fails
-        // But we should log this as it means the phone number won't work properly
-        console.error('[Webhook Config] ❌ Phone number may not receive calls/SMS properly due to webhook configuration failure');
+        console.error('[Webhook Config] ❌ Error updating phone number webhooks:', twilioError);
+        // Don't throw - continue with database update
+        console.error('[Webhook Config] ❌ Webhook configuration failed, but assignment will proceed');
       }
     } else {
       // If we're unassigning, reset the webhooks
       try {
-        // Get the correct Twilio client - use subaccount if available
-        let twilioClient = twilio;
         if (phoneNumber.user.twilioSubaccountSid) {
-          console.log(`[Webhook Config] Using subaccount for reset: ${phoneNumber.user.twilioSubaccountSid}`);
-          twilioClient = require('twilio')(
-            process.env.TWILIO_ACCOUNT_SID,
-            process.env.TWILIO_AUTH_TOKEN,
-            { accountSid: phoneNumber.user.twilioSubaccountSid }
-          );
+          console.log(`[Webhook Config] Skipping webhook reset for subaccount: ${phoneNumber.user.twilioSubaccountSid}`);
+          console.log(`[Webhook Config] Database will be updated to remove agent assignment.`);
         } else {
-          console.log(`[Webhook Config] Using main Twilio account for reset`);
+          console.log(`[Webhook Config] Using main account for reset`);
+          console.log(`[Webhook Config] Resetting webhooks for phone number ${phoneNumber.phoneNumber} (removing agent assignment)`);
+          
+          await twilio.incomingPhoneNumbers(phoneNumber.twilioSid).update({
+            voiceUrl: '',
+            smsUrl: '',
+            statusCallback: '',
+          });
+          
+          console.log(`[Webhook Config] ✓ Reset webhooks for phone number ${phoneNumber.phoneNumber}`);
+          console.log(`[Webhook Config] ✓ Phone number will no longer receive calls/SMS until reassigned`);
         }
-        
-        console.log(`[Webhook Config] Resetting webhooks for phone number ${phoneNumber.phoneNumber} (removing agent assignment)`);
-        
-        await twilioClient.incomingPhoneNumbers(phoneNumber.twilioSid).update({
-          voiceUrl: '',
-          smsUrl: '',
-          statusCallback: '',
-        });
-        
-        console.log(`[Webhook Config] ✓ Reset webhooks for phone number ${phoneNumber.phoneNumber}`);
-        console.log(`[Webhook Config] ✓ Phone number will no longer receive calls/SMS until reassigned`);
       } catch (twilioError) {
-        console.error('[Webhook Config] ❌ Error resetting Twilio phone number webhooks:', twilioError);
+        console.error('[Webhook Config] ❌ Error resetting phone number webhooks:', twilioError);
       }
     }
     

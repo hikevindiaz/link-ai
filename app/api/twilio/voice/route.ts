@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import twilio from 'twilio';
-import OpenAI from 'openai';
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { logger } from '@/lib/logger';
 
 // Verify Twilio webhook signature
 const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
@@ -51,7 +46,7 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
 
 // Twilio webhook for handling incoming voice calls
 export async function POST(req: NextRequest) {
-  console.log('Voice webhook called');
+  logger.info('Voice webhook called', {}, 'twilio-voice');
   
   try {
     // Parse the request body from Twilio (form data)
@@ -59,7 +54,7 @@ export async function POST(req: NextRequest) {
     
     // Validate the request is from Twilio
     if (!validateTwilioRequest(req, formData)) {
-      console.error('Invalid Twilio request');
+      logger.error('Invalid Twilio request', {}, 'twilio-voice');
       return NextResponse.json(
         { error: 'Unauthorized request' },
         { status: 403 }
@@ -73,7 +68,7 @@ export async function POST(req: NextRequest) {
       twilioData[key] = value.toString();
     });
     
-    console.log('Received voice webhook data:', twilioData);
+    logger.debug('Received voice webhook data', twilioData, 'twilio-voice');
     
     // Extract relevant fields from the Twilio request
     const {
@@ -90,7 +85,7 @@ export async function POST(req: NextRequest) {
     let agent;
     
     if (agentId) {
-      console.log(`Looking up agent with ID: ${agentId}`);
+      logger.info(`Looking up agent with ID: ${agentId}`, {}, 'twilio-voice');
       agent = await prisma.chatbot.findUnique({
         where: { id: agentId },
         include: {
@@ -98,7 +93,7 @@ export async function POST(req: NextRequest) {
         }
       });
     } else if (to) {
-      console.log(`No agent ID provided, looking up by phone number: ${to}`);
+      logger.info(`No agent ID provided, looking up by phone number: ${to}`, {}, 'twilio-voice');
       // Look up the phone number in our database
       const phoneNumber = await prisma.twilioPhoneNumber.findFirst({
         where: { phoneNumber: to },
@@ -115,7 +110,7 @@ export async function POST(req: NextRequest) {
     }
     
     if (!agent) {
-      console.error('No agent found for this call');
+      logger.error('No agent found for this call', { to, agentId }, 'twilio-voice');
       const twiml = new twilio.twiml.VoiceResponse();
       twiml.say('Sorry, this number is not configured to receive calls.');
       twiml.hangup();
@@ -127,52 +122,41 @@ export async function POST(req: NextRequest) {
       });
     }
     
-    console.log(`Call will be handled by agent: ${agent.name} (${agent.id})`);
+    logger.info(`Call will be handled by agent: ${agent.name} (${agent.id})`, {}, 'twilio-voice');
     
     // Create a TwiML response
     const twiml = new twilio.twiml.VoiceResponse();
     
-    // Start with a welcome message using the agent's configuration
-    const welcomeMessage = agent.welcomeMessage || 'Hello! I\'m your AI assistant. How can I help you today?';
+    // Start by pausing briefly to let the connection establish
+    twiml.pause({ length: 1 });
     
-    // Set language based on agent configuration
-    const language = agent.language || 'en-US';
+    // Connect to Media Stream for real-time conversation
+    const connect = twiml.connect();
     
-    // Get the configured silence and call timeouts
-    const silenceTimeout = agent.silenceTimeout || 5; // Default to 5 seconds if not specified
-    const callTimeoutSeconds = agent.callTimeout || 300; // Default to 5 minutes if not specified
+    // Configure the media stream URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000';
+    const streamUrl = `wss://${baseUrl.replace(/^https?:\/\//, '')}/api/twilio/media-stream?agentId=${agent.id}`;
     
-    // Check if we should use ElevenLabs voice
-    if (agent.voice) {
-      console.log(`Using ElevenLabs voice ID: ${agent.voice}`);
-      // Generate the TTS endpoint URL for the welcome message
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000';
-      const ttsEndpoint = `${baseUrl}/api/twilio/tts?message=${encodeURIComponent(welcomeMessage)}&voice=${encodeURIComponent(agent.voice)}`;
-      
-      // Play the welcome message using ElevenLabs
-      twiml.play(ttsEndpoint);
-    } else {
-      // Fall back to Twilio TTS with Polly voices
-      const voice = 'Polly.Joanna';
-    twiml.say({ voice, language }, welcomeMessage);
-    }
+    logger.info(`Connecting to media stream: ${streamUrl}`, {}, 'twilio-voice');
     
-    // Use Gather to collect user speech
-    const gather = twiml.gather({
-      input: ['speech'],
-      speechTimeout: silenceTimeout,
-      speechModel: 'phone_call',
-      enhanced: true,
-      language: language,
-      action: `/api/twilio/voice/respond?agentId=${agent.id}`,
-      method: 'POST',
-      actionOnEmptyResult: true,
+    // Add custom parameters to pass to the WebSocket
+    const stream = connect.stream({
+      url: streamUrl,
+      track: 'both_tracks' // Get both inbound and outbound audio
     });
     
-    // If user doesn't say anything, redirect to respond endpoint to handle silence
-    twiml.redirect(`/api/twilio/voice/respond?agentId=${agent.id}`);
+    // Pass custom parameters
+    stream.parameter({
+      name: 'from',
+      value: from
+    });
     
-    // Create a thread for this call if it doesn't exist
+    stream.parameter({
+      name: 'callSid',
+      value: callSid
+    });
+    
+    // Create a thread for this call
     try {
       const threadId = `call-${callSid}`;
       const existingThread = await prisma.message.findFirst({
@@ -180,22 +164,22 @@ export async function POST(req: NextRequest) {
       });
       
       if (!existingThread) {
-        // Create a new thread ID in the messages table
+        // Create a new thread ID in the messages table with call metadata
         await prisma.message.create({
           data: {
             threadId,
-            message: "Call started",
-            response: welcomeMessage,
+            message: `Call started from ${from}`,
+            response: '', // Will be filled in by the conversation
             from: from,
             userId: agent.userId,
             chatbotId: agent.id,
           }
         });
         
-        console.log(`Created thread ${threadId} for call from ${from}`);
+        logger.info(`Created thread ${threadId} for call from ${from}`, {}, 'twilio-voice');
       }
     } catch (dbError) {
-      console.error('Error creating call thread:', dbError);
+      logger.error('Error creating call thread:', dbError, 'twilio-voice');
       // Continue with the call even if we couldn't create the thread
     }
     
@@ -206,7 +190,7 @@ export async function POST(req: NextRequest) {
     });
     
   } catch (error) {
-    console.error('Error processing voice webhook:', error);
+    logger.error('Error processing voice webhook:', error, 'twilio-voice');
     
     // Return a TwiML response with an error message
     const twiml = new twilio.twiml.VoiceResponse();

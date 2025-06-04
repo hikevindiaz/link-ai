@@ -5,11 +5,14 @@ import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import type { Agent } from "@/types/agent"
-import { Phone, Clock, MessageSquare, Loader2, AlertCircle } from "lucide-react"
-import { useState, useEffect, useRef } from "react"
+import { Phone, Clock, MessageSquare, Loader2, AlertCircle, Info, CheckCircle } from "lucide-react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { toast } from "sonner"
-import { Icons } from "@/components/icons"
 import { SettingsTabWrapper } from "@/components/agents/settings-tab-wrapper"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface CallTabProps {
   agent: Agent
@@ -44,8 +47,6 @@ export function CallTab({ agent, onSave }: CallTabProps) {
   // Use a ref to track if we've already initialized our local state
   const hasInitialized = useRef(false);
   const saveCount = useRef(0);
-  // Add a new state to track if we've completed the full initialization process
-  const [isFullyInitialized, setIsFullyInitialized] = useState(false);
   
   // Call settings - initialize with agent values OR previously saved values
   const [checkUserPresence, setCheckUserPresence] = useState<boolean>(false)
@@ -62,9 +63,17 @@ export function CallTab({ agent, onSave }: CallTabProps) {
   const [selectedPhoneNumberId, setSelectedPhoneNumberId] = useState<string | null>(null)
   const [selectedVoice, setSelectedVoice] = useState<string | null>(null)
   
-  // Loading states
-  const [isPhoneNumbersLoading, setIsPhoneNumbersLoading] = useState(true)
-  const [isVoicesLoading, setIsVoicesLoading] = useState(true)
+  // Loading and error states
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadingStates, setLoadingStates] = useState({
+    phoneNumbers: true,
+    voices: true,
+    saving: false
+  })
+  const [errors, setErrors] = useState({
+    phoneNumbers: null as string | null,
+    voices: null as string | null
+  })
 
   // Track if form has changes
   const [isDirty, setIsDirty] = useState(false)
@@ -73,7 +82,6 @@ export function CallTab({ agent, onSave }: CallTabProps) {
   const localStorageKey = `agent-call-settings-${agent.id}`;
   
   // Initial values for comparison and reset
-  // This will start with default values but updated after first save
   const [initialValues, setInitialValues] = useState({
     checkUserPresence: false,
     presenceMessageDelay: 3,
@@ -86,9 +94,8 @@ export function CallTab({ agent, onSave }: CallTabProps) {
     voice: null as string | null,
   })
 
-  // Try to load saved settings from localStorage on component mount
+  // Initialize settings from localStorage or agent
   useEffect(() => {
-    // Only initialize once
     if (hasInitialized.current) return;
     
     try {
@@ -151,141 +158,161 @@ export function CallTab({ agent, onSave }: CallTabProps) {
     });
   };
 
-  // Fetch phone numbers
+  // Fetch all data in parallel
   useEffect(() => {
-    const fetchPhoneNumbers = async () => {
-      setIsPhoneNumbersLoading(true)
-      try {
-        const response = await fetch('/api/twilio/phone-numbers')
-        if (!response.ok) {
-          throw new Error('Failed to fetch phone numbers')
-        }
-        const data = await response.json()
-        const numbers = data.phoneNumbers || []
-        
-        // Filter for active numbers only
-        const activeNumbers = numbers.filter((number: PhoneNumber) => number.status === 'active')
-        setPhoneNumbers(activeNumbers)
-        
-        // Set the selected phone number ID based on initial values
-        const phoneNumber = initialValues.phoneNumber || agent.phoneNumber;
-        if (phoneNumber) {
-          const matchingPhone = activeNumbers.find(p => p.number === phoneNumber)
-          if (matchingPhone) {
-            setSelectedPhoneNumberId(matchingPhone.id)
-          } else {
-            setSelectedPhoneNumberId(null)
-          }
-        } else {
-          setSelectedPhoneNumberId(null)
-        }
-      } catch (error) {
-        console.error('Error fetching phone numbers:', error)
-        toast.error('Failed to load phone numbers')
-        setPhoneNumbers([])
-      } finally {
-        setIsPhoneNumbersLoading(false)
-        // Mark full initialization as complete after phone numbers are loaded
-        setIsFullyInitialized(true)
+    const fetchData = async () => {
+      setIsLoading(true);
+      
+      // Fetch phone numbers and voices in parallel
+      const [phoneNumbersResult, voicesResult] = await Promise.allSettled([
+        fetchPhoneNumbers(),
+        fetchVoices()
+      ]);
+      
+      // Handle results
+      if (phoneNumbersResult.status === 'rejected') {
+        setErrors(prev => ({ ...prev, phoneNumbers: 'Failed to load phone numbers' }));
       }
-    }
+      if (voicesResult.status === 'rejected') {
+        setErrors(prev => ({ ...prev, voices: 'Failed to load voices' }));
+      }
+      
+      setIsLoading(false);
+    };
+    
+    fetchData();
+  }, []);
 
-    fetchPhoneNumbers()
-  }, [initialValues.phoneNumber, agent.phoneNumber])
+  // Fetch phone numbers
+  const fetchPhoneNumbers = async () => {
+    setLoadingStates(prev => ({ ...prev, phoneNumbers: true }));
+    setErrors(prev => ({ ...prev, phoneNumbers: null }));
+    
+    try {
+      const response = await fetch('/api/twilio/phone-numbers');
+      if (!response.ok) {
+        throw new Error('Failed to fetch phone numbers');
+      }
+      const data = await response.json();
+      console.log('Phone numbers API response:', data);
+      
+      const numbers = data.phoneNumbers || [];
+      
+      // Map the API response to the expected format
+      const mappedNumbers = numbers.map((num: any) => ({
+        id: num.id,
+        number: num.number,
+        agentId: num.agentId,
+        agentName: num.agentName,
+        status: num.status || num.calculatedStatus || 'active'
+      }));
+      
+      // Filter for active numbers only
+      const activeNumbers = mappedNumbers.filter((number: PhoneNumber) => 
+        number.status === 'active' || number.status === 'warning' || number.status === 'pending'
+      );
+      
+      setPhoneNumbers(activeNumbers);
+      
+      // Set the selected phone number ID based on initial values
+      const phoneNumber = initialValues.phoneNumber || agent.phoneNumber;
+      if (phoneNumber) {
+        const matchingPhone = activeNumbers.find(p => p.number === phoneNumber);
+        if (matchingPhone) {
+          setSelectedPhoneNumberId(matchingPhone.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching phone numbers:', error);
+      setErrors(prev => ({ ...prev, phoneNumbers: 'Failed to load phone numbers' }));
+      toast.error('Failed to load phone numbers');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, phoneNumbers: false }));
+    }
+  };
 
   // Fetch user voices
-  useEffect(() => {
-    const fetchVoices = async () => {
-      setIsVoicesLoading(true)
-      try {
-        const response = await fetch('/api/user/voices')
-        if (!response.ok) {
-          throw new Error('Failed to fetch voices')
-        }
-        const data = await response.json()
-        setVoices(data.voices || [])
-      } catch (error) {
-        console.error('Error fetching voices:', error)
-        toast.error('Failed to load voices')
-        setVoices([])
-      } finally {
-        setIsVoicesLoading(false)
+  const fetchVoices = async () => {
+    setLoadingStates(prev => ({ ...prev, voices: true }));
+    setErrors(prev => ({ ...prev, voices: null }));
+    
+    try {
+      const response = await fetch('/api/user/voices');
+      if (!response.ok) {
+        throw new Error('Failed to fetch voices');
       }
+      const data = await response.json();
+      setVoices(data.voices || []);
+    } catch (error) {
+      console.error('Error fetching voices:', error);
+      setErrors(prev => ({ ...prev, voices: 'Failed to load voices' }));
+      toast.error('Failed to load voices');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, voices: false }));
     }
+  };
 
-    fetchVoices()
-  }, [selectedVoice, initialValues.voice, agent.voice])
+  // Memoized available phone numbers
+  const availablePhoneNumbers = useMemo(() => {
+    return phoneNumbers.filter(phone => !phone.agentId || phone.agentId === agent.id);
+  }, [phoneNumbers, agent.id]);
 
-  // Track changes when state changes
-  useEffect(() => {
-    // Don't set isDirty until phone numbers have loaded
-    if (isPhoneNumbersLoading) return;
+  // Track changes - optimized with useMemo
+  const hasChanges = useMemo(() => {
+    if (loadingStates.phoneNumbers) return false;
     
-    // Get the current phone number string that would be saved
-    const phoneNumberObj = phoneNumbers.find(p => p.id === selectedPhoneNumberId)
-    const currentPhoneNumberString = phoneNumberObj ? phoneNumberObj.number : null
+    const phoneNumberObj = phoneNumbers.find(p => p.id === selectedPhoneNumberId);
+    const currentPhoneNumberString = phoneNumberObj ? phoneNumberObj.number : null;
     
-    // Compare with initial values
-    const hasPhoneNumberChanged = currentPhoneNumberString !== initialValues.phoneNumber
-    const hasCheckUserPresenceChanged = checkUserPresence !== initialValues.checkUserPresence
-    const hasPresenceMessageDelayChanged = presenceMessageDelay !== initialValues.presenceMessageDelay
-    const hasSilenceTimeoutChanged = silenceTimeout !== initialValues.silenceTimeout
-    const hasCallTimeoutChanged = callTimeout !== initialValues.callTimeout
-    const hasPresenceMessageChanged = presenceMessage !== initialValues.presenceMessage
-    const hasHangUpMessageChanged = hangUpMessage !== initialValues.hangUpMessage
-    const hasResponseRateChanged = responseRate !== initialValues.responseRate
-    const hasSelectedVoiceChanged = selectedVoice !== initialValues.voice
-    
-    const newIsDirty = 
-      hasPhoneNumberChanged ||
-      hasCheckUserPresenceChanged || 
-      hasPresenceMessageDelayChanged || 
-      hasSilenceTimeoutChanged || 
-      hasCallTimeoutChanged || 
-      hasPresenceMessageChanged || 
-      hasHangUpMessageChanged || 
-      hasResponseRateChanged || 
-      hasSelectedVoiceChanged;
-    
-    setIsDirty(newIsDirty);
+    return (
+      currentPhoneNumberString !== initialValues.phoneNumber ||
+      checkUserPresence !== initialValues.checkUserPresence ||
+      presenceMessageDelay !== initialValues.presenceMessageDelay ||
+      silenceTimeout !== initialValues.silenceTimeout ||
+      callTimeout !== initialValues.callTimeout ||
+      presenceMessage !== initialValues.presenceMessage ||
+      hangUpMessage !== initialValues.hangUpMessage ||
+      responseRate !== initialValues.responseRate ||
+      selectedVoice !== initialValues.voice
+    );
   }, [
     selectedPhoneNumberId,
-    checkUserPresence, 
-    presenceMessageDelay, 
-    silenceTimeout, 
-    callTimeout, 
-    presenceMessage, 
-    hangUpMessage, 
-    responseRate, 
+    checkUserPresence,
+    presenceMessageDelay,
+    silenceTimeout,
+    callTimeout,
+    presenceMessage,
+    hangUpMessage,
+    responseRate,
     selectedVoice,
-    isPhoneNumbersLoading,
+    loadingStates.phoneNumbers,
     phoneNumbers,
     initialValues
-  ])
+  ]);
 
-  // Get available phone numbers (either unassigned or assigned to this agent)
-  const getAvailablePhoneNumbers = () => {
-    return phoneNumbers.filter(phone => !phone.agentId || phone.agentId === agent.id)
-  }
+  useEffect(() => {
+    setIsDirty(hasChanges);
+  }, [hasChanges]);
 
   // Handle phone number selection
-  const handlePhoneNumberChange = (value: string) => {
-    setSelectedPhoneNumberId(value === 'none' ? null : value)
-  }
+  const handlePhoneNumberChange = useCallback((value: string) => {
+    setSelectedPhoneNumberId(value === 'none' ? null : value);
+  }, []);
 
   // Handle voice selection
-  const handleVoiceChange = (value: string) => {
-    setSelectedVoice(value === 'none' ? null : value)
-  }
+  const handleVoiceChange = useCallback((value: string) => {
+    setSelectedVoice(value === 'none' ? null : value);
+  }, []);
 
   // Handle saving call settings
   const handleSaveSettings = async () => {
     try {
+      setLoadingStates(prev => ({ ...prev, saving: true }));
       saveCount.current += 1;
       
       // Get the selected phone number object
-      const phoneNumberObj = phoneNumbers.find(p => p.id === selectedPhoneNumberId)
-      const phoneNumberString = phoneNumberObj ? phoneNumberObj.number : null
+      const phoneNumberObj = phoneNumbers.find(p => p.id === selectedPhoneNumberId);
+      const phoneNumberString = phoneNumberObj ? phoneNumberObj.number : null;
       
       // Build the save data
       const saveData = {
@@ -298,17 +325,19 @@ export function CallTab({ agent, onSave }: CallTabProps) {
         responseRate,
         phoneNumber: phoneNumberString,
         voice: selectedVoice,
-      }
+      };
       
       // Save to the agent
-      await onSave(saveData)
+      await onSave(saveData);
       
-      // If phone number assignment changed, we need to update the phone number's agent assignment
+      // Handle phone number assignment changes
       const previousPhoneNumberId = phoneNumbers.find(p => p.number === initialValues.phoneNumber)?.id || null;
       
       if (selectedPhoneNumberId !== previousPhoneNumberId) {
         // If there was a previous phone number, unassign it
         if (previousPhoneNumberId && previousPhoneNumberId !== selectedPhoneNumberId) {
+          toast.loading('Unassigning previous phone number...', { id: 'phone-unassign' });
+          
           const unassignResponse = await fetch(`/api/twilio/phone-numbers/${previousPhoneNumberId}/assign`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -316,12 +345,17 @@ export function CallTab({ agent, onSave }: CallTabProps) {
           });
           
           if (!unassignResponse.ok) {
+            toast.error('Failed to unassign previous phone number', { id: 'phone-unassign' });
             throw new Error('Failed to unassign previous phone number');
           }
+          
+          toast.success('Previous phone number unassigned', { id: 'phone-unassign' });
         }
         
         // If there's a new phone number, assign it
         if (selectedPhoneNumberId) {
+          toast.loading('Configuring phone number...', { id: 'phone-assign' });
+          
           const assignResponse = await fetch(`/api/twilio/phone-numbers/${selectedPhoneNumberId}/assign`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -329,8 +363,16 @@ export function CallTab({ agent, onSave }: CallTabProps) {
           });
           
           if (!assignResponse.ok) {
+            const error = await assignResponse.json();
+            toast.error(error.error || 'Failed to configure phone number', { id: 'phone-assign' });
             throw new Error('Failed to assign new phone number');
           }
+          
+          const result = await assignResponse.json();
+          toast.success('Phone number configured successfully!', { id: 'phone-assign' });
+          
+          // Log webhook configuration for debugging
+          console.log('Phone number assignment result:', result);
           
           // Update the local phoneNumbers state to reflect the assignment
           setPhoneNumbers(prev => prev.map(phone => {
@@ -365,27 +407,63 @@ export function CallTab({ agent, onSave }: CallTabProps) {
       
       // Force dirty state to false
       setIsDirty(false);
+      
+      toast.success('Call settings saved successfully!');
     } catch (error) {
-      console.error('Error saving call settings:', error)
-      const errorMsg = error instanceof Error ? error.message : String(error)
-      throw new Error(`Failed to save call settings: ${errorMsg}`)
+      console.error('Error saving call settings:', error);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to save: ${errorMsg}`);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, saving: false }));
     }
-  }
+  };
   
   // Cancel handler to revert changes
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     // Reset to original values
-    const currentPhoneNumberId = phoneNumbers.find(p => p.number === initialValues.phoneNumber)?.id || null
-    setSelectedPhoneNumberId(currentPhoneNumberId)
-    setCheckUserPresence(initialValues.checkUserPresence)
-    setPresenceMessageDelay(initialValues.presenceMessageDelay)
-    setSilenceTimeout(initialValues.silenceTimeout)
-    setCallTimeout(initialValues.callTimeout)
-    setPresenceMessage(initialValues.presenceMessage)
-    setHangUpMessage(initialValues.hangUpMessage)
-    setResponseRate(initialValues.responseRate)
-    setSelectedVoice(initialValues.voice)
-    setIsDirty(false)
+    const currentPhoneNumberId = phoneNumbers.find(p => p.number === initialValues.phoneNumber)?.id || null;
+    setSelectedPhoneNumberId(currentPhoneNumberId);
+    setCheckUserPresence(initialValues.checkUserPresence);
+    setPresenceMessageDelay(initialValues.presenceMessageDelay);
+    setSilenceTimeout(initialValues.silenceTimeout);
+    setCallTimeout(initialValues.callTimeout);
+    setPresenceMessage(initialValues.presenceMessage);
+    setHangUpMessage(initialValues.hangUpMessage);
+    setResponseRate(initialValues.responseRate);
+    setSelectedVoice(initialValues.voice);
+    setIsDirty(false);
+  }, [phoneNumbers, initialValues]);
+
+  // Retry handlers
+  const retryPhoneNumbers = useCallback(() => {
+    fetchPhoneNumbers();
+  }, []);
+
+  const retryVoices = useCallback(() => {
+    fetchVoices();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <SettingsTabWrapper
+        tabName="Call"
+        isDirty={false}
+        onSave={handleSaveSettings}
+        onCancel={handleCancel}
+      >
+        <div className="space-y-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="p-6">
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </SettingsTabWrapper>
+    );
   }
 
   return (
@@ -402,49 +480,80 @@ export function CallTab({ agent, onSave }: CallTabProps) {
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               <Label className="font-medium text-gray-900 dark:text-gray-100">Phone Number</Label>
+              {selectedPhoneNumberId && (
+                <Badge variant="secondary" className="ml-auto">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Assigned
+                </Badge>
+              )}
             </div>
           </div>
           <div className="p-4 bg-white dark:bg-gray-900/50">
-            <div className="flex-1">
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
-                {isPhoneNumbersLoading ? (
-                  <div className="flex items-center pl-9 h-10">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2 text-gray-500" />
-                    <span className="text-sm text-gray-500">Loading phone numbers...</span>
+            {errors.phoneNumbers ? (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span>{errors.phoneNumbers}</span>
+                  <Button variant="ghost" size="sm" onClick={retryPhoneNumbers}>
+                    Retry
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <>
+                <div className="flex-1">
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+                    {loadingStates.phoneNumbers ? (
+                      <div className="flex items-center pl-9 h-10">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2 text-gray-500" />
+                        <span className="text-sm text-gray-500">Loading phone numbers...</span>
+                      </div>
+                    ) : (
+                      <Select 
+                        value={selectedPhoneNumberId || 'none'}
+                        onValueChange={handlePhoneNumberChange}
+                      >
+                        <SelectTrigger className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+                          <SelectValue placeholder="Select phone number" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No phone number</SelectItem>
+                          {availablePhoneNumbers.map((phone) => (
+                            <SelectItem key={phone.id} value={phone.id}>
+                              <div className="flex items-center justify-between w-full">
+                                <span>{phone.number}</span>
+                                {phone.status === 'pending' && (
+                                  <span className="text-xs text-yellow-600 dark:text-yellow-400 ml-2">(Unassigned)</span>
+                                )}
+                                {phone.status === 'warning' && (
+                                  <span className="text-xs text-orange-600 dark:text-orange-400 ml-2">(Warning)</span>
+                                )}
+                                {phone.agentId && phone.agentId !== agent.id && (
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Assigned to {phone.agentName})</span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
-                ) : (
-                  <Select 
-                    value={selectedPhoneNumberId || 'none'}
-                    onValueChange={handlePhoneNumberChange}
-                  >
-                    <SelectTrigger className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-                      <SelectValue placeholder="Select phone number" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No phone number</SelectItem>
-                      {getAvailablePhoneNumbers().map((phone) => (
-                        <SelectItem key={phone.id} value={phone.id}>
-                          {phone.number}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-              <div className="mt-2 flex items-center gap-1">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {getAvailablePhoneNumbers().length === 0 ? (
-                    "No available phone numbers found. You can purchase a new one"
-                  ) : (
-                    "You can manage your phone numbers"
-                  )}
-                </p>
-                <a href="/dashboard/phone-numbers" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
-                  here
-                </a>
-              </div>
-            </div>
+                  <div className="mt-2 flex items-center gap-1">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {availablePhoneNumbers.length === 0 ? (
+                        "No available phone numbers found. You can purchase a new one"
+                      ) : (
+                        "You can manage your phone numbers"
+                      )}
+                    </p>
+                    <a href="/dashboard/phone-numbers" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
+                      here
+                    </a>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </Card>
 
@@ -457,57 +566,69 @@ export function CallTab({ agent, onSave }: CallTabProps) {
             </div>
           </div>
           <div className="p-4 bg-white dark:bg-gray-900/50">
-            <div className="flex-1">
-              <div className="relative">
-                <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
-                {isVoicesLoading ? (
-                  <div className="flex items-center pl-9 h-10">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2 text-gray-500" />
-                    <span className="text-sm text-gray-500">Loading voices...</span>
+            {errors.voices ? (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span>{errors.voices}</span>
+                  <Button variant="ghost" size="sm" onClick={retryVoices}>
+                    Retry
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="flex-1">
+                <div className="relative">
+                  <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+                  {loadingStates.voices ? (
+                    <div className="flex items-center pl-9 h-10">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2 text-gray-500" />
+                      <span className="text-sm text-gray-500">Loading voices...</span>
+                    </div>
+                  ) : (
+                    <Select 
+                      value={selectedVoice || 'none'} 
+                      onValueChange={handleVoiceChange}
+                    >
+                      <SelectTrigger className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+                        <SelectValue placeholder="Select voice" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Default Voice</SelectItem>
+                        {voices.map((voice) => (
+                          <SelectItem key={voice.id} value={voice.id}>
+                            <div className="flex flex-col items-start text-left w-full">
+                              <span className="font-medium">{capitalizeVoiceName(voice.name)}</span>
+                              <span className="text-xs text-gray-500">
+                                {voice.openaiVoice} {voice.language ? `• ${voice.language}` : ''}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="mt-2 flex items-center gap-1">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {voices.length === 0 ? (
+                      "No voices found. You can add voices from your voice library"
+                    ) : (
+                      "You can manage your voices"
+                    )}
+                  </p>
+                  <a href="/dashboard/voices" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
+                    here
+                  </a>
+                </div>
+                {initialValues.voice && !voices.some(v => v.id === initialValues.voice) && !loadingStates.voices && (
+                  <div className="mt-2 text-sm text-yellow-600 dark:text-yellow-500 flex items-center">
+                    <AlertCircle className="h-4 w-4 mr-1" />
+                    Your agent has a voice assigned in the database, but it's not available in your account.
                   </div>
-                ) : (
-                  <Select 
-                    value={selectedVoice || 'none'} 
-                    onValueChange={handleVoiceChange}
-                  >
-                    <SelectTrigger className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-                      <SelectValue placeholder="Select voice" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Default Voice</SelectItem>
-                      {voices.map((voice) => (
-                        <SelectItem key={voice.id} value={voice.id}>
-                          <div className="flex flex-col items-start text-left w-full">
-                            <span className="font-medium">{capitalizeVoiceName(voice.name)}</span>
-                            <span className="text-xs text-gray-500">
-                              {voice.openaiVoice} {voice.language ? `• ${voice.language}` : ''}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 )}
               </div>
-              <div className="mt-2 flex items-center gap-1">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {voices.length === 0 ? (
-                    "No voices found. You can add voices from your voice library"
-                  ) : (
-                    "You can manage your voices"
-                  )}
-                </p>
-                <a href="/dashboard/voices" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
-                  here
-                </a>
-              </div>
-              {initialValues.voice && !voices.some(v => v.id === initialValues.voice) && !isVoicesLoading && (
-                <div className="mt-2 text-sm text-yellow-600 dark:text-yellow-500 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  Your agent has a voice assigned in the database, but it's not available in your account.
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </Card>
 
@@ -563,31 +684,37 @@ export function CallTab({ agent, onSave }: CallTabProps) {
               />
             </div>
             {checkUserPresence && (
-              <div className="mt-6">
+              <div className="mt-6 space-y-6">
                 <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm text-gray-900 dark:text-gray-100">
+                      Presence Check Delay
+                    </Label>
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {presenceMessageDelay} seconds
+                    </span>
+                  </div>
                   <Slider
                     value={[presenceMessageDelay]}
                     max={10}
                     min={1}
                     step={1}
                     onValueChange={(value) => setPresenceMessageDelay(value[0])}
+                    className="w-full"
                   />
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Current delay:
-                    <span className="ml-1 font-semibold text-gray-900 dark:text-gray-100">
-                      {presenceMessageDelay} seconds
-                    </span>
+                    Time to wait before asking if the user is still there
                   </p>
                 </div>
-                <div className="mt-4">
-                  <Label className="text-sm text-gray-900 dark:text-gray-100 mb-2 block">Presence Message</Label>
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-900 dark:text-gray-100">Presence Message</Label>
                   <Input
                     value={presenceMessage}
                     onChange={(e) => setPresenceMessage(e.target.value)}
                     placeholder="Are you still there?"
                     className="w-full"
                   />
-                  <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Message to ask user after silence
                   </p>
                 </div>
@@ -605,31 +732,37 @@ export function CallTab({ agent, onSave }: CallTabProps) {
             </div>
           </div>
           <div className="p-4 bg-white dark:bg-gray-900/50">
-            <div className="flex-1">
+            <div className="space-y-6">
               <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm text-gray-900 dark:text-gray-100">
+                    Silence Duration
+                  </Label>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {silenceTimeout} seconds
+                  </span>
+                </div>
                 <Slider
                   value={[silenceTimeout]}
                   max={30}
                   min={3}
                   step={1}
                   onValueChange={(value) => setSilenceTimeout(value[0])}
+                  className="w-full"
                 />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Current timeout:
-                  <span className="ml-1 font-semibold text-gray-900 dark:text-gray-100">
-                    {silenceTimeout} seconds
-                  </span>
+                  Maximum silence before ending the call
                 </p>
               </div>
-              <div className="mt-4">
-                <Label className="text-sm text-gray-900 dark:text-gray-100 mb-2 block">Hang Up Message</Label>
+              <div className="space-y-2">
+                <Label className="text-sm text-gray-900 dark:text-gray-100">Hang Up Message</Label>
                 <Input
                   value={hangUpMessage}
                   onChange={(e) => setHangUpMessage(e.target.value)}
                   placeholder="I haven't heard from you, so I'll end the call."
                   className="w-full"
                 />
-                <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Message before hanging up due to silence
                 </p>
               </div>
@@ -646,24 +779,25 @@ export function CallTab({ agent, onSave }: CallTabProps) {
             </div>
           </div>
           <div className="p-4 bg-white dark:bg-gray-900/50">
-            <div className="flex-1">
-              <div className="space-y-4">
-                <Slider
-                  value={[callTimeout]}
-                  max={900}
-                  min={30}
-                  step={30}
-                  onValueChange={(value) => setCallTimeout(value[0])}
-                />
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Current timeout:
-                  <span className="ml-1 font-semibold text-gray-900 dark:text-gray-100">
-                    {callTimeout} seconds ({Math.floor(callTimeout / 60)} minutes)
-                  </span>
-                </p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm text-gray-900 dark:text-gray-100">
+                  Maximum Call Duration
+                </Label>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {Math.floor(callTimeout / 60)} minutes
+                </span>
               </div>
-              <p className="mt-4 text-sm/6 text-gray-500 dark:text-gray-400">
-                The call will hang up after this many seconds of call time.
+              <Slider
+                value={[callTimeout]}
+                max={900}
+                min={30}
+                step={30}
+                onValueChange={(value) => setCallTimeout(value[0])}
+                className="w-full"
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                The call will automatically end after this duration
               </p>
             </div>
           </div>

@@ -58,6 +58,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
   
+  // Allow Twilio API routes that don't require authentication
+  if (pathname.startsWith("/api/twilio") && !pathname.includes("/phone-numbers")) {
+    return NextResponse.next();
+  }
+  
   // Check if user is authenticated
   if (!token) {
     // Not authenticated - redirect to login

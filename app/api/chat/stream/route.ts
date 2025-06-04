@@ -1,95 +1,150 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { AgentRuntime, ChannelContext, AgentMessage, StreamingResponse } from '@/lib/agent-runtime';
+import { WebChatAdapter } from '@/lib/agent-runtime/channels/web-adapter';
+import { logger } from '@/lib/logger';
 
 /**
- * Streaming LLM endpoint for low-latency voice conversations
- * Accepts partial or complete user messages and streams response tokens
+ * Streaming chat endpoint using the Unified Agent Runtime
+ * Accepts messages and streams response tokens for real-time chat
  */
 export async function POST(req: NextRequest) {
   try {
     // Get session for authentication
     const session = await getServerSession(authOptions);
     
-    if (!session) {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     // Parse request body
     const body = await req.json();
-    const { message, chatbotId, partial = false } = body;
+    const { 
+      message, 
+      chatbotId, 
+      threadId,
+      attachments,
+      partial = false 
+    } = body;
     
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Invalid message' }, { status: 400 });
     }
+    
+    if (!chatbotId || !threadId) {
+      return NextResponse.json({ error: 'Missing chatbotId or threadId' }, { status: 400 });
+    }
+    
+    logger.info('Chat stream request', { 
+      chatbotId,
+      threadId,
+      messageLength: message.length,
+      partial 
+    }, 'chat-stream');
+    
+    // Create agent runtime
+    const runtime = await AgentRuntime.fromChatbotId(chatbotId);
+    
+    // Create web chat adapter
+    const adapter = new WebChatAdapter();
+    await adapter.initialize(runtime['config']); // Access private config
+    
+    // Create channel context
+    const channelContext: ChannelContext = {
+      type: 'web',
+      sessionId: `web-${threadId}`,
+      userId: session.user.id,
+      chatbotId,
+      threadId,
+      capabilities: {
+        supportsAudio: false,
+        supportsVideo: false,
+        supportsImages: true,
+        supportsFiles: true,
+        supportsRichText: true,
+        supportsTypingIndicator: true,
+        supportsDeliveryReceipts: false,
+        supportsInterruption: false,
+        maxMessageLength: 4000
+      },
+      metadata: {
+        userAgent: req.headers.get('user-agent'),
+        userIP: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown',
+        partial
+      }
+    };
+    
+    // Handle incoming message through adapter
+    const userMessage = await adapter.handleIncoming({
+      message,
+      attachments,
+      metadata: { partial }
+    }, channelContext);
     
     // Prepare response stream
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // Get chatbot information for context
-          const chatbotResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/chatbots/${chatbotId}`);
-          const chatbot = await chatbotResponse.json();
-          
-          // Add system context based on chatbot configuration
-          const systemPrompt = chatbot?.systemPrompt || 
-            "You are a helpful, concise voice assistant. Respond in a clear and conversational way.";
-          
-          // If partial is true, we're processing incomplete user speech
-          // Adjust model behavior accordingly
-          const partialPrompt = partial 
-            ? "The user's message is still being transcribed. Interpret it as best you can and start formulating a response, but don't respond to ambiguous requests yet."
-            : "";
-          
-          // Create messages array for the LLM with proper types
-          const messages = [
-            { role: "system" as const, content: systemPrompt + (partial ? `\n${partialPrompt}` : "") },
-            { role: "user" as const, content: message }
-          ];
-          
-          // Stream response from OpenAI
-          const completion = await openai.chat.completions.create({
-            model: chatbot?.model || "gpt-4.1-mini-2025-04-14",
-            messages,
-            stream: true,
-            temperature: partial ? 0.3 : 0.7, // Lower temp for partial transcripts
-            max_tokens: partial ? 100 : 300,  // Limit tokens for partial responses
-          });
-          
-          // Stream tokens as they arrive
-          for await (const chunk of completion) {
-            const content = chunk.choices[0]?.delta?.content;
-            if (content) {
-              // Send content chunk to client
-              controller.enqueue(encoder.encode(content));
+          // Define streaming callbacks
+          const streamingCallbacks: StreamingResponse = {
+            onToken: (token: string) => {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`));
+            },
+            onComplete: () => {
+              controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+              controller.close();
+            },
+            onError: (error: Error) => {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: error.message })}\n\n`));
+              controller.close();
             }
-          }
+          };
           
-          // Signal completion
-          controller.close();
+          // Process message through runtime with streaming
+          const response = await runtime.processMessage(
+            userMessage,
+            channelContext,
+            streamingCallbacks
+          );
+          
+          // Send the final complete message
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            complete: true, 
+            message: response.content 
+          })}\n\n`));
+          
         } catch (error) {
-          console.error("Stream processing error:", error);
-          controller.error(error);
+          logger.error('Error in chat stream', { 
+            error: error.message,
+            chatbotId,
+            threadId 
+          }, 'chat-stream');
+          
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+            error: 'Error processing message' 
+          })}\n\n`));
+          controller.close();
         }
       }
     });
     
-    // Return streaming response
+    // Return streaming response with SSE headers
     return new Response(stream, {
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache, no-transform',
-        'X-Content-Type-Options': 'nosniff',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no', // Disable Nginx buffering
       },
     });
+    
   } catch (error) {
-    console.error("Stream endpoint error:", error);
+    logger.error('Chat stream endpoint error', { 
+      error: error.message 
+    }, 'chat-stream');
+    
     return NextResponse.json(
       { error: 'Error processing request' },
       { status: 500 }

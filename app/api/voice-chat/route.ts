@@ -1,198 +1,167 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { AgentRuntime, ChannelContext, AgentMessage } from '@/lib/agent-runtime';
+import { logger } from '@/lib/logger';
 import { ElevenLabsClient } from 'elevenlabs';
-import OpenAI from 'openai';
-import { PrismaClient } from '@prisma/client';
 
-// Ensure API keys are set in your .env file
+// Initialize ElevenLabs for voice synthesis
 const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY;
-const openaiApiKey = process.env.OPENAI_API_KEY;
+const elevenlabs = elevenLabsApiKey ? new ElevenLabsClient({ apiKey: elevenLabsApiKey }) : null;
 
-if (!elevenLabsApiKey || !openaiApiKey) {
-  console.error("Missing API keys for voice processing (ElevenLabs or OpenAI)");
-}
-
-// Initialize clients
-const prisma = new PrismaClient();
-const elevenlabs = new ElevenLabsClient({ apiKey: elevenLabsApiKey! });
-const openai = new OpenAI({ apiKey: openaiApiKey! });
-
-const DEFAULT_VOICE = 'Rachel'; // Fallback voice
-
+/**
+ * Voice chat endpoint using the Unified Agent Runtime
+ * Handles audio transcription and synthesis
+ */
 export async function POST(req: NextRequest) {
-  console.log('Received request for /api/voice-chat');
-  let prismaConnected = true; // Flag to track connection status for disconnect
+  logger.info('Voice chat request received', {}, 'voice-chat');
+  
   try {
-    // 1. Extract audio, chatbotId, and threadId
+    // Get session for authentication
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    // Extract audio and metadata
     const formData = await req.formData();
     const audioBlob = formData.get('audio') as Blob | null;
     const chatbotId = formData.get('chatbotId') as string | null;
     const threadId = formData.get('threadId') as string | null;
 
     if (!audioBlob) {
-      console.error('No audio blob found in request');
+      logger.error('No audio blob found in request', {}, 'voice-chat');
       return NextResponse.json({ error: 'No audio data received' }, { status: 400 });
     }
-    if (!chatbotId) {
-        console.error('No chatbotId found in request');
-        return NextResponse.json({ error: 'Missing chatbotId' }, { status: 400 });
-    }
-    if (!threadId) {
-        console.error('No threadId found in request');
-        return NextResponse.json({ error: 'Missing threadId' }, { status: 400 });
+    
+    if (!chatbotId || !threadId) {
+      logger.error('Missing required fields', { chatbotId, threadId }, 'voice-chat');
+      return NextResponse.json({ error: 'Missing chatbotId or threadId' }, { status: 400 });
     }
 
-    console.log(`Processing for chatbotId: ${chatbotId}, threadId: ${threadId}`);
+    logger.info(`Processing voice chat for chatbot: ${chatbotId}`, {}, 'voice-chat');
 
-    // --- Fetch Chatbot Voice & Prompt --- 
-    let voiceToUse = DEFAULT_VOICE;
-    let systemPrompt = "You are a helpful voice assistant."; // Default prompt
-    try {
-        const chatbot = await prisma.chatbot.findUnique({
-            where: { id: chatbotId },
-            select: { voice: true, prompt: true },
-        });
-        if (chatbot?.voice) {
-            voiceToUse = chatbot.voice;
-            console.log('Using voice from chatbot config:', voiceToUse);
-        }
-        if (chatbot?.prompt) {
-            systemPrompt = chatbot.prompt;
-            console.log('Using system prompt from chatbot config.');
-        } else {
-            console.log('Chatbot prompt not configured, using default.');
-        }
-    } catch (dbError) {
-        console.error('Error fetching chatbot config from DB:', dbError);
-    }
-    // ------------------------
-
-    // 2. Transcribe audio using ElevenLabs SDK (Correct Method)
-    console.log('Transcribing audio with ElevenLabs SDK STT...');
+    // Create agent runtime
+    const runtime = await AgentRuntime.fromChatbotId(chatbotId);
+    const agentConfig = runtime['config']; // Access private config
+    
+    // Transcribe audio using ElevenLabs if available
     let transcript = '';
-    try {
+    
+    if (elevenlabs) {
+      try {
+        logger.debug('Transcribing with ElevenLabs', {}, 'voice-chat');
         const transcriptionResult = await elevenlabs.speechToText.convert({
-            file: audioBlob, 
-            model_id: 'scribe_v1', // Changed model_id back based on error
-        });
-
-        // Parse the result based on documentation/example (assuming .text property)
-        if (transcriptionResult && typeof transcriptionResult.text === 'string') {
-            transcript = transcriptionResult.text;
-        } else {
-            console.warn('Unexpected ElevenLabs STT SDK result structure:', transcriptionResult);
-            transcript = ''; 
-        }
-        console.log('ElevenLabs STT Transcript:', transcript);
-    } catch (sttError) {
-        console.error('ElevenLabs STT SDK error:', sttError);
-        // Log more details if available
-        if (sttError instanceof Error) {
-            console.error('Error details:', sttError.message, sttError.stack);
-        }
-        return NextResponse.json({ error: 'Failed to transcribe audio with ElevenLabs SDK' }, { status: 500 });
-    }
-
-    if (!transcript) {
-        console.log('ElevenLabs returned empty transcript');
-        // Decide how to handle - maybe return a default message?
-        return NextResponse.json({ textResponse: "Sorry, I didn't catch that.", audioBase64: null }, { status: 200 });
-    }
-
-    // --- Fetch Conversation History --- 
-    let history: { role: 'user' | 'assistant', content: string }[] = [];
-    const historyLimit = 10; // Number of past messages to include
-    try {
-        const recentMessages = await prisma.message.findMany({
-            where: { threadId: threadId },
-            orderBy: { createdAt: 'asc' }, // Get oldest first to maintain order
-            take: historyLimit, 
+          file: audioBlob,
+          model_id: 'eleven_multilingual_v2',
         });
         
-        // Format for OpenAI
-        history = recentMessages.map(msg => ({
-            role: msg.from === 'user' ? 'user' : 'assistant', // Map 'from' to role
-            content: msg.from === 'user' ? msg.message : msg.response // Map message/response to content
-        }));
-        console.log(`Fetched ${history.length} messages for history.`);
-
-    } catch (dbError) {
-        console.error(`Error fetching history for thread ${threadId}:`, dbError);
-        // Proceed without history if fetching fails
-    }
-    // ------------------------------
-
-    // 3. Get AI response from OpenAI (with history)
-    console.log('Getting response from OpenAI...');
-    const messagesToOpenAI = [
-        { role: "system" as const, content: systemPrompt },
-        ...history, // Include fetched history
-        { role: "user" as const, content: transcript } // Current user input
-    ];
-
-    const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: messagesToOpenAI, // Use the array with history
-    });
-
-    const aiTextResponse = completion.choices[0]?.message?.content?.trim();
-    console.log('OpenAI Response:', aiTextResponse);
-
-    if (!aiTextResponse) {
-        console.error('OpenAI returned no response text');
-        return NextResponse.json({ error: 'Failed to get AI response' }, { status: 500 });
-    }
-
-    // 4. Synthesize speech using ElevenLabs (Correct TTS Method)
-    console.log(`Synthesizing speech with ElevenLabs TTS (Voice: ${voiceToUse})...`);
-    let audioBuffer: Buffer;
-    try {
-        // Try textToSpeech.convert with separate arguments
-        const audioResult = await elevenlabs.textToSpeech.convert(
-            voiceToUse,         // Argument 1: voiceId
-            {
-                text: aiTextResponse,      // Argument 2: Options object with 'text'
-                model_id: 'eleven_multilingual_v2' // Model ID inside options
-                // Add other TTS settings like stability here if needed
-            }
-        );
-
-        // Assuming audioResult contains the audio data (Buffer or Stream)
-        if (Buffer.isBuffer(audioResult)) {
-            audioBuffer = audioResult;
-        } else if (typeof audioResult?.pipe === 'function') { // Check if it's a readable stream
-            const chunks: Buffer[] = [];
-            for await (const chunk of audioResult) {
-                chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-            }
-            audioBuffer = Buffer.concat(chunks);
-        } else {
-             console.error('Unexpected TTS result format:', audioResult);
-             throw new Error('Failed to get audio buffer from ElevenLabs TTS');
+        if (transcriptionResult && typeof transcriptionResult.text === 'string') {
+          transcript = transcriptionResult.text;
         }
-
-    } catch (ttsError) {
-        console.error('ElevenLabs TTS error:', ttsError);
-         return NextResponse.json({ error: 'Failed to synthesize speech' }, { status: 500 });
+      } catch (sttError) {
+        logger.error('ElevenLabs STT error', { error: sttError }, 'voice-chat');
+        return NextResponse.json({ error: 'Failed to transcribe audio' }, { status: 500 });
+      }
+    } else {
+      logger.warn('ElevenLabs not configured, returning error', {}, 'voice-chat');
+      return NextResponse.json({ error: 'Voice transcription not configured' }, { status: 503 });
     }
     
-    const audioBase64 = audioBuffer.toString('base64');
-    console.log('ElevenLabs TTS audio generated and encoded to base64');
-
-    // 5. Return text response and audio data
+    if (!transcript) {
+      logger.info('Empty transcript received', {}, 'voice-chat');
+      return NextResponse.json({ 
+        textResponse: "Sorry, I didn't catch that.", 
+        audioBase64: null 
+      });
+    }
+    
+    // Create channel context for voice
+    const channelContext: ChannelContext = {
+      type: 'voice',
+      sessionId: `voice-${threadId}`,
+      userId: session.user.id,
+      chatbotId,
+      threadId,
+      capabilities: {
+        supportsAudio: true,
+        supportsVideo: false,
+        supportsImages: false,
+        supportsFiles: false,
+        supportsRichText: false,
+        supportsTypingIndicator: false,
+        supportsDeliveryReceipts: false,
+        supportsInterruption: true,
+        maxAudioDuration: 300 // 5 minutes
+      },
+      metadata: {
+        userAgent: req.headers.get('user-agent'),
+        userIP: req.headers.get('x-forwarded-for') || 'unknown'
+      }
+    };
+    
+    // Create user message
+    const userMessage: AgentMessage = {
+      id: `voice_${Date.now()}`,
+      role: 'user',
+      content: transcript,
+      type: 'text', // Even though it came from audio, we store the text
+      timestamp: new Date(),
+      metadata: {
+        audioUrl: undefined, // Could store the audio if needed
+        confidence: undefined // ElevenLabs doesn't return confidence
+      }
+    };
+    
+    // Process message through runtime
+    const response = await runtime.processMessage(userMessage, channelContext);
+    
+    // Synthesize response to speech if voice is configured
+    let audioBase64: string | null = null;
+    
+    if (elevenlabs && agentConfig.voice) {
+      try {
+        logger.debug(`Synthesizing speech with voice: ${agentConfig.voice}`, {}, 'voice-chat');
+        
+        const audioResult = await elevenlabs.textToSpeech.convert(
+          agentConfig.voice,
+          {
+            text: response.content,
+            model_id: 'eleven_multilingual_v2'
+          }
+        );
+        
+        // Convert audio result to base64
+        if (Buffer.isBuffer(audioResult)) {
+          audioBase64 = audioResult.toString('base64');
+        } else if (typeof audioResult?.pipe === 'function') {
+          const chunks: Buffer[] = [];
+          for await (const chunk of audioResult) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+          }
+          const audioBuffer = Buffer.concat(chunks);
+          audioBase64 = audioBuffer.toString('base64');
+        }
+        
+        logger.info('Speech synthesis completed', {}, 'voice-chat');
+      } catch (ttsError) {
+        logger.error('ElevenLabs TTS error', { error: ttsError }, 'voice-chat');
+        // Continue without audio
+      }
+    }
+    
+    // Return response
     return NextResponse.json({
-        transcript: transcript, // Also return the transcript
-        textResponse: aiTextResponse,
-        audioBase64: audioBase64,
+      transcript: transcript,
+      textResponse: response.content,
+      audioBase64: audioBase64,
+      messageId: response.id,
+      timestamp: response.timestamp
     });
 
   } catch (error) {
-    console.error('Error in /api/voice-chat:', error);
-    prismaConnected = false; // Avoid disconnect if connection failed initially
+    logger.error('Error in voice chat', { error: error.message }, 'voice-chat');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  } finally {
-      if (prismaConnected) {
-          await prisma.$disconnect();
-          console.log('Prisma client disconnected.');
-      }
   }
 } 

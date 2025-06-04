@@ -337,13 +337,21 @@ export async function POST(req: NextRequest) {
       console.log('[Phone Purchase] Attempting to purchase phone number on Twilio:', phoneNumberString);
       let purchasedNumber;
       try {
-        // Get webhook URLs
-        const { smsUrl, voiceUrl } = getTwilioWebhookUrls(false);
+        // Get proper webhook URLs - always use production URLs for phone number purchase
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://dashboard.getlinkai.com';
+        const webhookBaseUrl = baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`;
+        
+        const webhookUrls = {
+          voiceUrl: `${webhookBaseUrl}/api/twilio/voice`,
+          smsUrl: `${webhookBaseUrl}/api/twilio/sms`,
+        };
+        
+        console.log('[Phone Purchase] Setting webhook URLs:', webhookUrls);
           
         purchasedNumber = await subaccountClient.incomingPhoneNumbers.create({
           phoneNumber: phoneNumberString,
-          smsUrl,
-          voiceUrl,
+          smsUrl: webhookUrls.smsUrl,
+          voiceUrl: webhookUrls.voiceUrl,
         });
         console.log('[Phone Purchase] ✓ Phone number purchased successfully on Twilio, SID:', purchasedNumber.sid);
       } catch (twilioError: any) {

@@ -51,16 +51,32 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
   } | null>(null);
   const [hasActiveSubscription, setHasActiveSubscription] = useState<boolean>(false);
   const [isCheckingSubscription, setIsCheckingSubscription] = useState<boolean>(false);
+  const [isLoadingCountries, setIsLoadingCountries] = useState<boolean>(false);
 
   useEffect(() => {
     const loadCountries = async () => {
+      setIsLoadingCountries(true);
       try {
         const response = await fetch('/api/twilio');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
-        setCountries(data);
+        
+        // Ensure data is an array before setting it
+        if (Array.isArray(data)) {
+          setCountries(data);
+        } else {
+          console.error('Invalid countries data format:', data);
+          setCountries([]);
+          toast.error('Failed to load countries. Invalid data format.');
+        }
       } catch (error) {
         console.error('Error loading countries:', error);
+        setCountries([]); // Ensure countries is always an array
         toast.error('Failed to load countries. Please try again.');
+      } finally {
+        setIsLoadingCountries(false);
       }
     };
     
@@ -265,10 +281,18 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
             <DrawerTitle>Buy a New Phone Number</DrawerTitle>
           </DrawerHeader>
           <DrawerBody className="overflow-auto">
-            {isCheckingSubscription ? (
-              <div className="flex items-center justify-center py-8">
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                <span>Checking subscription...</span>
+            {isCheckingSubscription || isLoadingCountries ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mb-4"></div>
+                <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-2">
+                  {isCheckingSubscription ? 'Verifying subscription' : 'Loading countries'}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                  {isCheckingSubscription 
+                    ? 'Please wait while we check your subscription status.'
+                    : 'Please wait while we load available countries.'
+                  }
+                </p>
               </div>
             ) : (
               <>
@@ -276,26 +300,39 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
                   Select your country to start searching.
                 </p>
                 <div className="mt-4">
-                  <Select onValueChange={setSelectedCountry}>
+                  <Select onValueChange={setSelectedCountry} disabled={isLoadingCountries}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Country" />
+                      <SelectValue 
+                        placeholder={isLoadingCountries ? "Loading countries..." : "Select Country"} 
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {countries.map((country) => (
-                        <SelectItem key={country.code} value={country.code}>
-                          <span className="flex items-center gap-2">
-                            <span>{country.emoji}</span>
-                            {country.name}
-                          </span>
-                        </SelectItem>
-                      ))}
+                      {isLoadingCountries ? (
+                        <div className="flex items-center justify-center py-4">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mr-2"></div>
+                          <span className="text-sm text-gray-500">Loading countries...</span>
+                        </div>
+                      ) : Array.isArray(countries) && countries.length > 0 ? (
+                        countries.map((country) => (
+                          <SelectItem key={country.code} value={country.code}>
+                            <span className="flex items-center gap-2">
+                              <span>{country.emoji}</span>
+                              {country.name}
+                            </span>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="flex items-center justify-center py-4">
+                          <span className="text-sm text-gray-500">No countries available</span>
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
                   <Button
                     variant="primary"
                     className="mt-2"
                     onClick={handleFetchPhoneNumbers}
-                    disabled={!selectedCountry || isFetching || !hasActiveSubscription}
+                    disabled={!selectedCountry || isFetching || !hasActiveSubscription || isLoadingCountries}
                   >
                     {isFetching ? (
                       <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
@@ -374,7 +411,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
             )}
           </DrawerBody>
           
-          {!isCheckingSubscription && hasActiveSubscription && (
+          {!isCheckingSubscription && !isLoadingCountries && hasActiveSubscription && (
             <DrawerFooter className="flex flex-col items-start space-y-2 mt-4">
               <Button
                 variant="primary"
