@@ -12,3 +12,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 # Note: The STRIPE_WEBHOOK_SECRET is required for webhook verification.
 # Get this from your Stripe Dashboard under Developers > Webhooks > [Your Endpoint] > Signing secret 
+
+# Voice Server URL for WebSocket connections (deployed on Fly.io)
+# This should be the URL of your voice server deployment
+VOICE_SERVER_URL=wss://linkai-voice.fly.dev 

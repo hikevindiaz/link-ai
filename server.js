@@ -4,6 +4,7 @@ const { parse } = require('url');
 const next = require('next');
 const path = require('path');
 const fs = require('fs');
+const WebSocket = require('ws');
 
 // Import supabase utilities
 try {
@@ -40,6 +41,9 @@ const hostname = 'localhost';
 const port = process.env.PORT || 3000;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
+
+// Store active WebSocket connections
+const activeConnections = new Map();
 
 // Ensure the .next directory exists
 const ensureNextDirectory = () => {
@@ -137,7 +141,7 @@ ensureNextDirectory();
 // Start the Next.js app or fallback to a simple server
 app.prepare()
   .then(() => {
-    createServer((req, res) => {
+    const server = createServer((req, res) => {
       try {
         // Parse the URL
         const parsedUrl = parse(req.url, true);
@@ -149,9 +153,46 @@ app.prepare()
         res.statusCode = 500;
         res.end('Internal Server Error');
       }
-    }).listen(port, (err) => {
+    });
+    
+    // Create WebSocket server
+    const wss = new WebSocket.Server({ noServer: true });
+    
+    // Handle WebSocket upgrade requests
+    server.on('upgrade', async (request, socket, head) => {
+      const { pathname, query } = parse(request.url, true);
+      
+      // Handle Twilio media stream WebSocket connections
+      if (pathname === '/api/twilio/media-stream') {
+        const agentId = query.agentId;
+        
+        if (!agentId) {
+          socket.write('HTTP/1.1 400 Bad Request\r\n\r\n');
+          socket.destroy();
+          return;
+        }
+        
+        wss.handleUpgrade(request, socket, head, async (ws) => {
+          try {
+            console.log('Handling WebSocket connection for agent:', agentId);
+            // Dynamically import the modules to handle WebSocket connection
+            const { handleTwilioWebSocket } = await import('./lib/twilio-websocket-handler.js');
+            await handleTwilioWebSocket(ws, agentId);
+          } catch (error) {
+            console.error('Error handling WebSocket connection:', error);
+            ws.close(1011, 'Internal server error');
+          }
+        });
+      } else {
+        socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
+        socket.destroy();
+      }
+    });
+    
+    server.listen(port, (err) => {
       if (err) throw err;
       console.log(`> Ready on http://${hostname}:${port}`);
+      console.log('> WebSocket server ready for Twilio Media Streams');
     });
   })
   .catch((ex) => {

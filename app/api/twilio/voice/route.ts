@@ -119,13 +119,12 @@ export async function POST(req: NextRequest) {
     if (toNumber) {
       console.log('[Validation] Looking up phone number:', toNumber);
       const phoneNumberRecord = await prisma.twilioPhoneNumber.findFirst({
-        where: { phoneNumber: toNumber },
-        select: { subaccountAuthToken: true, subaccountSid: true }
+        where: { phoneNumber: toNumber }
       });
       
       if (phoneNumberRecord) {
-        phoneNumberAuthToken = phoneNumberRecord.subaccountAuthToken || undefined;
-        console.log('[Validation] Found phone number with subaccount:', phoneNumberRecord.subaccountSid || 'None');
+        // For now, we use the default auth token since subaccount fields don't exist yet
+        console.log('[Validation] Found phone number in database');
       } else {
         console.log('[Validation] Phone number not found in database');
       }
@@ -204,10 +203,36 @@ export async function POST(req: NextRequest) {
     const connect = twiml.connect();
     
     // Configure the media stream URL
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'http://localhost:3000';
-    const streamUrl = `wss://${baseUrl.replace(/^https?:\/\//, '')}/api/twilio/media-stream?agentId=${agent.id}`;
+    const voiceServerUrl = process.env.VOICE_SERVER_URL || 'wss://voice-server.fly.dev';
     
-    logger.info(`Connecting to media stream: ${streamUrl}`, {}, 'twilio-voice');
+    // Get OpenAI API key from the model
+    const openAIKey = agent.model?.apiKey || process.env.OPENAI_API_KEY;
+    
+    if (!openAIKey) {
+      logger.error('No OpenAI API key found for agent', { agentId: agent.id }, 'twilio-voice');
+      const twiml = new twilio.twiml.VoiceResponse();
+      twiml.say('Sorry, this agent is not properly configured.');
+      twiml.hangup();
+      
+      return new NextResponse(twiml.toString(), {
+        headers: {
+          'Content-Type': 'text/xml'
+        }
+      });
+    }
+    
+    // Build query parameters for the WebSocket connection
+    const queryParams = new URLSearchParams({
+      agentId: agent.id,
+      openAIKey: openAIKey,
+      prompt: agent.prompt || 'You are a helpful AI assistant.',
+      voice: agent.voice || 'alloy',
+      temperature: String(agent.temperature || 0.7)
+    });
+    
+    const streamUrl = `${voiceServerUrl}/api/twilio/media-stream?${queryParams.toString()}`;
+    
+    logger.info(`Connecting to media stream: ${voiceServerUrl}/api/twilio/media-stream?agentId=${agent.id}`, {}, 'twilio-voice');
     
     // Add custom parameters to pass to the WebSocket
     const stream = connect.stream({
