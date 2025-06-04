@@ -7,14 +7,17 @@ import { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message';
 import { processAppointmentSMSReply } from '@/lib/calendar-sms';
 
 // Verify Twilio webhook signature
-const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
+const validateTwilioRequest = (req: NextRequest, body: FormData, authToken?: string): boolean => {
   // In production, validate signature using Twilio's validateRequest function
   if (process.env.NODE_ENV === 'production') {
     try {
       const twilioSignature = req.headers.get('x-twilio-signature');
-      const url = process.env.NEXT_PUBLIC_APP_URL + '/api/twilio/sms';
+      const url = req.url;
       
-      if (!twilioSignature || !process.env.TWILIO_AUTH_TOKEN) {
+      // Use provided auth token or fall back to environment variable
+      const validationToken = authToken || process.env.TWILIO_AUTH_TOKEN;
+      
+      if (!twilioSignature || !validationToken) {
         console.error('Missing Twilio signature or auth token');
         return false;
       }
@@ -26,14 +29,28 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
       });
       
       const isValid = twilio.validateRequest(
-        process.env.TWILIO_AUTH_TOKEN,
+        validationToken,
         twilioSignature,
         url,
         params
       );
       
       if (!isValid) {
-        console.error('Invalid Twilio signature');
+        console.error('[SMS Validation] Signature validation failed for URL:', url);
+        
+        // Try without query parameters as a fallback
+        const baseUrl = url.split('?')[0];
+        const baseValid = twilio.validateRequest(
+          validationToken,
+          twilioSignature,
+          baseUrl,
+          params
+        );
+        
+        if (baseValid) {
+          console.log('[SMS Validation] Validation succeeded with base URL');
+          return true;
+        }
       }
       
       return isValid;
@@ -55,21 +72,36 @@ export async function POST(req: NextRequest) {
     // Parse the request body from Twilio (form data)
     const formData = await req.formData();
     
-    // Validate the request is from Twilio
-    if (!validateTwilioRequest(req, formData)) {
+    // Convert FormData to a plain object first to extract the To number
+    const twilioData: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      twilioData[key] = value.toString();
+    });
+    
+    // Extract the "To" number to look up auth token
+    const toNumber = twilioData.To;
+    let phoneNumberAuthToken: string | undefined;
+    
+    if (toNumber) {
+      const phoneNumberRecord = await prisma.twilioPhoneNumber.findFirst({
+        where: { phoneNumber: toNumber },
+        select: { subaccountAuthToken: true, subaccountSid: true }
+      });
+      
+      if (phoneNumberRecord) {
+        phoneNumberAuthToken = phoneNumberRecord.subaccountAuthToken || undefined;
+        console.log('[SMS Validation] Found phone number with subaccount:', phoneNumberRecord.subaccountSid || 'None');
+      }
+    }
+    
+    // Validate the request is from Twilio using the appropriate auth token
+    if (!validateTwilioRequest(req, formData, phoneNumberAuthToken)) {
       console.error('Invalid Twilio request');
       return NextResponse.json(
         { error: 'Unauthorized request' },
         { status: 403 }
       );
     }
-    
-    const twilioData: Record<string, string> = {};
-    
-    // Convert FormData to a plain object
-    formData.forEach((value, key) => {
-      twilioData[key] = value.toString();
-    });
     
     console.log('Received SMS webhook data:', twilioData);
     

@@ -510,6 +510,10 @@ model TwilioPhoneNumber {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   
+  // Subaccount information for validation
+  subaccountSid        String?  // The Twilio subaccount SID that owns this number
+  subaccountAuthToken  String?  // The auth token for webhook validation (encrypted in production)
+  
   // Stripe subscription tracking (NEW APPROACH)
   subscriptionItemId String? // Reference to SubscriptionItem
   

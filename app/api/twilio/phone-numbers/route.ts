@@ -292,6 +292,7 @@ export async function POST(req: NextRequest) {
       
       // Get or create a Twilio subaccount for the user
       let subaccountSid = user.twilioSubaccountSid;
+      let subaccountAuthToken: string | null = null;
       
       if (!subaccountSid) {
         // Create a new subaccount via our API
@@ -323,6 +324,28 @@ export async function POST(req: NextRequest) {
           data: { twilioSubaccountSid: subaccountSid }
         });
         console.log('[Phone Purchase] User updated with subaccount SID:', subaccountSid);
+      }
+      
+      // Fetch the subaccount auth token
+      console.log('[Phone Purchase] Fetching subaccount auth token...');
+      const authTokenResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/twilio/subaccount/auth-token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': req.headers.get('cookie') || '',
+        },
+        body: JSON.stringify({
+          subaccountSid: subaccountSid
+        }),
+      });
+      
+      const authTokenData = await authTokenResponse.json();
+      if (authTokenData.success && authTokenData.authToken) {
+        subaccountAuthToken = authTokenData.authToken;
+        console.log('[Phone Purchase] Retrieved subaccount auth token');
+      } else {
+        console.error('[Phone Purchase] Failed to get subaccount auth token:', authTokenData);
+        // Continue without auth token - validation will fall back to main account
       }
       
       // Create a Twilio client for the subaccount
@@ -415,6 +438,8 @@ export async function POST(req: NextRequest) {
         purchasedAt: new Date(),
         renewalDate,
         userId,
+        subaccountSid: subaccountSid, // Store the subaccount SID
+        subaccountAuthToken: subaccountAuthToken, // Store the auth token for webhook validation
         // Note: We're not storing subscriptionItemId anymore since it's part of the main subscription
         metadata: {
           stripeInvoiceId: paidInvoice.id,

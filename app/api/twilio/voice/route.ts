@@ -4,7 +4,7 @@ import twilio from 'twilio';
 import { logger } from '@/lib/logger';
 
 // Verify Twilio webhook signature
-const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
+const validateTwilioRequest = (req: NextRequest, body: FormData, authToken?: string): boolean => {
   // In production, validate signature using Twilio's validateRequest function
   if (process.env.NODE_ENV === 'production') {
     try {
@@ -14,9 +14,12 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
       console.log('[Twilio Validation] Starting validation');
       console.log('[Twilio Validation] Request URL:', url);
       console.log('[Twilio Validation] Twilio Signature:', twilioSignature ? 'Present' : 'Missing');
-      console.log('[Twilio Validation] Auth Token:', process.env.TWILIO_AUTH_TOKEN ? 'Present' : 'Missing');
       
-      if (!twilioSignature || !process.env.TWILIO_AUTH_TOKEN) {
+      // Use provided auth token or fall back to environment variable
+      const validationToken = authToken || process.env.TWILIO_AUTH_TOKEN;
+      console.log('[Twilio Validation] Using auth token:', authToken ? 'Phone-specific token' : 'Default environment token');
+      
+      if (!twilioSignature || !validationToken) {
         console.error('Missing Twilio signature or auth token');
         return false;
       }
@@ -30,7 +33,7 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
       console.log('[Twilio Validation] Form params:', Object.keys(params).join(', '));
       
       const isValid = twilio.validateRequest(
-        process.env.TWILIO_AUTH_TOKEN,
+        validationToken,
         twilioSignature,
         url,
         params
@@ -46,7 +49,7 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
         console.log('[Twilio Validation] Trying base URL:', baseUrl);
         
         const baseValid = twilio.validateRequest(
-          process.env.TWILIO_AUTH_TOKEN,
+          validationToken,
           twilioSignature,
           baseUrl,
           params
@@ -64,7 +67,7 @@ const validateTwilioRequest = (req: NextRequest, body: FormData): boolean => {
         console.log('[Twilio Validation] Trying configured URL:', configuredUrl);
         
         const configValid = twilio.validateRequest(
-          process.env.TWILIO_AUTH_TOKEN,
+          validationToken,
           twilioSignature,
           configuredUrl,
           params
@@ -109,8 +112,27 @@ export async function POST(req: NextRequest) {
     });
     logger.debug('Received form data before validation', twilioData, 'twilio-voice');
     
-    // Validate the request is from Twilio
-    if (!validateTwilioRequest(req, formData)) {
+    // Extract the "To" number to look up auth token
+    const toNumber = twilioData.To;
+    let phoneNumberAuthToken: string | undefined;
+    
+    if (toNumber) {
+      console.log('[Validation] Looking up phone number:', toNumber);
+      const phoneNumberRecord = await prisma.twilioPhoneNumber.findFirst({
+        where: { phoneNumber: toNumber },
+        select: { subaccountAuthToken: true, subaccountSid: true }
+      });
+      
+      if (phoneNumberRecord) {
+        phoneNumberAuthToken = phoneNumberRecord.subaccountAuthToken || undefined;
+        console.log('[Validation] Found phone number with subaccount:', phoneNumberRecord.subaccountSid || 'None');
+      } else {
+        console.log('[Validation] Phone number not found in database');
+      }
+    }
+    
+    // Validate the request is from Twilio using the appropriate auth token
+    if (!validateTwilioRequest(req, formData, phoneNumberAuthToken)) {
       logger.error('Invalid Twilio request', twilioData, 'twilio-voice');
       return NextResponse.json(
         { error: 'Unauthorized request' },
