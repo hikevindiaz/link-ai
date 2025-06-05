@@ -57,20 +57,46 @@ async function handleTwilioWebSocket(ws, config) {
     
     // Initialize OpenAI session
     const initializeSession = () => {
+      // Map voice to OpenAI voice if it's a custom voice ID
+      let openAIVoice = config.voice || 'alloy';
+      
+      // If voice appears to be a DB ID (cuid format), use default
+      if (openAIVoice.startsWith('cm') && openAIVoice.length > 20) {
+        logger.info('Voice appears to be a DB ID, using alloy', { 
+          voiceId: openAIVoice,
+          agentId: config.agentId 
+        });
+        openAIVoice = 'alloy';
+      }
+      
+      // Validate voice is a known OpenAI voice
+      const validVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+      if (!validVoices.includes(openAIVoice)) {
+        logger.info('Unknown voice, defaulting to alloy', { 
+          voice: openAIVoice,
+          agentId: config.agentId 
+        });
+        openAIVoice = 'alloy';
+      }
+      
       const sessionUpdate = {
         type: 'session.update',
         session: {
           turn_detection: { type: 'server_vad' },
           input_audio_format: 'g711_ulaw',
           output_audio_format: 'g711_ulaw',
-          voice: config.voice || 'alloy',
+          voice: openAIVoice,
           instructions: config.prompt || 'You are a helpful AI assistant.',
           modalities: ["text", "audio"],
           temperature: config.temperature || 0.8,
         }
       };
       
-      logger.info('Sending session update to OpenAI', { agentId: config.agentId });
+      logger.info('Sending session update to OpenAI', { 
+        agentId: config.agentId,
+        voice: openAIVoice,
+        instructionLength: sessionUpdate.session.instructions.length
+      });
       openAiWs.send(JSON.stringify(sessionUpdate));
     };
     

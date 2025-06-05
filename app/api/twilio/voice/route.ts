@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import twilio from 'twilio';
 import { logger } from '@/lib/logger';
+import { storeCallConfig, getVoiceSettings } from '@/lib/twilio/call-config';
 
 // Verify Twilio webhook signature
 const validateTwilioRequest = (req: NextRequest, body: FormData, authToken?: string): boolean => {
@@ -202,19 +203,7 @@ export async function POST(req: NextRequest) {
     
     logger.info(`Call will be handled by agent: ${agent.name} (${agent.id})`, {}, 'twilio-voice');
     
-    // Create a TwiML response
-    const twiml = new twilio.twiml.VoiceResponse();
-    
-    // Start by pausing briefly to let the connection establish
-    twiml.pause({ length: 1 });
-    
-    // Connect to Media Stream for real-time conversation
-    const connect = twiml.connect();
-    
-    // Configure the media stream URL
-    const voiceServerUrl = process.env.VOICE_SERVER_URL || 'wss://voice-server.fly.dev';
-    
-    // Get OpenAI API key from the model
+    // Get OpenAI API key from model or environment
     const openAIKey = agent.model?.apiKey || process.env.OPENAI_API_KEY;
     
     if (!openAIKey) {
@@ -230,33 +219,63 @@ export async function POST(req: NextRequest) {
       });
     }
     
-    // Build query parameters for the WebSocket connection
-    const queryParams = new URLSearchParams({
+    // Get voice settings - handles both OpenAI voice names and DB IDs
+    const voiceSettings = await getVoiceSettings(agent.voice);
+    
+    // Build comprehensive instructions including voice personality
+    let fullInstructions = agent.prompt || "You are a helpful AI assistant.";
+    if (voiceSettings.personality) {
+      fullInstructions = `${fullInstructions}\n\nVoice Personality: ${voiceSettings.personality}`;
+    }
+    if (voiceSettings.accent) {
+      fullInstructions = `${fullInstructions}\n\nSpeak with a ${voiceSettings.accent} accent.`;
+    }
+    
+    // Store full configuration for voice server to retrieve
+    const callConfig = {
       agentId: agent.id,
-      openAIKey: openAIKey,
-      prompt: agent.prompt || 'You are a helpful AI assistant.',
-      voice: agent.voice || 'alloy',
-      temperature: String(agent.temperature || 0.7)
-    });
+      openAIKey,
+      model: agent.modelId || "gpt-4o-realtime-preview-2024-10-01",
+      voice: voiceSettings,
+      instructions: fullInstructions,
+      temperature: agent.temperature || 0.7,
+      maxTokens: agent.maxCompletionTokens,
+      tools: [], // TODO: Add tools when available
+      knowledge: [], // TODO: Add knowledge when available
+      callSid,
+      from,
+      to
+    };
     
-    const streamUrl = `${voiceServerUrl}/api/twilio/media-stream?${queryParams.toString()}`;
+    await storeCallConfig(callSid, callConfig);
     
-    logger.info(`Connecting to media stream: ${voiceServerUrl}/api/twilio/media-stream?agentId=${agent.id}`, {}, 'twilio-voice');
+    // Create a TwiML response
+    const twiml = new twilio.twiml.VoiceResponse();
     
-    // Add custom parameters to pass to the WebSocket
-    // Note: Some versions of Twilio have issues with query parameters in WebSocket URLs
-    // Let's try a simpler URL and pass everything as custom parameters
-    const simpleStreamUrl = `${voiceServerUrl}/api/twilio/media-stream`;
+    // Start by pausing briefly to let the connection establish
+    twiml.pause({ length: 1 });
     
-    logger.info(`Stream URL (simple): ${simpleStreamUrl}`, {}, 'twilio-voice');
-    logger.info(`Stream URL (with params): ${streamUrl}`, {}, 'twilio-voice');
+    // Connect to Media Stream for real-time conversation
+    const connect = twiml.connect();
+    
+    // Get voice server URL from environment
+    const voiceServerUrl = process.env.VOICE_SERVER_URL || 'wss://voice-server.fly.dev';
+    const streamUrl = `${voiceServerUrl}/api/twilio/media-stream`;
+    
+    logger.info(`Connecting to media stream: ${streamUrl}`, { agentId: agent.id }, 'twilio-voice');
     
     const stream = connect.stream({
-      url: streamUrl, // Keep the full URL for now
-      track: 'inbound_track' // Get inbound audio from the caller
+      url: streamUrl,
+      track: 'inbound_track'
     });
     
-    // Pass all configuration as custom parameters (backup method)
+    // Pass minimal configuration via custom parameters
+    // Voice server will fetch full config using callSid
+    stream.parameter({
+      name: 'callSid',
+      value: callSid
+    });
+    
     stream.parameter({
       name: 'agentId',
       value: agent.id
@@ -268,13 +287,13 @@ export async function POST(req: NextRequest) {
     });
     
     stream.parameter({
-      name: 'prompt',
-      value: agent.prompt || 'You are a helpful AI assistant.'
+      name: 'voice',
+      value: voiceSettings.openAIVoice
     });
     
     stream.parameter({
-      name: 'voice',
-      value: agent.voice || 'alloy'
+      name: 'prompt',
+      value: fullInstructions.substring(0, 500) // Backup in case config fetch fails
     });
     
     stream.parameter({
@@ -282,15 +301,9 @@ export async function POST(req: NextRequest) {
       value: String(agent.temperature || 0.7)
     });
     
-    // Original parameters
     stream.parameter({
       name: 'from',
       value: from
-    });
-    
-    stream.parameter({
-      name: 'callSid',
-      value: callSid
     });
     
     // Create a thread for this call
