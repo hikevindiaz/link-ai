@@ -5,6 +5,12 @@ import { logger } from '@/lib/logger';
 
 // Verify Twilio webhook signature
 const validateTwilioRequest = (req: NextRequest, body: FormData, authToken?: string): boolean => {
+  // Allow bypassing signature validation for debugging (ONLY use temporarily!)
+  if (process.env.TWILIO_SIGNATURE_VALIDATION === 'disabled') {
+    console.warn('[Twilio Validation] WARNING: Signature validation is DISABLED - this should only be used for debugging!');
+    return true;
+  }
+  
   // In production, validate signature using Twilio's validateRequest function
   if (process.env.NODE_ENV === 'production') {
     try {
@@ -32,56 +38,46 @@ const validateTwilioRequest = (req: NextRequest, body: FormData, authToken?: str
       
       console.log('[Twilio Validation] Form params:', Object.keys(params).join(', '));
       
-      const isValid = twilio.validateRequest(
-        validationToken,
-        twilioSignature,
-        url,
-        params
-      );
+      // Try multiple URL variations for validation
+      const urlVariations = [
+        url, // Original URL
+        url.split('?')[0], // Without query params
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/voice`, // Base configured URL
+        `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/voice?agentId=${params.To ? 'unknown' : ''}`, // With placeholder agentId
+      ];
       
-      console.log('[Twilio Validation] Initial validation result:', isValid);
+      // Also try with different protocol if needed
+      const currentProtocol = new URL(url).protocol;
+      if (currentProtocol === 'https:') {
+        urlVariations.push(url.replace('https:', 'http:'));
+      } else {
+        urlVariations.push(url.replace('http:', 'https:'));
+      }
       
-      if (!isValid) {
-        console.error('[Twilio Validation] Signature validation failed for URL:', url);
-        
-        // Try without query parameters as a fallback
-        const baseUrl = url.split('?')[0];
-        console.log('[Twilio Validation] Trying base URL:', baseUrl);
-        
-        const baseValid = twilio.validateRequest(
+      console.log('[Twilio Validation] Trying URL variations:', urlVariations.map(u => u.split('?')[0] + (u.includes('?') ? '?...' : '')));
+      
+      for (const testUrl of urlVariations) {
+        const isValid = twilio.validateRequest(
           validationToken,
           twilioSignature,
-          baseUrl,
+          testUrl,
           params
         );
         
-        console.log('[Twilio Validation] Base URL validation result:', baseValid);
-        
-        if (baseValid) {
-          console.log('[Twilio Validation] Validation succeeded with base URL');
-          return true;
-        }
-        
-        // Try with the configured app URL as another fallback
-        const configuredUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/voice`;
-        console.log('[Twilio Validation] Trying configured URL:', configuredUrl);
-        
-        const configValid = twilio.validateRequest(
-          validationToken,
-          twilioSignature,
-          configuredUrl,
-          params
-        );
-        
-        console.log('[Twilio Validation] Configured URL validation result:', configValid);
-        
-        if (configValid) {
-          console.log('[Twilio Validation] Validation succeeded with configured URL');
+        if (isValid) {
+          console.log('[Twilio Validation] Validation succeeded with URL:', testUrl);
           return true;
         }
       }
       
-      return isValid;
+      console.error('[Twilio Validation] All validation attempts failed');
+      console.error('[Twilio Validation] Expected signature for:', {
+        url: url.split('?')[0],
+        paramCount: Object.keys(params).length,
+        authTokenLength: validationToken?.length
+      });
+      
+      return false;
     } catch (error) {
       console.error('Error validating Twilio request:', error);
       return false;
@@ -112,7 +108,7 @@ export async function POST(req: NextRequest) {
     });
     logger.debug('Received form data before validation', twilioData, 'twilio-voice');
     
-    // Extract the "To" number to look up auth token
+    // Extract the "To" number to look up auth token for subaccounts
     const toNumber = twilioData.To;
     let phoneNumberAuthToken: string | undefined;
     
@@ -123,8 +119,10 @@ export async function POST(req: NextRequest) {
       });
       
       if (phoneNumberRecord) {
-        // For now, we use the default auth token since subaccount fields don't exist yet
         console.log('[Validation] Found phone number in database');
+        // TODO: When subaccount fields are added to the schema, use:
+        // phoneNumberAuthToken = phoneNumberRecord.subaccountAuthToken;
+        // For now, we use the main account auth token
       } else {
         console.log('[Validation] Phone number not found in database');
       }

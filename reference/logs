@@ -1,1 +1,56 @@
-# Logs cleared - contains sensitive information
+[Middleware] Request: {
+  pathname: '/api/twilio/voice',
+  hasToken: false,
+  tokenData: null,
+  cookies: [],
+  nextAuthUrl: 'https://dashboard.getlinkai.com/',
+  hasSecret: true,
+  nodeEnv: 'production'
+}
+
+[Environment Check] NODE_ENV: production
+[Environment Check] TWILIO_AUTH_TOKEN: Set
+[Environment Check] NEXT_PUBLIC_APP_URL: https://dashboard.getlinkai.com
+[Validation] Looking up phone number: +17874764102
+[Validation] Found phone number in database
+[Twilio Validation] Starting validation
+[Twilio Validation] Request URL: https://dashboard.getlinkai.com/api/twilio/voice
+[Twilio Validation] Twilio Signature: Present
+[Twilio Validation] Using auth token: Default environment token
+[Twilio Validation] Form params: Called, ToState, CallerCountry, Direction, CallerState, ToZip, CallSid, To, CallerZip, ToCountry, StirVerstat, CallToken, CalledZip, ApiVersion, CalledCity, CallStatus, From, AccountSid, CalledCountry, CallerCity, ToCity, FromCountry, Caller, FromCity, CalledState, FromZip, FromState
+[Twilio Validation] Initial validation result: false
+[Twilio Validation] Signature validation failed for URL: https://dashboard.getlinkai.com/api/twilio/voice
+[Twilio Validation] Trying base URL: https://dashboard.getlinkai.com/api/twilio/voice
+[Twilio Validation] Base URL validation result: false
+[Twilio Validation] Trying configured URL: https://dashboard.getlinkai.com/api/twilio/voice
+[Twilio Validation] Configured URL validation result: false
+[2025-06-04T23:58:54.283Z] ERROR: [twilio-voice] Invalid Twilio request
+Data: {
+  "Called": "+17874764102",
+  "ToState": "Puerto Rico",
+  "CallerCountry": "PR",
+  "Direction": "inbound",
+  "CallerState": "Puerto Rico",
+  "ToZip": "00966",
+  "CallSid": "CAe6d19115ec36d77d548e9543d2b71f24",
+  "To": "+17874764102",
+  "CallerZip": "00976",
+  "ToCountry": "PR",
+  "StirVerstat": "TN-Validation-Passed-A",
+  "CallToken": "%7B%22parentCallInfoToken%22%3A%22eyJhbGciOiJFUzI1NiJ9.eyJjYWxsU2lkIjoiQ0FlNmQxOTExNWVjMzZkNzdkNTQ4ZTk1NDNkMmI3MWYyNCIsImZyb20iOiIrMTc4NzM4MjU0ODEiLCJ0byI6IisxNzg3NDc2NDEwMiIsImlhdCI6IjE3NDkwODE1MzIifQ.OM5xaa1u6lHm2Oxww6PDT7zXC8X0u31xDYjkJL3HTp6C2S67z5F0scdBjg7panX3WWHynIPA7nbTwo4ok5KhyA%22%2C%22identityHeaderTokens%22%3A%5B%5D%7D",
+  "CalledZip": "00966",
+  "ApiVersion": "2010-04-01",
+  "CalledCity": "GUAYNABO",
+  "CallStatus": "ringing",
+  "From": "+17873825481",
+  "AccountSid": "AC63991c2db51a41638adaa40c2fa6f205",
+  "CalledCountry": "PR",
+  "CallerCity": "TRUJILLO ALTO",
+  "ToCity": "GUAYNABO",
+  "FromCountry": "PR",
+  "Caller": "+17873825481",
+  "FromCity": "TRUJILLO ALTO",
+  "CalledState": "Puerto Rico",
+  "FromZip": "00976",
+  "FromState": "Puerto Rico"
+}

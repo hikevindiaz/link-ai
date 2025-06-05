@@ -1,6 +1,6 @@
 import twilio from 'twilio';
-import { logger } from '@/lib/logger';
-import prisma from '@/lib/prisma';
+import { logger } from '../logger';
+import prisma from '../prisma';
 
 export interface WebhookConfig {
   voiceUrl?: string;
@@ -69,10 +69,13 @@ export class TwilioWebhookManager {
       const webhookConfig: any = {};
       
       // Configure voice webhooks if voice is enabled
+      // NOTE: We don't include agentId in the URL because:
+      // 1. We support multiple Twilio subaccounts per agent
+      // 2. The webhook will look up the agent based on the "To" phone number
       if (capabilities.voice) {
-        webhookConfig.voiceUrl = `${this.baseUrl}/api/twilio/voice?agentId=${agentId}`;
+        webhookConfig.voiceUrl = `${this.baseUrl}/api/twilio/voice`;
         webhookConfig.voiceMethod = 'POST';
-        webhookConfig.voiceFallbackUrl = `${this.baseUrl}/api/twilio/voice/fallback?agentId=${agentId}`;
+        webhookConfig.voiceFallbackUrl = `${this.baseUrl}/api/twilio/voice/fallback`;
         webhookConfig.voiceFallbackMethod = 'POST';
       }
       
