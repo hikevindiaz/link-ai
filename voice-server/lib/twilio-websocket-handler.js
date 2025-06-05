@@ -208,7 +208,11 @@ async function handleTwilioWebSocket(ws, config) {
             
           case 'start':
             streamSid = data.start.streamSid;
-            logger.info('Incoming stream has started', { streamSid, agentId: config.agentId });
+            logger.info('Incoming stream has started', { 
+              streamSid, 
+              agentId: config.agentId,
+              customParams: data.start.customParameters || 'none'
+            });
             // Reset timestamps on new stream
             responseStartTimestampTwilio = null;
             latestMediaTimestamp = 0;

@@ -83,45 +83,74 @@ server.on('upgrade', async (request, socket, head) => {
     
     // Debug: Log the full URL and parsed query
     console.log('Full request URL:', request.url);
-    console.log('Parsed query object:', query);
-    console.log('Query keys:', Object.keys(query));
+    console.log('Note: Twilio strips query parameters from WebSocket URLs');
     
-    // Parse configuration from query parameters
-    const config = {
-      agentId: query.agentId || query['agentId'] || null,
-      openAIKey: query.openAIKey || query['openAIKey'] || null,
-      prompt: query.prompt ? decodeURIComponent(query.prompt) : undefined,
-      voice: query.voice || 'alloy',
-      temperature: query.temperature ? parseFloat(query.temperature) : 0.8
-    };
-    
-    console.log('Parsed config:', {
-      agentId: config.agentId ? 'present' : 'missing',
-      openAIKey: config.openAIKey ? 'present' : 'missing',
-      voice: config.voice,
-      temperature: config.temperature
-    });
-    
-    // Validate required parameters
-    if (!config.agentId || !config.openAIKey) {
-      console.error('Missing required parameters:', { 
-        agentId: !!config.agentId, 
-        openAIKey: !!config.openAIKey,
-        rawQuery: request.url
-      });
-      socket.write('HTTP/1.1 400 Bad Request\r\n\r\n');
-      socket.destroy();
-      return;
-    }
-    
+    // With Twilio, we need to get parameters from the start message instead of URL
+    // For now, we'll accept the connection and wait for the start message
     wss.handleUpgrade(request, socket, head, async (ws) => {
-      try {
-        console.log('Handling WebSocket connection for agent:', config.agentId);
-        await handleTwilioWebSocket(ws, config);
-      } catch (error) {
-        console.error('Error handling WebSocket connection:', error);
-        ws.close(1011, 'Internal server error');
-      }
+      console.log('WebSocket upgraded, waiting for Twilio start message with parameters...');
+      
+      // Create a temporary handler to wait for the start message
+      const startMessageHandler = async (message) => {
+        try {
+          const data = JSON.parse(message);
+          
+          if (data.event === 'start') {
+            console.log('Received Twilio start message:', data);
+            
+            // Extract custom parameters from the start message
+            const customParams = data.start.customParameters || {};
+            console.log('Custom parameters:', customParams);
+            
+            // Build config from custom parameters
+            const config = {
+              agentId: customParams.agentId || null,
+              openAIKey: customParams.openAIKey || null,
+              prompt: customParams.prompt || 'You are a helpful AI assistant.',
+              voice: customParams.voice || 'alloy',
+              temperature: customParams.temperature ? parseFloat(customParams.temperature) : 0.8
+            };
+            
+            console.log('Extracted config:', {
+              agentId: config.agentId ? 'present' : 'missing',
+              openAIKey: config.openAIKey ? 'present (first 10 chars: ' + config.openAIKey.substring(0, 10) + '...)' : 'missing',
+              voice: config.voice,
+              temperature: config.temperature
+            });
+            
+            // Validate required parameters
+            if (!config.agentId || !config.openAIKey) {
+              console.error('Missing required parameters in start message:', { 
+                agentId: !!config.agentId, 
+                openAIKey: !!config.openAIKey 
+              });
+              ws.close(1008, 'Missing required parameters');
+              return;
+            }
+            
+            // Remove this temporary handler
+            ws.removeListener('message', startMessageHandler);
+            
+            // Now handle the connection with the extracted config
+            console.log('Starting Twilio WebSocket handler with extracted config...');
+            await handleTwilioWebSocket(ws, config);
+          }
+        } catch (error) {
+          console.error('Error processing start message:', error);
+          ws.close(1011, 'Error processing start message');
+        }
+      };
+      
+      // Listen for the start message
+      ws.on('message', startMessageHandler);
+      
+      // Set a timeout in case we don't receive a start message
+      setTimeout(() => {
+        if (ws.readyState === ws.OPEN) {
+          console.error('Timeout waiting for start message');
+          ws.close(1008, 'Timeout waiting for start message');
+        }
+      }, 5000);
     });
   } else {
     socket.write('HTTP/1.1 404 Not Found\r\n\r\n');
