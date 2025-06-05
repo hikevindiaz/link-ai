@@ -59,10 +59,17 @@ const wss = new WebSocket.Server({ noServer: true });
 server.on('upgrade', async (request, socket, head) => {
   const { pathname, query } = parse(request.url, true);
   
-  // Verify origin if in production
-  if (process.env.NODE_ENV === 'production') {
+  console.log(`WebSocket upgrade request: ${pathname}`, {
+    origin: request.headers.origin || 'none',
+    userAgent: request.headers['user-agent'] || 'none',
+    queryParams: Object.keys(query).join(', ')
+  });
+  
+  // Verify origin if in production (skip for Twilio media stream endpoint)
+  if (process.env.NODE_ENV === 'production' && pathname !== '/api/twilio/media-stream') {
     const origin = request.headers.origin;
     if (origin && !ALLOWED_ORIGINS.includes(origin) && !ALLOWED_ORIGINS.includes('*')) {
+      console.error('WebSocket connection rejected - invalid origin:', origin);
       socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
       socket.destroy();
       return;
@@ -71,6 +78,9 @@ server.on('upgrade', async (request, socket, head) => {
   
   // Handle Twilio media stream WebSocket connections
   if (pathname === '/api/twilio/media-stream') {
+    // Skip origin check for Twilio connections (they don't send origin header)
+    console.log('Twilio WebSocket connection request from:', request.headers['user-agent'] || 'Unknown');
+    
     // Parse configuration from query parameters
     const config = {
       agentId: query.agentId,
