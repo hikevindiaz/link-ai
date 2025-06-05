@@ -244,12 +244,45 @@ export async function POST(req: NextRequest) {
     logger.info(`Connecting to media stream: ${voiceServerUrl}/api/twilio/media-stream?agentId=${agent.id}`, {}, 'twilio-voice');
     
     // Add custom parameters to pass to the WebSocket
+    // Note: Some versions of Twilio have issues with query parameters in WebSocket URLs
+    // Let's try a simpler URL and pass everything as custom parameters
+    const simpleStreamUrl = `${voiceServerUrl}/api/twilio/media-stream`;
+    
+    logger.info(`Stream URL (simple): ${simpleStreamUrl}`, {}, 'twilio-voice');
+    logger.info(`Stream URL (with params): ${streamUrl}`, {}, 'twilio-voice');
+    
     const stream = connect.stream({
-      url: streamUrl,
+      url: streamUrl, // Keep the full URL for now
       track: 'inbound_track' // Get inbound audio from the caller
     });
     
-    // Pass custom parameters
+    // Pass all configuration as custom parameters (backup method)
+    stream.parameter({
+      name: 'agentId',
+      value: agent.id
+    });
+    
+    stream.parameter({
+      name: 'openAIKey',
+      value: openAIKey
+    });
+    
+    stream.parameter({
+      name: 'prompt',
+      value: agent.prompt || 'You are a helpful AI assistant.'
+    });
+    
+    stream.parameter({
+      name: 'voice',
+      value: agent.voice || 'alloy'
+    });
+    
+    stream.parameter({
+      name: 'temperature',
+      value: String(agent.temperature || 0.7)
+    });
+    
+    // Original parameters
     stream.parameter({
       name: 'from',
       value: from
