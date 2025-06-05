@@ -25,7 +25,8 @@
     "supabase:sync": "npm run generate-supabase-schema && npm run migrate-db-to-supabase",
     "fix-twilio-webhooks": "ts-node scripts/fix-twilio-webhooks.ts",
     "add-twilio-subaccount-fields": "ts-node scripts/add-twilio-subaccount-fields.ts",
-    "check-webhook-config": "ts-node scripts/check-webhook-config.ts"
+    "check-webhook-config": "ts-node scripts/check-webhook-config.ts",
+    "update-phone-token": "ts-node scripts/update-phone-subaccount-token.ts"
   },
   "dependencies": {
     "@ai-sdk/fireworks": "0.1.16",

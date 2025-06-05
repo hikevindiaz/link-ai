@@ -126,9 +126,14 @@ export async function POST(req: NextRequest) {
       
       if (phoneNumberRecord) {
         console.log('[Validation] Found phone number in database');
-        // TODO: When subaccount fields are added to the schema, use:
-        // phoneNumberAuthToken = phoneNumberRecord.subaccountAuthToken;
-        // For now, we use the main account auth token
+        
+        // Use subaccount auth token if available
+        if (phoneNumberRecord.subaccountAuthToken) {
+          phoneNumberAuthToken = phoneNumberRecord.subaccountAuthToken;
+          console.log('[Validation] Using subaccount auth token for validation');
+        } else {
+          console.log('[Validation] No subaccount auth token found, using main account token');
+        }
       } else {
         console.log('[Validation] Phone number not found in database');
       }
