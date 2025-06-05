@@ -81,20 +81,33 @@ server.on('upgrade', async (request, socket, head) => {
     // Skip origin check for Twilio connections (they don't send origin header)
     console.log('Twilio WebSocket connection request from:', request.headers['user-agent'] || 'Unknown');
     
+    // Debug: Log the full URL and parsed query
+    console.log('Full request URL:', request.url);
+    console.log('Parsed query object:', query);
+    console.log('Query keys:', Object.keys(query));
+    
     // Parse configuration from query parameters
     const config = {
-      agentId: query.agentId,
-      openAIKey: query.openAIKey,
+      agentId: query.agentId || query['agentId'] || null,
+      openAIKey: query.openAIKey || query['openAIKey'] || null,
       prompt: query.prompt ? decodeURIComponent(query.prompt) : undefined,
       voice: query.voice || 'alloy',
       temperature: query.temperature ? parseFloat(query.temperature) : 0.8
     };
     
+    console.log('Parsed config:', {
+      agentId: config.agentId ? 'present' : 'missing',
+      openAIKey: config.openAIKey ? 'present' : 'missing',
+      voice: config.voice,
+      temperature: config.temperature
+    });
+    
     // Validate required parameters
     if (!config.agentId || !config.openAIKey) {
       console.error('Missing required parameters:', { 
         agentId: !!config.agentId, 
-        openAIKey: !!config.openAIKey 
+        openAIKey: !!config.openAIKey,
+        rawQuery: request.url
       });
       socket.write('HTTP/1.1 400 Bad Request\r\n\r\n');
       socket.destroy();
