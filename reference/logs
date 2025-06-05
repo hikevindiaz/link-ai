@@ -18,13 +18,20 @@
 [Twilio Validation] Twilio Signature: Present
 [Twilio Validation] Using auth token: Default environment token
 [Twilio Validation] Form params: Called, ToState, CallerCountry, Direction, CallerState, ToZip, CallSid, To, CallerZip, ToCountry, StirVerstat, CallToken, CalledZip, ApiVersion, CalledCity, CallStatus, From, AccountSid, CalledCountry, CallerCity, ToCity, FromCountry, Caller, FromCity, CalledState, FromZip, FromState
-[Twilio Validation] Initial validation result: false
-[Twilio Validation] Signature validation failed for URL: https://dashboard.getlinkai.com/api/twilio/voice
-[Twilio Validation] Trying base URL: https://dashboard.getlinkai.com/api/twilio/voice
-[Twilio Validation] Base URL validation result: false
-[Twilio Validation] Trying configured URL: https://dashboard.getlinkai.com/api/twilio/voice
-[Twilio Validation] Configured URL validation result: false
-[2025-06-04T23:58:54.283Z] ERROR: [twilio-voice] Invalid Twilio request
+[Twilio Validation] Trying URL variations: [
+  'https://dashboard.getlinkai.com/api/twilio/voice',
+  'https://dashboard.getlinkai.com/api/twilio/voice',
+  'https://dashboard.getlinkai.com/api/twilio/voice',
+  'https://dashboard.getlinkai.com/api/twilio/voice?...',
+  'http://dashboard.getlinkai.com/api/twilio/voice'
+]
+[Twilio Validation] All validation attempts failed
+[Twilio Validation] Expected signature for: {
+  url: 'https://dashboard.getlinkai.com/api/twilio/voice',
+  paramCount: 27,
+  authTokenLength: 32
+}
+[2025-06-05T01:22:26.798Z] ERROR: [twilio-voice] Invalid Twilio request
 Data: {
   "Called": "+17874764102",
   "ToState": "Puerto Rico",
@@ -32,12 +39,12 @@ Data: {
   "Direction": "inbound",
   "CallerState": "Puerto Rico",
   "ToZip": "00966",
-  "CallSid": "CAe6d19115ec36d77d548e9543d2b71f24",
+  "CallSid": "CAe0416b59901844a7626007cf41a4f3ef",
   "To": "+17874764102",
   "CallerZip": "00976",
   "ToCountry": "PR",
   "StirVerstat": "TN-Validation-Passed-A",
-  "CallToken": "%7B%22parentCallInfoToken%22%3A%22eyJhbGciOiJFUzI1NiJ9.eyJjYWxsU2lkIjoiQ0FlNmQxOTExNWVjMzZkNzdkNTQ4ZTk1NDNkMmI3MWYyNCIsImZyb20iOiIrMTc4NzM4MjU0ODEiLCJ0byI6IisxNzg3NDc2NDEwMiIsImlhdCI6IjE3NDkwODE1MzIifQ.OM5xaa1u6lHm2Oxww6PDT7zXC8X0u31xDYjkJL3HTp6C2S67z5F0scdBjg7panX3WWHynIPA7nbTwo4ok5KhyA%22%2C%22identityHeaderTokens%22%3A%5B%5D%7D",
+  "CallToken": "%7B%22parentCallInfoToken%22%3A%22eyJhbGciOiJFUzI1NiJ9.eyJjYWxsU2lkIjoiQ0FlMDQxNmI1OTkwMTg0NGE3NjI2MDA3Y2Y0MWE0ZjNlZiIsImZyb20iOiIrMTc4NzM4MjU0ODEiLCJ0byI6IisxNzg3NDc2NDEwMiIsImlhdCI6IjE3NDkwODY1NDYifQ.t_EFeFXflFgbKuOcatjM3pjfNTelo0bh2kF__ilw2AvaBGc5Rg9_SogeR67HUqfmGm8xG7noLnQHNnoo4kUp5A%22%2C%22identityHeaderTokens%22%3A%5B%5D%7D",
   "CalledZip": "00966",
   "ApiVersion": "2010-04-01",
   "CalledCity": "GUAYNABO",

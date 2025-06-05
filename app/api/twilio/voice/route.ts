@@ -39,30 +39,36 @@ const validateTwilioRequest = (req: NextRequest, body: FormData, authToken?: str
       console.log('[Twilio Validation] Form params:', Object.keys(params).join(', '));
       
       // Try multiple URL variations for validation
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dashboard.getlinkai.com';
       const urlVariations = [
         url, // Original URL
         url.split('?')[0], // Without query params
-        `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/voice`, // Base configured URL
-        `${process.env.NEXT_PUBLIC_APP_URL}/api/twilio/voice?agentId=${params.To ? 'unknown' : ''}`, // With placeholder agentId
+        `${baseUrl}/api/twilio/voice`, // Base configured URL
+        `${baseUrl}/api/twilio/voice/`, // With trailing slash
+        `${baseUrl.replace('https://', 'http://')}/api/twilio/voice`, // HTTP version
+        `${baseUrl.replace('https://', 'https://www.')}/api/twilio/voice`, // With www
       ];
       
-      // Also try with different protocol if needed
-      const currentProtocol = new URL(url).protocol;
-      if (currentProtocol === 'https:') {
-        urlVariations.push(url.replace('https:', 'http:'));
-      } else {
-        urlVariations.push(url.replace('http:', 'https:'));
-      }
+      // Remove duplicates
+      const uniqueUrls = [...new Set(urlVariations)];
       
-      console.log('[Twilio Validation] Trying URL variations:', urlVariations.map(u => u.split('?')[0] + (u.includes('?') ? '?...' : '')));
+      // Log what we're about to test
+      console.log('[Twilio Validation] Base URL from env:', baseUrl);
       
-      for (const testUrl of urlVariations) {
+      console.log('[Twilio Validation] Trying URL variations:', uniqueUrls.map(u => u.split('?')[0] + (u.includes('?') ? '?...' : '')));
+      
+      // Log the actual signature for debugging (first 10 chars only for security)
+      console.log('[Twilio Validation] Signature preview:', twilioSignature?.substring(0, 10) + '...');
+      
+      for (const testUrl of uniqueUrls) {
         const isValid = twilio.validateRequest(
           validationToken,
           twilioSignature,
           testUrl,
           params
         );
+        
+        console.log(`[Twilio Validation] Testing URL: ${testUrl} - Result: ${isValid}`);
         
         if (isValid) {
           console.log('[Twilio Validation] Validation succeeded with URL:', testUrl);
