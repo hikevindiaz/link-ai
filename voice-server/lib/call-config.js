@@ -120,6 +120,7 @@ async function getAgentConfiguration(agentId) {
     if (vectorStoreIds.length > 0) {
       tools.push({
         type: 'file_search',
+        name: 'file_search',
         file_search: {
           vector_store_ids: vectorStoreIds
         }

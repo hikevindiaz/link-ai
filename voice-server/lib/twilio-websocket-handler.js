@@ -104,12 +104,23 @@ async function handleTwilioWebSocket(ws, config) {
       
       // Add tools if available
       if (config.tools && config.tools.length > 0) {
-        sessionUpdate.session.tools = config.tools;
+        // Fix tools that are missing the required 'name' parameter
+        const fixedTools = config.tools.map(tool => {
+          if (tool.type === 'file_search' && !tool.name) {
+            return {
+              ...tool,
+              name: 'file_search'
+            };
+          }
+          return tool;
+        });
+        
+        sessionUpdate.session.tools = fixedTools;
         sessionUpdate.session.tool_choice = 'auto';
         logger.info('Adding tools to session', { 
           agentId: config.agentId,
-          toolCount: config.tools.length,
-          toolTypes: config.tools.map(t => t.type)
+          toolCount: fixedTools.length,
+          toolTypes: fixedTools.map(t => t.type)
         });
       }
       
