@@ -41,6 +41,12 @@ export async function storeCallConfig(callSid: string, config: CallConfig): Prom
   const ttl = 300; // 5 minutes
   
   try {
+    // Get the actual user ID for this agent
+    const agent = await prisma.chatbot.findUnique({
+      where: { id: config.agentId },
+      select: { userId: true }
+    });
+
     // Store as a message with special thread ID
     await prisma.message.create({
       data: {
@@ -48,7 +54,7 @@ export async function storeCallConfig(callSid: string, config: CallConfig): Prom
         message: 'CALL_CONFIG',
         response: JSON.stringify(config),
         from: 'system',
-        userId: config.agentId, // Using agentId temporarily
+        userId: agent?.userId!, // Use actual user ID (should be valid)
         chatbotId: config.agentId,
       }
     });

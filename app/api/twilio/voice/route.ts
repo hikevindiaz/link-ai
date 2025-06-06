@@ -169,6 +169,7 @@ export async function POST(req: NextRequest) {
         where: { id: agentId },
         include: {
           model: true,
+          user: true, // Include user data
           knowledgeSources: {
             select: {
               id: true,
@@ -188,6 +189,7 @@ export async function POST(req: NextRequest) {
           chatbot: {
             include: {
               model: true,
+              user: true, // Include user data
               knowledgeSources: {
                 select: {
                   id: true,
@@ -368,7 +370,7 @@ export async function POST(req: NextRequest) {
             message: `Call started from ${from}`,
             response: '', // Will be filled in by the conversation
             from: from,
-            userId: agent.userId,
+            userId: agent.userId, // Should now be valid with user relation
             chatbotId: agent.id,
           }
         });
