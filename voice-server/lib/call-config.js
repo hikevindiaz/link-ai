@@ -170,7 +170,7 @@ async function getVoiceSettings(voiceId, defaultVoice = 'alloy') {
   }
   
   // Check if it's already a valid OpenAI voice
-  const validVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+  const validVoices = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse'];
   if (validVoices.includes(voiceId)) {
     return { openAIVoice: voiceId };
   }

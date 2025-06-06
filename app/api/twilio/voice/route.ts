@@ -274,7 +274,7 @@ export async function POST(req: NextRequest) {
     const callConfig = {
       agentId: agent.id,
       openAIKey,
-      model: agent.modelId || "gpt-4o-realtime-preview-2024-10-01",
+      model: "gpt-4o-mini-realtime-preview-2024-12-17", // Use latest OpenAI Mini Realtime model
       voice: voiceSettings,
       instructions: fullInstructions,
       temperature: agent.temperature || 0.7,

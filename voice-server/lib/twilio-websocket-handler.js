@@ -52,7 +52,8 @@ async function handleTwilioWebSocket(ws, config) {
     activeConnections.set(connectionId, { ws, config });
     
     // Connect to OpenAI Realtime API
-    const model = config.model || 'gpt-4o-realtime-preview-2024-10-01';
+    // Always use the correct OpenAI Realtime model (ignore database model IDs)
+  const model = 'gpt-4o-mini-realtime-preview-2024-12-17';
     openAiWs = new WebSocket(`wss://api.openai.com/v1/realtime?model=${model}`, {
       headers: {
         Authorization: `Bearer ${config.openAIKey}`,
@@ -73,7 +74,7 @@ async function handleTwilioWebSocket(ws, config) {
       }
       
       // Validate voice is a known OpenAI voice
-      const validVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+      const validVoices = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse'];
       if (!validVoices.includes(openAIVoice)) {
         logger.info('Unknown voice, defaulting to alloy', { 
           voice: openAIVoice,
