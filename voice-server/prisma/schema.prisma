@@ -1,0 +1,177 @@
+// Minimal Prisma schema for voice server
+// Only includes models needed for retrieving agent configuration
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+  response  String
+  threadId  String   @default("")
+  from      String   @default("unknown")
+  userIP    String?
+  userId    String
+  chatbotId String
+  read      Boolean  @default(false)
+
+  @@map("messages")
+}
+
+model Chatbot {
+  id                              String   @id @default(cuid())
+  name                            String
+  userId                          String
+  openaiId                        String?  @default("")
+  createdAt                       DateTime @default(now()) @map("created_at")
+  openaiKey                       String?  @default("")
+  modelId                         String?
+  prompt                          String?  @default("You are a helpful assistant.")
+  welcomeMessage                  String?  @default("Hello! How can I help you today?")
+  chatbotErrorMessage             String?  @default("I'm sorry, I encountered an error. Please try again later.")
+  temperature                     Float    @default(0.7)
+  voice                           String?
+  silenceTimeout                  Int?
+  callTimeout                     Int?
+  checkUserPresence               Boolean? @default(false)
+  presenceMessage                 String?
+  presenceMessageDelay            Int?
+  hangUpMessage                   String?
+  maxCompletionTokens             Int      @default(1200)
+  lastTrainedAt                   DateTime?
+  trainingMessage                 String?
+  trainingStatus                  String   @default("idle")
+  
+  // Essential relations only
+  model             ChatbotModel?      @relation(fields: [modelId], references: [id])
+  knowledgeSources  KnowledgeSource[]  @relation("ChatbotToKnowledgeSource")
+  assistantSettings AssistantSettings?
+  twilioPhoneNumber TwilioPhoneNumber?
+
+  @@map("chatbots")
+}
+
+model ChatbotModel {
+  id      String    @id @default(cuid())
+  name    String
+  Chatbot Chatbot[]
+
+  @@map("models")
+}
+
+model KnowledgeSource {
+  id                   String    @id @default(cuid())
+  name                 String
+  description          String?
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  userId               String
+  catalogMode          String?
+  vectorStoreId        String?
+  vectorStoreUpdatedAt DateTime?
+  
+  // Relations
+  chatbots         Chatbot[]        @relation("ChatbotToKnowledgeSource")
+  websiteContents  WebsiteContent[]
+  qaContents       QAContent[]
+  textContents     TextContent[]
+
+  @@map("knowledge_sources")
+}
+
+model WebsiteContent {
+  id                String           @id @default(cuid())
+  url               String
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  knowledgeSourceId String
+  searchType        String           @default("crawl")
+  instructions      String?
+  
+  knowledgeSource   KnowledgeSource  @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map("website_contents")
+}
+
+model QAContent {
+  id                String           @id @default(cuid())
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  knowledgeSourceId String
+  answer            String
+  question          String
+  openAIFileId      String?
+  
+  knowledgeSource   KnowledgeSource  @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map("qa_contents")
+}
+
+model TextContent {
+  id                String           @id @default(cuid())
+  content           String
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+  knowledgeSourceId String
+  openAIFileId      String?
+  
+  knowledgeSource   KnowledgeSource  @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+
+  @@map("text_contents")
+}
+
+model AssistantSettings {
+  id                String    @id @default(cuid())
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  chatbotId         String    @unique
+  tools             Json?
+  retrievalSettings Json?
+  
+  chatbot           Chatbot   @relation(fields: [chatbotId], references: [id], onDelete: Cascade)
+
+  @@map("assistant_settings")
+}
+
+model UserVoice {
+  id          String    @id @default(cuid())
+  voiceId     String?
+  labels      Json?
+  addedOn     DateTime?
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("user_voices")
+}
+
+model TwilioPhoneNumber {
+  id                        String    @id @default(cuid())
+  phoneNumber               String    @unique
+  status                    String?
+  suspended                 Boolean   @default(false)
+  renewalDate               DateTime?
+  userId                    String?
+  chatbotId                 String?   @unique
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+  subaccountAuthToken       String?
+  friendlyName              String?
+  capabilities              Json?
+  subaccountSid             String?
+  stripeSubscriptionItemId  String?
+  
+  chatbot                   Chatbot?  @relation(fields: [chatbotId], references: [id], onDelete: SetNull)
+  
+  @@index([phoneNumber])
+  @@index([chatbotId])
+  @@map("twilio_phone_numbers")
+} 

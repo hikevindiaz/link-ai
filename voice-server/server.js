@@ -8,8 +8,9 @@ const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL;
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'];
 
-// Import the WebSocket handler
+// Import the WebSocket handler and call config
 const { handleTwilioWebSocket } = require('./lib/twilio-websocket-handler');
+const { getCallConfig, getAgentConfiguration } = require('./lib/call-config');
 
 // Create HTTP server
 const server = http.createServer((req, res) => {
@@ -35,7 +36,8 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ 
       status: 'healthy', 
       service: 'voice-server',
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString(),
+      database: DATABASE_URL ? 'configured' : 'not configured'
     }));
     return;
   }
@@ -81,14 +83,8 @@ server.on('upgrade', async (request, socket, head) => {
     // Skip origin check for Twilio connections (they don't send origin header)
     console.log('Twilio WebSocket connection request from:', request.headers['user-agent'] || 'Unknown');
     
-    // Debug: Log the full URL and parsed query
-    console.log('Full request URL:', request.url);
-    console.log('Note: Twilio strips query parameters from WebSocket URLs');
-    
-    // With Twilio, we need to get parameters from the start message instead of URL
-    // For now, we'll accept the connection and wait for the start message
     wss.handleUpgrade(request, socket, head, async (ws) => {
-      console.log('WebSocket upgraded, waiting for Twilio start message with parameters...');
+      console.log('WebSocket upgraded, waiting for Twilio start message...');
       
       // Create a temporary handler to wait for the start message
       const startMessageHandler = async (message) => {
@@ -102,37 +98,60 @@ server.on('upgrade', async (request, socket, head) => {
             const customParams = data.start.customParameters || {};
             console.log('Custom parameters:', customParams);
             
-            // Build config from custom parameters
-            const config = {
-              agentId: customParams.agentId || null,
-              openAIKey: customParams.openAIKey || null,
-              prompt: customParams.prompt || 'You are a helpful AI assistant.',
-              voice: customParams.voice || 'alloy',
-              temperature: customParams.temperature ? parseFloat(customParams.temperature) : 0.8
-            };
+            // Get callSid from custom parameters
+            const callSid = customParams.callSid;
             
-            console.log('Extracted config:', {
-              agentId: config.agentId ? 'present' : 'missing',
-              openAIKey: config.openAIKey ? 'present (first 10 chars: ' + config.openAIKey.substring(0, 10) + '...)' : 'missing',
-              voice: config.voice,
-              temperature: config.temperature
-            });
-            
-            // Validate required parameters
-            if (!config.agentId || !config.openAIKey) {
-              console.error('Missing required parameters in start message:', { 
-                agentId: !!config.agentId, 
-                openAIKey: !!config.openAIKey 
-              });
-              ws.close(1008, 'Missing required parameters');
+            if (!callSid) {
+              console.error('No callSid provided in custom parameters');
+              ws.close(1008, 'Missing callSid parameter');
               return;
             }
+            
+            // Retrieve full configuration from database
+            console.log(`Retrieving configuration for callSid: ${callSid}`);
+            const config = await getCallConfig(callSid);
+            
+            if (!config) {
+              console.error('Failed to retrieve call configuration', { callSid });
+              
+              // Fallback: Try to use minimal config from custom parameters
+              if (customParams.agentId && customParams.openAIKey) {
+                console.log('Using fallback configuration from custom parameters');
+                const fallbackConfig = {
+                  agentId: customParams.agentId,
+                  openAIKey: customParams.openAIKey,
+              prompt: customParams.prompt || 'You are a helpful AI assistant.',
+              voice: customParams.voice || 'alloy',
+                  temperature: customParams.temperature ? parseFloat(customParams.temperature) : 0.8,
+                  tools: [],
+                  vectorStoreIds: []
+                };
+                
+                // Remove this temporary handler
+                ws.removeListener('message', startMessageHandler);
+            
+                // Handle with fallback config
+                await handleTwilioWebSocket(ws, fallbackConfig);
+                return;
+              }
+              
+              ws.close(1008, 'Failed to retrieve call configuration');
+              return;
+            }
+            
+            console.log('Retrieved full configuration:', {
+              agentId: config.agentId,
+              hasOpenAIKey: !!config.openAIKey,
+              voice: config.voice?.openAIVoice || config.voice,
+              toolCount: config.tools?.length || 0,
+              vectorStoreCount: config.vectorStoreIds?.length || 0
+            });
             
             // Remove this temporary handler
             ws.removeListener('message', startMessageHandler);
             
-            // Now handle the connection with the extracted config
-            console.log('Starting Twilio WebSocket handler with extracted config...');
+            // Now handle the connection with the full config
+            console.log('Starting Twilio WebSocket handler with full configuration...');
             await handleTwilioWebSocket(ws, config);
           }
         } catch (error) {
@@ -173,4 +192,5 @@ server.listen(PORT, () => {
   console.log('WebSocket endpoint: /api/twilio/media-stream');
   console.log('Health check: /health');
   console.log('Environment:', process.env.NODE_ENV || 'development');
+  console.log('Database:', DATABASE_URL ? 'Connected' : 'Not configured');
 }); 

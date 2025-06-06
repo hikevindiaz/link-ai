@@ -19,9 +19,19 @@ export interface CallConfig {
   maxTokens?: number;
   tools: any[];
   knowledge: any[];
+  vectorStoreIds: string[];
   callSid: string;
   from: string;
   to: string;
+  // Additional agent settings
+  welcomeMessage?: string;
+  chatbotErrorMessage?: string;
+  silenceTimeout?: number;
+  callTimeout?: number;
+  checkUserPresence?: boolean;
+  presenceMessage?: string;
+  presenceMessageDelay?: number;
+  hangUpMessage?: string;
 }
 
 // Store call configuration temporarily using existing database

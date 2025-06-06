@@ -1,142 +1,207 @@
 # Voice Server Deployment Guide
 
-This guide will walk you through deploying the Link AI Voice Server to Fly.io.
+This guide covers deploying the Link AI Voice Server to Fly.io with full database connectivity.
 
 ## Prerequisites
 
-1. Fly.io account connected to GitHub (✅ You've already done this)
-2. Database URL from your main application
-3. Fly CLI installed
+- Fly CLI installed and authenticated
+- Access to your production database
+- Node.js 18+ installed locally
 
-## Step 1: Install Fly CLI
+## Initial Setup
 
-If you haven't already:
+1. **Install dependencies and generate Prisma client:**
 ```bash
-curl -L https://fly.io/install.sh | sh
+   cd voice-server
+   npm install
+   npx prisma generate
 ```
 
-Add to your PATH:
+2. **Configure environment variables:**
+   Create a `.env` file based on `env.example`:
 ```bash
-export FLYCTL_INSTALL="$HOME/.fly"
-export PATH="$FLYCTL_INSTALL/bin:$PATH"
+   cp env.example .env
+   # Edit .env with your actual values
 ```
 
-## Step 2: Login to Fly
-
+3. **Test locally:**
 ```bash
-flyctl auth login
+   npm run dev
 ```
 
-## Step 3: Navigate to Voice Server Directory
+## Deploy to Fly.io
 
+1. **Launch new app (first time only):**
 ```bash
-cd voice-server
-```
+   fly launch
+   ```
+   - Choose app name: `linkai-voice-server`
+   - Select region closest to your users
+   - Don't deploy yet when prompted
 
-## Step 4: Create the Fly App
+2. **Set secrets (environment variables):**
+   ```bash
+   # Database connection (use your main app's database)
+   fly secrets set DATABASE_URL="postgresql://user:password@host:5432/database?sslmode=require"
+   
+   # Allowed origins
+   fly secrets set ALLOWED_ORIGINS="https://dashboard.getlinkai.com,https://app.getlinkai.com"
+   
+   # Optional: Main app URL for API callbacks
+   fly secrets set MAIN_APP_URL="https://dashboard.getlinkai.com"
+   
+   # Optional: Internal API key
+   fly secrets set INTERNAL_API_KEY="your-secure-key-here"
+   ```
 
+3. **Configure fly.toml:**
+   The fly.toml file should already be configured, but verify it includes:
+   - Internal port 3000
+   - Health check endpoint
+   - Proper scaling settings
+
+4. **Deploy:**
 ```bash
-flyctl launch --no-deploy
+   fly deploy
 ```
 
-When prompted:
-- App name: `linkai-voice` (or choose your own)
-- Region: Choose closest to your users (e.g., `iad` for US East)
-- Don't add any databases
-- Don't deploy yet
+5. **Verify deployment:**
+   ```bash
+   # Check app status
+   fly status
+   
+   # Check logs
+   fly logs
+   
+   # Test health endpoint
+   curl https://linkai-voice-server.fly.dev/health
+   ```
 
-## Step 5: Set Environment Secrets
+## Update Main App Configuration
 
-Get your database URL from your main app's environment variables, then:
-
+1. **Set voice server URL in main app:**
 ```bash
-# Set the database URL (same as your main app)
-flyctl secrets set DATABASE_URL="postgresql://..."
+   # In your main app directory
+   VOICE_SERVER_URL=wss://linkai-voice-server.fly.dev
+   ```
 
-# Set allowed origins
-flyctl secrets set ALLOWED_ORIGINS="https://dashboard.getlinkai.com,https://www.getlinkai.com"
-```
-
-## Step 6: Deploy
-
+2. **Deploy main app changes:**
 ```bash
-flyctl deploy
+   git add .
+   git commit -m "Update voice server URL"
+   git push origin main
 ```
 
-## Step 7: Verify Deployment
+## Database Considerations
 
-Check the logs:
+The voice server now connects directly to your production database to retrieve agent configurations. This approach:
+
+- **Pros:**
+  - Full access to agent configuration
+  - Supports all agent features (tools, knowledge sources, voice settings)
+  - No URL length limitations
+  - More secure than passing config through URLs
+
+- **Cons:**
+  - Requires database connection from voice server
+  - Slightly higher latency for initial connection
+
+### Database Connection Pooling
+
+The voice server uses Prisma's connection pooling by default. For production, consider:
+
+1. Setting connection pool size in DATABASE_URL:
+   ```
+   postgresql://user:pass@host/db?connection_limit=5
+   ```
+
+2. Monitoring database connections:
 ```bash
-flyctl logs
+   fly postgres connect -a your-db-app
+   SELECT count(*) FROM pg_stat_activity;
 ```
 
-Test the health endpoint:
+## Monitoring and Debugging
+
+1. **View logs:**
 ```bash
-curl https://linkai-voice.fly.dev/health
-```
+   fly logs --app linkai-voice-server
+   ```
 
-## Step 8: Update Main Application
+2. **SSH into container:**
+   ```bash
+   fly ssh console --app linkai-voice-server
+   ```
 
-Add to your main app's `.env` file:
-```
-VOICE_SERVER_URL=wss://linkai-voice.fly.dev
-```
+3. **Check WebSocket connections:**
+   The server logs all WebSocket connections and configuration retrievals.
 
-## Step 9: Configure Scaling (Production)
+4. **Database queries:**
+   Enable Prisma query logging by setting:
+   ```bash
+   fly secrets set DEBUG="prisma:query"
+   ```
 
-For production with thousands of calls:
+## Scaling
 
+1. **Increase instances:**
 ```bash
-# Set minimum instances
-flyctl scale count 2
+   fly scale count 2 --app linkai-voice-server
+   ```
 
-# Configure auto-scaling
-flyctl autoscale set min=2 max=20
-
-# Set machine size (for higher load)
-flyctl scale vm shared-cpu-2x
-```
-
-## Step 10: Monitor Performance
-
+2. **Increase memory:**
 ```bash
-# View dashboard
-flyctl dashboard
-
-# Monitor logs
-flyctl logs --tail
-
-# Check metrics
-flyctl status
+   fly scale vm shared-cpu-1x --memory 512 --app linkai-voice-server
 ```
 
 ## Troubleshooting
 
-### Connection Issues
-- Verify DATABASE_URL is correct
-- Check allowed origins include your domains
-- Ensure Twilio webhooks point to correct URL
+### Voice Configuration Not Loading
 
-### Performance Issues
-- Scale up instances: `flyctl scale count 4`
-- Upgrade machine type: `flyctl scale vm dedicated-cpu-1x`
-- Check database connection pooling
+1. Check database connection:
+   ```bash
+   fly ssh console
+   node -e "require('./lib/prisma').chatbot.findFirst().then(console.log)"
+   ```
 
-### Debugging
-- SSH into instance: `flyctl ssh console`
-- View real-time logs: `flyctl logs --tail`
-- Check app status: `flyctl status`
+2. Verify callSid is being passed correctly
+3. Check main app is storing configuration properly
 
-## Cost Estimates
+### WebSocket Connection Failures
 
-For thousands of calls per day:
-- 2-4 shared instances: ~$10-20/month
-- With auto-scaling: ~$20-50/month depending on usage
-- Dedicated instances for high load: ~$60-120/month
+1. Verify VOICE_SERVER_URL in main app includes `wss://`
+2. Check Fly.io app is running: `fly status`
+3. Review logs for connection errors
 
-## Next Steps
+### High Latency
 
-1. Set up monitoring alerts
-2. Configure custom domain (optional)
-3. Set up database connection pooling for high load
-4. Configure rate limiting if needed 
+1. Consider deploying to region closer to users
+2. Optimize database queries
+3. Enable Fly.io's connection pooling
+
+## Security Best Practices
+
+1. **Rotate internal API key regularly**
+2. **Use read-only database user if possible**
+3. **Monitor for unusual connection patterns**
+4. **Keep dependencies updated:**
+   ```bash
+   npm update
+   npm audit fix
+   ```
+
+## Rollback Procedure
+
+If issues occur:
+
+1. **Quick rollback:**
+   ```bash
+   fly releases --app linkai-voice-server
+   fly deploy --image <previous-image-ref>
+   ```
+
+2. **Revert to previous version:**
+   ```bash
+   git checkout <previous-commit>
+   fly deploy
+   ``` 

@@ -1,82 +1,146 @@
 # Link AI Voice Server
 
-This is the dedicated WebSocket server for handling voice calls through Twilio Media Streams and OpenAI's Realtime API.
+WebSocket server for handling real-time voice conversations with Link AI agents using Twilio Media Streams and OpenAI Realtime API.
 
 ## Architecture
 
-- Persistent WebSocket connections for real-time voice communication
-- Connects Twilio Media Streams to OpenAI Realtime API
-- Handles thousands of concurrent voice calls
-- Auto-scaling with Fly.io
+The voice server acts as a bridge between:
+- **Twilio Media Streams**: Receives audio from phone calls
+- **OpenAI Realtime API**: Processes voice conversations
+- **Link AI Database**: Retrieves agent configurations
 
-## Local Development
+### Key Features
+
+- Direct database connectivity for full agent configuration access
+- Support for custom voices and personalities
+- Integration with knowledge sources and tools
+- Real-time voice interruption handling
+- Automatic fallback for configuration issues
+
+## How It Works
+
+1. **Call Initiation**: Main app receives Twilio webhook, stores configuration in database
+2. **WebSocket Connection**: Twilio connects to voice server via WebSocket
+3. **Configuration Retrieval**: Voice server fetches full agent config using callSid
+4. **OpenAI Connection**: Establishes connection to OpenAI Realtime API with agent settings
+5. **Audio Streaming**: Bidirectional audio streaming between caller and AI
+
+## Configuration
+
+### Environment Variables
+
+- `PORT`: Server port (default: 3000)
+- `DATABASE_URL`: PostgreSQL connection string (same as main app)
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed origins
+- `NODE_ENV`: Environment (development/production)
+- `MAIN_APP_URL`: URL of main application (optional)
+- `INTERNAL_API_KEY`: Key for secure API communication (optional)
+
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database
+- Access to OpenAI API
+
+### Setup
 
 1. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Copy `.env.example` to `.env` and fill in your credentials:
+2. Generate Prisma client:
+   ```bash
+   npx prisma generate
+   ```
+
+3. Copy environment file:
 ```bash
-cp .env.example .env
+   cp env.example .env
 ```
 
-3. Run the server:
+4. Configure `.env` with your values
+
+5. Run development server:
 ```bash
 npm run dev
 ```
 
-## Deployment to Fly.io
+### Testing
 
-1. Install Fly CLI:
+Test WebSocket connection:
 ```bash
-curl -L https://fly.io/install.sh | sh
+wscat -c ws://localhost:3000/api/twilio/media-stream
 ```
 
-2. Login to Fly:
+Test health endpoint:
 ```bash
-flyctl auth login
+curl http://localhost:3000/health
 ```
 
-3. Create the app (first time only):
+## Production Deployment
+
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed deployment instructions.
+
+### Quick Deploy to Fly.io
+
 ```bash
-flyctl launch
+fly launch
+fly secrets set DATABASE_URL="your-database-url"
+fly deploy
 ```
 
-4. Set secrets:
+## Agent Configuration
+
+The voice server retrieves comprehensive agent configuration including:
+
+- **Basic Settings**: Name, prompt, voice, temperature
+- **Voice Personality**: Custom voice settings and personality traits
+- **Knowledge Sources**: Vector stores for RAG
+- **Tools**: Built-in and custom function calling
+- **Call Settings**: Timeouts, presence detection, error messages
+
+### Voice Settings
+
+Supports OpenAI voices: `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`
+
+Custom voices can include:
+- Personality descriptions
+- Accent specifications
+- Speed and pitch adjustments
+
+## Security
+
+- Database credentials are never exposed to clients
+- WebSocket connections validated by origin
+- Configuration stored temporarily with automatic cleanup
+- Support for subaccount authentication tokens
+
+## Monitoring
+
+- Health check endpoint at `/health`
+- Comprehensive logging of all connections and events
+- Database connection status in health checks
+- Active connection tracking
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Configuration not loading**: Check database connection and callSid
+2. **Voice not working**: Verify voice ID is valid OpenAI voice
+3. **High latency**: Consider regional deployment
+4. **Connection drops**: Check WebSocket timeout settings
+
+### Debug Mode
+
+Enable detailed logging:
 ```bash
-flyctl secrets set DATABASE_URL="your-database-url"
-flyctl secrets set ALLOWED_ORIGINS="https://dashboard.getlinkai.com"
+DEBUG=* npm run dev
 ```
 
-5. Deploy:
-```bash
-flyctl deploy
-```
+## License
 
-## Scaling
-
-Monitor and scale based on load:
-```bash
-# View metrics
-flyctl dashboard
-
-# Scale horizontally
-flyctl scale count 3
-
-# Set auto-scaling
-flyctl autoscale set min=2 max=20
-```
-
-## Health Monitoring
-
-- Health check endpoint: `/health`
-- WebSocket endpoint: `/api/twilio/media-stream`
-- Metrics available at: `/metrics`
-
-## Environment Variables
-
-- `DATABASE_URL`: PostgreSQL connection string
-- `NODE_ENV`: Environment (production/development)
-- `PORT`: Server port (default: 3000)
-- `ALLOWED_ORIGINS`: Comma-separated list of allowed origins for CORS 
+Proprietary - Link AI 

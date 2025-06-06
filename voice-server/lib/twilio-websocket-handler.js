@@ -35,7 +35,11 @@ async function handleTwilioWebSocket(ws, config) {
   let openAiWs = null;
   
   try {
-    logger.info('WebSocket connection established', { agentId: config.agentId });
+    logger.info('WebSocket connection established', { 
+      agentId: config.agentId,
+      hasTools: !!config.tools && config.tools.length > 0,
+      hasKnowledge: !!config.vectorStoreIds && config.vectorStoreIds.length > 0
+    });
     
     // Validate required configuration
     if (!config.openAIKey) {
@@ -48,7 +52,8 @@ async function handleTwilioWebSocket(ws, config) {
     activeConnections.set(connectionId, { ws, config });
     
     // Connect to OpenAI Realtime API
-    openAiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01', {
+    const model = config.model || 'gpt-4o-realtime-preview-2024-10-01';
+    openAiWs = new WebSocket(`wss://api.openai.com/v1/realtime?model=${model}`, {
       headers: {
         Authorization: `Bearer ${config.openAIKey}`,
         "OpenAI-Beta": "realtime=v1"
@@ -57,16 +62,14 @@ async function handleTwilioWebSocket(ws, config) {
     
     // Initialize OpenAI session
     const initializeSession = () => {
-      // Map voice to OpenAI voice if it's a custom voice ID
-      let openAIVoice = config.voice || 'alloy';
-      
-      // If voice appears to be a DB ID (cuid format), use default
-      if (openAIVoice.startsWith('cm') && openAIVoice.length > 20) {
-        logger.info('Voice appears to be a DB ID, using alloy', { 
-          voiceId: openAIVoice,
-          agentId: config.agentId 
-        });
-        openAIVoice = 'alloy';
+      // Extract voice settings
+      let openAIVoice = 'alloy';
+      if (config.voice) {
+        if (typeof config.voice === 'string') {
+          openAIVoice = config.voice;
+        } else if (config.voice.openAIVoice) {
+          openAIVoice = config.voice.openAIVoice;
+        }
       }
       
       // Validate voice is a known OpenAI voice
@@ -79,6 +82,7 @@ async function handleTwilioWebSocket(ws, config) {
         openAIVoice = 'alloy';
       }
       
+      // Build session configuration
       const sessionUpdate = {
         type: 'session.update',
         session: {
@@ -86,18 +90,59 @@ async function handleTwilioWebSocket(ws, config) {
           input_audio_format: 'g711_ulaw',
           output_audio_format: 'g711_ulaw',
           voice: openAIVoice,
-          instructions: config.prompt || 'You are a helpful AI assistant.',
+          instructions: config.instructions || config.prompt || 'You are a helpful AI assistant.',
           modalities: ["text", "audio"],
           temperature: config.temperature || 0.8,
         }
       };
       
+      // Add max tokens if specified
+      if (config.maxTokens) {
+        sessionUpdate.session.max_response_output_tokens = config.maxTokens;
+      }
+      
+      // Add tools if available
+      if (config.tools && config.tools.length > 0) {
+        sessionUpdate.session.tools = config.tools;
+        sessionUpdate.session.tool_choice = 'auto';
+        logger.info('Adding tools to session', { 
+          agentId: config.agentId,
+          toolCount: config.tools.length,
+          toolTypes: config.tools.map(t => t.type)
+        });
+      }
+      
       logger.info('Sending session update to OpenAI', { 
         agentId: config.agentId,
         voice: openAIVoice,
-        instructionLength: sessionUpdate.session.instructions.length
+        instructionLength: sessionUpdate.session.instructions.length,
+        hasTools: !!sessionUpdate.session.tools,
+        temperature: sessionUpdate.session.temperature,
+        model: model
       });
+      
       openAiWs.send(JSON.stringify(sessionUpdate));
+      
+      // Send welcome message if configured
+      if (config.welcomeMessage) {
+        setTimeout(() => {
+          const conversationItem = {
+            type: 'conversation.item.create',
+            item: {
+              type: 'message',
+              role: 'assistant',
+              content: [{
+                type: 'input_text',
+                text: config.welcomeMessage
+              }]
+            }
+          };
+          openAiWs.send(JSON.stringify(conversationItem));
+          
+          // Request response
+          openAiWs.send(JSON.stringify({ type: 'response.create' }));
+        }, 500);
+      }
     };
     
     // Handle interruption when the caller's speech starts
@@ -190,6 +235,54 @@ async function handleTwilioWebSocket(ws, config) {
           handleSpeechStartedEvent();
         }
         
+        // Handle tool calls
+        if (response.type === 'response.function_call_arguments.done') {
+          logger.info('Function call completed', {
+            agentId: config.agentId,
+            functionName: response.name,
+            callId: response.call_id
+          });
+          
+          // TODO: Implement tool execution logic here
+          // For now, we'll send a placeholder response
+          const toolResponse = {
+            type: 'conversation.item.create',
+            item: {
+              type: 'function_call_output',
+              call_id: response.call_id,
+              output: JSON.stringify({
+                error: 'Tool execution not yet implemented'
+              })
+            }
+          };
+          openAiWs.send(JSON.stringify(toolResponse));
+        }
+        
+        // Handle errors
+        if (response.type === 'error') {
+          logger.error('OpenAI error', { 
+            error: response.error,
+            agentId: config.agentId 
+          });
+          
+          // Send error message to user if appropriate
+          if (config.chatbotErrorMessage) {
+            const errorMessage = {
+              type: 'conversation.item.create',
+              item: {
+                type: 'message',
+                role: 'assistant',
+                content: [{
+                  type: 'input_text',
+                  text: config.chatbotErrorMessage
+                }]
+              }
+            };
+            openAiWs.send(JSON.stringify(errorMessage));
+            openAiWs.send(JSON.stringify({ type: 'response.create' }));
+          }
+        }
+        
       } catch (error) {
         logger.error('Error processing OpenAI message', { 
           error: error.message, 
@@ -237,7 +330,9 @@ async function handleTwilioWebSocket(ws, config) {
             logger.info('Incoming stream has started', { 
               streamSid, 
               agentId: config.agentId,
-              customParams: data.start.customParameters || 'none'
+              callSid: config.callSid,
+              from: config.from,
+              to: config.to
             });
             // Reset timestamps on new stream
             responseStartTimestampTwilio = null;

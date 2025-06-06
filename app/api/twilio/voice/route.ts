@@ -169,6 +169,14 @@ export async function POST(req: NextRequest) {
         where: { id: agentId },
         include: {
           model: true,
+          knowledgeSources: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              vectorStoreId: true
+            }
+          }
         }
       });
     } else if (to) {
@@ -180,6 +188,14 @@ export async function POST(req: NextRequest) {
           chatbot: {
             include: {
               model: true,
+              knowledgeSources: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  vectorStoreId: true
+                }
+              }
             }
           }
         }
@@ -203,8 +219,8 @@ export async function POST(req: NextRequest) {
     
     logger.info(`Call will be handled by agent: ${agent.name} (${agent.id})`, {}, 'twilio-voice');
     
-    // Get OpenAI API key from model or environment
-    const openAIKey = agent.model?.apiKey || process.env.OPENAI_API_KEY;
+    // Get OpenAI API key from agent
+    const openAIKey = agent.openaiKey || process.env.OPENAI_API_KEY;
     
     if (!openAIKey) {
       logger.error('No OpenAI API key found for agent', { agentId: agent.id }, 'twilio-voice');
@@ -231,6 +247,27 @@ export async function POST(req: NextRequest) {
       fullInstructions = `${fullInstructions}\n\nSpeak with a ${voiceSettings.accent} accent.`;
     }
     
+    // Extract vector store IDs from knowledge sources
+    const vectorStoreIds = agent.knowledgeSources
+      ?.filter(ks => ks.vectorStoreId)
+      .map(ks => ks.vectorStoreId) || [];
+    
+    // Build tools array - for now, we'll include built-in tools and prepare for custom tools
+    const tools = [];
+    
+    // Add file search tool if there are knowledge sources
+    if (vectorStoreIds.length > 0) {
+      tools.push({
+        type: 'file_search',
+        file_search: {
+          vector_store_ids: vectorStoreIds
+        }
+      });
+    }
+    
+    // Add other built-in tools if needed
+    // TODO: Load custom tools from database/configuration
+    
     // Store full configuration for voice server to retrieve
     const callConfig = {
       agentId: agent.id,
@@ -240,11 +277,21 @@ export async function POST(req: NextRequest) {
       instructions: fullInstructions,
       temperature: agent.temperature || 0.7,
       maxTokens: agent.maxCompletionTokens,
-      tools: [], // TODO: Add tools when available
-      knowledge: [], // TODO: Add knowledge when available
+      tools,
+      knowledge: agent.knowledgeSources || [],
+      vectorStoreIds,
       callSid,
       from,
-      to
+      to,
+      // Additional agent settings that might be needed
+      welcomeMessage: agent.welcomeMessage,
+      chatbotErrorMessage: agent.chatbotErrorMessage,
+      silenceTimeout: agent.silenceTimeout,
+      callTimeout: agent.callTimeout,
+      checkUserPresence: agent.checkUserPresence,
+      presenceMessage: agent.presenceMessage,
+      presenceMessageDelay: agent.presenceMessageDelay,
+      hangUpMessage: agent.hangUpMessage
     };
     
     await storeCallConfig(callSid, callConfig);

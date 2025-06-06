@@ -1,0 +1,4 @@
+# Add these to your main app's .env or Vercel environment variables:
+ 
+VOICE_SERVER_URL=wss://voice-server.fly.dev
+INTERNAL_API_KEY=b0a2c45fc3ad742d48cd7f2ead7d5f6f7d2a8c0d66dbbf9988cdd42826cb1b5e 
