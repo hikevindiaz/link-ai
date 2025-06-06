@@ -261,6 +261,7 @@ export async function POST(req: NextRequest) {
     if (vectorStoreIds.length > 0) {
       tools.push({
         type: 'file_search',
+        name: 'file_search',
         file_search: {
           vector_store_ids: vectorStoreIds
         }
