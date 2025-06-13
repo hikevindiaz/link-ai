@@ -152,6 +152,9 @@ server.on('upgrade', async (request, socket, head) => {
             
             // Now handle the connection with the full config
             console.log('Starting Twilio WebSocket handler with full configuration...');
+            
+            // Pass the original start message to the handler
+            config.startMessage = message;
             await handleTwilioWebSocket(ws, config);
           }
         } catch (error) {
@@ -160,16 +163,21 @@ server.on('upgrade', async (request, socket, head) => {
         }
       };
       
-      // Listen for the start message
-      ws.on('message', startMessageHandler);
-      
-      // Set a timeout in case we don't receive a start message
-      setTimeout(() => {
+      // Set a timeout in case we don't receive a start message (increased to 30 seconds)
+      const startTimeout = setTimeout(() => {
         if (ws.readyState === ws.OPEN) {
           console.error('Timeout waiting for start message');
           ws.close(1008, 'Timeout waiting for start message');
         }
-      }, 5000);
+      }, 30000);
+      
+      // Listen for the start message with timeout clearing
+      const wrappedHandler = async (message) => {
+        clearTimeout(startTimeout);
+        await startMessageHandler(message);
+      };
+      
+      ws.on('message', wrappedHandler);
     });
   } else {
     socket.write('HTTP/1.1 404 Not Found\r\n\r\n');

@@ -33,9 +33,12 @@ export async function POST(
   { params }: { params: { chatbotId: string } }
 ) {
   try {
-    // Check if user is authenticated
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    // Check if this is an embedded request
+    const isEmbedded = req.headers.get('referer')?.includes('/embed/');
+    
+    // Check if user is authenticated (only required for non-embedded requests)
+    const session = !isEmbedded ? await getServerSession(authOptions) : null;
+    if (!isEmbedded && !session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -72,10 +75,9 @@ export async function POST(
     }
 
     // Get the chatbot
-    const chatbot = await db.chatbot.findUnique({
+    let chatbotQuery: any = {
       where: {
         id: params.chatbotId,
-        userId: session.user.id,
       },
       include: {
         model: true,
@@ -86,10 +88,24 @@ export async function POST(
           },
         },
       },
-    });
+    };
+
+    // For non-embedded requests, verify ownership
+    if (!isEmbedded && session?.user) {
+      chatbotQuery.where.userId = session.user.id;
+    }
+
+    const chatbot = await db.chatbot.findUnique(chatbotQuery) as any;
 
     if (!chatbot) {
       return NextResponse.json({ error: "Chatbot not found" }, { status: 404 });
+    }
+
+    // For embedded requests, check if public access is allowed
+    if (isEmbedded && !chatbot.allowEveryone) {
+      return NextResponse.json({ 
+        error: "This chatbot is not publicly accessible" 
+      }, { status: 403 });
     }
 
     console.log("Chatbot data:", {

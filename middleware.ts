@@ -5,6 +5,11 @@ import type { NextRequest } from "next/server";
 // Pages that don't require authentication
 const publicPages = ["/login", "/register"];
 
+// Check if a path is an embed route
+function isEmbedRoute(pathname: string): boolean {
+  return pathname.startsWith("/embed/");
+}
+
 // API routes that are allowed during onboarding
 const onboardingApiRoutes = [
   "/api/billing/create-setup-intent",
@@ -52,6 +57,11 @@ export async function middleware(req: NextRequest) {
     }
     return NextResponse.next();
   }
+
+  // Allow embed routes to be publicly accessible
+  if (isEmbedRoute(pathname)) {
+    return NextResponse.next();
+  }
   
   // Allow auth API routes
   if (pathname.startsWith("/api/auth/")) {
@@ -60,6 +70,24 @@ export async function middleware(req: NextRequest) {
   
   // Allow Twilio API routes that don't require authentication
   if (pathname.startsWith("/api/twilio") && !pathname.includes("/phone-numbers")) {
+    return NextResponse.next();
+  }
+
+  // Allow chatbot and related API routes for embed functionality
+  if (req.headers.get('referer')?.includes('/embed/') && 
+      (pathname.startsWith("/api/chatbots/") || 
+       pathname.startsWith("/api/chat-interface") ||
+       pathname.startsWith("/api/knowledge-sources") ||
+       pathname.startsWith("/api/files/upload") ||
+       pathname.startsWith("/api/document") ||
+       pathname.startsWith("/api/chat"))) {
+    return NextResponse.next();
+  }
+
+  // Allow chatbot API routes for embed functionality (for direct access)
+  if (pathname.startsWith("/api/chatbots/") && 
+      (pathname.includes("/chat") || 
+       pathname.match(/\/api\/chatbots\/[^\/]+\/?$/))) { // Allow GET /api/chatbots/[id] and chat
     return NextResponse.next();
   }
   
