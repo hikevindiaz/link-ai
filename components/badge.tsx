@@ -7,17 +7,21 @@ import { cn } from "@/lib/utils"
 
 const badgeVariants = tv({
   base: cn(
-    "inline-flex items-center gap-x-1 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset",
+    "inline-flex items-center gap-x-1 whitespace-nowrap rounded-xl px-2 py-1 text-xs font-medium ring-1 ring-inset",
   ),
   variants: {
     variant: {
       default: [
-        "bg-blue-50 text-blue-900 ring-blue-500/30",
-        "dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30",
+        "bg-neutral-50 text-neutral-900 ring-neutral-500/30",
+        "dark:bg-neutral-400/10 dark:text-neutral-400 dark:ring-neutral-400/20",
       ],
       neutral: [
-        "bg-gray-50 text-gray-900 ring-gray-500/30",
-        "dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20",
+        "bg-neutral-50 text-neutral-900 ring-neutral-500/30",
+        "dark:bg-neutral-400/10 dark:text-neutral-400 dark:ring-neutral-400/20",
+      ],
+      neutral: [
+        "bg-neutral-50 text-neutral-900 ring-neutral-500/30",
+        "dark:bg-neutral-400/10 dark:text-neutral-400 dark:ring-neutral-400/30",
       ],
       success: [
         "bg-emerald-50 text-emerald-900 ring-emerald-600/30",

@@ -1,4 +1,4 @@
-// Tremor Card [v0.0.2]
+// Tremor Card [v0.0.2] - Updated to match Design System
 
 import * as React from "react"
 
@@ -13,7 +13,10 @@ const Card = React.forwardRef<
     <Comp
       ref={ref}
       className={cn(
-        "rounded-lg border border-gray-200 bg-white text-gray-950 shadow-sm dark:border-gray-800 dark:bg-gray-950 dark:text-gray-50",
+        // Design System: Theme-compatible card with border design - optimized for 5-column layout
+        "bg-white dark:bg-black border border-neutral-200 dark:border-neutral-800 p-3 rounded-xl shadow-sm",
+        // Text colors per design system
+        "text-black dark:text-white",
         className
       )}
       {...props}
@@ -28,7 +31,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    className={cn("flex flex-col space-y-1.5 p-0 mb-4", className)}
     {...props}
   />
 ))
@@ -41,7 +44,8 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
+      // Design System: Typography scale
+      "text-2xl font-normal leading-tight tracking-tight text-neutral-700 dark:text-neutral-200",
       className
     )}
     {...props}
@@ -55,7 +59,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-gray-500 dark:text-gray-400", className)}
+    className={cn("text-base text-neutral-600 dark:text-neutral-400", className)}
     {...props}
   />
 ))
@@ -65,7 +69,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  <div ref={ref} className={cn("p-0", className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 
@@ -75,7 +79,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
+    className={cn("flex items-center p-0 mt-6", className)}
     {...props}
   />
 ))

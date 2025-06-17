@@ -66,7 +66,7 @@ const renderContentWithFormatting = (text: string) => {
           alt="Inline image content" 
           width={300}
           height={200}
-          className="rounded-md my-2 max-w-xs h-auto object-contain block"
+          className="rounded-xl my-2 max-w-xs h-auto object-contain block"
         />
       );
     } else {
@@ -100,7 +100,7 @@ const renderContentWithFormatting = (text: string) => {
               alt={markdownImages[imageIndex].alt || "Image"} 
               width={300}
               height={200}
-              className="rounded-md my-2 max-w-xs h-auto object-contain block"
+              className="rounded-xl my-2 max-w-xs h-auto object-contain block"
             />
           );
         }
@@ -206,7 +206,7 @@ const processLinks = (text: string) => {
           href={part} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-indigo-600 dark:text-indigo-400 underline"
+          className="text-neutral-600 dark:text-neutral-400 underline"
         >
           {part}
         </a>
@@ -221,10 +221,10 @@ export function ThreadMessage({ isUser, content, avatar }: ThreadMessageProps) {
     // User message bubble (can also render images if needed, though unlikely)
     return (
       <div className="flex items-end justify-end space-x-2">
-        <div className="bg-black dark:bg-gray-800 text-white px-4 py-2 text-sm rounded-tl-lg rounded-tr-lg rounded-bl-lg rounded-br-none max-w-md break-words">
+        <div className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 text-sm rounded-tl-lg rounded-tr-lg rounded-bl-lg rounded-br-none max-w-md break-words">
           {renderContentWithFormatting(content)}
         </div>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black dark:bg-gray-800 text-white text-xs">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black dark:bg-white text-white dark:text-black text-xs">
           <UserIcon className="h-4 w-4" />
         </span>
       </div>
@@ -234,10 +234,10 @@ export function ThreadMessage({ isUser, content, avatar }: ThreadMessageProps) {
   // Agent message bubble
   return (
     <div className="flex items-start justify-start space-x-2">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-200 text-gray-800 dark:text-gray-800 text-xs font-medium">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-medium">
         {avatar}
       </span>
-      <div className="bg-gray-100 dark:bg-gray-100 text-gray-900 dark:text-gray-900 px-4 py-2 text-sm rounded-tl-none rounded-tr-lg rounded-br-lg rounded-bl-lg max-w-md break-words">
+      <div className="bg-card-light dark:bg-card-dark text-neutral-700 dark:text-neutral-200 px-4 py-2 text-sm rounded-tl-none rounded-tr-lg rounded-br-lg rounded-bl-lg max-w-md break-words">
         {renderContentWithFormatting(content)}
       </div>
     </div>

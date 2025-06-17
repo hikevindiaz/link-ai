@@ -294,7 +294,7 @@ export default function IntegrationsPage() {
   }
 
   // Define gradient colors (can be customized)
-  const borderGradientColors = ["#4f46e5", "#7c3aed", "#db2777"]; // Using indigo/purple/pink
+  const borderGradientColors = ["#4f46e5", "#7c3aed", "#db2777"]; // Using neutral/purple/pink
   const [color1, color2, color3] = borderGradientColors;
   const gradientStyle = `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})`;
 
@@ -304,10 +304,10 @@ export default function IntegrationsPage() {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0 px-4 md:px-8 pt-6">
         {/* Left Side: Title & Count */}
         <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50">
+          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
             Integrations & Modules
           </h3>
-          <span className="inline-flex size-6 items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-900 dark:bg-gray-800 dark:text-gray-50">
+          <span className="inline-flex size-6 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-50">
             {filteredAndSortedData.length}
           </span>
         </div>
@@ -351,24 +351,24 @@ export default function IntegrationsPage() {
             const cardInnerContent = (
               <>
                 <div className="flex items-start gap-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white p-1.5 dark:border-gray-800 dark:bg-gray-900">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-neutral-200 bg-white p-1.5 dark:border-neutral-800 dark:bg-neutral-900">
                     {item.iconUrl ? (
                       <ThemedSvg src={item.iconUrl} alt={item.name} className="size-5" />
                     ) : (
-                      <item.icon className="size-5 text-gray-700 dark:text-gray-300" aria-hidden={true} />
+                      <item.icon className="size-5 text-neutral-700 dark:text-neutral-300" aria-hidden={true} />
                     )}
                   </span>
                   <div className="flex-1">
-                    <dt className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+                    <dt className="text-sm font-semibold text-neutral-900 dark:text-neutral-50">
                       {item.name}
                     </dt>
-                    <dd className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                    <dd className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
                       {item.description}
                     </dd>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <div className="mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
                   {item.isModule ? (
                     <div className="flex items-center space-x-2">
                       <Switch
@@ -377,7 +377,7 @@ export default function IntegrationsPage() {
                         onCheckedChange={(checked) => handleModuleToggle(item.id, checked)}
                         disabled={isItemLoading}
                       />
-                      <Label htmlFor={`module-toggle-${item.id}`} className={`text-xs ${isItemLoading ? 'text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400'} cursor-pointer`}>
+                      <Label htmlFor={`module-toggle-${item.id}`} className={`text-xs ${isItemLoading ? 'text-neutral-400 dark:text-neutral-600' : 'text-neutral-600 dark:text-neutral-400'} cursor-pointer`}>
                         {isItemLoading ? 'Updating...' : item.isEnabled ? 'Enabled' : 'Disabled'}
                       </Label>
                     </div>
@@ -391,7 +391,7 @@ export default function IntegrationsPage() {
                         onCheckedChange={(checked) => handleModuleToggle(item.id, checked)}
                         disabled={isItemLoading}
                       />
-                      <Label htmlFor={`integration-toggle-${item.id}`} className={`text-xs ${isItemLoading ? 'text-gray-400 dark:text-gray-600' : 'text-gray-600 dark:text-gray-400'} cursor-pointer`}>
+                      <Label htmlFor={`integration-toggle-${item.id}`} className={`text-xs ${isItemLoading ? 'text-neutral-400 dark:text-neutral-600' : 'text-neutral-600 dark:text-neutral-400'} cursor-pointer`}>
                         {isItemLoading ? 'Updating...' : item.isEnabled ? 'Enabled' : 'Disabled'}
                       </Label>
                     </div>
@@ -424,7 +424,7 @@ export default function IntegrationsPage() {
                   style={{ background: gradientStyle }}
                 >
                   <Card 
-                    className="flex flex-col justify-between p-4 relative h-full bg-white dark:bg-gray-900 rounded-lg"
+                    className="flex flex-col justify-between p-4 relative h-full bg-white dark:bg-neutral-900 rounded-xl"
                   >
                     {cardInnerContent}
                   </Card>
@@ -435,7 +435,7 @@ export default function IntegrationsPage() {
               return (
                 <Card 
                   key={item.id} 
-                  className="flex flex-col justify-between p-4 relative border hover:shadow-md transition-shadow duration-200 h-full bg-white dark:bg-gray-900 rounded-lg"
+                  className="flex flex-col justify-between p-4 relative border hover:shadow-md transition-shadow duration-200 h-full bg-white dark:bg-neutral-900 rounded-xl"
                 >
                   {cardInnerContent}
                 </Card>

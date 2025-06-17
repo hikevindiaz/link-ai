@@ -46,7 +46,7 @@ const DeleteFileDialog: React.FC<DeleteFileDialogProps> = ({
             Are you sure you want to remove this file? Your agent will no longer have access to this information.
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-md overflow-hidden text-ellipsis">
+        <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden text-ellipsis">
           {fileToDelete?.name}
         </div>
         
@@ -54,8 +54,8 @@ const DeleteFileDialog: React.FC<DeleteFileDialogProps> = ({
           <div className="mt-4 space-y-2">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-1.5">
-                <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
-                <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />
+                <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400">
                   {deleteProgress === 'deleting' 
                     ? "Starting to remove file from knowledge base..." 
                     : deleteProgress === 'removing'
@@ -64,7 +64,7 @@ const DeleteFileDialog: React.FC<DeleteFileDialogProps> = ({
                 </span>
               </div>
             </div>
-            <Progress value={deleteProgress === 'deleting' ? 25 : deleteProgress === 'removing' ? 60 : 90} className="h-2 bg-indigo-100 text-indigo-600" />
+            <Progress value={deleteProgress === 'deleting' ? 25 : deleteProgress === 'removing' ? 60 : 90} className="h-2 bg-neutral-100 text-neutral-600" />
           </div>
         )}
         

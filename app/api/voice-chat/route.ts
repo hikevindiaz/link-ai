@@ -17,10 +17,13 @@ export async function POST(req: NextRequest) {
   logger.info('Voice chat request received', {}, 'voice-chat');
   
   try {
-    // Get session for authentication
-    const session = await getServerSession(authOptions);
+    // Check if this is an embedded request
+    const isEmbedded = req.headers.get('referer')?.includes('/embed/');
     
-    if (!session?.user) {
+    // Get session for authentication (only required for non-embedded requests)
+    const session = !isEmbedded ? await getServerSession(authOptions) : null;
+    
+    if (!isEmbedded && !session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
@@ -41,6 +44,22 @@ export async function POST(req: NextRequest) {
     }
 
     logger.info(`Processing voice chat for chatbot: ${chatbotId}`, {}, 'voice-chat');
+
+    // For embedded requests, verify the chatbot allows public access first
+    if (isEmbedded) {
+      const { db } = await import('@/lib/db');
+      const chatbot = await db.chatbot.findUnique({
+        where: { id: chatbotId },
+        select: { allowEveryone: true }
+      });
+      
+      if (!chatbot?.allowEveryone) {
+        logger.warn('Embedded voice chat attempted on private chatbot', { chatbotId }, 'voice-chat');
+        return NextResponse.json({ 
+          error: 'This chatbot is not publicly accessible' 
+        }, { status: 403 });
+      }
+    }
 
     // Create agent runtime
     const runtime = await AgentRuntime.fromChatbotId(chatbotId);

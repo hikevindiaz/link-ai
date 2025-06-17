@@ -24,13 +24,13 @@ interface BillingOverviewProps {
   isLoading?: boolean;
 }
 
-// Loading component with indigo theme
+// Loading component with neutral theme
 function BillingOverviewLoading() {
   return (
-    <div className="mt-8 rounded-lg border border-gray-200 bg-white text-gray-950 shadow-sm dark:border-gray-800 dark:bg-gray-950 dark:text-gray-50 p-6">
+    <div className="mt-8 rounded-lg border border-neutral-200 bg-white text-neutral-950 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-50 p-6">
       <div className="flex items-center justify-center space-x-3">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
           Loading billing information...
         </p>
       </div>
@@ -84,14 +84,14 @@ export function BillingOverview({
     return (
       <Card className="mt-8 p-8 text-center">
         <div className="flex justify-center mb-4">
-          <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-2">
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-2">
           No active plan
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+        <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-6">
           Choose a plan to get started with AI agents and unlock powerful automation features.
         </p>
         <Button onClick={onShowPricingDialog}>
@@ -102,24 +102,24 @@ export function BillingOverview({
   }
 
   return (
-    <div className="mt-8 rounded-lg border border-gray-200 bg-white text-gray-950 shadow-sm dark:border-gray-800 dark:bg-gray-950 dark:text-gray-50 p-0">
+    <div className="mt-8 rounded-lg border border-neutral-200 bg-white text-neutral-950 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-50 p-0">
       <div className="flex items-start space-x-10 px-6 py-2">
-        <ul className="w-full divide-y divide-gray-200 text-sm text-gray-500 dark:divide-gray-800 dark:text-gray-500">
+        <ul className="w-full divide-y divide-neutral-200 text-sm text-neutral-500 dark:divide-neutral-800 dark:text-neutral-500">
           {/* Plan */}
           <li className="flex items-center justify-between py-4">
             <div className="w-full">
               <div className="flex items-center justify-between">
-                <p className="font-medium text-gray-900 dark:text-gray-50">
+                <p className="font-medium text-neutral-900 dark:text-neutral-50">
                   {planDetails.name}
                 </p>
-                <p className="font-medium text-gray-700 dark:text-gray-300">
+                <p className="font-medium text-neutral-700 dark:text-neutral-300">
                   {planDetails.price}
                 </p>
               </div>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
                 <button
                   onClick={onShowPricingDialog}
-                  className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:dark:text-indigo-300 hover:underline"
+                  className="text-neutral-600 hover:text-neutral-700 dark:text-neutral-400 hover:dark:text-neutral-300 hover:underline"
                 >
                   Switch Plan
                 </button>
@@ -132,10 +132,10 @@ export function BillingOverview({
             <li key={index} className="flex items-center justify-between py-4">
               <div className="w-full">
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-gray-900 dark:text-gray-50">
+                  <p className="font-medium text-neutral-900 dark:text-neutral-50">
                     {usage.resource}
                   </p>
-                  <p className="font-medium text-gray-700 dark:text-gray-300">
+                  <p className="font-medium text-neutral-700 dark:text-neutral-300">
                     {usage.overageCost > 0 
                       ? `$${usage.overageCost.toFixed(2)}`
                       : '$0.00'
@@ -144,16 +144,16 @@ export function BillingOverview({
                 </div>
                 <div className="w-full md:w-1/2">
                   {usage.percentage >= 0 && (
-                    <div className="mt-2 bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
+                    <div className="mt-2 bg-neutral-200 rounded-full h-1.5 dark:bg-neutral-700">
                       <div 
                         className={`h-1.5 rounded-full transition-all duration-300 ${
-                          usage.percentage > 100 ? 'bg-red-500' : 'bg-indigo-500'
+                          usage.percentage > 100 ? 'bg-red-500' : 'bg-neutral-500'
                         }`}
                         style={{ width: `${Math.min(usage.percentage, 100)}%` }}
                       ></div>
                     </div>
                   )}
-                  <p className="mt-1 flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
+                  <p className="mt-1 flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-500">
                     <span>Used {usage.usage}</span>
                     <span>{usage.maximum}</span>
                   </p>
@@ -168,14 +168,14 @@ export function BillingOverview({
               <div className="w-full">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-900 dark:text-gray-50">
+                    <p className="font-medium text-neutral-900 dark:text-neutral-50">
                       Phone Number ({phone.phoneNumber})
                     </p>
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                       phone.status === 'active' 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                         : phone.status === 'pending'
-                        ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400'
+                        ? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900/20 dark:text-neutral-400'
                         : phone.status === 'warning'
                         ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400'
                         : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
@@ -183,11 +183,11 @@ export function BillingOverview({
                       {phone.status.charAt(0).toUpperCase() + phone.status.slice(1)}
                     </span>
                   </div>
-                  <p className="font-medium text-gray-700 dark:text-gray-300">
+                  <p className="font-medium text-neutral-700 dark:text-neutral-300">
                     ${phone.monthlyPrice.toFixed(2)}
                   </p>
                 </div>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
                   Dedicated phone line, ${phone.monthlyPrice.toFixed(2)}/mo
                 </p>
               </div>
@@ -199,14 +199,14 @@ export function BillingOverview({
             <li className="flex items-center justify-between py-4">
               <div className="w-full">
                 <div className="flex items-center justify-between">
-                  <p className="font-medium text-gray-900 dark:text-gray-50">
+                  <p className="font-medium text-neutral-900 dark:text-neutral-50">
                     Additional usage charges
                   </p>
-                  <p className="font-medium text-gray-700 dark:text-gray-300">
+                  <p className="font-medium text-neutral-700 dark:text-neutral-300">
                     ${overageCost.toFixed(2)}
                   </p>
                 </div>
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
                   Overage beyond plan limits
                 </p>
               </div>
@@ -216,10 +216,10 @@ export function BillingOverview({
       </div>
       
       {/* Footer */}
-      <div className="border-t border-gray-200 bg-gray-50 px-6 py-3 dark:border-gray-800 dark:bg-gray-900">
+      <div className="border-t border-neutral-200 bg-neutral-50 px-6 py-3 dark:border-neutral-800 dark:bg-neutral-900">
         {currentPlan?.status === 'trialing' ? (
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm font-medium text-gray-900 dark:text-gray-50">
+            <div className="flex items-center justify-between text-sm font-medium text-neutral-900 dark:text-neutral-50">
               <span>Trial ends {currentPlan.currentPeriodEnd 
                 ? new Date(currentPlan.currentPeriodEnd).toLocaleDateString('en-US', { 
                     month: 'long', 
@@ -234,7 +234,7 @@ export function BillingOverview({
                 }
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex items-center justify-between text-xs text-neutral-600 dark:text-neutral-400">
               <span>First billing charge</span>
               <span className="font-medium">
                 ${(
@@ -246,7 +246,7 @@ export function BillingOverview({
             </div>
           </div>
         ) : (
-          <p className="flex items-center justify-between text-sm font-medium text-gray-900 dark:text-gray-50">
+          <p className="flex items-center justify-between text-sm font-medium text-neutral-900 dark:text-neutral-50">
             <span>Next billing {currentPlan.currentPeriodEnd 
               ? new Date(currentPlan.currentPeriodEnd).toLocaleDateString('en-US', { 
                   month: 'long', 

@@ -198,35 +198,35 @@ export function PricingStep({ selectedPlan, onSelectPlan, onPrev, onComplete, is
       {!showPaymentForm ? (
         <>
           {/* Pricing Table */}
-          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-              <thead className="bg-gray-50 dark:bg-gray-800">
+          <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
+            <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-800">
+              <thead className="bg-neutral-50 dark:bg-neutral-800">
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                     Feature
                   </th>
                   {pricingPlans.map((plan) => (
-                    <th key={plan.id} scope="col" className={`px-6 py-3 text-center text-xs font-medium uppercase tracking-wider ${selectedPlan === plan.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                    <th key={plan.id} scope="col" className={`px-6 py-3 text-center text-xs font-medium uppercase tracking-wider ${selectedPlan === plan.id ? 'text-neutral-600 dark:text-neutral-400' : 'text-neutral-500 dark:text-neutral-400'}`}>
                       {plan.name}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
+              <tbody className="bg-white dark:bg-neutral-900 divide-y divide-neutral-200 dark:divide-neutral-800">
                 {/* Pricing row */}
-                <tr className="bg-gray-50 dark:bg-gray-800/50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-50">
+                <tr className="bg-neutral-50 dark:bg-neutral-800/50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-neutral-900 dark:text-neutral-50">
                     Price (per month)
                   </td>
                   {pricingPlans.map((plan) => (
-                    <td key={plan.id} className={`px-6 py-4 whitespace-nowrap text-center text-lg font-bold ${selectedPlan === plan.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-900 dark:text-gray-50'}`}>
+                    <td key={plan.id} className={`px-6 py-4 whitespace-nowrap text-center text-lg font-bold ${selectedPlan === plan.id ? 'text-neutral-600 dark:text-neutral-400' : 'text-neutral-900 dark:text-neutral-50'}`}>
                       {plan.priceLabel}
                       <div className="mt-2">
                         <Button
                           variant={selectedPlan === plan.id ? "primary" : "secondary"}
                           size="sm"
                           onClick={() => onSelectPlan(plan.id)}
-                          className={`w-full ${selectedPlan === plan.id ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                          className={`w-full ${selectedPlan === plan.id ? '' : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'}`}
                         >
                           {selectedPlan === plan.id ? "Selected" : "Select"}
                         </Button>
@@ -237,12 +237,12 @@ export function PricingStep({ selectedPlan, onSelectPlan, onPrev, onComplete, is
                 
                 {/* Features rows */}
                 {getAllFeatures().map((featureName) => (
-                  <tr key={featureName} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <tr key={featureName} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-50">
                       {featureName}
                     </td>
                     {pricingPlans.map((plan) => (
-                      <td key={`${plan.id}-${featureName}`} className={`px-6 py-4 whitespace-nowrap text-center text-sm ${selectedPlan === plan.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <td key={`${plan.id}-${featureName}`} className={`px-6 py-4 whitespace-nowrap text-center text-sm ${selectedPlan === plan.id ? 'text-neutral-600 dark:text-neutral-400' : 'text-neutral-500 dark:text-neutral-400'}`}>
                         {getFeatureValue(plan.id, featureName)}
                       </td>
                     ))}
@@ -257,7 +257,7 @@ export function PricingStep({ selectedPlan, onSelectPlan, onPrev, onComplete, is
               variant="ghost" 
               size="sm"
               onClick={() => setShowFullFeatures(!showFullFeatures)}
-              className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300"
+              className="text-neutral-500 hover:text-neutral-600 dark:text-neutral-400 dark:hover:text-neutral-300"
             >
               {showFullFeatures ? "Show less features" : "Show all features"}
             </Button>
@@ -284,13 +284,13 @@ export function PricingStep({ selectedPlan, onSelectPlan, onPrev, onComplete, is
                   {paymentMethods.map((method) => (
                     <div 
                       key={method.id}
-                      className="flex items-center justify-between p-3 border rounded-md hover:bg-gray-50 dark:hover:bg-gray-900"
+                      className="flex items-center justify-between p-3 border rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-900"
                     >
                       <div className="flex items-center gap-2">
-                        <CreditCardIcon className="h-5 w-5 text-gray-500" />
+                        <CreditCardIcon className="h-5 w-5 text-neutral-500" />
                         <span>{formatCardDetails(method)}</span>
                         {method.isDefault && (
-                          <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">Default</span>
+                          <span className="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded-full">Default</span>
                         )}
                       </div>
                     </div>
@@ -399,7 +399,7 @@ export function PricingStep({ selectedPlan, onSelectPlan, onPrev, onComplete, is
             >
               Go to Dashboard
             </Button>
-            <p className="text-xs text-center text-gray-500">
+            <p className="text-xs text-center text-neutral-500">
               If you're not redirected automatically, please click the button above.
             </p>
           </DialogFooter>

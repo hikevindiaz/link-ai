@@ -257,7 +257,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
       
       toast.success(successMessage, {
         duration: 5000,
-        icon: <Database className="h-5 w-5 text-indigo-500 animate-bounce" />,
+        icon: <Database className="h-5 w-5 text-neutral-500 animate-bounce" />,
       });
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -305,20 +305,20 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
         {/* Dynamic Saving Progress Overlay */}
         {showSavingProgress && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-lg max-w-md w-full">
               <div className="flex items-center space-x-2 mb-4">
-                <Save className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <Save className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
                 <h3 className="text-lg font-medium">Saving Agent Settings</h3>
               </div>
               
               <Progress 
                 value={saveProgress} 
-                className="h-2 mb-2 bg-gray-200 dark:bg-gray-700 [&>div]:bg-indigo-600 dark:[&>div]:bg-indigo-400" 
+                className="h-2 mb-2 bg-neutral-200 dark:bg-neutral-700 [&>div]:bg-neutral-600 dark:[&>div]:bg-neutral-400" 
               />
               
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{savingStep}</p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">{savingStep}</p>
               
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-4">
+              <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-4">
                 {saveProgress < 100 
                   ? "Please don't close this window while saving..."
                   : "Save completed successfully!"}
@@ -328,18 +328,18 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
         )}
 
         {/* Knowledge Source - First Card */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Label className="font-medium text-gray-900 dark:text-gray-100">Knowledge Source</Label>
+                <Database className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                <Label className="font-medium text-neutral-900 dark:text-neutral-50">Knowledge Source</Label>
               </div>
               <Badge 
                 variant={badgeStatus.variant}
                 className={`text-xs flex items-center gap-1 ${
                   badgeStatus.status === "Trained" 
-                    ? "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200"
+                    ? "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200"
                     : badgeStatus.status === "Untrained"
                     ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
                     : ""
@@ -352,16 +352,16 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
               </Badge>
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="p-3 bg-white dark:bg-neutral-900">
             <div className="flex-1">
               <div className="relative">
-                <Database className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+                <Database className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
                 <Select 
                   value={selectedKnowledgeSource} 
                   onValueChange={handleKnowledgeSourceChange}
                   disabled={isLoading || isSaving}
                 >
-                  <SelectTrigger className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+                  <SelectTrigger className="pl-9">
                     <SelectValue placeholder={isLoading ? "Loading knowledge sources..." : "Select knowledge source"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -383,7 +383,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
                   </SelectContent>
                 </Select>
               </div>
-              <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-400">
                 Link a knowledge source to enhance your agent with custom data.
               </p>
               {selectedKnowledgeSource !== "none" && (
@@ -403,14 +403,14 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
         </Card>
 
         {/* Temperature */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
-              <Thermometer className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-100">Temperature</Label>
+              <Thermometer className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Temperature</Label>
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="p-3 bg-white dark:bg-neutral-900">
             <div className="space-y-4">
               <Slider
                 value={[temperature]}
@@ -421,15 +421,15 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
                 className="w-full"
                 disabled={isSaving}
               />
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 Current level:
-                <span className="ml-1 font-semibold text-gray-900 dark:text-gray-100">
+                <span className="ml-1 font-semibold text-neutral-900 dark:text-neutral-50">
                   {temperature < 0.3 ? "Precise" : 
                    temperature < 0.7 ? "Balanced" : "Creative"}
                   ({temperature.toFixed(1)})
                 </span>
               </p>
-              <p className="mt-4 text-sm/6 text-gray-500 dark:text-gray-400">
+              <p className="mt-4 text-sm/6 text-neutral-500 dark:text-neutral-400">
                 Higher temperature increases creativity but may reduce accuracy.
               </p>
             </div>

@@ -42,7 +42,7 @@ export function SubmissionDetailsDialog({
         
         <div className="mt-4 space-y-4">
           {/* Submission Meta */}
-          <div className="rounded-md bg-gray-50 p-4 dark:bg-gray-800/50">
+          <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Form</p>
@@ -69,7 +69,7 @@ export function SubmissionDetailsDialog({
                     href={`/dashboard/conversations/${submission.threadId}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                    className="inline-flex items-center text-sm font-medium text-neutral-600 hover:text-neutral-500 dark:text-neutral-400 dark:hover:text-neutral-300"
                   >
                     View conversation
                     <RiExternalLinkLine className="ml-1 h-3 w-3" />
@@ -88,7 +88,7 @@ export function SubmissionDetailsDialog({
             </h3>
             <div className="space-y-3">
               {Object.entries(submission.data).map(([fieldName, value]) => (
-                <div key={fieldName} className="rounded-md border border-gray-200 p-3 dark:border-gray-700">
+                <div key={fieldName} className="rounded-xl border border-gray-200 p-3 dark:border-gray-700">
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                     {fieldName}
                   </p>

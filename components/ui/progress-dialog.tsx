@@ -58,13 +58,13 @@ export function ProgressDialog({
           <Progress value={progress} className="h-2 w-full" />
         </div>
         
-        <div className="mt-4 max-h-48 overflow-y-auto border rounded-md p-2">
+        <div className="mt-4 max-h-48 overflow-y-auto border rounded-xl p-2">
           {messages.length > 0 ? (
             <div className="space-y-2">
               {messages.map((message, index) => (
                 <div key={index} className="flex items-start text-sm">
                   <span className="mr-2 flex-shrink-0">
-                    {message.type === 'info' && <Info className="h-4 w-4 text-indigo-500" />}
+                    {message.type === 'info' && <Info className="h-4 w-4 text-neutral-500" />}
                     {message.type === 'success' && <CheckCircle className="h-4 w-4 text-green-500" />}
                     {message.type === 'error' && <XCircle className="h-4 w-4 text-red-500" />}
                   </span>

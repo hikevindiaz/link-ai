@@ -3,17 +3,17 @@
 export type ColorUtility = "bg" | "stroke" | "fill" | "text"
 
 export const chartColors = {
-  indigo: {
-    bg: "bg-indigo-500 dark:bg-indigo-500",
-    stroke: "stroke-indigo-500 dark:stroke-indigo-500",
-    fill: "fill-indigo-500 dark:fill-indigo-500",
-    text: "text-indigo-500 dark:text-indigo-500",
+  neutral: {
+    bg: "bg-neutral-500 dark:bg-neutral-500",
+    stroke: "stroke-neutral-500 dark:stroke-neutral-500",
+    fill: "fill-neutral-500 dark:fill-neutral-500",
+    text: "text-neutral-500 dark:text-neutral-500",
   },
-  lightindigo: {
-    bg: "bg-indigo-300/50 dark:bg-indigo-800/50",
-    stroke: "stroke-indigo-300/50 dark:stroke-indigo-800/50",
-    fill: "fill-indigo-300/50 dark:fill-indigo-800/50",
-    text: "text-indigo-300/50 dark:text-indigo-800/50",
+  lightneutral: {
+    bg: "bg-neutral-300/50 dark:bg-neutral-800/50",
+    stroke: "stroke-neutral-300/50 dark:stroke-neutral-800/50",
+    fill: "fill-neutral-300/50 dark:fill-neutral-800/50",
+    text: "text-neutral-300/50 dark:text-neutral-800/50",
   },
   emerald: {
     bg: "bg-emerald-500 dark:bg-emerald-500",
@@ -63,11 +63,11 @@ export const chartColors = {
     fill: "fill-cyan-500 dark:fill-cyan-500",
     text: "text-cyan-500 dark:text-cyan-500",
   },
-  indigo: {
-    bg: "bg-indigo-600 dark:bg-indigo-500",
-    stroke: "stroke-indigo-600 dark:stroke-indigo-500",
-    fill: "fill-indigo-600 dark:fill-indigo-500",
-    text: "text-indigo-600 dark:text-indigo-500",
+  neutral: {
+    bg: "bg-neutral-600 dark:bg-neutral-500",
+    stroke: "stroke-neutral-600 dark:stroke-neutral-500",
+    fill: "fill-neutral-600 dark:fill-neutral-500",
+    text: "text-neutral-600 dark:text-neutral-500",
   },
   orange: {
     bg: "bg-orange-500 dark:bg-orange-400",
@@ -102,8 +102,8 @@ export const chartColors = {
 export type AvailableChartColorsKeys = keyof typeof chartColors
 
 export const chartGradientColors = {
-  indigo: "from-indigo-200 to-indigo-500 dark:from-indigo-200/10 dark:to-indigo-400",
-  lightindigo: "from-indigo-200 to-indigo-500 dark:from-indigo-200/10 dark:to-indigo-400",
+  neutral: "from-neutral-200 to-neutral-500 dark:from-neutral-200/10 dark:to-neutral-400",
+  lightneutral: "from-neutral-200 to-neutral-500 dark:from-neutral-200/10 dark:to-neutral-400",
   emerald:
     "from-emerald-200 to-emerald-500 dark:from-emerald-200/10 dark:to-emerald-400",
   lightEmerald:
@@ -116,8 +116,8 @@ export const chartGradientColors = {
   rose: "from-rose-200 to-rose-500 dark:from-rose-200/10 dark:to-rose-400",
   sky: "from-sky-200 to-sky-500 dark:from-sky-200/10 dark:to-sky-400",
   cyan: "from-cyan-200 to-cyan-500 dark:from-cyan-200/10 dark:to-cyan-400",
-  indigo:
-    "from-indigo-200 to-indigo-500 dark:from-indigo-200/10 dark:to-indigo-400",
+  neutral:
+    "from-neutral-200 to-neutral-500 dark:from-neutral-200/10 dark:to-neutral-400",
   orange:
     "from-orange-200 to-orange-500 dark:from-orange-200/10 dark:to-orange-400",
   pink: "from-pink-200 to-pink-500 dark:from-pink-200/10 dark:to-pink-400",
@@ -125,17 +125,17 @@ export const chartGradientColors = {
 } as const satisfies Record<string, string>
 
 export const chartConditionalColors = {
-  indigo: {
-    low: "fill-indigo-200 dark:fill-indigo-300",
-    medium: "fill-indigo-300 dark:fill-indigo-400",
-    high: "fill-indigo-400 dark:fill-indigo-500",
-    critical: "fill-indigo-500 dark:fill-indigo-600",
+  neutral: {
+    low: "fill-neutral-200 dark:fill-neutral-300",
+    medium: "fill-neutral-300 dark:fill-neutral-400",
+    high: "fill-neutral-400 dark:fill-neutral-500",
+    critical: "fill-neutral-500 dark:fill-neutral-600",
   },
-  lightindigo: {
-    low: "fill-indigo-200 dark:fill-indigo-300",
-    medium: "fill-indigo-300 dark:fill-indigo-400",
-    high: "fill-indigo-400 dark:fill-indigo-500",
-    critical: "fill-indigo-500 dark:fill-indigo-600",
+  lightneutral: {
+    low: "fill-neutral-200 dark:fill-neutral-300",
+    medium: "fill-neutral-300 dark:fill-neutral-400",
+    high: "fill-neutral-400 dark:fill-neutral-500",
+    critical: "fill-neutral-500 dark:fill-neutral-600",
   },
   emerald: {
     low: "fill-emerald-200 dark:fill-emerald-300",

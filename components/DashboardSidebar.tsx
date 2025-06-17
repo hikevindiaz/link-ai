@@ -65,13 +65,13 @@ export default function DashboardSidebar({
               <div
                 className={`relative px-3.5 py-2.5 ${
                   selectedPhoneNumber?.id === phone.id
-                    ? "border-blue-500 dark:border-blue-500 bg-blue-50/50 dark:bg-blue-500/5 ring-1 ring-blue-500/20 dark:ring-blue-500/20"
+                    ? "border-neutral-500 dark:border-neutral-500 bg-neutral-50/50 dark:bg-neutral-500/5 ring-1 ring-neutral-500/20 dark:ring-neutral-500/20"
                     : ""
                 }`}
                 onClick={() => setSelectedPhoneNumber(phone)}
               >
                 <div className="flex items-center space-x-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-500">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-500/20 text-neutral-800 dark:text-neutral-500">
                     <Icons.phone className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <div className="truncate min-w-0">

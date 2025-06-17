@@ -175,7 +175,7 @@ export function CalendarSettingsDialog({
               <h3 className="text-sm font-medium mb-2">Calendar Information</h3>
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">Calendar Name</label>
+                  <label className="text-sm text-neutral-500">Calendar Name</label>
                   <Input 
                     type="text"
                     placeholder="Enter calendar name"
@@ -193,7 +193,7 @@ export function CalendarSettingsDialog({
               <h3 className="text-sm font-medium mb-2">Working Hours</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">Start Time</label>
+                  <label className="text-sm text-neutral-500">Start Time</label>
                   <Select 
                     // Use workingHoursStart
                     value={currentSettings.workingHoursStart || '09:00'}
@@ -221,7 +221,7 @@ export function CalendarSettingsDialog({
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">End Time</label>
+                  <label className="text-sm text-neutral-500">End Time</label>
                   <Select 
                      // Use workingHoursEnd
                     value={currentSettings.workingHoursEnd || '17:00'}
@@ -253,24 +253,24 @@ export function CalendarSettingsDialog({
             <div>
               <h3 className="text-sm font-medium mb-2">Weekend Availability</h3>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">Include Saturdays</label>
+                <div className="flex items-center justify-between p-3 border rounded-xl">
+                  <label className="text-sm text-neutral-700">Include Saturdays</label>
                   <input 
                     type="checkbox" 
                     // Use includeSaturday
                     checked={!!currentSettings.includeSaturday} // Ensure boolean
                     onChange={(e) => handleSettingChange('includeSaturday', e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-4 w-4 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">Include Sundays</label>
+                <div className="flex items-center justify-between p-3 border rounded-xl">
+                  <label className="text-sm text-neutral-700">Include Sundays</label>
                   <input 
                     type="checkbox" 
                      // Use includeSunday
                     checked={!!currentSettings.includeSunday} // Ensure boolean
                     onChange={(e) => handleSettingChange('includeSunday', e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-4 w-4 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
                 </div>
               </div>
@@ -282,31 +282,31 @@ export function CalendarSettingsDialog({
             <div>
               <h3 className="text-sm font-medium mb-2">Booking Preferences</h3>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">Ask for appointment duration</label>
+                <div className="flex items-center justify-between p-3 border rounded-xl">
+                  <label className="text-sm text-neutral-700">Ask for appointment duration</label>
                   <input 
                     type="checkbox" 
                     checked={!!currentSettings.askForDuration}
                     onChange={(e) => handleSettingChange('askForDuration', e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-4 w-4 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">Ask for appointment notes</label>
+                <div className="flex items-center justify-between p-3 border rounded-xl">
+                  <label className="text-sm text-neutral-700">Ask for appointment notes</label>
                   <input 
                     type="checkbox" 
                     checked={!!currentSettings.askForNotes}
                     onChange={(e) => handleSettingChange('askForNotes', e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-4 w-4 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">Require phone number</label>
+                <div className="flex items-center justify-between p-3 border rounded-xl">
+                  <label className="text-sm text-neutral-700">Require phone number</label>
                   <input 
                     type="checkbox" 
                     checked={!!currentSettings.requirePhoneNumber}
                     onChange={(e) => handleSettingChange('requirePhoneNumber', e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-4 w-4 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
                 </div>
               </div>
@@ -316,7 +316,7 @@ export function CalendarSettingsDialog({
               <h3 className="text-sm font-medium mb-2">Scheduling Settings</h3>
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">Default Duration (minutes)</label>
+                  <label className="text-sm text-neutral-500">Default Duration (minutes)</label>
                   <Input 
                     type="number"
                     min="15"
@@ -326,7 +326,7 @@ export function CalendarSettingsDialog({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">Buffer Between Appointments (minutes)</label>
+                  <label className="text-sm text-neutral-500">Buffer Between Appointments (minutes)</label>
                   <Input 
                     type="number"
                     min="0"
@@ -336,7 +336,7 @@ export function CalendarSettingsDialog({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">Minimum Advance Notice (minutes)</label>
+                  <label className="text-sm text-neutral-500">Minimum Advance Notice (minutes)</label>
                   <Input 
                     type="number"
                     min="0"
@@ -346,7 +346,7 @@ export function CalendarSettingsDialog({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">Max Bookings Per Slot</label>
+                  <label className="text-sm text-neutral-500">Max Bookings Per Slot</label>
                   <Input 
                     type="number"
                     min="1"
@@ -356,7 +356,7 @@ export function CalendarSettingsDialog({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">Default Location</label>
+                  <label className="text-sm text-neutral-500">Default Location</label>
                   <Input 
                     type="text"
                     placeholder="Office, Zoom link, etc."
@@ -371,24 +371,24 @@ export function CalendarSettingsDialog({
               <h3 className="text-sm font-medium mb-2">Custom Messages</h3>
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">Booking Prompt</label>
+                  <label className="text-sm text-neutral-500">Booking Prompt</label>
                   <Input 
                     type="text"
                     placeholder="e.g., Please provide your reason for the appointment"
                     value={currentSettings.bookingPrompt || ''}
                     onChange={(e) => handleSettingChange('bookingPrompt', e.target.value)}
                   />
-                  <p className="text-xs text-gray-400">Custom message shown during booking process</p>
+                  <p className="text-xs text-neutral-400">Custom message shown during booking process</p>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-sm text-gray-500">Confirmation Message</label>
+                  <label className="text-sm text-neutral-500">Confirmation Message</label>
                   <Input 
                     type="text"
                     placeholder="e.g., Your appointment has been confirmed! We'll send a reminder."
                     value={currentSettings.confirmationMessage || ''}
                     onChange={(e) => handleSettingChange('confirmationMessage', e.target.value)}
                   />
-                  <p className="text-xs text-gray-400">Message shown after successful booking</p>
+                  <p className="text-xs text-neutral-400">Message shown after successful booking</p>
                 </div>
               </div>
             </div>
@@ -399,38 +399,38 @@ export function CalendarSettingsDialog({
             <div>
               <h3 className="text-sm font-medium mb-2">SMS Notification Settings</h3>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">Send SMS Confirmations</label>
+                <div className="flex items-center justify-between p-3 border rounded-xl">
+                  <label className="text-sm text-neutral-700">Send SMS Confirmations</label>
                   <input 
                     type="checkbox" 
                     checked={!!currentSettings.notificationSmsEnabled}
                     onChange={(e) => handleSettingChange('notificationSmsEnabled', e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-4 w-4 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">Send SMS Reminders</label>
+                <div className="flex items-center justify-between p-3 border rounded-xl">
+                  <label className="text-sm text-neutral-700">Send SMS Reminders</label>
                   <input 
                     type="checkbox" 
                     checked={!!currentSettings.smsReminderEnabled}
                     onChange={(e) => handleSettingChange('smsReminderEnabled', e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-4 w-4 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 border rounded-md">
-                  <label className="text-sm text-gray-700">Require SMS Confirmation</label>
+                <div className="flex items-center justify-between p-3 border rounded-xl">
+                  <label className="text-sm text-neutral-700">Require SMS Confirmation</label>
                   <input 
                     type="checkbox" 
                     checked={!!currentSettings.confirmationRequired}
                     onChange={(e) => handleSettingChange('confirmationRequired', e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-4 w-4 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
                 </div>
               </div>
             </div>
             
             <div className="space-y-1">
-              <label className="text-sm text-gray-500">Reminder Time</label>
+              <label className="text-sm text-neutral-500">Reminder Time</label>
               <Select 
                 value={currentSettings.reminderTimeMinutes?.toString() || '30'} 
                 onValueChange={(value) => handleSettingChange('reminderTimeMinutes', value)}
@@ -451,7 +451,7 @@ export function CalendarSettingsDialog({
             </div>
             
             <div className="space-y-1">
-              <label className="text-sm text-gray-500">Auto-Cancel Timeout (hours)</label>
+              <label className="text-sm text-neutral-500">Auto-Cancel Timeout (hours)</label>
               <Input 
                 type="number"
                 min="1"
@@ -459,7 +459,7 @@ export function CalendarSettingsDialog({
                 value={currentSettings.confirmationTimeoutHours || 24}
                 onChange={(e) => handleSettingChange('confirmationTimeoutHours', parseInt(e.target.value) || 24)}
               />
-              <p className="text-xs text-gray-400">Unconfirmed appointments will be cancelled after this time</p>
+              <p className="text-xs text-neutral-400">Unconfirmed appointments will be cancelled after this time</p>
             </div>
             
             <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
@@ -474,7 +474,7 @@ export function CalendarSettingsDialog({
           </TabsContent>
         </Tabs>
         
-        <DialogFooter className="mt-6 sticky bottom-0 bg-white dark:bg-gray-950 pt-4 pb-2 border-t">
+        <DialogFooter className="mt-6 sticky bottom-0 bg-white dark:bg-neutral-950 pt-4 pb-2 border-t">
           <Button 
             variant="secondary"
             onClick={() => onOpenChange(false)}

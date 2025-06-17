@@ -61,15 +61,15 @@ export const GlobalDatabase: FunctionComponent = () => {
         aria-labelledby="global-database-title"
         className="relative mx-auto mt-28 flex w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-3xl bg-gray-950 pt-24 shadow-xl shadow-black/30 md:mt-40"
       >
-        <div className="absolute top-[17rem] size-[40rem] rounded-full bg-indigo-800 blur-3xl md:top-[20rem]" />
-        <div className="z-10 inline-block rounded-lg border border-indigo-400/20 bg-indigo-800/20 px-3 py-1.5 font-semibold uppercase leading-4 tracking-tight sm:text-sm">
-          <span className="bg-gradient-to-b from-indigo-200 to-indigo-400 bg-clip-text text-transparent">
+        <div className="absolute top-[17rem] size-[40rem] rounded-full bg-neutral-800 blur-3xl md:top-[20rem]" />
+        <div className="z-10 inline-block rounded-lg border border-neutral-400/20 bg-neutral-800/20 px-3 py-1.5 font-semibold uppercase leading-4 tracking-tight sm:text-sm">
+          <span className="bg-gradient-to-b from-neutral-200 to-neutral-400 bg-clip-text text-transparent">
             Made for the cloud
           </span>
         </div>
         <h2
           id="global-database-title"
-          className="z-10 mt-6 inline-block bg-gradient-to-b from-white to-indigo-100 bg-clip-text px-2 text-center text-5xl font-bold tracking-tighter text-transparent md:text-8xl"
+          className="z-10 mt-6 inline-block bg-gradient-to-b from-white to-neutral-100 bg-clip-text px-2 text-center text-5xl font-bold tracking-tighter text-transparent md:text-8xl"
         >
           The global <br /> cloud database
         </h2>
@@ -84,10 +84,10 @@ export const GlobalDatabase: FunctionComponent = () => {
             <div className="grid grid-cols-1 gap-x-10 gap-y-6 rounded-lg border border-white/[3%] bg-white/[1%] px-6 py-6 shadow-xl backdrop-blur md:grid-cols-3 md:p-8">
               {features.map((item) => (
                 <div key={item.name} className="flex flex-col gap-2">
-                  <h3 className="whitespace-nowrap bg-gradient-to-b from-indigo-300 to-indigo-500 bg-clip-text text-lg font-semibold text-transparent md:text-xl">
+                  <h3 className="whitespace-nowrap bg-gradient-to-b from-neutral-300 to-neutral-500 bg-clip-text text-lg font-semibold text-transparent md:text-xl">
                     {item.name}
                   </h3>
-                  <p className="text-sm leading-6 text-indigo-200/40">
+                  <p className="text-sm leading-6 text-neutral-200/40">
                     {item.description}
                   </p>
                 </div>

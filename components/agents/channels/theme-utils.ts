@@ -69,7 +69,7 @@ export const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: nu
 
 // Shared border gradient options
 export const borderGradientOptions = [
-  { name: "Indigo", colors: ["#4F46E5", "#4338CA", "#6366F1"] },
+  { name: "neutral", colors: ["#4F46E5", "#4338CA", "#6366F1"] },
   { name: "Blue", colors: ["#2563EB", "#1E40AF", "#3B82F6"] },
   { name: "Purple", colors: ["#7E22CE", "#6D28D9", "#8B5CF6"] },
   { name: "Pink", colors: ["#DB2777", "#BE185D", "#EC4899"] },
@@ -80,7 +80,7 @@ export const borderGradientOptions = [
 export const orbColorOptions = [
   { name: "Black", value: RIVE_COLORS.BLACK },
   { name: "White", value: RIVE_COLORS.WHITE },
-  { name: "Indigo", value: RIVE_COLORS.PURPLE },
+  { name: "neutral", value: RIVE_COLORS.PURPLE },
   { name: "Blue", value: RIVE_COLORS.BLUE },
   { name: "Red", value: RIVE_COLORS.RED },
   { name: "Orange", value: RIVE_COLORS.ORANGE },

@@ -15,8 +15,32 @@ export async function GET(request: Request) {
     // Log request for debugging
     console.log('[Voice API] Processing credentials request for chatbot:', chatbotId);
     
-    // Get current user session
-    const session = await getServerSession(authOptions);
+    // Check if this is an embedded request
+    const isEmbedded = request.headers.get('referer')?.includes('/embed/');
+    
+    // Get current user session (only for non-embedded requests)
+    const session = !isEmbedded ? await getServerSession(authOptions) : null;
+    
+    // For embedded requests, verify the chatbot allows public access
+    if (isEmbedded && chatbotId) {
+      const { db } = await import('@/lib/db');
+      const chatbot = await db.chatbot.findUnique({
+        where: { id: chatbotId },
+        select: { allowEveryone: true }
+      });
+      
+      if (!chatbot?.allowEveryone) {
+        console.log('[Voice API] Embedded request denied for private chatbot:', chatbotId);
+        return NextResponse.json({ 
+          error: 'This chatbot is not publicly accessible' 
+        }, { status: 403 });
+      }
+    }
+    
+    // For non-embedded requests, require authentication
+    if (!isEmbedded && !session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     
     // Get API keys from environment
     const openaiApiKey = process.env.OPENAI_API_KEY;

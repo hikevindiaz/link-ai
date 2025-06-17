@@ -239,7 +239,7 @@ export default function AppointmentConfirmationEmail({
                                 {/* Timeline Item 3 - Appointment */}
                                 <Row>
                                     <Column className="w-[40px]">
-                                        <div className="w-[24px] h-[24px] bg-indigo-500 rounded-full flex items-center justify-center">
+                                        <div className="w-[24px] h-[24px] bg-neutral-500 rounded-full flex items-center justify-center">
                                             <Text className="text-[12px] text-white font-bold m-0">📅</Text>
                                         </div>
                                     </Column>
@@ -251,7 +251,7 @@ export default function AppointmentConfirmationEmail({
                                             {appointmentDate} at {appointmentTime}
                                         </Text>
                                         {appointmentLocation && (
-                                            <Text className="text-[12px] text-indigo-400 m-0">
+                                            <Text className="text-[12px] text-neutral-400 m-0">
                                                 📍 {appointmentLocation}
                                             </Text>
                                         )}
@@ -362,7 +362,7 @@ export default function AppointmentConfirmationEmail({
                                 
                                 <Button
                                     href={createCalendarLink()}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-[32px] py-[16px] rounded-[8px] text-[16px] font-semibold box-border no-underline inline-block"
+                                    className="bg-neutral-600 hover:bg-neutral-700 text-white px-[32px] py-[16px] rounded-[8px] text-[16px] font-semibold box-border no-underline inline-block"
                                 >
                                     📅 Add to Calendar
                                 </Button>

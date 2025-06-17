@@ -11,7 +11,7 @@ export const IconTypeSelector = ({
   handleIconTypeChange 
 }: IconTypeSelectorProps) => (
   <div className="space-y-2">
-    <FormLabel className="text-sm font-medium text-gray-900 dark:text-gray-50">
+    <FormLabel className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
       Button Icon Type
     </FormLabel>
     <RadioCardGroup 

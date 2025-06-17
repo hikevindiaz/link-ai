@@ -131,7 +131,7 @@ export function GradientPicker({
                             <div
                                 key={s}
                                 style={{ background: s }}
-                                className="rounded-md h-6 w-6 cursor-pointer active:scale-105"
+                                className="rounded-xl h-6 w-6 cursor-pointer active:scale-105"
                                 onClick={() => setBackground(s)}
                             />
                         ))}
@@ -143,7 +143,7 @@ export function GradientPicker({
                                 <div
                                     key={s}
                                     style={{ background: s }}
-                                    className="rounded-md h-6 w-6 cursor-pointer active:scale-105"
+                                    className="rounded-xl h-6 w-6 cursor-pointer active:scale-105"
                                     onClick={() => setBackground(s)}
                                 />
                             ))}

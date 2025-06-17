@@ -301,7 +301,7 @@ export default function IntegrationsPage() {
   }
 
   // Define gradient colors (can be customized)
-  const borderGradientColors = ["#4f46e5", "#7c3aed", "#db2777"]; // Using indigo/purple/pink
+  const borderGradientColors = ["#4f46e5", "#7c3aed", "#db2777"]; // Using neutral/purple/pink
   const [color1, color2, color3] = borderGradientColors;
   const gradientStyle = `conic-gradient(from var(--border-angle), ${color1}, ${color2}, ${color3}, ${color2}, ${color1})`;
 
@@ -358,7 +358,7 @@ export default function IntegrationsPage() {
             const cardInnerContent = (
               <>
                 <div className="flex items-start gap-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-gray-200 bg-white p-1.5 dark:border-gray-800 dark:bg-gray-900">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white p-1.5 dark:border-gray-800 dark:bg-gray-900">
                     {item.iconUrl ? (
                       <ThemedSvg src={item.iconUrl} alt={item.name} className="size-5" />
                     ) : (

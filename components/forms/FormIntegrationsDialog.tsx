@@ -97,7 +97,7 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
               className={cn(
                 "px-4 py-2 text-sm font-medium rounded-none",
                 activeTab === 'chatbot'
-                  ? "border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                  ? "border-b-2 border-neutral-500 text-neutral-600 dark:text-neutral-400"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               )}
               onClick={() => setActiveTab('chatbot')}
@@ -110,7 +110,7 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
               className={cn(
                 "px-4 py-2 text-sm font-medium rounded-none",
                 activeTab === 'api'
-                  ? "border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400"
+                  ? "border-b-2 border-neutral-500 text-neutral-600 dark:text-neutral-400"
                   : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
               )}
               onClick={() => setActiveTab('api')}
@@ -129,7 +129,7 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
                 </p>
                 
                 <div className="relative">
-                  <pre className="rounded-md bg-gray-50 p-4 text-sm text-gray-800 overflow-x-auto dark:bg-gray-900 dark:text-gray-300">
+                  <pre className="rounded-xl bg-gray-50 p-4 text-sm text-gray-800 overflow-x-auto dark:bg-gray-900 dark:text-gray-300">
                     {chatbotIntegrationCode}
                   </pre>
                   <Button
@@ -145,7 +145,7 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
                   </Button>
                 </div>
                 
-                <div className="mt-4 rounded-md border border-gray-200 p-4 dark:border-gray-800">
+                <div className="mt-4 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
                   <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     Chatbot Integration Steps
                   </h3>
@@ -166,7 +166,7 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
                 </p>
                 
                 <div className="relative">
-                  <pre className="rounded-md bg-gray-50 p-4 text-sm text-gray-800 overflow-x-auto dark:bg-gray-900 dark:text-gray-300">
+                  <pre className="rounded-xl bg-gray-50 p-4 text-sm text-gray-800 overflow-x-auto dark:bg-gray-900 dark:text-gray-300">
                     {apiIntegrationCode}
                   </pre>
                   <Button
@@ -182,14 +182,14 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
                   </Button>
                 </div>
                 
-                <div className="mt-4 rounded-md border border-gray-200 p-4 dark:border-gray-800">
+                <div className="mt-4 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
                   <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     API Authentication
                   </h3>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     API requests require authentication. Use your API key in the Authorization header:
                   </p>
-                  <pre className="mt-2 rounded-md bg-gray-50 p-2 text-xs text-gray-800 overflow-x-auto dark:bg-gray-900 dark:text-gray-300">
+                  <pre className="mt-2 rounded-xl bg-gray-50 p-2 text-xs text-gray-800 overflow-x-auto dark:bg-gray-900 dark:text-gray-300">
                     Authorization: Bearer YOUR_API_KEY
                   </pre>
                 </div>

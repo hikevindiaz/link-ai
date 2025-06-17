@@ -135,7 +135,7 @@ export function FormSettingsDialog({
             <input
               type="text"
               id="form-name"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
+              className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
               placeholder="e.g., Customer Inquiry"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
@@ -149,7 +149,7 @@ export function FormSettingsDialog({
             <textarea
               id="form-description"
               rows={2}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
+              className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
               placeholder="Describe what information this form will collect"
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
@@ -162,7 +162,7 @@ export function FormSettingsDialog({
             </label>
             <select
               id="form-status"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
+              className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
               value={formStatus}
               onChange={(e) => setFormStatus(e.target.value as "active" | "inactive")}
             >
@@ -191,7 +191,7 @@ export function FormSettingsDialog({
               {fields.map((field, index) => (
                 <div 
                   key={field.id}
-                  className="rounded-md border border-gray-200 p-3 dark:border-gray-700"
+                  className="rounded-xl border border-gray-200 p-3 dark:border-gray-700"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -217,7 +217,7 @@ export function FormSettingsDialog({
                       <input
                         type="text"
                         id={`field-name-${field.id}`}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
+                        className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-1.5 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
                         value={field.name}
                         onChange={(e) => handleFieldChange(field.id, "name", e.target.value)}
                       />
@@ -230,7 +230,7 @@ export function FormSettingsDialog({
                       <input
                         type="text"
                         id={`field-description-${field.id}`}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
+                        className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-1.5 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
                         value={field.description || ""}
                         onChange={(e) => handleFieldChange(field.id, "description", e.target.value)}
                       />
@@ -243,7 +243,7 @@ export function FormSettingsDialog({
                         </label>
                         <select
                           id={`field-type-${field.id}`}
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
+                          className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-1.5 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
                           value={field.type}
                           onChange={(e) => handleFieldChange(field.id, "type", e.target.value)}
                         >
@@ -261,7 +261,7 @@ export function FormSettingsDialog({
                         <input
                           id={`field-required-${field.id}`}
                           type="checkbox"
-                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-700"
+                          className="h-4 w-4 rounded border-gray-300 text-neutral-600 focus:ring-neutral-500 dark:border-gray-700"
                           checked={field.required}
                           onChange={(e) => handleFieldChange(field.id, "required", e.target.checked)}
                         />
@@ -279,7 +279,7 @@ export function FormSettingsDialog({
                         <input
                           type="text"
                           id={`field-options-${field.id}`}
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
+                          className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-1.5 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
                           placeholder="Option 1, Option 2, Option 3"
                           value={(field.options || []).join(", ")}
                           onChange={(e) => handleFieldChange(

@@ -47,8 +47,8 @@ export default function SourcePage() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="flex items-center">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
-          <span className="ml-2 text-sm text-gray-500">Loading source...</span>
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
+          <span className="ml-2 text-sm text-neutral-500">Loading source...</span>
         </div>
       </div>
     );
@@ -58,10 +58,10 @@ export default function SourcePage() {
     return (
       <div className="flex h-full flex-col items-center justify-center p-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
             Source Not Found
           </h1>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
+          <p className="mt-2 text-neutral-500 dark:text-neutral-400">
             The knowledge source you're looking for doesn't exist or you don't have access to it.
           </p>
         </div>

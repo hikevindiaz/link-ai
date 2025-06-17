@@ -40,7 +40,7 @@ export function DashboardNav({ items }: { items: SidebarNavItem[] }) {
               key={index}
               href={item.disabled ? "/" : item.href || "#"}
               className={cn(
-                "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                "group flex items-center rounded-xl px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
                 path === item.href ? "bg-[#3c82f6] text-white" : "text-gray-700",
                 item.disabled && "cursor-not-allowed opacity-50"
               )}

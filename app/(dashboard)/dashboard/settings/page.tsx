@@ -928,10 +928,10 @@ export default function SettingsPage() {
 
   return (
     <div className="p-4 sm:p-8">
-      <h1 className="text-lg font-bold text-gray-900 dark:text-gray-50">
+      <h1 className="text-lg font-bold text-neutral-900 dark:text-neutral-50">
         Settings
       </h1>
-      <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
+      <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-500">
         Manage your personal details, notifications, business information, and billing information.
       </p>
       <Tabs defaultValue="account" className="mt-8">
@@ -964,17 +964,17 @@ export default function SettingsPage() {
         <TabsContent value="billing" className="mt-8 space-y-8">
           <div className="max-w-4xl space-y-10">
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-50">
+            <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
                 Billing overview
             </h2>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+              <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-500">
                 {currentPlan 
                   ? `See the breakdown of your costs for the upcoming payment.`
                   : 'Your workspace has no active plan. Choose a plan to get started with AI agents.'
                 }{' '}
                 <button
                   onClick={() => setShowPricingDialog(true)}
-                  className="inline-flex items-center gap-1 text-indigo-500 hover:underline hover:underline-offset-4 dark:text-indigo-400"
+                  className="inline-flex items-center gap-1 text-neutral-500 hover:underline hover:underline-offset-4 dark:text-neutral-400"
                 >
                   {currentPlan ? 'Compare pricing plans' : 'View plans'}
                   <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

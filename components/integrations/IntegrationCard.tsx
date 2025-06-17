@@ -52,7 +52,7 @@ const IntegrationCard: React.FC<IntegrationCardProps> = ({
 
         {/* Configure Button */}
         <button
-          className="configure-btn flex items-center justify-center bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-md mt-4"
+          className="configure-btn flex items-center justify-center bg-neutral-500 hover:bg-neutral-600 text-white font-medium py-2 px-4 rounded-xl mt-4"
           onClick={openModal}
         >
           <img src="/bolt.svg" alt="Configure Icon" className="h-4 w-4 mr-2" /> Configure
@@ -77,20 +77,20 @@ const IntegrationCard: React.FC<IntegrationCardProps> = ({
                 type="text"
                 id="apiKey"
                 placeholder="Enter API Key"
-                className="mt-1 p-2 w-full border rounded-md"
+                className="mt-1 p-2 w-full border rounded-xl"
               />
             </div>
 
             {/* Actions */}
             <div className="flex justify-end space-x-2">
               <button
-                className="cancel-btn bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md"
+                className="cancel-btn bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl"
                 onClick={closeModal}
               >
                 Cancel
               </button>
               <button
-                className="save-btn bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md"
+                className="save-btn bg-neutral-500 hover:bg-neutral-600 text-white px-4 py-2 rounded-xl"
                 onClick={closeModal}
               >
                 Save

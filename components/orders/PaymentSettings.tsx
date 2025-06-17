@@ -140,14 +140,14 @@ export function PaymentSettings({
           <Card key={method.id} className="p-4">
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-full ${method.enabled ? 'bg-indigo-100 dark:bg-indigo-900/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                  <MethodIcon className={`h-5 w-5 ${method.enabled ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                <div className={`flex h-10 w-10 items-center justify-center rounded-full ${method.enabled ? 'bg-neutral-100 dark:bg-neutral-900/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                  <MethodIcon className={`h-5 w-5 ${method.enabled ? 'text-neutral-600 dark:text-neutral-400' : 'text-gray-500 dark:text-gray-400'}`} />
                 </div>
                 <div>
                   <div className="flex items-center">
                     <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">{method.name}</h4>
                     {method.isDefault && (
-                      <span className="ml-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
+                      <span className="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-800 dark:bg-neutral-900/30 dark:text-neutral-400">
                         Default
                       </span>
                     )}

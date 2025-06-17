@@ -74,7 +74,7 @@ export default function AgentChatPage({ params }: ChatPageProps) {
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <div className="text-lg text-gray-500">Loading agent...</div>
+        <div className="text-lg text-neutral-500">Loading agent...</div>
       </div>
     );
   }

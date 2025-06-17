@@ -125,13 +125,13 @@ export const RealtimeVoiceInterface = forwardRef<RealtimeVoiceInterfaceHandle, R
             <div className="mt-4 w-full max-w-md space-y-2 max-h-48 overflow-y-auto">
               {userTranscript && (
                 <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300">
-                  <span className="font-medium text-indigo-600 dark:text-indigo-400">You: </span>
+                  <span className="font-medium text-neutral-600 dark:text-neutral-400">You: </span>
                   {userTranscript}
                 </div>
               )}
               {assistantTranscript && (
-                <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300">
-                  <span className="font-medium text-indigo-600 dark:text-indigo-400">Assistant: </span>
+                <div className="bg-neutral-50 dark:bg-neutral-900/20 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300">
+                  <span className="font-medium text-neutral-600 dark:text-neutral-400">Assistant: </span>
                   {assistantTranscript}
                 </div>
               )}

@@ -31,12 +31,12 @@ export default async function Code({
   return (
     <div
       className={cn(
-        "relative w-full overflow-auto rounded-xl bg-gray-950 shadow-xl shadow-black/40 ring-1 ring-black dark:shadow-indigo-900/30 dark:ring-white/5",
+        "relative w-full overflow-auto rounded-xl bg-neutral-950 shadow-xl shadow-black/40 ring-1 ring-black dark:shadow-neutral-900/30 dark:ring-white/5",
         className,
       )}
     >
       {copy && (
-        <div className="absolute right-0 h-full w-24 bg-gradient-to-r from-gray-900/0 via-gray-900/70 to-gray-900">
+        <div className="absolute right-0 h-full w-24 bg-gradient-to-r from-neutral-900/0 via-neutral-900/70 to-neutral-900">
           <div className="absolute right-3 top-3">
             <CopyToClipboard code={code} />
           </div>
@@ -44,7 +44,7 @@ export default async function Code({
       )}
 
       <div
-        className="text-sm [&>pre]:overflow-x-auto [&>pre]:!bg-gray-950 [&>pre]:py-6 [&>pre]:pl-4 [&>pre]:pr-5 [&>pre]:leading-snug [&>pre]:dark:!bg-gray-950 [&_code]:block [&_code]:w-fit [&_code]:min-w-full"
+        className="text-sm [&>pre]:overflow-x-auto [&>pre]:!bg-neutral-950 [&>pre]:py-6 [&>pre]:pl-4 [&>pre]:pr-5 [&>pre]:leading-snug [&>pre]:dark:!bg-neutral-950 [&_code]:block [&_code]:w-fit [&_code]:min-w-full"
         dangerouslySetInnerHTML={{ __html: html }}
       ></div>
     </div>

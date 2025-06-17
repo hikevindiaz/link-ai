@@ -19,7 +19,7 @@ interface SummaryDialogProps {
 export function SummaryDialog({ open, onOpenChange, title, content }: SummaryDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg bg-white dark:bg-neutral-950">
         <DialogHeader>
           <DialogTitle>{title || "Conversation Summary"}</DialogTitle>
           <DialogDescription className="mt-1 text-sm leading-6 whitespace-pre-line">

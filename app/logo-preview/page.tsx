@@ -29,7 +29,7 @@ export default function LogoPreviewPage() {
               <button
                 key={name}
                 onClick={() => setSelectedColorScheme(name)}
-                className={`px-4 py-2 rounded-md transition-all ${
+                className={`px-4 py-2 rounded-xl transition-all ${
                   selectedColorScheme === name 
                     ? 'bg-blue-500 text-white' 
                     : 'bg-gray-200 hover:bg-gray-300'

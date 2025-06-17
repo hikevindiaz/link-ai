@@ -346,15 +346,15 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
   if (!isMounted) return null;
 
   const themeClass = currentTheme === "dark" 
-    ? "bg-gray-950 text-white" 
-    : "bg-gray-50 text-gray-900";
+    ? "bg-neutral-950 text-white" 
+    : "bg-neutral-50 text-neutral-900";
 
   return (
     <div
       {...props}
       className={cn(
         "fixed inset-y-0 left-0 flex flex-col flex-shrink-0 transition-all duration-300 z-20",
-        "border-r border-gray-200 dark:border-gray-800",
+        "border-r border-neutral-200 dark:border-neutral-800",
         themeClass,
         collapsed ? "w-[70px]" : "w-[260px]"
       )}
@@ -396,7 +396,7 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
             variant="ghost"
             aria-label="Collapse sidebar"
             onClick={toggleSidebar}
-            className="h-8 w-8 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800"
+            className="h-8 w-8 p-1.5 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800"
           >
             <PanelLeft className="size-[18px] shrink-0" aria-hidden="true" />
           </Button>
@@ -418,7 +418,7 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                   className="[&>input]:sm:py-1.5"
                 />
                 {searchQuery && searchResults.length > 0 && (
-                  <div className="absolute z-10 mt-2 w-full bg-white shadow-lg rounded-md overflow-hidden dark:bg-gray-800">
+                  <div className="absolute z-10 mt-2 w-full bg-white shadow-lg rounded-xl overflow-hidden dark:bg-neutral-800">
                     {searchResults.map((result) => (
                       <button
                         key={result.href}
@@ -427,7 +427,7 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                           setSearchResults([]);
                           window.location.href = result.href;
                         }}
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="block w-full text-left px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-700"
                       >
                         {result.name}
                       </button>
@@ -435,7 +435,7 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                   </div>
                 )}
                 {searchQuery && searchResults.length === 0 && (
-                  <div className="absolute z-10 mt-2 w-full bg-white shadow-lg rounded-md overflow-hidden dark:bg-gray-800 p-2 text-center text-xs text-gray-500">
+                  <div className="absolute z-10 mt-2 w-full bg-white shadow-lg rounded-xl overflow-hidden dark:bg-neutral-800 p-2 text-center text-xs text-neutral-500">
                     No results found.
                   </div>
                 )}
@@ -455,9 +455,9 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                     onClick={toggleSidebar}
                     aria-label="Expand sidebar"
                     className={cn(
-                      "flex w-full items-center justify-center rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
-                      "text-gray-900 dark:text-gray-400",
-                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                      "flex w-full items-center justify-center rounded-xl p-2 text-base transition hover:bg-neutral-200/50 sm:text-sm hover:dark:bg-neutral-900",
+                      "text-neutral-900 dark:text-neutral-400",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
                     )}
                   >
                     <PanelRight className="size-[18px] shrink-0" aria-hidden="true" />
@@ -473,11 +473,11 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                     aria-current={pathname === item.href ? "page" : undefined}
                     data-active={pathname === item.href}
                     className={cn(
-                      "flex items-center rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
+                      "flex items-center rounded-xl p-2 text-base transition hover:bg-neutral-200/50 sm:text-sm hover:dark:bg-neutral-900",
                       collapsed ? "justify-center" : "justify-between",
-                      "text-gray-900 dark:text-gray-400 hover:dark:text-gray-50",
-                      "data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500",
-                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                      "text-neutral-700 dark:text-neutral-400 hover:dark:text-neutral-50",
+                      "data-[active=true]:text-neutral-600 data-[active=true]:dark:text-neutral-400",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
                     )}
                   >
                     <span className={cn(
@@ -492,8 +492,8 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                         <span className={cn(
                             "inline-flex items-center justify-center rounded",
                             collapsed 
-                            ? "absolute top-0.5 right-1.5 size-2 bg-indigo-600 dark:bg-indigo-500" 
-                            : "ml-auto size-5 bg-indigo-100 text-sm font-medium text-indigo-600 sm:text-xs dark:bg-indigo-500/10 dark:text-indigo-500"
+                            ? "absolute top-0.5 right-1.5 size-2 bg-neutral-600 dark:bg-neutral-500" 
+                            : "ml-auto size-5 bg-neutral-100 text-sm font-medium text-neutral-600 sm:text-xs dark:bg-neutral-500/10 dark:text-neutral-500"
                         )}>
                             {!collapsed && inboxUnreadCount}
                         </span>
@@ -517,11 +517,11 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                     aria-current={pathname === item.href ? "page" : undefined}
                     data-active={pathname === item.href}
                     className={cn(
-                      "flex items-center rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
+                      "flex items-center rounded-xl p-2 text-base transition hover:bg-neutral-200/50 sm:text-sm hover:dark:bg-neutral-900",
                       collapsed ? "justify-center" : "justify-start", // Align left when expanded
-                      "text-gray-900 dark:text-gray-400 hover:dark:text-gray-50",
-                      "data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500",
-                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                      "text-neutral-700 dark:text-neutral-400 hover:dark:text-neutral-50",
+                      "data-[active=true]:text-neutral-600 data-[active=true]:dark:text-neutral-400",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
                     )}
                   >
                     <span className={cn(
@@ -554,11 +554,11 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                      // Check if current path is within this group for active state
                      data-active={item.children?.some(child => pathname === child.href)}
                     className={cn(
-                      "flex items-center rounded-md p-2 w-full text-base transition sm:text-sm",
+                      "flex items-center rounded-xl p-2 w-full text-base transition sm:text-sm",
                       collapsed ? "justify-center" : "justify-between gap-2",
-                      "text-gray-900 dark:text-gray-400 hover:bg-gray-200/50 hover:dark:bg-gray-900 hover:dark:text-gray-50",
+                      "text-neutral-700 dark:text-neutral-400 hover:bg-neutral-200/50 hover:dark:bg-neutral-900 hover:dark:text-neutral-50",
                        // Apply active styles to the button if a child is active
-                      "data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500"
+                      "data-[active=true]:text-neutral-600 data-[active=true]:dark:text-neutral-400"
                     )}
                   >
                     <div className={cn("flex items-center", !collapsed && "gap-x-2.5")}>
@@ -572,7 +572,7 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                       <RiArrowDownSFill
                         className={cn(
                           openMenus.includes(item.name) ? "rotate-0" : "-rotate-90",
-                          "size-5 shrink-0 transform text-gray-400 transition-transform"
+                          "size-5 shrink-0 transform text-neutral-400 transition-transform"
                         )}
                         aria-hidden="true"
                       />
@@ -581,7 +581,7 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                   {/* Submenu rendering logic remains the same */}
                   {item.children && openMenus.includes(item.name) && !collapsed && (
                     <ul className="relative mt-1 space-y-1 border-l border-transparent">
-                      <div className="absolute inset-y-0 left-4 w-px bg-gray-300 dark:bg-gray-800" />
+                      <div className="absolute inset-y-0 left-4 w-px bg-neutral-300 dark:bg-neutral-800" />
                       {item.children.map((child) => (
                         <li key={child.name}>
                           <a
@@ -589,15 +589,15 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
                             aria-current={pathname === child.href ? "page" : undefined}
                             data-active={pathname === child.href}
                             className={cn(
-                              "relative flex gap-2 rounded-md py-1.5 pl-9 pr-3 text-base transition sm:text-sm",
-                              "text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
-                              "data-[active=true]:rounded data-[active=true]:bg-white data-[active=true]:text-indigo-600 data-[active=true]:shadow data-[active=true]:ring-1 data-[active=true]:ring-gray-200 data-[active=true]:dark:bg-gray-900 data-[active=true]:dark:text-indigo-500 data-[active=true]:dark:ring-gray-800",
-                              "focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                              "relative flex gap-2 rounded-xl py-1.5 pl-9 pr-3 text-base transition sm:text-sm",
+                              "text-neutral-700 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-50",
+                              "data-[active=true]:rounded data-[active=true]:bg-white data-[active=true]:text-neutral-600 data-[active=true]:shadow data-[active=true]:ring-1 data-[active=true]:ring-neutral-200 data-[active=true]:dark:bg-neutral-900 data-[active=true]:dark:text-neutral-500 data-[active=true]:dark:ring-neutral-800",
+                              "focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-500"
                             )}
                           >
                             {pathname === child.href && (
                               <div
-                                className="absolute left-4 top-1/2 h-5 w-px -translate-y-1/2 bg-indigo-500 dark:bg-indigo-500"
+                                className="absolute left-4 top-1/2 h-5 w-px -translate-y-1/2 bg-neutral-500 dark:bg-neutral-500"
                                 aria-hidden="true"
                               />
                             )}
@@ -617,7 +617,7 @@ export function AppSidebar({ collapsed: propCollapsed, onToggle, ...props }: App
       {/* Footer */}
       <div className={cn(
         "sticky bottom-0 z-10",
-        "border-t border-gray-200 dark:border-gray-800",
+        "border-t border-neutral-200 dark:border-neutral-800",
         themeClass,
         "mt-auto",
         collapsed ? "px-2 py-3" : "p-3"

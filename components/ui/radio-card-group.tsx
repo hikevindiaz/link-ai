@@ -29,13 +29,13 @@ const RadioCardItem = React.forwardRef<
       ref={forwardedRef}
       className={cn(
         // base
-        "group relative w-full rounded-md border p-4 text-left shadow-sm transition focus:outline-none",
+        "group relative w-full rounded-xl border p-4 text-left shadow-sm transition focus:outline-none",
         // background color
         "bg-white dark:bg-gray-950",
         // border color
         "border-gray-300 dark:border-gray-800",
-        "data-[state=checked]:border-indigo-500",
-        "data-[state=checked]:dark:border-indigo-500",
+        "data-[state=checked]:border-neutral-500",
+        "data-[state=checked]:dark:border-neutral-500",
         // disabled
         "data-[disabled]:border-gray-100 data-[disabled]:dark:border-gray-800",
         "data-[disabled]:bg-gray-50 data-[disabled]:shadow-none data-[disabled]:dark:bg-gray-900",
@@ -65,7 +65,7 @@ const RadioCardIndicator = React.forwardRef<
         // background color
         "bg-white dark:bg-gray-950",
         // checked
-        "group-data-[state=checked]:border-0 group-data-[state=checked]:border-transparent group-data-[state=checked]:bg-indigo-500",
+        "group-data-[state=checked]:border-0 group-data-[state=checked]:border-transparent group-data-[state=checked]:bg-neutral-500",
         // disabled
         "group-data-[disabled]:border-gray-300 group-data-[disabled]:bg-gray-100 group-data-[disabled]:text-gray-400",
         "group-data-[disabled]:dark:border-gray-700 group-data-[disabled]:dark:bg-gray-800",

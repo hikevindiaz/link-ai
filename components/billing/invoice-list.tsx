@@ -152,7 +152,7 @@ export function InvoiceList() {
                 href={invoice.pdfUrl} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                className="inline-flex items-center text-sm font-medium text-neutral-600 hover:text-neutral-500 dark:text-neutral-400 dark:hover:text-neutral-300"
               >
                 <Download className="mr-1 h-4 w-4" />
                 PDF

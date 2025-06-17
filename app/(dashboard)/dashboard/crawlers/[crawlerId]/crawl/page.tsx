@@ -66,7 +66,7 @@ export default async function CrawlingPage({ params }: CrawlerSettingsProps) {
             </DashboardHeader>
             {files?.length ?
                 <>
-                    <div className="divide-y divide-border rounded-md border bg-custom">
+                    <div className="divide-y divide-border rounded-xl border bg-custom">
                         {files.map((file) => (
                             <FileItem file={file} key={file.id} />
                         ))}

@@ -208,7 +208,7 @@ export default function TestDashboardPage() {
               {dashboardData.stats.totalAgents > 0 ? `${Math.round(dashboardData.stats.activeUsers / dashboardData.stats.totalAgents * 100)}% active` : '0% active'}
             </p>
             <ProgressBar value={dashboardData.stats.totalAgents > 0 ? (dashboardData.stats.activeUsers / dashboardData.stats.totalAgents * 100) : 0} 
-              color="indigo" className="mt-2" />
+              color="neutral" className="mt-2" />
           </CardContent>
         </Card>
         <Card>
@@ -221,7 +221,7 @@ export default function TestDashboardPage() {
             <p className="text-xs text-muted-foreground">
               {dashboardData.stats.messageCountLast30Days.toLocaleString()} in the last 30 days
             </p>
-            <ProgressBar value={70} color="indigo" className="mt-2" />
+            <ProgressBar value={70} color="neutral" className="mt-2" />
           </CardContent>
         </Card>
         <Card>
@@ -234,7 +234,7 @@ export default function TestDashboardPage() {
             <p className="text-xs text-muted-foreground">
               {dashboardData.stats.totalFiles.toLocaleString()} files uploaded
             </p>
-            <ProgressBar value={85} color="indigo" className="mt-2" />
+            <ProgressBar value={85} color="neutral" className="mt-2" />
           </CardContent>
         </Card>
       </div>
@@ -266,7 +266,7 @@ export default function TestDashboardPage() {
                   data={dashboardData.messageData}
                   index="date"
                   categories={["Messages"]}
-                  colors={["indigo"]}
+                  colors={["neutral"]}
                   valueFormatter={(value) => `${value.toLocaleString()} msgs`}
                   showLegend={false}
                   showAnimation
@@ -288,7 +288,7 @@ export default function TestDashboardPage() {
                   data={dashboardData.agentTypes}
                   category="count"
                   index="name"
-                  colors={["indigo", "cyan", "amber", "emerald", "rose"]}
+                  colors={["neutral", "cyan", "amber", "emerald", "rose"]}
                   valueFormatter={(value) => `${value} agents`}
                   showAnimation
                 />
@@ -314,7 +314,7 @@ export default function TestDashboardPage() {
                   data={dashboardData.topPerformingChatbots}
                   index="name"
                   categories={["messages"]}
-                  colors={["indigo"]}
+                  colors={["neutral"]}
                   valueFormatter={(value) => `${value.toLocaleString()} msgs`}
                   showLegend={false}
                   showAnimation
@@ -396,11 +396,11 @@ export default function TestDashboardPage() {
                   Configure Settings
                 </Button>
                 <div className="mt-6">
-                  <TremorCard decoration="top" decorationColor="indigo">
+                  <TremorCard decoration="top" decorationColor="neutral">
                     <Text>Subscription Status</Text>
                     <Metric>Pro Plan</Metric>
                     <Text className="mt-4 text-sm">Renews on Nov 12, 2023</Text>
-                    <ProgressBar value={65} color="indigo" className="mt-2" />
+                    <ProgressBar value={65} color="neutral" className="mt-2" />
                     <Text className="mt-1 text-xs text-muted-foreground">65% of your monthly quota used</Text>
                   </TremorCard>
                 </div>
@@ -485,7 +485,7 @@ export default function TestDashboardPage() {
                       <Grid numItemsLg={5} className="gap-4">
                         <Col numColSpanLg={2}>
                           <Text>{source.name}</Text>
-                          <Badge color={source.type === 'file' ? 'blue' : source.type === 'website' ? 'emerald' : source.type === 'qa' ? 'amber' : source.type === 'catalog' ? 'indigo' : 'rose'}>
+                          <Badge color={source.type === 'file' ? 'blue' : source.type === 'website' ? 'emerald' : source.type === 'qa' ? 'amber' : source.type === 'catalog' ? 'neutral' : 'rose'}>
                             {source.type}
                           </Badge>
                         </Col>
@@ -582,7 +582,7 @@ export default function TestDashboardPage() {
                               <Text>{error.date}</Text>
                             </div>
                           </Flex>
-                          <Text className="mt-3 text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded-md">{error.errorMessage}</Text>
+                          <Text className="mt-3 text-sm bg-slate-50 dark:bg-slate-900 p-2 rounded-xl">{error.errorMessage}</Text>
                         </div>
                       </Flex>
                     </TremorCard>

@@ -31,23 +31,23 @@ interface PaymentMethodsSectionProps {
   isLoading?: boolean;
 }
 
-// Loading component with indigo theme
+// Loading component with neutral theme
 function PaymentMethodsLoading() {
   return (
     <div className="space-y-6">
       <div className="sm:flex sm:items-start sm:justify-between sm:space-x-10">
         <div>
-          <h2 className="font-semibold text-gray-900 dark:text-gray-50">
+          <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
             Payment method
           </h2>
         </div>
       </div>
       <div className="flex flex-col items-center justify-center py-12">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mb-4"></div>
-        <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-2">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600 mb-4"></div>
+        <h3 className="text-base font-medium text-neutral-900 dark:text-neutral-50 mb-2">
           Loading payment methods
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
           Please wait while we retrieve your saved payment methods.
         </p>
       </div>
@@ -136,17 +136,17 @@ export function PaymentMethodsSection({
       <div className="space-y-6">
         <div className="sm:flex sm:items-start sm:justify-between sm:space-x-10">
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-gray-50">
+            <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
               Payment method
             </h2>
           </div>
         </div>
         <div className="flex flex-col items-center justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mb-4"></div>
-          <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-2">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600 mb-4"></div>
+          <h3 className="text-base font-medium text-neutral-900 dark:text-neutral-50 mb-2">
             Loading payment methods
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
             Please wait while we retrieve your saved payment methods.
           </p>
         </div>
@@ -158,10 +158,10 @@ export function PaymentMethodsSection({
     <div className="space-y-6">
       <div className="sm:flex sm:items-start sm:justify-between sm:space-x-10">
         <div>
-          <h2 className="font-semibold text-gray-900 dark:text-gray-50">
+          <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
             Payment method
           </h2>
-          <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
+          <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-500">
             Payments will be taken from the card listed below, and you can
             update it by adding a new card through the menu on the right.
           </p>
@@ -174,14 +174,14 @@ export function PaymentMethodsSection({
       {paymentMethods.length === 0 ? (
         <div className="text-center py-8">
           <div className="flex justify-center mb-4">
-            <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
           </div>
-          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-2">
+          <h4 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-2">
             No payment methods
           </h4>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
+          <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-6">
             Add a payment method to manage your subscription and purchase phone numbers.
           </p>
           <Button onClick={onAddPaymentMethod}>
@@ -192,23 +192,23 @@ export function PaymentMethodsSection({
       ) : (
         <Table className="mt-10">
           <TableHead>
-            <TableRow className="border-b border-gray-200 dark:border-gray-800">
-              <TableCell className="text-xs font-medium uppercase text-gray-500 dark:text-gray-500">
+            <TableRow className="border-b border-neutral-200 dark:border-neutral-800">
+              <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
                 Provider
               </TableCell>
-              <TableCell className="text-xs font-medium uppercase text-gray-500 dark:text-gray-500">
+              <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
                 Status
               </TableCell>
-              <TableCell className="text-xs font-medium uppercase text-gray-500 dark:text-gray-500">
+              <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
                 Type
               </TableCell>
-              <TableCell className="text-xs font-medium uppercase text-gray-500 dark:text-gray-500">
+              <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
                 Number (Last 4)
               </TableCell>
-              <TableCell className="text-xs font-medium uppercase text-gray-500 dark:text-gray-500">
+              <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
                 Exp. Date
               </TableCell>
-              <TableCell className="text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-500">
+              <TableCell className="text-right text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
                 <span className="sr-only">Edit</span>
               </TableCell>
             </TableRow>
@@ -236,7 +236,7 @@ export function PaymentMethodsSection({
                     {!method.isDefault && (
                       <button
                         onClick={() => handleSetDefault(method.id)}
-                        className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        className="font-medium text-neutral-600 hover:text-neutral-500 dark:text-neutral-400 dark:hover:text-neutral-300"
                       >
                         Set Default
                       </button>
@@ -245,7 +245,7 @@ export function PaymentMethodsSection({
                       <Tooltip>
                         <TooltipTrigger>
                           <span
-                            className="font-medium text-gray-400 cursor-not-allowed dark:text-gray-600"
+                            className="font-medium text-neutral-400 cursor-not-allowed dark:text-neutral-600"
                           >
                             Cannot Delete
                           </span>

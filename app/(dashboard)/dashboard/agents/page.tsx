@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
-import { Card } from "@/components/ui/homepage/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/Button";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,9 @@ import {
   RiErrorWarningLine,
   RiDeleteBinLine,
   RiCheckLine,
-  RiClipboardLine
+  RiClipboardLine,
+  RiDraftLine,
+  RiCheckboxCircleLine
 } from "@remixicon/react";
 import { LinkAIAgentIcon } from "@/components/icons/LinkAIAgentIcon";
 import {
@@ -117,13 +119,13 @@ function convertToAgent(chatbot: any): Agent {
 }
 
 const colorCombinations = [
-  { text: 'text-fuchsia-800 dark:text-fuchsia-500', bg: 'bg-fuchsia-100 dark:bg-fuchsia-500/20' },
-  { text: 'text-indigo-800 dark:text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-500/20' },
-  { text: 'text-pink-800 dark:text-pink-500', bg: 'bg-pink-100 dark:bg-pink-500/20' },
-  { text: 'text-emerald-800 dark:text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-500/20' },
-  { text: 'text-orange-800 dark:text-orange-500', bg: 'bg-orange-100 dark:bg-orange-500/20' },
-  { text: 'text-indigo-800 dark:text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-500/20' },
-  { text: 'text-yellow-800 dark:text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-500/20' },
+  { text: 'text-neutral-800 dark:text-neutral-200', bg: 'bg-neutral-100 dark:bg-neutral-800' },
+  { text: 'text-neutral-700 dark:text-neutral-300', bg: 'bg-neutral-200 dark:bg-neutral-700' },
+  { text: 'text-neutral-800 dark:text-neutral-200', bg: 'bg-neutral-150 dark:bg-neutral-750' },
+  { text: 'text-neutral-900 dark:text-neutral-100', bg: 'bg-neutral-100 dark:bg-neutral-800' },
+  { text: 'text-neutral-700 dark:text-neutral-300', bg: 'bg-neutral-200 dark:bg-neutral-700' },
+  { text: 'text-neutral-800 dark:text-neutral-200', bg: 'bg-neutral-100 dark:bg-neutral-800' },
+  { text: 'text-neutral-700 dark:text-neutral-300', bg: 'bg-neutral-200 dark:bg-neutral-700' },
 ];
 
 const getInitials = (name: string) => {
@@ -134,6 +136,51 @@ const getInitials = (name: string) => {
     .toUpperCase()
     .slice(0, 2);
 };
+
+// Agent Status Badge Component
+function AgentStatusBadge({ agent, compact = false }: { agent: Agent; compact?: boolean }) {
+  const hasPrompt = agent.prompt && agent.prompt.trim().length > 0;
+  
+  if (compact) {
+    // Compact version for list items
+    const compactClasses = "text-xs px-1.5 py-0.5 rounded-full flex items-center gap-1";
+    
+    if (hasPrompt) {
+      return (
+        <div className={`${compactClasses} bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400`}>
+          <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
+          <span>Active</span>
+        </div>
+      );
+    }
+    
+    return (
+      <div className={`${compactClasses} bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400`}>
+        <div className="h-1.5 w-1.5 rounded-full bg-neutral-500"></div>
+        <span>Draft</span>
+      </div>
+    );
+  }
+  
+  // Regular version for headers
+  const baseClasses = "flex items-center gap-1 px-3 py-1 font-medium";
+  
+  if (hasPrompt) {
+    return (
+      <Badge variant="secondary" className={`${baseClasses} bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400`}>
+        <RiCheckboxCircleLine className="h-3.5 w-3.5" />
+        <span>Active</span>
+      </Badge>
+    );
+  }
+  
+  return (
+    <Badge variant="secondary" className={`${baseClasses} bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400`}>
+      <RiDraftLine className="h-3.5 w-3.5" />
+      <span>Draft</span>
+    </Badge>
+  );
+}
 
 // Custom TabNavigation components
 const TabNavigation: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => {
@@ -165,6 +212,7 @@ export default function TestChatbotPage() {
   const { data: session } = useSession();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [agents, setAgents] = useState<SimpleAgent[]>([]);
+  const [agentPrompts, setAgentPrompts] = useState<Record<string, string>>({});
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [agentToDelete, setAgentToDelete] = useState<SimpleAgent | null>(null);
@@ -231,25 +279,39 @@ export default function TestChatbotPage() {
       const data = await response.json();
       logger.debug('Response data', { data }, 'agent-listing');
       
+      let agentsList: any[] = [];
+      
       // Check if data is an object with chatbots property (new API format)
       if (data && data.success && Array.isArray(data.chatbots)) {
         logger.debug('Found chatbots array in response', null, 'agent-listing');
-        setAgents(data.chatbots.map((chatbot: any) => ({
-          id: chatbot.id,
-          name: chatbot.name,
-          status: chatbot.isLive ? 'live' : 'draft',
-          userId: session.user?.id || '',
-          createdAt: new Date(chatbot.createdAt),
-          updatedAt: new Date(chatbot.updatedAt)
-        })));
+        agentsList = data.chatbots;
       } else if (Array.isArray(data)) {
         // Legacy format - direct array
         logger.debug('Using direct array response', null, 'agent-listing');
-        setAgents(data.filter((agent: any) => agent.userId === session.user?.id));
+        agentsList = data.filter((agent: any) => agent.userId === session.user?.id);
       } else {
         logger.error('Unexpected data format', { data }, 'agent-listing');
         setAgents([]);
+        return;
       }
+      
+      // Set agents list
+      setAgents(agentsList.map((chatbot: any) => ({
+        id: chatbot.id,
+        name: chatbot.name,
+        status: chatbot.isLive ? 'live' : 'draft',
+        userId: session.user?.id || '',
+        createdAt: new Date(chatbot.createdAt),
+        updatedAt: new Date(chatbot.updatedAt)
+      })));
+      
+      // Extract prompts for status badges
+      const prompts: Record<string, string> = {};
+      agentsList.forEach((chatbot: any) => {
+        prompts[chatbot.id] = chatbot.prompt || '';
+      });
+      setAgentPrompts(prompts);
+      
     } catch (error) {
       logger.error('Error fetching agents', { error }, 'agent-listing');
       toast.error("Failed to load agents");
@@ -427,8 +489,8 @@ export default function TestChatbotPage() {
   // Custom styling for active tab
   const getTabClassName = (tabName: string) => {
     const baseClasses = "inline-flex gap-2 items-center";
-    const activeClasses = "text-indigo-600 font-medium border-b-2 border-indigo-600 dark:text-indigo-500 dark:border-indigo-500";
-    const inactiveClasses = "text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-700";
+    const activeClasses = "text-neutral-600 font-medium border-b-2 border-neutral-600 dark:text-neutral-500 dark:border-neutral-500";
+    const inactiveClasses = "text-neutral-500 hover:text-neutral-700 hover:border-b-2 hover:border-neutral-300 dark:text-neutral-400 dark:hover:text-neutral-300 dark:hover:border-neutral-700";
     
     // Add mobile-specific classes
     const mobileClasses = isMobileView ? "py-2 px-3 text-sm" : "py-3 px-3";
@@ -462,11 +524,11 @@ export default function TestChatbotPage() {
     <div className="flex h-full">
       {/* Left Sidebar - Conditionally Rendered */}
       {(!isMobileView || (isMobileView && !showAgentDetailsOnMobile)) && (
-        <div className={cn("border-r border-gray-200 dark:border-gray-800 flex flex-col", 
+        <div className={cn("border-r border-neutral-200 dark:border-neutral-800 flex flex-col", 
           isMobileView ? "w-full" : "w-80")}>
           <div className="p-4 pb-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
                 My Agents
               </h2>
               <Button
@@ -484,11 +546,11 @@ export default function TestChatbotPage() {
           <div className="px-4 pb-4 flex-1 overflow-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
-                <span className="ml-2 text-sm text-gray-500">Loading agents...</span>
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
+                <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">Loading agents...</span>
               </div>
             ) : agents.length > 0 ? (
-              <div className="grid grid-cols-1 gap-3 mt-1">
+              <div className="grid grid-cols-1 gap-2 mt-2">
                 {agents.map((agent, index) => {
                   // Check if this agent's ID matches the selected agent (for debugging)
                   const isSelected = selectedAgent?.id === agent.id;
@@ -504,128 +566,107 @@ export default function TestChatbotPage() {
                     agent._logged = true;
                   }
                   
+                  // Create agent object with prompt for badge
+                  const agentForBadge = { ...agent, prompt: agentPrompts[agent.id] || '' } as Agent;
+                  
                   return (
-                    <Card 
+                    <div 
                       key={agent.id} 
-                      asChild 
+                      onClick={() => handleAgentSelect(agent)}
                       className={cn(
-                        "group transition-all duration-200",
-                        "hover:bg-gray-50 dark:hover:bg-gray-900",
+                        "group transition-all duration-200 cursor-pointer p-3 rounded-xl border relative",
+                        "hover:bg-neutral-50 dark:hover:bg-neutral-900",
                         "hover:shadow-sm",
-                        "hover:border-gray-300 dark:hover:border-gray-700",
+                        "bg-white dark:bg-black border-neutral-200 dark:border-neutral-800",
+                        "hover:border-neutral-300 dark:hover:border-neutral-700",
                         isSelected && [
-                          "border-indigo-600 dark:border-indigo-500",
-                          "bg-indigo-50/50 dark:bg-indigo-500/5",
-                          "ring-1 ring-indigo-500 dark:ring-indigo-500"
+                          "border-neutral-400 dark:border-white",
+                          "bg-neutral-50 dark:bg-neutral-900"
                         ]
                       )}
                     >
-                      <div className="relative px-3.5 py-2.5">
-                        <div className="flex items-center space-x-3">
-                          <span
-                            className={cn(
-                              colorCombinations[index % colorCombinations.length].bg,
-                              colorCombinations[index % colorCombinations.length].text,
-                              'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium',
-                              'transition-transform duration-200 group-hover:scale-[1.02]',
-                              isSelected && [
-                                "border-2 border-indigo-500 dark:border-indigo",
-                                "shadow-[0_0_0_4px_rgba(59,130,246,0.1)]"
-                              ]
-                            )}
-                            aria-hidden={true}
-                          >
-                            {getInitials(agent.name)}
-                          </span>
-                          <div className="truncate min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className={cn(
-                                "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
-                                isSelected && "text-indigo-600 dark:text-indigo-400"
-                              )}>
-                                <button 
-                                  onClick={() => handleAgentSelect(agent)}
-                                  className="focus:outline-none hover:no-underline no-underline"
-                                  type="button"
-                                >
-                                  <span className="absolute inset-0" aria-hidden="true" />
-                                  {agent.name}
-                                </button>
-                              </p>
-                            </div>
-                            
-                            <div className="mt-0.5">
-                              <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline">
-                                ID: {agent.id}
-                              </p>
+                      <div className="flex items-center">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-medium">
+                          {getInitials(agent.name)}
+                        </span>
+                        <div className="ml-3 w-full overflow-hidden">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center max-w-[85%]">
+                              <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                                {agent.name}
+                              </div>
                             </div>
                           </div>
-                        </div>
-
-                        <div className="absolute right-2.5 top-2.5">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                className="h-6 w-6 p-0"
-                              >
-                                <RiMoreFill className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent className="min-w-56">
-                              <DropdownMenuLabel>Agent Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              
-                              <DropdownMenuGroup>
-                                <DropdownMenuItem onClick={() => handleAgentChat(agent.id)}>
-                                  <span className="flex items-center gap-x-2">
-                                    <RiMessage2Line className="size-4 text-inherit" />
-                                    <span>Chat</span>
-                                  </span>
-                                </DropdownMenuItem>
-                              </DropdownMenuGroup>
-
-                              <DropdownMenuSeparator />
-
-                              <DropdownMenuGroup>
-                                <DropdownMenuItem onClick={() => window.location.href = `/dashboard/inquiries/${agent.id}`}>
-                                  <span className="flex items-center gap-x-2">
-                                    <RiUserLine className="size-4 text-inherit" />
-                                    <span>User Inquiries</span>
-                                  </span>
-                                </DropdownMenuItem>
-
-                                <DropdownMenuItem onClick={() => window.location.href = `/dashboard/errors/${agent.id}`}>
-                                  <span className="flex items-center gap-x-2">
-                                    <RiErrorWarningLine className="size-4 text-inherit" />
-                                    <span>Errors</span>
-                                  </span>
-                                </DropdownMenuItem>
-                              </DropdownMenuGroup>
-
-                              <DropdownMenuSeparator />
-
-                              <DropdownMenuItem 
-                                onClick={() => setAgentToDelete(agent)}
-                                className="text-red-600 dark:text-red-400"
-                              >
-                                <span className="flex items-center gap-x-2">
-                                  <RiDeleteBinLine className="size-4 text-inherit" />
-                                  <span>Delete</span>
-                                </span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <p className="mt-1 truncate text-xs text-neutral-600 dark:text-neutral-400">
+                            ID: {agent.id}
+                          </p>
                         </div>
                       </div>
-                    </Card>
+
+                      <div className="absolute right-2 top-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-6 w-6 p-0"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <RiMoreFill className="h-3.5 w-3.5 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="min-w-56">
+                            <DropdownMenuLabel>Agent Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem onClick={() => handleAgentChat(agent.id)}>
+                                <span className="flex items-center gap-x-2">
+                                  <RiMessage2Line className="size-4 text-inherit" />
+                                  <span>Chat</span>
+                                </span>
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuGroup>
+                              <DropdownMenuItem onClick={() => window.location.href = `/dashboard/inquiries/${agent.id}`}>
+                                <span className="flex items-center gap-x-2">
+                                  <RiUserLine className="size-4 text-inherit" />
+                                  <span>User Inquiries</span>
+                                </span>
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem onClick={() => window.location.href = `/dashboard/errors/${agent.id}`}>
+                                <span className="flex items-center gap-x-2">
+                                  <RiErrorWarningLine className="size-4 text-inherit" />
+                                  <span>Errors</span>
+                                </span>
+                              </DropdownMenuItem>
+                            </DropdownMenuGroup>
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuItem 
+                              onClick={() => setAgentToDelete(agent)}
+                              className="text-red-600 dark:text-red-400"
+                            >
+                              <span className="flex items-center gap-x-2">
+                                <RiDeleteBinLine className="size-4 text-inherit" />
+                                <span>Delete</span>
+                              </span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
             ) : (
               <div className="flex h-full items-center justify-center py-8 text-center">
                 <div className="flex flex-col items-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     No agents yet.
                   </p>
                   <Button 
@@ -648,13 +689,13 @@ export default function TestChatbotPage() {
         <div className="flex-1 overflow-auto overflow-x-hidden">
           {/* Mobile Back Button */}
           {isMobileView && showAgentDetailsOnMobile && selectedAgent && (
-            <div className="sticky top-0 z-10 bg-background border-b border-gray-200 dark:border-gray-800">
+            <div className="sticky top-0 z-10 bg-background border-b border-neutral-200 dark:border-neutral-800">
               <div className="flex items-center px-4 py-2.5">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowAgentDetailsOnMobile(false)}
-                  className="mr-2 text-gray-600 dark:text-gray-300 p-1 h-auto"
+                  className="mr-2 text-neutral-600 dark:text-neutral-300 p-1 h-auto"
                 >
                   <RiArrowLeftLine className="h-5 w-5" />
                 </Button>
@@ -672,34 +713,14 @@ export default function TestChatbotPage() {
                   <div className="flex flex-wrap items-center justify-between gap-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <h1 className={cn(
-                        "text-xl sm:text-2xl font-semibold tracking-tight text-gray-900 dark:text-white",
+                        "text-xl sm:text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50",
                         isMobileView && "pr-2"
                       )}>
                         {selectedAgent.name}
                       </h1>
                       
-                      {/* Status Badge - moved next to agent name */}
-                      <Badge 
-                        variant={selectedAgent.status === 'live' ? 'primary' : 'secondary'}
-                        className={cn(
-                          "flex items-center gap-1 px-2 py-0.5 font-medium w-fit",
-                          selectedAgent.status === 'live' 
-                            ? "bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400" 
-                            : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400"
-                        )}
-                      >
-                        {selectedAgent.status === 'live' ? (
-                          <>
-                            <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                            <span>Live</span>
-                          </>
-                        ) : (
-                          <>
-                            <div className="h-2 w-2 rounded-full bg-gray-500"></div>
-                            <span>Draft</span>
-                          </>
-                        )}
-                      </Badge>
+                      {/* Prompt-based Status Badge */}
+                      <AgentStatusBadge agent={selectedAgent} />
                     </div>
                     
                     {/* Talk to your agent button - aligned to the right */}
@@ -728,7 +749,7 @@ export default function TestChatbotPage() {
                             className={`h-6 w-6 p-0 transition-colors duration-200 ${
                               copySuccess 
                                 ? "text-green-500 bg-green-50 hover:text-green-600 dark:bg-green-900/20 dark:text-green-400" 
-                                : "text-gray-500 hover:text-indigo-600"
+                                : "text-neutral-500 hover:text-neutral-600"
                             }`}
                             onClick={handleCopyAgentId}
                           >
@@ -745,7 +766,7 @@ export default function TestChatbotPage() {
                       </Tooltip>
                     </TooltipProvider>
                     <code className={cn(
-                      "text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono text-gray-700 dark:text-gray-300",
+                      "text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded font-mono text-neutral-700 dark:text-neutral-300",
                       isMobileView ? "max-w-[120px] sm:max-w-xs truncate" : "max-w-xs overflow-x-auto"
                     )}>
                       {selectedAgent.id}
@@ -756,7 +777,7 @@ export default function TestChatbotPage() {
               
               {/* Full-width tab navigation */}
               <div className="-mx-6">
-                <TabNavigation className="text-sm pl-4 border-b border-gray-200 dark:border-gray-800">
+                <TabNavigation className="text-sm pl-4 border-b border-neutral-200 dark:border-neutral-800">
                   <div className={cn(
                     "px-4 sm:px-6 flex overflow-x-auto scrollbar-none"
                   )}>
@@ -916,15 +937,15 @@ export default function TestChatbotPage() {
           ) : (
             <div className="flex h-full flex-col items-center justify-center p-6">
               <div className="mx-auto max-w-md text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                  <LinkAIAgentIcon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+                  <LinkAIAgentIcon className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
+                <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
                   {agents.length > 0 
                     ? 'Select an Agent' 
                     : 'Welcome to Agents'}
                 </h1>
-                <p className="mt-2 text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-neutral-600 dark:text-neutral-400">
                   {agents.length > 0 
                     ? 'Select an agent from the sidebar or create a new one to get started.' 
                     : 'Create your first agent to enhance your business operations.'}
@@ -951,13 +972,13 @@ export default function TestChatbotPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Delete Agent</DialogTitle>
-            <DialogDescription className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+            <DialogDescription className="mt-1 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
               Are you sure you want to delete this agent? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           
           {deleteStatus === 'success' && (
-            <div className="my-4 p-3 bg-green-50 border border-green-200 rounded-md text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">
+            <div className="my-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-800 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">
               <div className="flex items-center">
                 <CheckCircle2 className="h-5 w-5 mr-2" />
                 <span>Agent deleted successfully!</span>
@@ -966,7 +987,7 @@ export default function TestChatbotPage() {
           )}
           
           {deleteStatus === 'error' && (
-            <div className="my-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <div className="my-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               <div className="flex items-center">
                 <AlertCircle className="h-5 w-5 mr-2" />
                 <span>{deleteError || 'Failed to delete agent. Please try again.'}</span>

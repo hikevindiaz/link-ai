@@ -21,7 +21,7 @@ export default function CodeExampleTabs({
         aria-label="Select code"
       >
         <Tabs.Trigger
-          className="group relative flex flex-1 flex-col items-start justify-start rounded-xl p-6 text-left shadow-lg ring-1 ring-gray-200 dark:ring-white/5 dark:data-[state=active]:shadow-indigo-900/30"
+          className="group relative flex flex-1 flex-col items-start justify-start rounded-xl p-6 text-left shadow-lg ring-1 ring-gray-200 dark:ring-white/5 dark:data-[state=active]:shadow-neutral-900/30"
           value="tab1"
         >
           <div className="absolute -left-[36px] top-1/2 hidden -rotate-90 group-data-[state=active]:flex">
@@ -32,10 +32,10 @@ export default function CodeExampleTabs({
             />
           </div>
           <div className="flex items-center gap-4">
-            <div className="aspect-square w-fit rounded-lg bg-white p-2 text-gray-700 ring-1 ring-black/10 transition-all group-data-[state=active]:text-indigo-600 group-data-[state=active]:shadow-md group-data-[state=active]:shadow-indigo-500/20 dark:bg-gray-950 dark:text-gray-400 dark:ring-white/10 dark:group-data-[state=active]:text-indigo-400 dark:group-data-[state=active]:shadow-indigo-600/50">
+            <div className="aspect-square w-fit rounded-lg bg-white p-2 text-gray-700 ring-1 ring-black/10 transition-all group-data-[state=active]:text-neutral-600 group-data-[state=active]:shadow-md group-data-[state=active]:shadow-neutral-500/20 dark:bg-gray-950 dark:text-gray-400 dark:ring-white/10 dark:group-data-[state=active]:text-neutral-400 dark:group-data-[state=active]:shadow-neutral-600/50">
               <RiShapesLine aria-hidden="true" className="size-5" />
             </div>
-            <p className="font-semibold tracking-tight text-gray-700 transition-all group-data-[state=active]:text-indigo-600 sm:text-lg dark:text-gray-400 dark:group-data-[state=active]:text-indigo-400">
+            <p className="font-semibold tracking-tight text-gray-700 transition-all group-data-[state=active]:text-neutral-600 sm:text-lg dark:text-gray-400 dark:group-data-[state=active]:text-neutral-400">
               Model everything
             </p>
           </div>
@@ -45,7 +45,7 @@ export default function CodeExampleTabs({
           </p>
         </Tabs.Trigger>
         <Tabs.Trigger
-          className="group relative flex flex-1 flex-col items-start justify-start rounded-xl p-6 text-left shadow-lg ring-1 ring-gray-200 dark:ring-white/5 dark:data-[state=active]:shadow-indigo-900/30"
+          className="group relative flex flex-1 flex-col items-start justify-start rounded-xl p-6 text-left shadow-lg ring-1 ring-gray-200 dark:ring-white/5 dark:data-[state=active]:shadow-neutral-900/30"
           value="tab2"
         >
           <div className="absolute -left-[36px] top-1/2 hidden -rotate-90 sm:group-data-[state=active]:flex">
@@ -56,10 +56,10 @@ export default function CodeExampleTabs({
             />
           </div>
           <div className="flex items-center gap-4">
-            <div className="data-state aspect-square w-fit rounded-lg bg-white p-2 text-gray-700 ring-1 ring-black/10 transition-all group-data-[state=active]:text-indigo-600 group-data-[state=active]:shadow-md group-data-[state=active]:shadow-indigo-500/20 dark:bg-gray-950 dark:text-gray-400 dark:ring-white/10 dark:group-data-[state=active]:text-indigo-400 dark:group-data-[state=active]:shadow-indigo-600/50">
+            <div className="data-state aspect-square w-fit rounded-lg bg-white p-2 text-gray-700 ring-1 ring-black/10 transition-all group-data-[state=active]:text-neutral-600 group-data-[state=active]:shadow-md group-data-[state=active]:shadow-neutral-500/20 dark:bg-gray-950 dark:text-gray-400 dark:ring-white/10 dark:group-data-[state=active]:text-neutral-400 dark:group-data-[state=active]:shadow-neutral-600/50">
               <RiCodeSSlashLine aria-hidden="true" className="size-5" />
             </div>
-            <p className="font-semibold tracking-tight text-gray-700 transition-all group-data-[state=active]:text-indigo-600 sm:text-lg dark:text-gray-400 dark:group-data-[state=active]:text-indigo-400">
+            <p className="font-semibold tracking-tight text-gray-700 transition-all group-data-[state=active]:text-neutral-600 sm:text-lg dark:text-gray-400 dark:group-data-[state=active]:text-neutral-400">
               Query efficiently
             </p>
           </div>

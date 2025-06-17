@@ -77,19 +77,19 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
         };
       case 'pending':
         return {
-          icon: <Icons.clock className="h-5 w-5 text-indigo-500" />,
+          icon: <Icons.clock className="h-5 w-5 text-neutral-500" />,
           title: 'Pending',
           description: 'This phone number is ready to use but waiting to be assigned to an agent.',
-          color: 'text-indigo-600 dark:text-indigo-500',
-          bgColor: 'bg-indigo-50 dark:bg-indigo-900/20',
+          color: 'text-neutral-600 dark:text-neutral-500',
+          bgColor: 'bg-neutral-50 dark:bg-neutral-900/20',
         };
       default:
         return {
-          icon: <Icons.info className="h-5 w-5 text-gray-500" />,
+          icon: <Icons.info className="h-5 w-5 text-neutral-500" />,
           title: 'Unknown',
           description: 'The status of this phone number is unknown.',
-          color: 'text-gray-600 dark:text-gray-500',
-          bgColor: 'bg-gray-50 dark:bg-gray-900/20',
+          color: 'text-neutral-600 dark:text-neutral-500',
+          bgColor: 'bg-neutral-50 dark:bg-neutral-900/20',
         };
     }
   };
@@ -97,12 +97,12 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
   const statusDetails = getStatusDetails();
 
   return (
-    <Card className="mt-4 overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-      <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+    <Card className="mt-4 overflow-hidden p-0 bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-900">
+      <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-900 dark:bg-neutral-900">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Icons.activity className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-            <h4 className="text-md font-semibold text-gray-900 dark:text-gray-50">
+            <Icons.activity className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+            <h4 className="text-md font-semibold text-neutral-900 dark:text-neutral-50">
               Phone Number Status
             </h4>
           </div>
@@ -115,14 +115,14 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
             title="Refresh status"
           >
             {isRefreshing ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
             ) : (
               <Icons.refresh className="h-4 w-4" />
             )}
           </Button>
         </div>
       </div>
-      <div className="p-4 bg-white dark:bg-gray-900/50">
+      <div className="p-4 bg-white dark:bg-neutral-900/50">
         <div className={`rounded-lg p-4 ${statusDetails.bgColor}`}>
           <div className="flex items-start">
             <div className="mr-3 mt-0.5">
@@ -132,13 +132,13 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
               <h5 className={`font-medium ${statusDetails.color}`}>
                 {statusDetails.title}
               </h5>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
                 {statusDetails.description}
               </p>
               
               {/* Show status reason if available */}
               {phoneNumber.statusReason && (
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
                   Reason: {phoneNumber.statusReason}
                 </p>
               )}
@@ -160,11 +160,11 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
         </div>
 
         <div className="mt-4">
-          <h5 className="font-medium text-sm text-gray-900 dark:text-gray-50 mb-2">
+          <h5 className="font-medium text-sm text-neutral-900 dark:text-neutral-50 mb-2">
             Billing Information
           </h5>
-          <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-            <p className="text-xs text-gray-500 mt-2">
+          <div className="space-y-1 text-sm text-neutral-600 dark:text-neutral-400">
+            <p className="text-xs text-neutral-500 mt-2">
               Phone numbers are billed monthly. Add a payment method to ensure uninterrupted service.
             </p>
           </div>

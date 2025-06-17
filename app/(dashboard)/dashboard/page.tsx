@@ -2,12 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
-import { Select, SelectItem, DateRangePickerValue } from "@tremor/react";
 import { DashboardHeader } from "@/components/dashboard/header";
 import { DashboardStats } from "@/components/dashboard/stats";
 import { MessagesChart } from "@/components/dashboard/messages-chart";
-import { DashboardOverview } from '@/components/dashboard/overview-header';
-import WelcomeBanner from '@/components/WelcomeBanner';
 
 interface KpiData {
   name: string;
@@ -23,41 +20,25 @@ interface MessageData {
   };
 }
 
-interface IntegrationSettingsMap {
-  [integrationId: string]: {
-    isEnabled: boolean;
-  };
-}
-
 interface DashboardData {
   kpiData: KpiData[];
   messageData: MessageData[];
   totalMessages: number;
-  integrationSettings: IntegrationSettingsMap;
-  appointmentsCount: number;
-  formsCount: number;
-  formSubmissionsCount: number;
-  messageCountToday: number;
 }
 
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [isClient, setIsClient] = useState(false);
-  const [onboardingChecked, setOnboardingChecked] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // ADDED: State for selected period (default '30d')
+  
+  // Filter states
+  const [selectedAgent, setSelectedAgent] = useState<string>('all');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('30d');
 
   const [dashboardData, setDashboardData] = useState<DashboardData>({
     kpiData: [],
     messageData: [],
     totalMessages: 0,
-    integrationSettings: {},
-    appointmentsCount: 0,
-    formsCount: 0,
-    formSubmissionsCount: 0,
-    messageCountToday: 0,
   });
 
   // Set isClient to true when component mounts
@@ -65,58 +46,104 @@ export default function DashboardPage() {
     setIsClient(true);
   }, []);
 
-  // Fetch dashboard data - keep as a separate effect
+  // Fetch dashboard data
   useEffect(() => {
     const fetchData = async () => {
       if (session?.user?.id) {
-        // ADDED: Calculate start and end dates based on selectedPeriod
-        let startDate = new Date();
-        const endDate = new Date(); // Today
-        endDate.setHours(23, 59, 59, 999); // End of today
+        // Calculate current period dates
+        let currentStartDate = new Date();
+        const currentEndDate = new Date();
+        currentEndDate.setHours(23, 59, 59, 999);
 
+        let periodDays = 30; // Default to 30 days
         switch (selectedPeriod) {
           case '7d':
-            startDate.setDate(endDate.getDate() - 6);
+            periodDays = 7;
+            currentStartDate.setDate(currentEndDate.getDate() - 6);
             break;
           case '90d':
-            startDate.setDate(endDate.getDate() - 89);
+            periodDays = 90;
+            currentStartDate.setDate(currentEndDate.getDate() - 89);
             break;
           case '30d':
           default:
-            startDate.setDate(endDate.getDate() - 29);
+            periodDays = 30;
+            currentStartDate.setDate(currentEndDate.getDate() - 29);
             break;
         }
-        startDate.setHours(0, 0, 0, 0); // Start of the day
+        currentStartDate.setHours(0, 0, 0, 0);
 
-        // Format dates for query parameters
-        const fromDate = startDate.toISOString().split('T')[0];
-        const toDate = endDate.toISOString().split('T')[0];
+        // Calculate previous period dates for comparison
+        const previousEndDate = new Date(currentStartDate);
+        previousEndDate.setDate(previousEndDate.getDate() - 1); // Day before current period starts
+        const previousStartDate = new Date(previousEndDate);
+        previousStartDate.setDate(previousStartDate.getDate() - (periodDays - 1));
+        previousStartDate.setHours(0, 0, 0, 0);
+
+        const currentFromDate = currentStartDate.toISOString().split('T')[0];
+        const currentToDate = currentEndDate.toISOString().split('T')[0];
+        const previousFromDate = previousStartDate.toISOString().split('T')[0];
+        const previousToDate = previousEndDate.toISOString().split('T')[0];
         
-        const apiUrl = `/api/dashboard/stats?from=${fromDate}&to=${toDate}`;
+        // Build API URLs with filters
+        let currentApiUrl = `/api/dashboard/stats?from=${currentFromDate}&to=${currentToDate}`;
+        let previousApiUrl = `/api/dashboard/stats?from=${previousFromDate}&to=${previousToDate}`;
+        
+        if (selectedAgent !== 'all') {
+          currentApiUrl += `&agentId=${selectedAgent}`;
+          previousApiUrl += `&agentId=${selectedAgent}`;
+        }
 
         try {
-          const response = await fetch(apiUrl);
-          const data = await response.json();
+          // Fetch both current and previous period data
+          const [currentResponse, previousResponse] = await Promise.all([
+            fetch(currentApiUrl),
+            fetch(previousApiUrl)
+          ]);
 
-          // REMOVED: Manual KPI data construction and conditional logic
-          // The API now returns the final kpiData array directly
+          const currentData = await currentResponse.json();
+          const previousData = await previousResponse.json();
+
+          // Helper function to safely convert stat values to numbers
+          const statToNumber = (stat: any): number => {
+            const num = Number(stat);
+            return isNaN(num) ? 0 : num;
+          };
+
+          // Calculate percentage changes
+          const calculatePercentageChange = (current: number, previous: number): string => {
+            if (previous === 0) {
+              return current > 0 ? '100%' : '0%';
+            }
+            const change = ((current - previous) / previous) * 100;
+            return `${Number(change.toFixed(1))}%`;
+          };
+
+          // Create a map of current and previous data
+          const currentStatsMap = new Map((currentData.kpiData || []).map((item: any) => [item.name, statToNumber(item.stat)]));
+          const previousStatsMap = new Map((previousData.kpiData || []).map((item: any) => [item.name, statToNumber(item.stat)]));
+
+          // Ensure we prioritize the 5 main stats: Messages, Appointments, Calls, Call Minutes, Orders
+          const priorityStats = ['Messages', 'Appointments', 'Calls', 'Call Minutes', 'Orders'];
+          
+          // Build the complete KPI data with calculated percentages
+          const calculatedKpiData = priorityStats.map(statName => {
+            const currentValue = currentStatsMap.get(statName) || 0;
+            const previousValue = previousStatsMap.get(statName) || 0;
+            const percentageChange = calculatePercentageChange(currentValue, previousValue);
+            
+            return {
+              name: statName,
+              stat: currentValue.toString(),
+              change: percentageChange,
+              changeType: currentValue >= previousValue ? 'positive' as const : 'negative' as const
+            };
+          });
 
           setDashboardData({
-            // UPDATE: Use kpiData directly from API response
-            kpiData: data.kpiData || [],
-            // UPDATE: No need to transform messagesPerDay anymore - pass it directly
-            messageData: data.messagesPerDay || [],
-            // UPDATE: Use totalMessages directly from API response
-            totalMessages: data.totalMessages || 0,
-            // Keep other state properties if they are still needed elsewhere,
-            // otherwise they can be removed if only used for KPI construction previously.
-            // For now, we'll keep them assuming they might be used later, but they are not used
-            // to build the kpiData array anymore.
-            integrationSettings: {}, // API no longer returns this separately
-            appointmentsCount: 0,   // API no longer returns this separately
-            formsCount: 0,          // API no longer returns this separately
-            formSubmissionsCount: 0,// API no longer returns this separately
-            messageCountToday: 0,   // API no longer returns this separately
+            kpiData: calculatedKpiData,
+            messageData: currentData.messagesPerDay || [],
+            totalMessages: currentData.totalMessages || 0,
           });
           setLoading(false);
         } catch (error) {
@@ -129,40 +156,30 @@ export default function DashboardPage() {
     if (session) {
       fetchData();
     }
-  }, [session, selectedPeriod]);
+  }, [session, selectedPeriod, selectedAgent]);
 
   if (!isClient) {
     return null;
   }
 
-  // Split KPI data for rendering order
-  // UPDATE: Add 'Phone Numbers' to top KPIs
-  const topKpiKeys = ['Agents', 'Knowledge Sources', 'Phone Numbers', 'Messages'];
-  const topKpiData = dashboardData.kpiData.filter(kpi => topKpiKeys.includes(kpi.name));
-  const conditionalKpiData = dashboardData.kpiData.filter(kpi => !topKpiKeys.includes(kpi.name));
-
   const userFirstName = session?.user?.name?.split(' ')[0] || '';
 
   return (
-    <div className="flex flex-col p-0">
+    <div className="flex flex-col min-h-screen bg-white dark:bg-black">
       <DashboardHeader 
         loading={loading}
         userFirstName={userFirstName}
+        selectedAgent={selectedAgent}
+        onAgentChange={setSelectedAgent}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={setSelectedPeriod}
       />
-      <div className="p-4 sm:p-6 lg:p-8">
-        <WelcomeBanner />
-        <DashboardOverview 
-          selectedPeriod={selectedPeriod}
-          onPeriodChange={setSelectedPeriod}
-        />
-        <DashboardStats data={topKpiData} />
+      <div className="flex-1 p-3 sm:p-4 lg:p-6">
+        <DashboardStats data={dashboardData.kpiData} />
         <MessagesChart 
           data={dashboardData.messageData}
           totalMessages={dashboardData.totalMessages}
         />
-        {conditionalKpiData.length > 0 && (
-          <DashboardStats data={conditionalKpiData} />
-        )}
       </div>
     </div>
   );

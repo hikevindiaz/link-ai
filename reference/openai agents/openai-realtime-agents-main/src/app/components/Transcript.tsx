@@ -78,14 +78,14 @@ function Transcript({
           <div className="flex gap-x-2">
             <button
               onClick={handleCopyTranscript}
-              className="w-24 text-sm px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center gap-x-1"
+              className="w-24 text-sm px-3 py-1 rounded-xl bg-gray-200 hover:bg-gray-300 flex items-center justify-center gap-x-1"
             >
               <ClipboardCopyIcon />
               {justCopied ? "Copied!" : "Copy"}
             </button>
             <button
               onClick={downloadRecording}
-              className="w-40 text-sm px-3 py-1 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center gap-x-1"
+              className="w-40 text-sm px-3 py-1 rounded-xl bg-gray-200 hover:bg-gray-300 flex items-center justify-center gap-x-1"
             >
               <DownloadIcon />
               <span>Download Audio</span>

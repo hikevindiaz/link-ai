@@ -281,11 +281,11 @@ const VoicesPage = () => {
         <div className="flex-1 overflow-auto">
           {/* Mobile back button for detail/creator views */}
           {isMobileView && showDetailsOnMobile && currentView !== 'empty' && (
-            <div className="border-b border-gray-200 dark:border-gray-800 p-2">
+            <div className="border-b border-neutral-200 dark:border-neutral-800 p-2">
               <Button
                 variant="ghost"
                 onClick={handleBackToVoices}
-                className="flex items-center text-gray-600 dark:text-gray-300"
+                className="flex items-center text-neutral-600 dark:text-neutral-300"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to voices

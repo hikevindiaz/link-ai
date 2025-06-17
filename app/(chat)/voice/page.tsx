@@ -42,14 +42,14 @@ export default function VoiceExperiencePage() {
   }, []);
   
   return (
-    <div className="min-h-dvh flex flex-col bg-white dark:bg-gray-950">
-      <header className="border-b border-gray-200 dark:border-gray-800 py-4 px-6 flex items-center">
+    <div className="min-h-dvh flex flex-col bg-white dark:bg-neutral-950">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 py-4 px-6 flex items-center">
         <Link href="/chat" className="mr-4">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+        <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
           Streaming Voice Experience
         </h1>
       </header>
@@ -66,14 +66,14 @@ export default function VoiceExperiencePage() {
         </div>
         
         {/* Message History */}
-        <div className="w-full md:w-1/2 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-800 p-6 overflow-y-auto">
-          <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">
+        <div className="w-full md:w-1/2 border-t md:border-t-0 md:border-l border-neutral-200 dark:border-neutral-800 p-6 overflow-y-auto">
+          <h2 className="text-lg font-medium mb-4 text-neutral-900 dark:text-neutral-100">
             Conversation History
           </h2>
           
           <div className="space-y-4">
             {messages.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <p className="text-neutral-500 dark:text-neutral-400 text-sm">
                 Your conversation will appear here. Start by clicking "Voice Call" and speaking.
               </p>
             ) : (
@@ -82,14 +82,14 @@ export default function VoiceExperiencePage() {
                   key={index}
                   className={`p-3 rounded-lg ${
                     message.role === 'user' 
-                      ? 'bg-indigo-50 dark:bg-indigo-900/30 ml-6' 
-                      : 'bg-gray-100 dark:bg-gray-800 mr-6'
+                      ? 'bg-neutral-50 dark:bg-neutral-900/30 ml-6' 
+                      : 'bg-neutral-100 dark:bg-neutral-800 mr-6'
                   }`}
                 >
-                  <p className="text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <p className="text-sm font-medium mb-1 text-neutral-700 dark:text-neutral-300">
                     {message.role === 'user' ? 'You' : 'AI'}
                   </p>
-                  <p className="text-gray-800 dark:text-gray-200">
+                  <p className="text-neutral-800 dark:text-neutral-200">
                     {message.content}
                   </p>
                 </div>
@@ -99,7 +99,7 @@ export default function VoiceExperiencePage() {
         </div>
       </div>
       
-      <footer className="border-t border-gray-200 dark:border-gray-800 p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+      <footer className="border-t border-neutral-200 dark:border-neutral-800 p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
         <p>
           Streaming voice interface uses real-time audio processing with minimal latency.
         </p>

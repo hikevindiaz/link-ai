@@ -414,13 +414,21 @@ export function ManualMode({
                 <Label htmlFor="product-title" className="font-medium">
                   Product Title
                 </Label>
-                <Input
-                  id="product-title"
-                  value={newProduct.title}
-                  onChange={(e) => setNewProduct({...newProduct, title: e.target.value})}
-                  placeholder="Enter product title"
-                  className="mt-2"
-                />
+                <div className="space-y-2">
+                  <Input
+                    id="product-title"
+                    value={newProduct.title}
+                    onChange={(e) => setNewProduct({...newProduct, title: e.target.value})}
+                    placeholder="Enter product title"
+                    className="mt-2"
+                    maxLength={100}
+                  />
+                  <div className="flex justify-end">
+                    <span className="text-xs text-neutral-500">
+                      {newProduct.title.length}/100
+                    </span>
+                  </div>
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
@@ -461,14 +469,22 @@ export function ManualMode({
                 <Label htmlFor="product-description" className="font-medium">
                   Description
                 </Label>
-                <Textarea
-                  id="product-description"
-                  value={newProduct.description}
-                  onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
-                  placeholder="Enter product description"
-                  className="mt-2"
-                  rows={3}
-                />
+                <div className="space-y-2">
+                  <Textarea
+                    id="product-description"
+                    value={newProduct.description}
+                    onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                    placeholder="Enter product description"
+                    className="mt-2"
+                    rows={3}
+                    maxLength={500}
+                  />
+                  <div className="flex justify-end">
+                    <span className="text-xs text-neutral-500">
+                      {newProduct.description.length}/500
+                    </span>
+                  </div>
+                </div>
               </div>
               
               {/* Product Image Upload */}
@@ -479,7 +495,7 @@ export function ManualMode({
                 
                 {newProduct.imageUrl ? (
                   <div className="mt-2 relative">
-                    <div className="relative w-full h-40 rounded-md overflow-hidden border border-gray-200 dark:border-gray-800">
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
                       <img 
                         src={newProduct.imageUrl} 
                         alt="Product preview" 
@@ -498,7 +514,7 @@ export function ManualMode({
                   <div className="mt-2">
                     <label
                       htmlFor="product-image-input"
-                      className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-md border-gray-300 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                      className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl border-gray-300 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50"
                     >
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <ImageIcon className="w-10 h-10 mb-3 text-gray-400" />
@@ -541,26 +557,34 @@ export function ManualMode({
                     </Badge>
                   ))}
                 </div>
-                <div className="mt-2 flex gap-2">
-                  <Input
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    placeholder="Add category"
-                    className="flex-1"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddCategory();
-                      }
-                    }}
-                  />
-                  <Button 
-                    type="button" 
-                    variant="secondary" 
-                    onClick={handleAddCategory}
-                  >
-                    Add
-                  </Button>
+                <div className="mt-2 space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      placeholder="Add category"
+                      className="flex-1"
+                      maxLength={30}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCategory();
+                        }
+                      }}
+                    />
+                    <Button 
+                      type="button" 
+                      variant="secondary" 
+                      onClick={handleAddCategory}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                  <div className="flex justify-end">
+                    <span className="text-xs text-neutral-500">
+                      {newCategory.length}/30
+                    </span>
+                  </div>
                 </div>
               </div>
             </DrawerBody>
@@ -614,7 +638,7 @@ export function ManualMode({
       
       {products.length > 0 ? (
         <div className="mt-4">
-          <div className="rounded-md border border-gray-200 dark:border-gray-800">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800">
             <TableRoot>
               <Table>
                 <TableHead>
@@ -632,7 +656,7 @@ export function ManualMode({
                       <TableCell className="font-medium">
                         <div className="flex items-center space-x-3">
                           {product.imageUrl && (
-                            <div className="flex-shrink-0 w-10 h-10 overflow-hidden rounded-md">
+                            <div className="flex-shrink-0 w-10 h-10 overflow-hidden rounded-xl">
                               <img 
                                 src={product.imageUrl} 
                                 alt={product.title} 
@@ -692,7 +716,7 @@ export function ManualMode({
       ) : (
         <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
           <div className="text-center">
-            <RiListCheck2 className="h-12 w-12 text-indigo-300 dark:text-indigo-700 mx-auto mb-3" />
+            <RiListCheck2 className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
               No products added yet
             </h3>

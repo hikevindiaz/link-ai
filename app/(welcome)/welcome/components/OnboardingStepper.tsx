@@ -63,7 +63,7 @@ export default function OnboardingStepper({ activeStep, onStepChange }: Onboardi
               <div className="mt-2 flex items-center space-x-1 truncate">
                 {index < activeStep ? (
                   <RiCheckboxCircleFill
-                    className="size-4 shrink-0 text-indigo-500 dark:text-indigo-500"
+                    className="size-4 shrink-0 text-neutral-500 dark:text-neutral-500"
                     aria-hidden={true}
                   />
                 ) : (
@@ -71,8 +71,8 @@ export default function OnboardingStepper({ activeStep, onStepChange }: Onboardi
                     className={cn(
                       "size-4 shrink-0",
                       index === activeStep 
-                        ? "text-indigo-500 dark:text-indigo-500" 
-                        : "text-gray-400 dark:text-gray-600"
+                        ? "text-neutral-500 dark:text-neutral-500" 
+                        : "text-neutral-400 dark:text-neutral-600"
                     )}
                     aria-hidden={true}
                   />
@@ -81,12 +81,12 @@ export default function OnboardingStepper({ activeStep, onStepChange }: Onboardi
                   <p className={cn(
                     "truncate text-xs font-medium",
                     index <= activeStep 
-                      ? "text-indigo-600 dark:text-indigo-500" 
-                      : "text-gray-500 dark:text-gray-500"
+                      ? "text-neutral-600 dark:text-neutral-500" 
+                      : "text-neutral-500 dark:text-neutral-500"
                   )}>
                     {step.label}
                   </p>
-                  <p className="truncate text-xs text-gray-500 dark:text-gray-500">
+                  <p className="truncate text-xs text-neutral-500 dark:text-neutral-500">
                     {step.description}
                   </p>
                 </div>

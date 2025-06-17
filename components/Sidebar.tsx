@@ -140,7 +140,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
           <DrawerContent
             // data-sidebar="sidebar"
             // data-mobile="true"
-            className="bg-gray-50 p-0 text-gray-900"
+            className="bg-white dark:bg-black p-0 text-neutral-700 dark:text-neutral-200"
           >
             <VisuallyHidden.Root>
               <DrawerTitle>Sidebar</DrawerTitle>
@@ -149,7 +149,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
               <DrawerClose className="absolute right-4 top-4" asChild>
                 <Button
                   variant="ghost"
-                  className="!p-2 text-gray-700 hover:text-gray-900 dark:text-gray-300 hover:dark:text-gray-50 w-full"
+                  className="!p-2 text-neutral-700 hover:text-neutral-900 dark:text-neutral-300 hover:dark:text-neutral-50 w-full"
                 >
                   <RiCloseLine className="size-5 shrink-0" aria-hidden="true" />
                 </Button>
@@ -179,7 +179,7 @@ const Sidebar = React.forwardRef<HTMLDivElement, React.ComponentProps<"div">>(
           className={cn(
             "fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[left,right,width] duration-150 ease-in-out will-change-transform md:flex",
             "left-0 group-data-[collapsible=true]:left-[calc(var(--sidebar-width)*-1)]",
-            "border-r border-gray-200 dark:border-gray-800",
+            "border-r border-neutral-200 dark:border-neutral-800",
             className,
           )}
           {...props}
@@ -208,7 +208,7 @@ const SidebarTrigger = React.forwardRef<
       ref={ref}
       data-sidebar="trigger"
       className={cn(
-        "group inline-flex rounded-md p-1.5 hover:bg-gray-200/50 hover:dark:bg-gray-900",
+        "group inline-flex rounded-xl p-1.5 hover:bg-neutral-200/50 hover:dark:bg-neutral-900",
         focusRing,
       )}
       onClick={(event) => {
@@ -218,7 +218,7 @@ const SidebarTrigger = React.forwardRef<
       {...props}
     >
       <PanelLeft
-        className="size-[18px] shrink-0 text-gray-700 dark:text-gray-300"
+        className="size-[18px] shrink-0 text-neutral-700 dark:text-neutral-300"
         aria-hidden="true"
       />
       <span className="sr-only">Toggle Sidebar</span>
@@ -292,9 +292,9 @@ const SidebarLink = React.forwardRef<
       aria-current={isActive ? "page" : undefined}
       data-active={isActive}
       className={cn(
-        "flex items-center justify-between rounded-md p-2 text-base transition hover:bg-gray-200/50 sm:text-sm hover:dark:bg-gray-900",
-        "text-gray-900 dark:text-gray-400 hover:dark:text-gray-50",
-        "data-[active=true]:text-indigo-600 data-[active=true]:dark:text-indigo-500",
+        "flex items-center justify-between rounded-xl p-2 text-base transition hover:bg-neutral-200/50 sm:text-sm hover:dark:bg-neutral-900",
+        "text-neutral-700 dark:text-neutral-400 hover:dark:text-neutral-50",
+        "data-[active=true]:text-neutral-600 data-[active=true]:dark:text-neutral-400",
         !showLabel && "justify-center",
         focusRing,
       )}
@@ -306,7 +306,7 @@ const SidebarLink = React.forwardRef<
       </span>
       {notifications && (
         <span className={cn(
-          "inline-flex size-5 items-center justify-center rounded bg-indigo-100 text-sm font-medium text-indigo-600 sm:text-xs dark:bg-indigo-500/10 dark:text-indigo-500",
+          "inline-flex size-5 items-center justify-center rounded bg-neutral-100 text-sm font-medium text-neutral-600 sm:text-xs dark:bg-neutral-500/10 dark:text-neutral-400",
           !showLabel && "absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 size-4"
         )}>
           {notifications}
@@ -377,16 +377,16 @@ const SidebarSubLink = React.forwardRef<
       aria-current={isActive ? "page" : undefined}
       data-active={isActive}
       className={cn(
-        "relative flex gap-2 rounded-md py-1.5 pl-9 pr-3 text-base transition sm:text-sm",
-        "text-gray-700 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
-        "data-[active=true]:rounded data-[active=true]:bg-white data-[active=true]:text-indigo-600 data-[active=true]:shadow data-[active=true]:ring-1 data-[active=true]:ring-gray-200 data-[active=true]:dark:bg-gray-900 data-[active=true]:dark:text-indigo-500 data-[active=true]:dark:ring-gray-800",
+        "relative flex gap-2 rounded-xl py-1.5 pl-9 pr-3 text-base transition sm:text-sm",
+        "text-neutral-700 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-50",
+        "data-[active=true]:rounded data-[active=true]:bg-white data-[active=true]:text-neutral-600 data-[active=true]:shadow data-[active=true]:ring-1 data-[active=true]:ring-neutral-200 data-[active=true]:dark:bg-neutral-900 data-[active=true]:dark:text-neutral-400 data-[active=true]:dark:ring-neutral-800",
         focusRing,
       )}
       {...props}
     >
       {isActive && (
         <div
-          className="absolute left-4 top-1/2 h-5 w-px -translate-y-1/2 bg-indigo-500 dark:bg-indigo-500"
+          className="absolute left-4 top-1/2 h-5 w-px -translate-y-1/2 bg-neutral-600 dark:bg-neutral-400"
           aria-hidden="true"
         />
       )}

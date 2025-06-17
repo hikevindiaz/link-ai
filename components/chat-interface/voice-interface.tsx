@@ -45,13 +45,13 @@ export function VoiceInterface({
     <div className="flex-1 flex flex-col items-center justify-center p-4 relative bg-background">
       <div className="absolute top-4 right-4">
         <button 
-          className={`text-xs px-2 py-1 rounded ${useStreamingVoice ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}
+          className={`text-xs px-2 py-1 rounded ${useStreamingVoice ? 'bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}
           onClick={() => onStreamingModeToggle(true)}
         >
           Streaming
         </button>
         <button 
-          className={`text-xs px-2 py-1 rounded ml-2 ${!useStreamingVoice ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}
+          className={`text-xs px-2 py-1 rounded ml-2 ${!useStreamingVoice ? 'bg-neutral-100 text-neutral-700 dark:bg-neutral-900 dark:text-neutral-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}
           onClick={() => onStreamingModeToggle(false)}
         >
           Legacy
@@ -69,7 +69,7 @@ export function VoiceInterface({
       
       <p className="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300">
         {statusText}
-        {useStreamingVoice && <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">Streaming Mode</span>}
+        {useStreamingVoice && <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800 dark:bg-neutral-900 dark:text-neutral-200">Streaming Mode</span>}
       </p>
       
       <div className="mt-6 flex flex-col gap-3 w-full max-w-xs">

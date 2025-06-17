@@ -170,10 +170,10 @@ export default function OrdersPage() {
     <div className="flex h-full">
       {/* Left Sidebar - Order List */}
       {(!isMobileView || (isMobileView && !showOrderDetailsOnMobile)) && (
-        <div className={`${isMobileView ? 'w-full' : 'w-80'} border-r border-gray-200 dark:border-gray-800 flex flex-col`}>
+        <div className={`${isMobileView ? 'w-full' : 'w-80'} border-r border-neutral-200 dark:border-neutral-800 flex flex-col`}>
           <div className="p-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
                 Orders
               </h2>
               
@@ -248,7 +248,7 @@ export default function OrdersPage() {
                     </TabsContent>
                   </Tabs>
                   
-                  <DialogFooter className="mt-6 sticky bottom-0 bg-white dark:bg-gray-950 pt-4 pb-2">
+                  <DialogFooter className="mt-6 sticky bottom-0 bg-white dark:bg-neutral-950 pt-4 pb-2">
                     <Button 
                       variant="secondary" 
                       className="mr-2"
@@ -263,7 +263,7 @@ export default function OrdersPage() {
                 </DialogContent>
               </Dialog>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
               View and manage your orders
             </p>
             
@@ -276,7 +276,7 @@ export default function OrdersPage() {
                 <SelectContent>
                   <SelectItem value="all" className="flex items-center">
                     <div className="flex items-center gap-2">
-                      <RiFilterLine className="size-4 text-gray-500" />
+                      <RiFilterLine className="size-4 text-neutral-500" />
                       <span>All Orders</span>
                       <Badge 
                         variant="secondary"
@@ -324,11 +324,11 @@ export default function OrdersPage() {
       {(!isMobileView || (isMobileView && showOrderDetailsOnMobile)) && (
         <div className="flex-1 overflow-auto">
           {isMobileView && showOrderDetailsOnMobile && (
-            <div className="border-b border-gray-200 dark:border-gray-800 p-2">
+            <div className="border-b border-neutral-200 dark:border-neutral-800 p-2">
               <Button
                 variant="ghost"
                 onClick={handleBackToList}
-                className="flex items-center text-gray-600 dark:text-gray-300"
+                className="flex items-center text-neutral-600 dark:text-neutral-300"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to orders
@@ -344,15 +344,15 @@ export default function OrdersPage() {
           ) : (
             <div className="flex h-full flex-col items-center justify-center p-8 text-center">
               <div className="flex max-w-md flex-col items-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                  <RiShoppingBag3Line className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-900">
+                  <RiShoppingBag3Line className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
                 </div>
                 
-                <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-50">
+                <h2 className="mt-4 text-lg font-semibold text-neutral-900 dark:text-neutral-50">
                   Select an order to view details
                 </h2>
                 
-                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                   Choose an order from the sidebar to view its details and manage it.
                 </p>
               </div>

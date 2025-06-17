@@ -156,17 +156,17 @@ export function PhoneNumberBillingCard() {
             ))}
           </div>
 
-          <Card className="p-4 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800">
+          <Card className="p-4 bg-neutral-50 dark:bg-neutral-900/20 border-neutral-200 dark:border-neutral-800">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-indigo-900 dark:text-indigo-100">
+                <p className="font-medium text-neutral-900 dark:text-neutral-100">
                   Total Monthly Phone Number Cost
                 </p>
-                <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                <p className="text-sm text-neutral-700 dark:text-neutral-300">
                   {phoneNumbers.filter(n => n.status === 'active').length} active phone number(s)
                 </p>
               </div>
-              <p className="text-2xl font-semibold text-indigo-900 dark:text-indigo-100">
+              <p className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
                 ${totalMonthlyCost.toFixed(2)}
               </p>
             </div>

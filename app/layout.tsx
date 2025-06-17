@@ -31,6 +31,14 @@ const fontHeading = localFont({
   variable: "--font-heading",
 });
 
+// Updated Inter font configuration to match design system
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+// Keep existing Geist fonts for backward compatibility but prioritize Inter
 const geistFont = localFont({
   src: [
     {
@@ -53,8 +61,6 @@ const geistMonoFont = localFont({
   variable: '--font-geist-mono',
 });
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
   title: "Link AI",
   description: "Human First, AI Powered",
@@ -66,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${geistFont.variable} ${geistMonoFont.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${geistFont.variable} ${geistMonoFont.variable}`}>
       <head>
         {/* Removed Remix Icon CDN Link */}
       </head>
@@ -74,8 +80,8 @@ export default function RootLayout({
       <body
         id='root'
         className={cn(
-          "min-h-screen w-full bg-white font-sans antialiased",
-          geistFont.variable,
+          "min-h-screen w-full bg-white dark:bg-black font-inter antialiased",
+          inter.variable,
           fontHeading.variable
         )}
       >

@@ -62,7 +62,7 @@ export default function Footer() {
                   {navigation.product.map((item) => (
                     <li key={item.name} className="w-fit">
                       <Link
-                        className="flex rounded-md text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
+                        className="flex rounded-xl text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
                         href={item.href}
                         target={item.external ? "_blank" : undefined}
                         rel={item.external ? "noopener noreferrer" : undefined}
@@ -93,7 +93,7 @@ export default function Footer() {
                   {navigation.resources.map((item) => (
                     <li key={item.name} className="w-fit">
                       <Link
-                        className="flex rounded-md text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
+                        className="flex rounded-xl text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
                         href={item.href}
                         target={item.external ? "_blank" : undefined}
                         rel={item.external ? "noopener noreferrer" : undefined}
@@ -126,7 +126,7 @@ export default function Footer() {
                   {navigation.company.map((item) => (
                     <li key={item.name} className="w-fit">
                       <Link
-                        className="flex rounded-md text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
+                        className="flex rounded-xl text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
                         href={item.href}
                         target={item.external ? "_blank" : undefined}
                         rel={item.external ? "noopener noreferrer" : undefined}
@@ -157,7 +157,7 @@ export default function Footer() {
                   {navigation.legal.map((item) => (
                     <li key={item.name} className="w-fit">
                       <Link
-                        className="flex rounded-md text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
+                        className="flex rounded-xl text-sm text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
                         href={item.href}
                         target={item.external ? "_blank" : undefined}
                         rel={item.external ? "noopener noreferrer" : undefined}

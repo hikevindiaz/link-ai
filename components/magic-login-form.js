@@ -65,7 +65,7 @@ const ClientOnlyForm = () => {
         <div className="space-y-2">
           <Label
             htmlFor="email"
-            className="text-sm font-medium text-gray-900 dark:text-gray-50"
+            className="text-sm font-medium text-neutral-900 dark:text-neutral-50"
           >
             Email
           </Label>
@@ -118,12 +118,12 @@ export default function MagicLoginForm() {
       <div className="flex flex-col space-y-4">
         <div className="space-y-4">
           <div className="space-y-2">
-            <div className="text-sm font-medium text-gray-900 dark:text-gray-50">
+            <div className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
               Email
             </div>
-            <div className="h-10 bg-gray-100 dark:bg-gray-800 rounded-md mt-2" />
+            <div className="h-10 bg-neutral-100 dark:bg-neutral-800 rounded-xl mt-2" />
           </div>
-          <div className="h-10 bg-primary rounded-md flex items-center justify-center text-white p-2 w-full">
+          <div className="h-10 bg-primary rounded-xl flex items-center justify-center text-white p-2 w-full">
             <span>Loading form...</span>
           </div>
         </div>

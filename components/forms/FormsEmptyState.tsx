@@ -10,8 +10,8 @@ export function FormsEmptyState({ hasExistingForms, onCreateForm }: FormsEmptySt
   return (
     <div className="flex h-full flex-col items-center justify-center p-8 text-center">
       <div className="flex max-w-md flex-col items-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-          <RiFileList3Line className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-900">
+          <RiFileList3Line className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
         </div>
         
         <h2 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-50">

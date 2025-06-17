@@ -26,13 +26,14 @@ export const ChatButtonMessage = ({
       name="chatTitle"
       render={({ field }) => (
         <FormItem>
-          <FormLabel className="text-sm font-medium text-gray-900 dark:text-gray-50">
+          <FormLabel className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
             Chat Button Message
           </FormLabel>
           <FormControl>
             <Input 
               {...field}
               placeholder="Hi, let's chat!" 
+              maxLength={25}
               onChange={(e) => {
                 const value = e.target.value;
                 
@@ -64,9 +65,14 @@ export const ChatButtonMessage = ({
               className="w-full"
             />
           </FormControl>
-          <FormDescription className="text-xs text-gray-500 dark:text-gray-500">
-            This is the message that appears in the chat button. You can include emojis in your message (e.g., "Let's talk! 👋" or "Need help? 🤔").
-          </FormDescription>
+          <div className="flex items-center justify-between">
+            <FormDescription className="text-xs text-neutral-500 dark:text-neutral-400">
+              This is the message that appears in the chat button. You can include emojis in your message (e.g., "Let's talk! 👋" or "Need help? 🤔").
+            </FormDescription>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">
+              {field.value?.length || 0}/25
+            </span>
+          </div>
         </FormItem>
       )}
     />

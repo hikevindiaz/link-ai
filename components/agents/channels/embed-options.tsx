@@ -40,14 +40,14 @@ export function EmbedOptions({ agent, widgetCode, windowCode }: EmbedOptionsProp
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium text-gray-900 dark:text-white">Embed Options</h3>
+      <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">Embed Options</h3>
       
       {/* Chat Widget Code */}
       <div className="space-y-2">
-        <Label className="text-gray-900 dark:text-white">Chat Widget (Floating Button)</Label>
+        <Label className="text-neutral-900 dark:text-neutral-50">Chat Widget (Floating Button)</Label>
         <div className="relative">
-          <pre className="p-4 bg-gray-50 dark:bg-gray-900 border rounded-md overflow-auto">
-            <code className="text-sm text-gray-900 dark:text-gray-300">{widgetCode}</code>
+          <pre className="p-4 bg-neutral-50 dark:bg-neutral-900 border rounded-xl overflow-auto">
+            <code className="text-sm text-neutral-900 dark:text-neutral-300">{windowCode}</code>
           </pre>
           <Button 
             type="button" 
@@ -64,17 +64,17 @@ export function EmbedOptions({ agent, widgetCode, windowCode }: EmbedOptionsProp
             {widgetCodeCopied ? "Copied!" : "Copy Widget"}
           </Button>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Paste this code snippet into the <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs">{'<head>'}</code> section of your website's HTML. This will add a floating chat button that visitors can click to interact with your AI assistant.
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+          Paste this code snippet into the <code className="bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded text-xs">{'<head>'}</code> section of your website's HTML. This will add a floating chat button that visitors can click to interact with your AI assistant.
         </p>
       </div>
 
       {/* Chat Window Code */}
       <div className="space-y-2">
-        <Label className="text-gray-900 dark:text-white">Chat Window (Inline Frame)</Label>
+        <Label className="text-neutral-900 dark:text-neutral-50">Chat Window (Inline Frame)</Label>
         <div className="relative">
-          <pre className="p-4 bg-gray-50 dark:bg-gray-900 border rounded-md overflow-auto">
-            <code className="text-sm text-gray-900 dark:text-gray-300">{windowCode}</code>
+          <pre className="p-4 bg-neutral-50 dark:bg-neutral-900 border rounded-xl overflow-auto">
+            <code className="text-sm text-neutral-900 dark:text-neutral-300">{windowCode}</code>
           </pre>
           <Button 
             type="button" 
@@ -91,7 +91,7 @@ export function EmbedOptions({ agent, widgetCode, windowCode }: EmbedOptionsProp
             {windowCodeCopied ? "Copied!" : "Copy Window"}
           </Button>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
           Paste this iframe code anywhere in your page content where you want the chat window to appear. This embeds the chat interface directly within your webpage as a fixed element.
         </p>
       </div>

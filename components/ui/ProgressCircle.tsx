@@ -13,8 +13,8 @@ const progressCircleVariants = tv({
   variants: {
     variant: {
       default: {
-        background: "stroke-indigo-200 dark:stroke-indigo-500/30",
-        circle: "stroke-indigo-500 dark:stroke-indigo-500",
+        background: "stroke-neutral-200 dark:stroke-neutral-500/30",
+        circle: "stroke-neutral-500 dark:stroke-neutral-500",
       },
       neutral: {
         background: "stroke-gray-200 dark:stroke-gray-500/40",
@@ -93,7 +93,7 @@ const ProgressCircle = React.forwardRef<SVGSVGElement, ProgressCircleProps>(
         >
           <circle
             r={normalizedRadius}
-            cn={radius}
+            cx={radius}
             cy={radius}
             strokeWidth={strokeWidth}
             fill="transparent"
@@ -104,7 +104,7 @@ const ProgressCircle = React.forwardRef<SVGSVGElement, ProgressCircleProps>(
           {safeValue >= 0 ? (
             <circle
               r={normalizedRadius}
-              cn={radius}
+              cx={radius}
               cy={radius}
               strokeWidth={strokeWidth}
               strokeDasharray={`${circumference} ${circumference}`}

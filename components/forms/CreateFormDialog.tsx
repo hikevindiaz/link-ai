@@ -207,7 +207,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
               <input
                 type="text"
                 id="form-name"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
+                className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
                 placeholder="e.g., Customer Inquiry"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
@@ -221,7 +221,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
               <textarea
                 id="form-description"
                 rows={2}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
+                className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-2 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-sm"
                 placeholder="Describe what information this form will collect"
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
@@ -243,7 +243,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
                     key={index}
                     type="button"
                     onClick={() => addPredefinedField(field)}
-                    className="flex items-center justify-between rounded-md border border-gray-300 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-200"
+                    className="flex items-center justify-between rounded-xl border border-gray-300 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-200"
                   >
                     <span className="font-medium">{field.name}</span>
                     <RiAddLine className="h-4 w-4 text-gray-500 dark:text-gray-400" />
@@ -253,7 +253,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
                 <button
                   type="button"
                   onClick={() => setShowCustomField(true)}
-                  className="flex items-center justify-between rounded-md border border-dashed border-gray-300 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-200"
+                  className="flex items-center justify-between rounded-xl border border-dashed border-gray-300 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-200"
                 >
                   <span className="font-medium">Custom Field</span>
                   <RiAddLine className="h-4 w-4 text-gray-500 dark:text-gray-400" />
@@ -262,7 +262,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
               
               {/* Custom Field Form */}
               {showCustomField && (
-                <div className="rounded-md border border-gray-300 p-3 mb-4 dark:border-gray-700">
+                <div className="rounded-xl border border-gray-300 p-3 mb-4 dark:border-gray-700">
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Add Custom Field
                   </h4>
@@ -275,7 +275,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
                       <input
                         type="text"
                         id="custom-field-name"
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
+                        className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-1.5 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
                         placeholder="e.g., Company Size"
                         value={customFieldName}
                         onChange={(e) => setCustomFieldName(e.target.value)}
@@ -289,7 +289,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
                       <input
                         type="text"
                         id="custom-field-description"
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-1.5 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
+                        className="mt-1 block w-full rounded-xl border border-gray-300 px-3 py-1.5 shadow-sm focus:border-neutral-500 focus:outline-none focus:ring-neutral-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 sm:text-xs"
                         placeholder="e.g., Number of employees"
                         value={customFieldDescription}
                         onChange={(e) => setCustomFieldDescription(e.target.value)}
@@ -300,7 +300,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
                       <input
                         id="custom-field-required"
                         type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-700"
+                        className="h-4 w-4 rounded border-gray-300 text-neutral-600 focus:ring-neutral-500 dark:border-gray-700"
                         checked={customFieldRequired}
                         onChange={(e) => setCustomFieldRequired(e.target.checked)}
                       />
@@ -339,7 +339,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
                     {fields.map((field) => (
                       <li 
                         key={field.id}
-                        className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 text-sm dark:border-gray-700"
+                        className="flex items-center justify-between rounded-xl border border-gray-200 px-3 py-2 text-sm dark:border-gray-700"
                       >
                         <div className="flex items-center">
                           <RiDraggable className="mr-2 h-4 w-4 text-gray-400" />
@@ -350,7 +350,7 @@ export function CreateFormDialog({ open, onOpenChange, onCreateForm }: CreateFor
                         </div>
                         <div className="flex items-center">
                           {field.required && (
-                            <span className="mr-2 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">
+                            <span className="mr-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">
                               Required
                             </span>
                           )}

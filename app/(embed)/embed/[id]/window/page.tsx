@@ -40,7 +40,7 @@ export default function ChatWindow({ params, searchParams }: ChatWindowProps) {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg text-gray-500">Loading chat...</div>
+        <div className="text-lg text-neutral-500">Loading chat...</div>
       </div>
     );
   }

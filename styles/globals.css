@@ -3,54 +3,59 @@
 @tailwind components;
 @tailwind utilities;
 
-
-/* ADD DARK MODE CSS VARIABLES HERE */
+/* 2. Design System CSS Variables - Updated to match design system guide */
 @layer base {
   :root {
-    /* Light Mode Variables (example, adjust if yours differ) */
-    --background: 0 0% 100%; /* White */
-    --foreground: 224 71.4% 4.1%; /* Almost Black */
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    /* Light Mode Variables - Updated to match design system */
+    --background: 0 0% 100%; /* White (#ffffff) */
+    --foreground: 0 0% 0%; /* Black (#000000) */
+    --card: 0 0% 96%; /* Approximate for #F5F5F7 */
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 0 0% 0%;
-    --radius: 0.75rem; /* Use your defined md radius */
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 0% 0%; /* Black for primary buttons */
+    --primary-foreground: 0 0% 100%; /* White text on black */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 32%; /* neutral-600 #525252 */
+    --muted-foreground: 0 0% 25%; /* neutral-700 #404040 */
+    --accent: 262 83% 58%; /* neutral-600 #4f46e5 */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%; /* neutral-200 #e5e5e5 */
+    --input: 0 0% 90%;
+    --ring: 262 83% 58%; /* neutral-600 for focus rings */
+    --radius: 1.5rem; /* 24px - larger radius for modern look */
+    
+    /* Design System Specific Variables */
+    --color-primary-500: oklch(0.84 0.18 117.33);
+    --bg-card-light: #F5F5F7;
+    --bg-card-dark: #262626;
+    --font-inter: "Inter", sans-serif;
   }
 
   .dark {
-    /* Dark Mode Variables */
-    --background: 222.2 84% 4.9%; /* Dark Blue/Gray */
-    --foreground: 210 40% 98%; /* Almost White */
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%; 
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%; /* Input border in dark */
-    --ring: 212.7 26.8% 83.9%;
+    /* Dark Mode Variables - Updated to match design system */
+    --background: 0 0% 0%; /* Black (#000000) */
+    --foreground: 0 0% 100%; /* White (#ffffff) */
+    --card: 0 0% 15%; /* neutral-800 #262626 */
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%; /* White for primary buttons in dark mode */
+    --primary-foreground: 0 0% 0%; /* Black text on white */
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 64%; /* neutral-400 #a3a3a3 */
+    --muted-foreground: 0 0% 90%; /* neutral-200 #e5e5e5 */
+    --accent: 262 83% 70%; /* neutral-400 #818cf8 */
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%; /* neutral-800 #262626 */
+    --input: 0 0% 15%;
+    --ring: 262 83% 70%;
   }
 }
 
@@ -62,9 +67,10 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+    font-family: var(--font-inter);
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
-/* END DARK MODE CSS VARIABLES */
 
 /* 3. Global Reset */
 html, body, #__next {
@@ -73,80 +79,119 @@ html, body, #__next {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans);
 }
 
-/* 4. Page Content Padding */
-.page-content {
-  padding: 2rem;
-}
-
-@media (min-width: 768px) {
-  .page-content {
-    padding: 3rem;
+/* 4. Design System Component Classes */
+@layer components {
+  /* Card Components - Following design system */
+  .card-standard {
+    @apply bg-card-light dark:bg-card-dark p-8 md:p-14 rounded-3xl shadow-sm;
+  }
+  
+  .card-bordered {
+    @apply rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-black;
+  }
+  
+  .card-overlay {
+    @apply bg-card-overlay rounded-lg overflow-hidden;
+  }
+  
+  /* Button Styles - Following design system */
+  .btn-primary {
+    @apply bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black;
+  }
+  
+  .btn-secondary {
+    @apply bg-neutral-600 hover:bg-neutral-700 text-white dark:bg-neutral-500 dark:hover:bg-neutral-600;
+  }
+  
+  /* Typography Styles - Following design system */
+  .heading-primary {
+    @apply text-4xl md:text-5xl font-normal mb-6 leading-tight text-neutral-600 dark:text-white;
+  }
+  
+  .text-body {
+    @apply text-neutral-600 dark:text-neutral-400 text-base md:text-2xl font-inter;
+  }
+  
+  .text-muted {
+    @apply text-neutral-600 dark:text-neutral-400;
+  }
+  
+  .text-emphasis {
+    @apply font-bold text-neutral-700 dark:text-neutral-200;
+  }
+  
+  /* Link Styles - Following design system */
+  .nav-link {
+    @apply text-neutral-700 dark:text-neutral-200 text-sm transition duration-150;
+  }
+  
+  .footer-link {
+    @apply text-neutral-600 hover:text-neutral-600 dark:text-neutral-400 dark:hover:text-neutral-400 transition-colors;
   }
 }
 
-/* Light Theme Adjustments */
+/* 5. Page Content Padding */
+.page-content {
+  @apply p-8 md:p-12;
+}
+
+/* 6. Sidebar Styles - Updated to match design system */
 .sidebar-light {
-  @apply bg-gray-50 text-gray-900;
+  @apply bg-neutral-50 text-neutral-900;
 }
 
 .sidebar-light .sidebar-header {
-  @apply text-gray-900;
+  @apply text-neutral-900;
 }
 
 .sidebar-light .sidebar-link {
-  @apply text-gray-700 hover:bg-gray-200 hover:text-gray-900;
+  @apply text-neutral-700 hover:bg-neutral-200 hover:text-neutral-900;
 }
 
 .sidebar-light .sidebar-divider {
-  @apply border-gray-200;
+  @apply border-neutral-200;
 }
 
-/* Dark Theme Adjustments */
 .sidebar-dark {
-  @apply bg-gray-900 text-gray-100;
+  @apply bg-neutral-900 text-neutral-100;
 }
 
 .sidebar-dark .sidebar-header {
-  @apply text-gray-100;
+  @apply text-neutral-100;
 }
 
 .sidebar-dark .sidebar-link {
-  @apply text-gray-400 hover:bg-gray-800 hover:text-white;
+  @apply text-neutral-400 hover:bg-neutral-800 hover:text-white;
 }
 
 .sidebar-dark .sidebar-divider {
-  @apply border-gray-800;
+  @apply border-neutral-800;
 }
 
-/* Sidebar Hover Effects */
 .sidebar-link {
-  @apply flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200;
+  @apply flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-200;
 }
 
-/* Active Link State */
 .sidebar-link-active {
-  @apply bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300;
+  @apply bg-neutral-100 text-neutral-600 dark:bg-neutral-900 dark:text-neutral-300;
 }
 
-/* Divider Styling */
 .sidebar-divider {
   @apply my-2 border-t;
 }
 
-/* Profile Dropdown */
+/* 7. Profile Dropdown */
 .profile-dropdown {
-  @apply bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100;
+  @apply bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100;
 }
 
 .profile-dropdown:hover {
-  @apply bg-gray-100 dark:bg-gray-700;
+  @apply bg-neutral-100 dark:bg-neutral-700;
 }
 
+/* 8. Toggle Button Styles */
 .toggle-button {
   background-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
@@ -160,21 +205,7 @@ html, body, #__next {
   background-color: hsl(var(--secondary));
 }
 
-/* 🔥 Pin/Unpin Button Styles */
-.toggle-button {
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  padding: 0.3rem;
-  border-radius: 50%;
-  transition: transform 0.3s ease;
-}
-
-.toggle-button:hover {
-  transform: scale(1.1);
-  background-color: hsl(var(--secondary));
-}
-
-/* Search Results Dropdown */
+/* 9. Search Results Dropdown */
 .search-results {
   max-height: 200px;
   overflow-y: auto;
@@ -184,7 +215,7 @@ html, body, #__next {
   transition: background-color 0.2s ease;
 }
 
-/* Tremor Card Customization */
+/* 10. Tremor Card Customization */
 .tremor-card {
   @apply bg-white dark:bg-gray-900 shadow-md rounded-lg p-4;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -195,7 +226,34 @@ html, body, #__next {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Define the custom property for border angle */
+/* 11. Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+  transition: background-color 0.3s;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb,
+.custom-scrollbar:active::-webkit-scrollbar-thumb,
+.custom-scrollbar:focus::-webkit-scrollbar-thumb {
+  background-color: rgba(107, 114, 128, 0.5);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.custom-scrollbar:hover {
+  scrollbar-color: rgba(107, 114, 128, 0.5) transparent;
+}
+
+/* 12. Animation Keyframes and Classes */
 @property --border-angle {
   syntax: '<angle>';
   inherits: false;
@@ -219,6 +277,21 @@ html, body, #__next {
 
 .animate-fadeUp {
   animation: fadeUp 5s ease-in-out infinite;
+}
+
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUpFade {
+  animation: slideUpFade 300ms ease-in-out forwards;
 }
 
 @keyframes levitate {
@@ -274,6 +347,7 @@ html, body, #__next {
   animation-delay: 2s;
 }
 
+/* 13. Background Blob Animation */
 .container {
   background: black;
   width: 100%;
@@ -364,31 +438,26 @@ html, body, #__next {
   }
 }
 
-/* Add these styles to your global stylesheet */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: transparent;
-  border-radius: 3px;
-  transition: background-color 0.3s;
-}
-.custom-scrollbar:hover::-webkit-scrollbar-thumb,
-.custom-scrollbar:active::-webkit-scrollbar-thumb,
-.custom-scrollbar:focus::-webkit-scrollbar-thumb {
-  background-color: rgba(107, 114, 128, 0.5); /* Tailwind's gray-500 at 50% opacity */
+/* 8. Popover Styles */
+.popover {
+  @apply bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100;
 }
 
-/* For Firefox (optional) */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
+.popover-content {
+  @apply bg-neutral-100 dark:bg-neutral-700;
 }
-.custom-scrollbar:hover {
-  scrollbar-color: rgba(107, 114, 128, 0.5) transparent;
+
+/* Chat Interface Styles - Needs consistent colors */
+.chat-container {
+  @apply bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100;
+}
+
+.chat-input {
+  @apply bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100;
+}
+
+/* Chat Message Styles */
+.chat-message {
+  @apply bg-white dark:bg-neutral-900 shadow-md rounded-lg p-4;
 }
 

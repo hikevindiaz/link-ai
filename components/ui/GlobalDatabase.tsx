@@ -99,15 +99,15 @@ export const GlobalDatabase: FunctionComponent = () => {
         aria-labelledby="global-database-title"
         className="relative mx-auto mt-28 flex w-full max-w-6xl flex-col items-center justify-center overflow-hidden rounded-3xl bg-black pt-24 shadow-xl shadow-black/30 md:mt-40"
       >
-        <div className="absolute top-[17rem] size-[40rem] rounded-full bg-indigo-800 blur-3xl md:top-[20rem]" />
-        <div className="z-10 inline-block rounded-lg border border-indigo-400/20 bg-indigo-800/20 px-3 py-1.5 font-semibold uppercase leading-4 tracking-tight sm:text-sm">
-          <span className="bg-gradient-to-b from-indigo-200 to-indigo-400 bg-clip-text text-transparent">
+        <div className="absolute top-[17rem] size-[40rem] rounded-full bg-neutral-800 blur-3xl md:top-[20rem]" />
+        <div className="z-10 inline-block rounded-lg border border-neutral-400/20 bg-neutral-800/20 px-3 py-1.5 font-semibold uppercase leading-4 tracking-tight sm:text-sm">
+          <span className="bg-gradient-to-b from-neutral-200 to-neutral-400 bg-clip-text text-transparent">
             Made for the cloud
           </span>
         </div>
         <h2
           id="global-database-title"
-          className="z-10 mt-6 inline-block bg-gradient-to-b from-white to-indigo-100 bg-clip-text px-2 text-center text-5xl font-bold tracking-tighter text-transparent md:text-8xl"
+          className="z-10 mt-6 inline-block bg-gradient-to-b from-white to-neutral-100 bg-clip-text px-2 text-center text-5xl font-bold tracking-tighter text-transparent md:text-8xl"
         >
           The global <br /> cloud database
         </h2>
@@ -122,10 +122,10 @@ export const GlobalDatabase: FunctionComponent = () => {
             <div className="grid grid-cols-1 gap-x-10 gap-y-6 rounded-lg border border-white/[3%] bg-white/[1%] px-6 py-6 shadow-xl backdrop-blur md:grid-cols-3 md:p-8">
               {features.map((item) => (
                 <div key={item.name} className="flex flex-col gap-2">
-                  <h3 className="whitespace-nowrap bg-gradient-to-b from-indigo-300 to-indigo-500 bg-clip-text text-lg font-semibold text-transparent md:text-xl">
+                  <h3 className="whitespace-nowrap bg-gradient-to-b from-neutral-300 to-neutral-500 bg-clip-text text-lg font-semibold text-transparent md:text-xl">
                     {item.name}
                   </h3>
-                  <p className="text-sm leading-6 text-indigo-200/40">
+                  <p className="text-sm leading-6 text-neutral-200/40">
                     {item.description}
                   </p>
                 </div>
@@ -141,7 +141,7 @@ export const GlobalDatabase: FunctionComponent = () => {
       >
         <div className="mx-auto max-w-6xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
-            <p className="text-base font-medium leading-7 text-indigo-600 dark:text-indigo-400">
+            <p className="text-base font-medium leading-7 text-neutral-600 dark:text-neutral-400">
               LinkReps
             </p>
             <h2
@@ -162,8 +162,8 @@ export const GlobalDatabase: FunctionComponent = () => {
                 key={stat.id}
                 className={cx(
                   "relative rounded-lg p-6 shadow-lg ring-1 ring-black/5 dark:ring-white/5",
-                  stat.id === 1 && "from-indigo-500",
-                  stat.id === 2 && "from-indigo-500",
+                  stat.id === 1 && "from-neutral-500",
+                  stat.id === 2 && "from-neutral-500",
                   stat.id === 3 && "from-sky-500",
                   stat.id === 4 && "from-teal-500",
                   "before:absolute before:bottom-0 before:left-0 before:h-1 before:w-full before:rounded-bl-lg before:rounded-br-lg before:bg-gradient-to-r before:from-current before:to-transparent",
@@ -172,7 +172,7 @@ export const GlobalDatabase: FunctionComponent = () => {
                 <dt className="flex items-center gap-2 truncate text-sm font-medium leading-6 text-gray-600 dark:text-gray-400">
                   <stat.icon
                     aria-hidden="true"
-                    className="size-6 flex-none text-indigo-600 dark:text-indigo-400"
+                    className="size-6 flex-none text-neutral-600 dark:text-neutral-400"
                   />
                   {stat.name}
                 </dt>

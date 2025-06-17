@@ -95,7 +95,7 @@ export function PaymentMethodDisplay({
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-3 w-1/2" />
         </div>
-        {showDetailsButton && <Skeleton className="h-7 w-16 rounded-md" />} 
+        {showDetailsButton && <Skeleton className="h-7 w-16 rounded-xl" />} 
       </div>
     );
   }

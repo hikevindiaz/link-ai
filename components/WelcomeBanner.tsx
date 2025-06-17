@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { WelcomeModal } from './WelcomeModal';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { FileText, Globe, MessageSquare, ShoppingCart } from 'lucide-react';
 
 interface StepStatus {
   completed: boolean;
@@ -269,51 +270,59 @@ const WelcomeBanner = ({
             </DialogHeader>
             
             <div className="space-y-6 mt-6">
-              <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-6">
-                <h3 className="font-semibold text-gray-900 dark:text-gray-50 mb-3">
-                  What is a Knowledge Source?
+              <div className="bg-neutral-50 dark:bg-neutral-900/20 rounded-lg p-6">
+                <h3 className="font-semibold text-neutral-900 dark:text-neutral-50 mb-3">
+                  Smart content management
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  A Knowledge Source is a collection of information that trains your AI agents. Think of it as the brain of your AI - the more comprehensive and organized your knowledge sources, the better your agents can assist customers.
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
+                  Train your AI assistant with different types of content to provide more accurate and contextual responses.
                 </p>
                 
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-start gap-3">
-                    <RiFileTextLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                      <FileText className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                    </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-50">Documents & PDFs</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Upload product manuals, FAQs, policies, and guides
+                      <h4 className="font-medium text-neutral-900 dark:text-neutral-50">Documents & PDFs</h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Upload manuals, guides, and documentation for instant knowledge base creation.
                       </p>
                     </div>
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <RiGlobalLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                      <Globe className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                    </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-50">Websites</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Import content from your website, help center, or blog
+                      <h4 className="font-medium text-neutral-900 dark:text-neutral-50">Websites</h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Import content from websites and online resources automatically.
                       </p>
                     </div>
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <RiQuestionLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                      <MessageSquare className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                    </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-50">Q&A Pairs</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Create custom questions and answers for specific scenarios
+                      <h4 className="font-medium text-neutral-900 dark:text-neutral-50">Q&A Pairs</h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Create custom question-answer pairs for specific use cases.
                       </p>
                     </div>
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <RiShoppingBagLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400 mt-0.5" />
+                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                      <ShoppingCart className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
+                    </div>
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-gray-50">Product Catalogs</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Import your product inventory with descriptions and images
+                      <h4 className="font-medium text-neutral-900 dark:text-neutral-50">Product Catalogs</h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Import product information for e-commerce support and recommendations.
                       </p>
                     </div>
                   </div>
@@ -347,7 +356,7 @@ const WelcomeBanner = ({
           <Card className="relative p-6 gradient-border-content">
             <div className="absolute right-0 top-0 pr-3 pt-3">
               <Button
-                className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-500 hover:dark:text-gray-300"
+                className="p-1 text-neutral-600 hover:text-neutral-700 dark:text-neutral-400 hover:dark:text-neutral-300"
                 variant="ghost"
                 onClick={handleDismiss}
                 aria-label="Close"
@@ -355,10 +364,10 @@ const WelcomeBanner = ({
                 <RiCloseLine className="h-5 w-5 shrink-0" aria-hidden={true} />
               </Button>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+            <h3 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">
               Welcome to Link AI
             </h3>
-            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
+            <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
               Get started with Link AI in just three steps. Complete your account setup, add knowledge sources, and create your first AI agent.
             </p>
             <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -368,29 +377,29 @@ const WelcomeBanner = ({
                   className={`flex flex-col justify-between border-l-2 py-1 pl-4 ${
                     item.completed
                       ? 'border-green-200 dark:border-green-400/20'
-                      : 'border-blue-100 dark:border-blue-400/20'
+                      : 'border-neutral-200 dark:border-neutral-400/20'
                   }`}
                 >
                   <div>
                     <span 
-                      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ${
+                      className={`inline-flex items-center rounded-xl px-2 py-1 text-xs font-medium ${
                         item.completed 
-                          ? 'bg-green-50 text-green-600 dark:bg-green-400/20 dark:text-green-500' 
-                          : 'bg-blue-50 text-blue-500 dark:bg-blue-400/20 dark:text-blue-500'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-400/10 dark:text-green-500' 
+                          : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-400/10 dark:text-neutral-400'
                       }`}
                     >
                       {item.completed ? 'Completed' : `Step ${item.step}`}
                     </span>
-                    <h4 className="mt-4 text-sm font-medium text-gray-900 dark:text-gray-50">
+                    <h4 className="mt-4 text-base font-medium text-neutral-700 dark:text-neutral-200">
                       {item.title}
                     </h4>
-                    <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
+                    <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
                       {item.description}
                     </p>
                   </div>
                   <Button 
                     disabled={item.disabled || item.completed}
-                    className={`mt-6 ${item.completed ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                    className={`mt-6 ${item.completed ? 'bg-green-600 hover:bg-green-700' : ''}`}
                     onClick={() => handleAction(
                       item.nextUrl, 
                       item.title === 'Complete Onboarding' ? 'onboarding' : 
@@ -409,7 +418,7 @@ const WelcomeBanner = ({
         <Card className="relative p-6">
           <div className="absolute right-0 top-0 pr-3 pt-3">
             <Button
-              className="p-1 text-gray-500 hover:text-gray-700 dark:text-gray-500 hover:dark:text-gray-300"
+              className="p-1 text-neutral-600 hover:text-neutral-700 dark:text-neutral-400 hover:dark:text-neutral-300"
               variant="ghost"
               onClick={handleDismiss}
               aria-label="Close"
@@ -417,10 +426,10 @@ const WelcomeBanner = ({
               <RiCloseLine className="h-5 w-5 shrink-0" aria-hidden={true} />
             </Button>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+          <h3 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">
             Welcome to Link AI
           </h3>
-          <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
+          <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
             Get started with Link AI in just three steps. Complete your account setup, add knowledge sources, and create your first AI agent.
           </p>
           <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -430,29 +439,29 @@ const WelcomeBanner = ({
                 className={`flex flex-col justify-between border-l-2 py-1 pl-4 ${
                   item.completed
                     ? 'border-green-200 dark:border-green-400/20'
-                    : 'border-blue-100 dark:border-blue-400/20'
+                    : 'border-neutral-200 dark:border-neutral-400/20'
                 }`}
               >
                 <div>
                   <span 
-                    className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ${
+                    className={`inline-flex items-center rounded-xl px-2 py-1 text-xs font-medium ${
                       item.completed 
-                        ? 'bg-green-50 text-green-600 dark:bg-green-400/20 dark:text-green-500' 
-                        : 'bg-blue-50 text-blue-500 dark:bg-blue-400/20 dark:text-blue-500'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-400/10 dark:text-green-500' 
+                        : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-400/10 dark:text-neutral-400'
                     }`}
                   >
                     {item.completed ? 'Completed' : `Step ${item.step}`}
                   </span>
-                  <h4 className="mt-4 text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <h4 className="mt-4 text-base font-medium text-neutral-700 dark:text-neutral-200">
                     {item.title}
                   </h4>
-                  <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-500">
+                  <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
                     {item.description}
                   </p>
                 </div>
                 <Button 
                   disabled={item.disabled || item.completed}
-                  className={`mt-6 ${item.completed ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                  className={`mt-6 ${item.completed ? 'bg-green-600 hover:bg-green-700' : ''}`}
                   onClick={() => handleAction(
                     item.nextUrl, 
                     item.title === 'Complete Onboarding' ? 'onboarding' : 

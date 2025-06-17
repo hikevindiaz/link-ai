@@ -1423,7 +1423,7 @@ video {
   border-radius: 0.5rem;
 }
 
-.rounded-md {
+.rounded-xl {
   border-radius: 0.375rem;
 }
 
@@ -1531,7 +1531,7 @@ video {
   background-color: rgb(0 0 0 / var(--tw-bg-opacity));
 }
 
-.bg-indigo-500 {
+.bg-neutral-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(59 130 246 / var(--tw-bg-opacity));
 }
@@ -1891,7 +1891,7 @@ video {
   color: rgb(0 0 0 / var(--tw-text-opacity));
 }
 
-.text-indigo-600 {
+.text-neutral-600 {
   --tw-text-opacity: 1;
   color: rgb(37 99 235 / var(--tw-text-opacity));
 }
@@ -2248,12 +2248,12 @@ video {
   color: rgb(0 0 0 / var(--tw-text-opacity));
 }
 
-.hover\:text-indigo-500:hover {
+.hover\:text-neutral-500:hover {
   --tw-text-opacity: 1;
   color: rgb(59 130 246 / var(--tw-text-opacity));
 }
 
-.hover\:text-indigo-800:hover {
+.hover\:text-neutral-800:hover {
   --tw-text-opacity: 1;
   color: rgb(30 64 175 / var(--tw-text-opacity));
 }
@@ -2793,7 +2793,7 @@ video {
   border-bottom-left-radius: 0.375rem;
 }
 
-.\[\&\:has\(\[aria-selected\]\)\]\:rounded-md:has([aria-selected]) {
+.\[\&\:has\(\[aria-selected\]\)\]\:rounded-xl:has([aria-selected]) {
   border-radius: 0.375rem;
 }
 

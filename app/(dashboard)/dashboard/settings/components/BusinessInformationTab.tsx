@@ -95,10 +95,10 @@ export function BusinessInformationTab() {
   return (
     <div className="space-y-8">
       <form onSubmit={handleUpdateBusinessInfo}>
-        <h2 className="font-semibold text-gray-900 dark:text-gray-50">
+        <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
           Business Information
         </h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-500">
           Update your company details to help us customize your experience.
         </p>
         

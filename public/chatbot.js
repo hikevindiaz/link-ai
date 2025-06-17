@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var chatbotId = window.chatbotConfig.chatbotId;
       var apiUrl = window.chatbotConfig.apiUrl || "https://dashboard.getlinkai.com";
       var riveOrbColor = window.chatbotConfig.riveOrbColor;
-      var borderGradientColors = window.chatbotConfig.borderGradientColors || ["#4F46E5", "#4338CA", "#6366F1"]; // Default to Indigo
+      var borderGradientColors = window.chatbotConfig.borderGradientColors || ["#4F46E5", "#4338CA", "#6366F1"]; // Default to neutral
       
       // Create container for the widget
       var widgetContainer = document.createElement('div');

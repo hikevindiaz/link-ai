@@ -52,8 +52,8 @@ const data = [
     name: 'David Smith',
     initials: 'DS',
     email: 'd.smith@gmail.com',
-    textColor: 'text-indigo-800 dark:text-indigo-500',
-    bgColor: 'bg-indigo-100 dark:bg-indigo-500/20',
+    textColor: 'text-neutral-800 dark:text-neutral-500',
+    bgColor: 'bg-neutral-100 dark:bg-neutral-500/20',
     href: '#',
   },
   {

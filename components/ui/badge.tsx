@@ -13,13 +13,13 @@ const badgeVariants = cva(
         default:
           "bg-gray-50 text-gray-700 ring-gray-600/20 dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20",
         primary:
-          "bg-indigo-50 text-indigo-700 ring-indigo-600/20 dark:bg-indigo-400/10 dark:text-indigo-400 dark:ring-indigo-400/20",
+          "bg-neutral-50 text-neutral-700 ring-neutral-600/20 dark:bg-neutral-400/10 dark:text-neutral-400 dark:ring-neutral-400/20",
         secondary:
           "bg-gray-50 text-gray-700 ring-gray-600/20 dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20",
         success:
           "bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-400/10 dark:text-green-400 dark:ring-green-400/20",
         info:
-          "bg-indigo-50 text-indigo-700 ring-indigo-600/20 dark:bg-indigo-400/10 dark:text-indigo-400 dark:ring-indigo-400/20",
+          "bg-neutral-50 text-neutral-700 ring-neutral-600/20 dark:bg-neutral-400/10 dark:text-neutral-400 dark:ring-neutral-400/20",
         warning:
           "bg-yellow-50 text-yellow-700 ring-yellow-600/20 dark:bg-yellow-400/10 dark:text-yellow-400 dark:ring-yellow-400/20",
         danger:

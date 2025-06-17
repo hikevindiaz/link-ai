@@ -44,7 +44,7 @@ const tabNavigationLinkVariants = cva(
   {
     variants: {
       active: {
-        true: "border-indigo-500 text-indigo-600 dark:border-indigo-500 dark:text-indigo-400",
+        true: "border-neutral-500 text-neutral-600 dark:border-neutral-500 dark:text-neutral-400",
         false: "",
       },
     },

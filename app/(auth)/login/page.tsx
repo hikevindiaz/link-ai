@@ -21,14 +21,7 @@ export default async function Login() {
 
   return (
     <div className="flex h-screen w-screen items-center justify-center">
-      <Link
-        href="https://www.getlinkai.com/"
-        className="group absolute left-4 top-4 md:left-8 md:top-8 text-white"
-      >
-        <Icons.chevronLeft className="mr-2 h-4 w-4 text-white group-hover:text-black" />
-        <span className="group-hover:text-black"></span>
-      </Link>
-      <LoginForm /> {/* Use the client component here */}
+      <LoginForm />
     </div>
   );
 }

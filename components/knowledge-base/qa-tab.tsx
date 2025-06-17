@@ -460,13 +460,13 @@ export default function QATab({ source }: QATabProps) {
     
     const getStatusIcon = () => {
       switch (pair.status) {
-        case 'saving': return <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />;
-        case 'processing': return <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />;
-        case 'training': return <RiBrainLine className="h-4 w-4 animate-pulse text-indigo-500" />;
+        case 'saving': return <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />;
+        case 'processing': return <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />;
+        case 'training': return <RiBrainLine className="h-4 w-4 animate-pulse text-neutral-500" />;
         case 'complete': return <CheckCircle className="h-4 w-4 text-green-500" />;
         case 'error': return <AlertCircle className="h-4 w-4 text-red-500" />;
-        case 'deleting': return <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />;
-        default: return <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />;
+        case 'deleting': return <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />;
+        default: return <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />;
       }
     };
     
@@ -478,7 +478,7 @@ export default function QATab({ source }: QATabProps) {
             <span className={cn(
               pair.status === 'error' ? 'text-red-500' : 
               pair.status === 'complete' ? 'text-green-600' : 
-              'text-indigo-600 dark:text-indigo-400',
+              'text-neutral-600 dark:text-neutral-400',
               'font-medium'
             )}>
               {getStatusText()}
@@ -498,7 +498,7 @@ export default function QATab({ source }: QATabProps) {
             "h-2",
             pair.status === 'error' ? 'bg-red-100 text-red-500' : 
             pair.status === 'complete' ? 'bg-green-100 text-green-600' : 
-            'bg-indigo-100 text-indigo-600'
+            'bg-neutral-100 text-neutral-600'
           )}
         />
       </div>
@@ -510,7 +510,7 @@ export default function QATab({ source }: QATabProps) {
       <div className="space-y-8">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <FileQuestion className="h-5 w-5 text-indigo-500" />
+            <FileQuestion className="h-5 w-5 text-neutral-500" />
             <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
               Add Q&A Content
             </h2>
@@ -555,30 +555,46 @@ export default function QATab({ source }: QATabProps) {
                   <label htmlFor="question" className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                     Question
                   </label>
-                  <Textarea
-                    id="question"
-                    value={formQuestion}
-                    onChange={(e) => setFormQuestion(e.target.value)}
-                    placeholder="Enter a question that your Agent should answer"
-                    rows={2}
-                    required
-                    className="resize-y"
-                  />
+                  <div className="space-y-2">
+                    <Textarea
+                      id="question"
+                      value={formQuestion}
+                      onChange={(e) => setFormQuestion(e.target.value)}
+                      placeholder="Enter a question that your Agent should answer"
+                      rows={2}
+                      required
+                      className="resize-y"
+                      maxLength={200}
+                    />
+                    <div className="flex justify-end">
+                      <span className="text-xs text-neutral-500">
+                        {formQuestion.length}/200
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
                   <label htmlFor="answer" className="block text-sm font-medium text-gray-900 dark:text-gray-100">
                     Answer
                   </label>
-                  <Textarea
-                    id="answer"
-                    value={formAnswer}
-                    onChange={(e) => setFormAnswer(e.target.value)}
-                    placeholder="Enter the precise answer your Agent should provide"
-                    rows={4}
-                    required
-                    className="resize-y"
-                  />
+                  <div className="space-y-2">
+                    <Textarea
+                      id="answer"
+                      value={formAnswer}
+                      onChange={(e) => setFormAnswer(e.target.value)}
+                      placeholder="Enter the precise answer your Agent should provide"
+                      rows={4}
+                      required
+                      className="resize-y"
+                      maxLength={1000}
+                    />
+                    <div className="flex justify-end">
+                      <span className="text-xs text-neutral-500">
+                        {formAnswer.length}/1,000
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex justify-end gap-2">
@@ -628,7 +644,7 @@ export default function QATab({ source }: QATabProps) {
         {/* List of existing QA pairs */}
         <div>
           <h3 className="font-medium text-lg text-gray-900 dark:text-gray-50 flex items-center gap-2">
-            <RiBrainLine className="h-5 w-5 text-indigo-500" />
+            <RiBrainLine className="h-5 w-5 text-neutral-500" />
             Agent Knowledge Q&A
           </h3>
           
@@ -639,13 +655,13 @@ export default function QATab({ source }: QATabProps) {
               {qaPairs.map((pair) => (
                 <Card 
                   key={pair.id} 
-                  className="overflow-hidden border-gray-200 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-200"
+                  className="overflow-hidden border-gray-200 dark:border-gray-800 hover:border-neutral-200 dark:hover:border-neutral-800 transition-all duration-200"
                 >
                   <div className="p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-1.5 mb-1">
-                          <Badge variant="secondary" className="text-xs bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800">
+                          <Badge variant="secondary" className="text-xs bg-neutral-50 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-800">
                             Q&A
                           </Badge>
                           <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -664,7 +680,7 @@ export default function QATab({ source }: QATabProps) {
                           size="icon"
                           onClick={() => handleEdit(pair)}
                           title="Edit Q&A"
-                          className="text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950"
+                          className="text-gray-500 hover:text-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-950"
                         >
                           <RiEditLine className="h-4 w-4" />
                         </Button>
@@ -686,7 +702,7 @@ export default function QATab({ source }: QATabProps) {
           ) : (
             <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
               <div className="text-center">
-                <Brain className="h-12 w-12 text-indigo-300 dark:text-indigo-700 mx-auto mb-3" />
+                <Brain className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
                 <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                   No Q&A pairs saved yet
                 </h3>
@@ -714,7 +730,7 @@ export default function QATab({ source }: QATabProps) {
           
           {currentPairId && (
             <div className="py-4">
-              <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-md border border-red-100 dark:border-red-900">
+              <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-100 dark:border-red-900">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {qaPairs.find(pair => pair.id === currentPairId)?.question}
                 </p>

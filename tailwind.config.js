@@ -53,6 +53,28 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Design System Brand Colors
+        'link-ai': {
+          primary: 'oklch(0.84 0.18 117.33)', // Custom primary color from design system
+        },
+        // Design System Neutral Colors with exact values from design system guide
+        neutral: {
+          50: '#fafafa',
+          100: '#f5f5f5',
+          200: '#e5e5e5', // border-light, text-secondary-dark
+          300: '#d4d4d4',
+          400: '#a3a3a3', // text-muted-dark
+          500: '#737373',
+          600: '#525252', // text-muted-light
+          700: '#404040', // text-secondary-light
+          800: '#262626', // bg-card-dark, border-dark
+          900: '#171717',
+          950: '#0a0a0a',
+        },
+        // Design System Card Colors
+        'card-light': '#F5F5F7', // Exact color from design system
+        'card-dark': '#262626',   // neutral-800
+        'card-overlay': '#1D1F2F', // Dark overlay for cards
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -60,8 +82,13 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-geist)", ...fontFamily.sans],
+        // Updated to use Inter as primary font per design system
+        sans: ["var(--font-inter)", ...fontFamily.sans],
+        // Keep existing fonts for backward compatibility
+        geist: ["var(--font-geist)", ...fontFamily.sans],
         heading: ["var(--font-heading)", ...fontFamily.sans],
+        // Add Inter font family explicitly
+        inter: ["var(--font-inter)", ...fontFamily.sans],
       },
       keyframes: {
         "accordion-down": {

@@ -31,46 +31,56 @@ export function OrderList({ orders, selectedOrder, onSelectOrder }: OrderListPro
     <div className="px-4 py-2">
       <div className="space-y-2">
         {orders.map((order) => (
-          <Card 
+          <div 
             key={order.id}
-            className={cn(
-              "cursor-pointer p-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-900",
-              selectedOrder?.id === order.id && "border-blue-500 ring-1 ring-blue-500 bg-blue-50/50 dark:bg-blue-500/5"
-            )}
             onClick={() => onSelectOrder(order)}
+            className={cn(
+              "group transition-all duration-200 cursor-pointer p-3 rounded-lg border relative",
+              "hover:bg-neutral-50 dark:hover:bg-neutral-900",
+              "hover:shadow-sm",
+              "bg-white dark:bg-black border-neutral-200 dark:border-neutral-800",
+              "hover:border-neutral-300 dark:hover:border-neutral-700",
+              selectedOrder?.id === order.id && [
+                "border-neutral-400 dark:border-white",
+                "bg-neutral-50 dark:bg-neutral-900"
+              ]
+            )}
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex items-center">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                    {order.id}
-                  </h3>
-                  <Badge 
-                    variant={(statusConfig[order.status as keyof typeof statusConfig]?.variant || "default") as any}
-                    className="ml-2 text-xs"
-                  >
-                    {capitalize(order.status)}
-                  </Badge>
+            <div className="flex items-center">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-medium">
+                #
+              </span>
+              <div className="ml-3 w-full overflow-hidden">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center max-w-[70%]">
+                    <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                      {order.id}
+                    </div>
+                    <div className="ml-2 flex-shrink-0">
+                      <Badge 
+                        variant={(statusConfig[order.status as keyof typeof statusConfig]?.variant || "default") as any}
+                        className="text-xs"
+                      >
+                        {capitalize(order.status)}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                    ${order.total.toFixed(2)}
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {order.customerName}
-                </p>
-              </div>
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
-                ${order.total.toFixed(2)}
-              </p>
-            </div>
-            <div className="mt-2 flex items-center justify-between">
-              <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                <RiTimeLine className="mr-1 h-3.5 w-3.5" />
-                {formatDistanceToNow(order.createdAt, { addSuffix: true })}
-              </div>
-              <div className="flex items-center text-xs text-blue-500">
-                <RiUserLine className="mr-1 h-3.5 w-3.5" />
-                {order.agent.name}
+                <div className="mt-1 flex items-center justify-between">
+                  <p className="truncate text-xs text-neutral-600 dark:text-neutral-400">
+                    {order.customerName}
+                  </p>
+                  <div className="flex items-center text-xs text-neutral-500 ml-2">
+                    <RiTimeLine className="mr-1 h-3.5 w-3.5" />
+                    {formatDistanceToNow(order.createdAt, { addSuffix: true })}
+                  </div>
+                </div>
               </div>
             </div>
-          </Card>
+          </div>
         ))}
       </div>
     </div>

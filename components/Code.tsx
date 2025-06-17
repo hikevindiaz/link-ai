@@ -31,7 +31,7 @@ export default async function Code({
   return (
     <div
       className={cn(
-        "relative w-full overflow-auto rounded-xl bg-gray-950 shadow-xl shadow-black/40 ring-1 ring-black dark:shadow-indigo-900/30 dark:ring-white/5",
+        "relative w-full overflow-auto rounded-xl bg-gray-950 shadow-xl shadow-black/40 ring-1 ring-black dark:shadow-neutral-900/30 dark:ring-white/5",
         className,
       )}
     >

@@ -218,7 +218,7 @@ export function CatalogTab({ source, onSave }: CatalogTabProps) {
       <div className="space-y-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <RiListCheck2 className="h-5 w-5 text-indigo-500" />
+            <RiListCheck2 className="h-5 w-5 text-neutral-500" />
             <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
               Product Catalog
             </h2>
@@ -276,24 +276,32 @@ export function CatalogTab({ source, onSave }: CatalogTabProps) {
               <Label htmlFor="catalog-instructions" className="sr-only">
                 Catalog Instructions
               </Label>
-              <Textarea
-                id="catalog-instructions"
-                placeholder="Enter additional instructions for processing your catalog (optional)"
-                value={catalogInstructions}
-                onChange={(e) => setCatalogInstructions(e.target.value)}
-                rows={3}
-                className="resize-none"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                Add specific instructions about how products should be processed or what information is most important.
-              </p>
+              <div className="space-y-2">
+                <Textarea
+                  id="catalog-instructions"
+                  placeholder="Enter additional instructions for processing your catalog (optional)"
+                  value={catalogInstructions}
+                  onChange={(e) => setCatalogInstructions(e.target.value)}
+                  rows={3}
+                  className="resize-none"
+                  maxLength={500}
+                />
+                <div className="flex justify-between items-center">
+                  <p className="text-xs text-gray-500">
+                    Add specific instructions about how products should be processed or what information is most important.
+                  </p>
+                  <span className="text-xs text-neutral-500">
+                    {catalogInstructions.length}/500
+                  </span>
+                </div>
+              </div>
               
               {saveProgress > 0 && (
                 <div className="mt-3 space-y-1">
                   <div className="flex justify-between items-center text-xs">
                     <div className="flex items-center gap-1.5">
-                      <Loader2 className="h-3 w-3 animate-spin text-indigo-500" />
-                      <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                      <Loader2 className="h-3 w-3 animate-spin text-neutral-500" />
+                      <span className="font-medium text-neutral-600 dark:text-neutral-400">
                         {saveProgress < 20 ? 'Starting save...' : 
                          saveProgress < 40 ? 'Saving instructions...' :
                          saveProgress < 70 ? 'Processing instructions...' :
@@ -301,13 +309,13 @@ export function CatalogTab({ source, onSave }: CatalogTabProps) {
                          'Finishing up...'}
                       </span>
                     </div>
-                    <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                    <span className="font-medium text-neutral-600 dark:text-neutral-400">
                       {saveProgress}%
                     </span>
                   </div>
                   <Progress 
                     value={saveProgress} 
-                    className="h-1.5 bg-indigo-100 text-indigo-600"
+                    className="h-1.5 bg-neutral-100 text-neutral-600"
                   />
                 </div>
               )}

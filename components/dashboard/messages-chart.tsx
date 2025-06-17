@@ -53,49 +53,6 @@ export function MessagesChart({ data, totalMessages }: MessagesChartProps) {
     });
   }, [data, selectedChannel, availableChannels]);
 
-  const summary = useMemo(() => {
-    const channelTotals: { [channel: string]: number } = {};
-    let grandTotal = 0;
-
-    data.forEach(day => {
-      Object.entries(day.channels).forEach(([channel, count]) => {
-        channelTotals[channel] = (channelTotals[channel] || 0) + count;
-        grandTotal += count;
-      });
-    });
-
-    const items = [
-      {
-        category: 'All Channels',
-        total: formatNumber(grandTotal),
-        color: 'bg-indigo-500',
-      }
-    ];
-
-    const topChannels = Object.entries(channelTotals)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3);
-
-    const channelColors: { [key: string]: string } = {
-      web: 'bg-blue-500',
-      sms: 'bg-emerald-500',
-      voice: 'bg-amber-500', 
-      whatsapp: 'bg-green-500',
-      'voice call': 'bg-amber-500',
-      'web call': 'bg-cyan-500'
-    };
-
-    topChannels.forEach(([channel, total], index) => {
-      items.push({
-        category: channel.charAt(0).toUpperCase() + channel.slice(1),
-        total: formatNumber(total),
-        color: channelColors[channel] || `bg-gray-500`,
-      });
-    });
-
-    return items;
-  }, [data]);
-
   const chartCategories = useMemo(() => {
     if (selectedChannel === 'all') {
       return ['Total', ...availableChannels.slice(0, 3)];
@@ -109,8 +66,8 @@ export function MessagesChart({ data, totalMessages }: MessagesChartProps) {
     if (!active || !payload || payload.length === 0) return null;
 
     return (
-      <div className="rounded-tremor-default border border-tremor-border bg-tremor-background text-tremor-default shadow-tremor-dropdown p-2">
-        <div className="border-b border-tremor-border px-3 py-1">
+      <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black text-neutral-900 dark:text-white shadow-lg p-2">
+        <div className="border-b border-neutral-200 dark:border-neutral-800 px-3 py-1">
           <p className="font-medium">{label}</p>
         </div>
         <div className="px-3 py-1 space-y-1">
@@ -119,10 +76,10 @@ export function MessagesChart({ data, totalMessages }: MessagesChartProps) {
               <div className="flex items-center space-x-2">
                 <span
                   className={`h-1 w-3 shrink-0 rounded-sm ${
-                    category.color || 'bg-gray-500'
+                    category.color || 'bg-neutral-500'
                   }`}
                 />
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
                   {category.dataKey}
                 </p>
               </div>
@@ -137,51 +94,25 @@ export function MessagesChart({ data, totalMessages }: MessagesChartProps) {
   };
 
   return (
-    <Card className="mt-8 p-6">
-      <div className="sm:flex sm:items-center sm:justify-between sm:space-x-10">
+    <Card className="mt-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between sm:space-x-10 mb-4 space-y-2 sm:space-y-0">
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Messages per Day</p>
-          <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">Messages per Day</p>
+          <p className="text-xl font-semibold text-black dark:text-white">
             {formatNumber(totalMessages)}
           </p>
         </div>
-        <Button className="mt-4 w-full sm:mt-0 sm:w-fit" variant="secondary">
-          <a href="/dashboard/interactions" className="flex items-center gap-2">
-            <Eye className="size-4" />
-            View All
-          </a>
+        <Button className="text-xs px-3 py-1.5 w-fit" variant="secondary">
+          <Eye className="size-3 mr-1" />
+          View All
         </Button>
       </div>
 
-      <ul role="list" className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {summary.map((item, index) => (
-          <li key={index}>
-            <div className="flex space-x-2 items-center">
-              {item.color && (
-                <span
-                  className={cn(item.color, 'w-1 h-8 shrink-0 rounded')}
-                  aria-hidden={true}
-                />
-              )}
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {item.total}
-              </p>
-            </div>
-            <p className={cn(
-              item.color ? "pl-3" : "",
-              "text-sm text-gray-500 dark:text-gray-400"
-            )}>
-              {item.category}
-            </p>
-          </li>
-        ))}
-      </ul>
-
-      <Tabs value={selectedChannel} onValueChange={setSelectedChannel} className="mt-6">
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
+      <Tabs value={selectedChannel} onValueChange={setSelectedChannel} className="mb-3">
+        <TabsList className="bg-neutral-100 dark:bg-neutral-800">
+          <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
           {availableChannels.map(channel => (
-            <TabsTrigger key={channel} value={channel}>
+            <TabsTrigger key={channel} value={channel} className="text-xs">
               {channel.charAt(0).toUpperCase() + channel.slice(1)}
             </TabsTrigger>
           ))}
@@ -195,8 +126,9 @@ export function MessagesChart({ data, totalMessages }: MessagesChartProps) {
         valueFormatter={formatNumber}
         customTooltip={customTooltip}
         showLegend={true}
-        fill="solid"
-        className="mt-4 h-60"
+        fill="gradient"
+        colors={["neutral", "emerald", "amber", "rose"]}
+        className="h-48"
       />
     </Card>
   );

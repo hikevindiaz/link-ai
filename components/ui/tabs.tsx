@@ -30,13 +30,13 @@ const variantStyles: Record<TabsListVariant, string> = {
     // base
     "flex items-center justify-start border-b",
     // border color
-    "border-gray-200 dark:border-gray-800",
+    "border-neutral-200 dark:border-neutral-800",
   ),
   solid: cn(
     // base
-    "inline-flex items-center justify-center rounded-md p-1",
+    "inline-flex items-center justify-center rounded-xl p-1",
     // background color
-    "bg-gray-100 dark:bg-gray-900",
+    "bg-neutral-100 dark:bg-neutral-900",
   ),
 }
 
@@ -64,33 +64,33 @@ function getVariantStyles(tabVariant: TabsListVariant) {
         // base
         "-mb-px items-center justify-center whitespace-nowrap border-b-2 border-transparent px-3 pb-2 text-sm font-medium transition-all",
         // text color
-        "text-gray-500 dark:text-gray-500",
+        "text-neutral-500 dark:text-neutral-500",
         // hover
-        "hover:text-gray-700 hover:dark:text-gray-400",
+        "hover:text-neutral-700 hover:dark:text-neutral-400",
         // border hover
-        "hover:border-gray-300 hover:dark:border-gray-400",
+        "hover:border-neutral-300 hover:dark:border-neutral-400",
         // selected
-        "data-[state=active]:border-indigo-500 data-[state=active]:text-indigo-500",
-        "data-[state=active]:dark:border-indigo-500 data-[state=active]:dark:text-indigo-500",
+        "data-[state=active]:border-neutral-600 data-[state=active]:text-neutral-600",
+        "data-[state=active]:dark:border-neutral-400 data-[state=active]:dark:text-neutral-400",
         // disabled
         "data-[disabled]:pointer-events-none",
-        "data-[disabled]:text-gray-300 data-[disabled]:dark:text-gray-700",
+        "data-[disabled]:text-neutral-300 data-[disabled]:dark:text-neutral-700",
       )
     case "solid":
       return cn(
         // base
         "inline-flex items-center justify-center whitespace-nowrap rounded px-3 py-1 text-sm font-medium ring-1 ring-inset transition-all",
         // text color
-        "text-gray-500 dark:text-gray-400",
+        "text-neutral-500 dark:text-neutral-400",
         // hover
-        "hover:text-gray-700 hover:dark:text-gray-200",
+        "hover:text-neutral-700 hover:dark:text-neutral-200",
         // ring
         "ring-transparent",
         // selected
-        "data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow",
-        "data-[state=active]:dark:bg-gray-950 data-[state=active]:dark:text-gray-50",
+        "data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow",
+        "data-[state=active]:dark:bg-neutral-950 data-[state=active]:dark:text-neutral-50",
         // disabled
-        "data-[disabled]:pointer-events-none data-[disabled]:text-gray-400 data-[disabled]:opacity-50 data-[disabled]:dark:text-gray-600",
+        "data-[disabled]:pointer-events-none data-[disabled]:text-neutral-400 data-[disabled]:opacity-50 data-[disabled]:dark:text-neutral-600",
       )
   }
 }

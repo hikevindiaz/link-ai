@@ -55,7 +55,7 @@ export default function Features() {
               <div key={feature.name} className="flex flex-col">
                 <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900 dark:text-gray-50">
                   <feature.icon
-                    className="size-5 flex-none text-indigo-600 dark:text-indigo-400"
+                    className="size-5 flex-none text-neutral-600 dark:text-neutral-400"
                     aria-hidden="true"
                   />
                   {feature.name}

@@ -96,28 +96,28 @@ export function DeletePhoneNumberDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white dark:bg-gray-900 border dark:border-gray-800">
+      <DialogContent className="sm:max-w-md bg-white dark:bg-neutral-900 border dark:border-neutral-800">
         {deleteState === 'confirming' && (
           <>
             <DialogHeader>
-              <DialogTitle className="text-foreground dark:text-gray-100">Delete Phone Number</DialogTitle>
-              <DialogDescription className="text-muted-foreground dark:text-gray-400">
+              <DialogTitle className="text-foreground dark:text-neutral-100">Delete Phone Number</DialogTitle>
+              <DialogDescription className="text-muted-foreground dark:text-neutral-400">
                 Are you sure you want to delete this phone number? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             
             <div className="py-4">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                You are about to delete the phone number <span className="font-medium text-gray-900 dark:text-white">{phoneNumber.number}</span>.
+              <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                You are about to delete the phone number <span className="font-medium text-neutral-900 dark:text-white">{phoneNumber.number}</span>.
               </p>
               
               {phoneNumber.agentName && (
-                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                  This number is currently assigned to <span className="font-medium text-gray-900 dark:text-white">{phoneNumber.agentName}</span> and will be unassigned.
+                <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
+                  This number is currently assigned to <span className="font-medium text-neutral-900 dark:text-white">{phoneNumber.agentName}</span> and will be unassigned.
                 </p>
               )}
               
-              <div className="mt-4 rounded-md bg-amber-50 p-3 dark:bg-amber-900/20">
+              <div className="mt-4 rounded-xl bg-amber-50 p-3 dark:bg-amber-900/20">
                 <div className="flex">
                   <Icons.warning className="h-5 w-5 text-amber-400 dark:text-amber-500" />
                   <div className="ml-3">
@@ -139,7 +139,7 @@ export function DeletePhoneNumberDialog({
               <Button 
                 variant="light" 
                 onClick={() => onOpenChange(false)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-100 dark:border-gray-700"
+                className="bg-neutral-100 hover:bg-neutral-200 text-neutral-900 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-100 dark:border-neutral-700"
               >
                 Cancel
               </Button>
@@ -156,11 +156,11 @@ export function DeletePhoneNumberDialog({
 
         {deleteState === 'deleting' && (
           <div className="py-12 flex flex-col items-center justify-center">
-            <Icons.spinner className="h-12 w-12 animate-spin text-indigo-500 dark:text-indigo-400 mb-6" />
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50 mb-2">
+            <Icons.spinner className="h-12 w-12 animate-spin text-neutral-500 dark:text-neutral-400 mb-6" />
+            <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50 mb-2">
               Deleting Phone Number
             </h3>
-            <p className="text-sm text-center text-gray-500 dark:text-gray-400 max-w-sm">
+            <p className="text-sm text-center text-neutral-500 dark:text-neutral-400 max-w-sm">
               Please wait while we process your request. This may take a few moments.
             </p>
           </div>
@@ -171,10 +171,10 @@ export function DeletePhoneNumberDialog({
             <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-6">
               <Icons.check className="h-8 w-8 text-green-600 dark:text-green-500" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50 mb-2">
+            <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50 mb-2">
               Phone Number Deleted
             </h3>
-            <p className="text-sm text-center text-gray-500 dark:text-gray-400 max-w-sm">
+            <p className="text-sm text-center text-neutral-500 dark:text-neutral-400 max-w-sm">
               The phone number {phoneNumber.number} has been successfully deleted from your account and released back to the number pool.
             </p>
           </div>
@@ -183,14 +183,14 @@ export function DeletePhoneNumberDialog({
         {deleteState === 'error' && (
           <>
             <DialogHeader>
-              <DialogTitle className="text-foreground dark:text-gray-100">Error Deleting Phone Number</DialogTitle>
-              <DialogDescription className="text-muted-foreground dark:text-gray-400">
+              <DialogTitle className="text-foreground dark:text-neutral-100">Error Deleting Phone Number</DialogTitle>
+              <DialogDescription className="text-muted-foreground dark:text-neutral-400">
                 We encountered a problem while trying to delete your phone number.
               </DialogDescription>
             </DialogHeader>
             
             <div className="py-4">
-              <div className="rounded-md bg-red-50 p-4 dark:bg-red-900/20">
+              <div className="rounded-xl bg-red-50 p-4 dark:bg-red-900/20">
                 <div className="flex">
                   <Icons.warning className="h-5 w-5 text-red-400 dark:text-red-500" />
                   <div className="ml-3">
@@ -206,14 +206,14 @@ export function DeletePhoneNumberDialog({
               <Button 
                 variant="light" 
                 onClick={() => setDeleteState('confirming')}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-900 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-100 dark:border-gray-700"
+                className="bg-neutral-100 hover:bg-neutral-200 text-neutral-900 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-100 dark:border-neutral-700"
               >
                 Try Again
               </Button>
               <Button 
                 variant="secondary" 
                 onClick={() => onOpenChange(false)}
-                className="dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-100 dark:border-gray-700"
+                className="dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-100 dark:border-neutral-700"
               >
                 Close
               </Button>

@@ -281,11 +281,11 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/20 p-4 border border-indigo-200 dark:border-indigo-800">
-                <h3 className="text-sm font-medium text-indigo-800 dark:text-indigo-200 mb-2">
+              <div className="rounded-lg bg-neutral-50 dark:bg-neutral-900/20 p-4 border border-neutral-200 dark:border-neutral-800">
+                <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200 mb-2">
                   Connect your AI agent to WhatsApp
                 </h3>
-                <p className="text-xs text-indigo-700 dark:text-indigo-300">
+                <p className="text-xs text-neutral-700 dark:text-neutral-300">
                   Enable WhatsApp Business messaging to allow your AI agent to communicate with customers through the world's most popular messaging app.
                 </p>
               </div>
@@ -339,11 +339,11 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
                   <p>
                     You'll be redirected to Facebook to connect your business account to WhatsApp. This allows your AI agent to send and receive WhatsApp messages.
                   </p>
-                  <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg text-sm">
-                    <p className="font-medium text-indigo-800 dark:text-indigo-200 mb-1">
+                  <div className="bg-neutral-50 dark:bg-neutral-900/20 p-3 rounded-lg text-sm">
+                    <p className="font-medium text-neutral-800 dark:text-neutral-200 mb-1">
                       During setup, you will:
                     </p>
-                    <ul className="space-y-1 text-indigo-700 dark:text-indigo-300">
+                    <ul className="space-y-1 text-neutral-700 dark:text-neutral-300">
                       <li>• Log in with Facebook</li>
                       <li>• Create or select your business profile</li>
                       <li>• Verify ownership of {phoneNumber.number}</li>
@@ -358,7 +358,7 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
 
               {setupStep === 'connecting' && (
                 <div className="text-center py-4">
-                  <Icons.spinner className="h-8 w-8 animate-spin mx-auto text-indigo-600" />
+                  <Icons.spinner className="h-8 w-8 animate-spin mx-auto text-neutral-600" />
                   <p className="mt-3 font-medium">Connecting to WhatsApp Business...</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Please complete the setup in the popup window
@@ -368,7 +368,7 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
 
               {setupStep === 'verifying' && (
                 <div className="text-center py-4">
-                  <Icons.spinner className="h-8 w-8 animate-spin mx-auto text-indigo-600" />
+                  <Icons.spinner className="h-8 w-8 animate-spin mx-auto text-neutral-600" />
                   <p className="mt-3 font-medium">Verifying your setup...</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     This may take a few moments

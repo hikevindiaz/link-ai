@@ -47,7 +47,7 @@ function BottomToolbar({
   }
 
   function getConnectionButtonClasses() {
-    const baseClasses = "text-white text-base p-2 w-36 rounded-md h-full";
+    const baseClasses = "text-white text-base p-2 w-36 rounded-xl h-full";
     const cursorClass = isConnecting ? "cursor-not-allowed" : "cursor-pointer";
 
     if (isConnected) {
@@ -91,7 +91,7 @@ function BottomToolbar({
           disabled={!isPTTActive}
           className={
             (isPTTUserSpeaking ? "bg-gray-300" : "bg-gray-200") +
-            " py-1 px-4 cursor-pointer rounded-md" +
+            " py-1 px-4 cursor-pointer rounded-xl" +
             (!isPTTActive ? " bg-gray-100 text-gray-400" : "")
           }
         >
@@ -135,7 +135,7 @@ function BottomToolbar({
           id="codec-select"
           value={codec}
           onChange={handleCodecChange}
-          className="border border-gray-300 rounded-md px-2 py-1 focus:outline-none cursor-pointer"
+          className="border border-gray-300 rounded-xl px-2 py-1 focus:outline-none cursor-pointer"
         >
           <option value="opus">Opus (48 kHz)</option>
           <option value="pcmu">PCMU (8 kHz)</option>

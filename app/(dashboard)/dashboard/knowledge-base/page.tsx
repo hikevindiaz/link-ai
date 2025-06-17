@@ -234,8 +234,8 @@ export default function KnowledgeBasePage() {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="flex items-center">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
-          <span className="ml-2 text-sm text-gray-500">Loading...</span>
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
+          <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">Loading...</span>
         </div>
       </div>
     );
@@ -253,7 +253,7 @@ export default function KnowledgeBasePage() {
             </AlertDescription>
           </Alert>
           
-          <div className="rounded-md bg-gray-900 p-4 text-white">
+          <div className="rounded-xl bg-neutral-900 p-4 text-white">
             <pre className="overflow-x-auto text-sm">
               <code>
                 npx prisma generate{'\n'}
@@ -262,7 +262,7 @@ export default function KnowledgeBasePage() {
             </pre>
           </div>
           
-          <p className="mt-4 text-sm text-gray-500">
+          <p className="mt-4 text-sm text-neutral-500">
             After running these commands, restart your development server and refresh this page.
           </p>
           
@@ -280,11 +280,11 @@ export default function KnowledgeBasePage() {
   return (
     <div className="flex flex-col items-center justify-center h-full p-6 relative">
       <div className="mx-auto max-w-md text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-          <RiDatabase2Line className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+          <RiDatabase2Line className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">Knowledge Base</h1>
-        <p className="mt-2 text-gray-500 dark:text-gray-400">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">Knowledge Base</h1>
+        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
           Add knowledge to make your AI assistants smarter.
         </p>
         <div className="mt-6 flex justify-center gap-2">

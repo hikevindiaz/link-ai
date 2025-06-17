@@ -33,10 +33,10 @@ export function KnowledgeSourceBadge({
 }) {
   // If compact mode is enabled, just show a colored dot
   if (compact) {
-    // While loading, show pulsing gray dot
+    // While loading, show pulsing neutral dot
     if (isLoading) {
       return (
-        <span className="h-2.5 w-2.5 rounded-full bg-gray-400 animate-pulse"></span>
+        <span className="h-2.5 w-2.5 rounded-full bg-neutral-400 animate-pulse"></span>
       );
     }
     
@@ -61,9 +61,9 @@ export function KnowledgeSourceBadge({
       );
     }
     
-    // Draft (no content) gets gray dot
+    // Draft (no content) gets neutral dot
     return (
-      <span className="h-2.5 w-2.5 rounded-full bg-gray-400"></span>
+      <span className="h-2.5 w-2.5 rounded-full bg-neutral-400"></span>
     );
   }
   
@@ -83,8 +83,8 @@ export function KnowledgeSourceBadge({
   // Show loading state
   if (isLoading) {
     return (
-      <Badge variant="secondary" className={`${baseClasses} bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400`}>
-        <span className="h-3 w-3 rounded-full bg-gray-500 animate-pulse"></span>
+      <Badge variant="secondary" className={`${baseClasses} bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400`}>
+        <span className="h-3 w-3 rounded-full bg-neutral-500 animate-pulse"></span>
         <span>Checking...</span>
       </Badge>
     );
@@ -110,7 +110,7 @@ export function KnowledgeSourceBadge({
   }
   
   return (
-    <Badge variant="secondary" className={`${baseClasses} bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400`}>
+    <Badge variant="secondary" className={`${baseClasses} bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400`}>
       <RiDraftLine className="h-3.5 w-3.5" />
       <span>Draft</span>
     </Badge>
@@ -302,8 +302,8 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
   // Custom styling for active tab
   const getTabClassName = (tabName: string) => {
     const baseClasses = "inline-flex gap-2";
-    const activeClasses = "text-indigo-600 font-medium border-b-2 border-indigo-600 dark:text-indigo-500 dark:border-indigo-500";
-    const inactiveClasses = "text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-700";
+    const activeClasses = "text-neutral-600 font-medium border-b-2 border-neutral-600 dark:text-neutral-500 dark:border-neutral-500";
+    const inactiveClasses = "text-neutral-500 hover:text-neutral-700 hover:border-b-2 hover:border-neutral-300 dark:text-neutral-400 dark:hover:text-neutral-300 dark:hover:border-neutral-700";
     
     return `${baseClasses} ${activeTab === tabName ? activeClasses : inactiveClasses}`;
   };
@@ -312,10 +312,10 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
     <div className="p-6">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-white">
             {source.name}
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Manage your knowledge source content
           </p>
         </div>
@@ -339,7 +339,7 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
                     className={`h-6 w-6 p-0 transition-colors duration-200 ${
                       copySuccess 
                         ? "text-green-500 bg-green-50 hover:text-green-600 dark:bg-green-900/20 dark:text-green-400" 
-                        : "text-gray-500 hover:text-indigo-600"
+                        : "text-neutral-500 hover:text-neutral-600"
                     }`}
                     onClick={handleCopySourceId}
                   >
@@ -355,7 +355,7 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono text-gray-700 dark:text-gray-300">
+            <code className="text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded font-mono text-neutral-700 dark:text-neutral-300">
               {source.id}
             </code>
           </div>
@@ -363,7 +363,7 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
       </div>
       
       <div className="-mx-6 mt-4">
-        <TabNavigation className="border-b border-gray-200 dark:border-gray-800">
+        <TabNavigation className="border-b border-neutral-200 dark:border-neutral-800">
           <div className="px-6">
             <TabNavigationLink 
               href="#" 

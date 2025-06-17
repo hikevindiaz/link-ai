@@ -125,7 +125,7 @@ export function ActionsTab({ agent, onSave }: ActionsTabProps) {
     <div className="space-y-6 relative min-h-[calc(100vh-200px)]">
       {isLoading ? (
         <div className="h-48 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          <Loader2 className="h-8 w-8 animate-spin text-neutral-400" />
         </div>
       ) : !hasCalendarIntegration ? (
         <Alert>
@@ -157,7 +157,7 @@ export function ActionsTab({ agent, onSave }: ActionsTabProps) {
               id="calendar"
               name="Calendar Booking"
               description="Allow your agent to schedule appointments"
-              icon={<Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+              icon={<Calendar className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />}
               enabled={calendarEnabled}
               onToggle={handleCalendarToggle}
               disabled={!hasCalendarIntegration || calendars.length === 0}
@@ -167,7 +167,7 @@ export function ActionsTab({ agent, onSave }: ActionsTabProps) {
                   <div className="space-y-2">
                     <Label htmlFor="calendar-select">Select Calendar</Label>
                     {calendars.length === 0 ? (
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-neutral-500">
                         No calendars found. 
                         <Button variant="ghost" className="px-1 h-auto" asChild>
                           <Link href="/dashboard/calendar">Create a calendar</Link>
@@ -188,7 +188,7 @@ export function ActionsTab({ agent, onSave }: ActionsTabProps) {
                         </SelectContent>
                       </Select>
                     )}
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-neutral-500">
                       Choose which calendar your agent will use for booking appointments.
                     </p>
                   </div>
@@ -211,14 +211,14 @@ export function ActionsTab({ agent, onSave }: ActionsTabProps) {
               id="orders"
               name="Order Processing"
               description="Let your agent create and process orders"
-              icon={<ShoppingBag className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+              icon={<ShoppingBag className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />}
               enabled={false}
               onToggle={() => {}}
               disabled={true}
               isComingSoon={true}
             >
               <div className="space-y-4 animate-in slide-in-from-top-5 duration-300 px-4 py-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   Order processing will be available soon.
                 </p>
               </div>
@@ -229,14 +229,14 @@ export function ActionsTab({ agent, onSave }: ActionsTabProps) {
               id="forms"
               name="Smart Forms"
               description="Let your agent create and process form submissions"
-              icon={<UserPlus className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+              icon={<UserPlus className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />}
               enabled={false}
               onToggle={() => {}}
               disabled={true}
               isComingSoon={true}
             >
               <div className="space-y-4 animate-in slide-in-from-top-5 duration-300 px-4 py-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   Smart Forms will be available soon.
                 </p>
               </div>

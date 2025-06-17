@@ -126,8 +126,8 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                 className="space-y-6"
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Personal Information</h2>
-                  <p className="text-gray-600 text-sm">
+                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50 mb-2">Personal Information</h2>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-sm">
                     Let's start with your basic information.
                   </p>
                 </div>
@@ -137,7 +137,7 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-900">Full Name</FormLabel>
+                      <FormLabel className="text-neutral-900 dark:text-neutral-50">Full Name</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="John Doe" 
@@ -155,7 +155,7 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-900">Email Address</FormLabel>
+                      <FormLabel className="text-neutral-900 dark:text-neutral-50">Email Address</FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -164,13 +164,13 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                           disabled={!!initialValues?.email}
                           className={cn(
                             "h-12",
-                            initialValues?.email && "text-gray-500 cursor-not-allowed"
+                            initialValues?.email && "text-neutral-500 cursor-not-allowed"
                           )}
                           {...field}
                         />
                       </FormControl>
                       {initialValues?.email && (
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
                           Your email is used for login and cannot be changed.
                         </p>
                       )}
@@ -191,8 +191,8 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                 className="space-y-6"
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Address Information</h2>
-                  <p className="text-gray-600 text-sm">
+                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50 mb-2">Address Information</h2>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-sm">
                     Where should we send important correspondence?
                   </p>
                 </div>
@@ -202,7 +202,7 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                   name="addressLine1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-900">Address Line 1</FormLabel>
+                      <FormLabel className="text-neutral-900 dark:text-neutral-50">Address Line 1</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="123 Main St" 
@@ -220,7 +220,7 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                   name="addressLine2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-900">Address Line 2 (Optional)</FormLabel>
+                      <FormLabel className="text-neutral-900 dark:text-neutral-50">Address Line 2 (Optional)</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="Apartment, suite, etc." 
@@ -245,8 +245,8 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                 className="space-y-6"
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Location Details</h2>
-                  <p className="text-gray-600 text-sm">
+                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50 mb-2">Location Details</h2>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-sm">
                     Complete your address information.
                   </p>
                 </div>
@@ -257,7 +257,7 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                     name="city"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-900">City</FormLabel>
+                        <FormLabel className="text-neutral-900 dark:text-neutral-50">City</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="New York" 
@@ -275,7 +275,7 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                     name="state"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-900">State/Province</FormLabel>
+                        <FormLabel className="text-neutral-900 dark:text-neutral-50">State/Province</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="NY" 
@@ -295,7 +295,7 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                     name="postalCode"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-900">Postal Code</FormLabel>
+                        <FormLabel className="text-neutral-900 dark:text-neutral-50">Postal Code</FormLabel>
                         <FormControl>
                           <Input 
                             placeholder="10001" 
@@ -313,7 +313,7 @@ export function AccountStep({ initialValues, onNext, isSubmitting = false, onSub
                     name="country"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-900">Country</FormLabel>
+                        <FormLabel className="text-neutral-900 dark:text-neutral-50">Country</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}

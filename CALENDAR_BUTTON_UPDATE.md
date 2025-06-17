@@ -26,7 +26,7 @@ https://calendar.google.com/calendar/render?action=TEMPLATE&text={title}&dates={
 ### 3. Email Template Updates
 
 #### Confirmation Email
-- **Button style**: Indigo background (`bg-indigo-600`)
+- **Button style**: neutral background (`bg-neutral-600`)
 - **Text**: "📅 Add to Calendar"
 - **Help text**: "Click the button above to add this appointment to Google Calendar, Outlook, or your default calendar app"
 

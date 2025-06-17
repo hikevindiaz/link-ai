@@ -158,7 +158,7 @@ export function ChannelsTab({ agent, onSave }: ChannelsTabProps) {
           id="website"
           name="Website"
           description="Configure website chat widget"
-          icon={<Globe className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+          icon={<Globe className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />}
           enabled={channels.websiteEnabled}
           onToggle={(enabled) => updateChannel('websiteEnabled', enabled)}
         >
@@ -175,14 +175,14 @@ export function ChannelsTab({ agent, onSave }: ChannelsTabProps) {
           id="whatsapp"
           name="WhatsApp"
           description="Configure WhatsApp integration"
-          icon={<RiWhatsappLine className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+          icon={<RiWhatsappLine className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />}
           enabled={channels.whatsappEnabled}
           onToggle={(enabled) => updateChannel('whatsappEnabled', enabled)}
           disabled={true}
           isComingSoon={true}
         >
           <div className="space-y-4 animate-in slide-in-from-top-5 duration-300 px-4 py-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               WhatsApp integration will be available soon.
             </p>
           </div>
@@ -193,14 +193,14 @@ export function ChannelsTab({ agent, onSave }: ChannelsTabProps) {
           id="instagram"
           name="Instagram"
           description="Configure Instagram integration"
-          icon={<RiInstagramLine className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+          icon={<RiInstagramLine className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />}
           enabled={channels.instagramEnabled}
           onToggle={(enabled) => updateChannel('instagramEnabled', enabled)}
           disabled={true}
           isComingSoon={true}
         >
           <div className="space-y-4 animate-in slide-in-from-top-5 duration-300 px-4 py-4">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Instagram integration will be available soon.
             </p>
           </div>
@@ -211,7 +211,7 @@ export function ChannelsTab({ agent, onSave }: ChannelsTabProps) {
           id="messenger"
           name="Messenger"
           description="Configure Messenger integration"
-          icon={<RiMessengerLine className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+          icon={<RiMessengerLine className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />}
           enabled={channels.messengerEnabled}
           onToggle={(enabled) => updateChannel('messengerEnabled', enabled)}
           disabled={true}
@@ -223,7 +223,7 @@ export function ChannelsTab({ agent, onSave }: ChannelsTabProps) {
           id="sms"
           name="SMS"
           description="Configure SMS integration"
-          icon={<RiChat1Line className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+          icon={<RiChat1Line className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />}
           enabled={channels.smsEnabled}
           onToggle={(enabled) => updateChannel('smsEnabled', enabled)}
           disabled={true}

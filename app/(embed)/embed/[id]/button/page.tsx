@@ -25,7 +25,7 @@ export default async function Button({ params }: ChatComponentProps) {
 
   // Get border gradient colors from the chatbot or use default
   const borderGradientColors = (chatbot as any).borderGradientColors || 
-    ["#4F46E5", "#4338CA", "#6366F1"]; // Default to Indigo
+    ["#4F46E5", "#4338CA", "#6366F1"]; // Default to neutral
     
   return (
     <ChatbotButton 

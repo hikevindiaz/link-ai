@@ -475,11 +475,11 @@ export function CallTab({ agent, onSave }: CallTabProps) {
     >
       <div className="space-y-6">
         {/* Phone Number */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-100">Phone Number</Label>
+              <Phone className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Phone Number</Label>
               {selectedPhoneNumberId && (
                 <Badge variant="secondary" className="ml-auto">
                   <CheckCircle className="h-3 w-3 mr-1" />
@@ -488,7 +488,7 @@ export function CallTab({ agent, onSave }: CallTabProps) {
               )}
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="p-3 bg-white dark:bg-neutral-900">
             {errors.phoneNumbers ? (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -503,18 +503,18 @@ export function CallTab({ agent, onSave }: CallTabProps) {
               <>
                 <div className="flex-1">
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
                     {loadingStates.phoneNumbers ? (
                       <div className="flex items-center pl-9 h-10">
-                        <Loader2 className="h-4 w-4 animate-spin mr-2 text-gray-500" />
-                        <span className="text-sm text-gray-500">Loading phone numbers...</span>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2 text-neutral-500" />
+                        <span className="text-sm text-neutral-500">Loading phone numbers...</span>
                       </div>
                     ) : (
                       <Select 
                         value={selectedPhoneNumberId || 'none'}
                         onValueChange={handlePhoneNumberChange}
                       >
-                        <SelectTrigger className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+                        <SelectTrigger className="pl-9">
                           <SelectValue placeholder="Select phone number" />
                         </SelectTrigger>
                         <SelectContent>
@@ -530,7 +530,7 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                                   <span className="text-xs text-orange-600 dark:text-orange-400 ml-2">(Warning)</span>
                                 )}
                                 {phone.agentId && phone.agentId !== agent.id && (
-                                  <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">(Assigned to {phone.agentName})</span>
+                                  <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">(Assigned to {phone.agentName})</span>
                                 )}
                               </div>
                             </SelectItem>
@@ -540,14 +540,14 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                     )}
                   </div>
                   <div className="mt-2 flex items-center gap-1">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
                       {availablePhoneNumbers.length === 0 ? (
                         "No available phone numbers found. You can purchase a new one"
                       ) : (
                         "You can manage your phone numbers"
                       )}
                     </p>
-                    <a href="/dashboard/phone-numbers" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
+                    <a href="/dashboard/phone-numbers" className="text-sm text-neutral-600 hover:underline dark:text-neutral-400">
                       here
                     </a>
                   </div>
@@ -558,14 +558,14 @@ export function CallTab({ agent, onSave }: CallTabProps) {
         </Card>
 
         {/* Voice Selection */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-100">Voice</Label>
+              <MessageSquare className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Voice</Label>
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="p-3 bg-white dark:bg-neutral-900">
             {errors.voices ? (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -579,18 +579,18 @@ export function CallTab({ agent, onSave }: CallTabProps) {
             ) : (
               <div className="flex-1">
                 <div className="relative">
-                  <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+                  <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
                   {loadingStates.voices ? (
                     <div className="flex items-center pl-9 h-10">
-                      <Loader2 className="h-4 w-4 animate-spin mr-2 text-gray-500" />
-                      <span className="text-sm text-gray-500">Loading voices...</span>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2 text-neutral-500" />
+                      <span className="text-sm text-neutral-500">Loading voices...</span>
                     </div>
                   ) : (
                     <Select 
                       value={selectedVoice || 'none'} 
                       onValueChange={handleVoiceChange}
                     >
-                      <SelectTrigger className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+                      <SelectTrigger className="pl-9">
                         <SelectValue placeholder="Select voice" />
                       </SelectTrigger>
                       <SelectContent>
@@ -599,7 +599,7 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                           <SelectItem key={voice.id} value={voice.id}>
                             <div className="flex flex-col items-start text-left w-full">
                               <span className="font-medium">{capitalizeVoiceName(voice.name)}</span>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-neutral-500">
                                 {voice.openaiVoice} {voice.language ? `• ${voice.language}` : ''}
                               </span>
                             </div>
@@ -610,14 +610,14 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                   )}
                 </div>
                 <div className="mt-2 flex items-center gap-1">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {voices.length === 0 ? (
                       "No voices found. You can add voices from your voice library"
                     ) : (
                       "You can manage your voices"
                     )}
                   </p>
-                  <a href="/dashboard/voices" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
+                  <a href="/dashboard/voices" className="text-sm text-neutral-600 hover:underline dark:text-neutral-400">
                     here
                   </a>
                 </div>
@@ -633,20 +633,20 @@ export function CallTab({ agent, onSave }: CallTabProps) {
         </Card>
 
         {/* Response Rate Selection */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-100">Response Rate</Label>
+              <Clock className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Response Rate</Label>
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="p-3 bg-white dark:bg-neutral-900">
             <div className="flex-1">
               <Select 
                 value={responseRate} 
                 onValueChange={(value: 'rapid' | 'normal' | 'patient') => setResponseRate(value)}
               >
-                <SelectTrigger className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
+                <SelectTrigger>
                   <SelectValue placeholder="Select response rate" />
                 </SelectTrigger>
                 <SelectContent>
@@ -655,7 +655,7 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                   <SelectItem value="patient">Patient (More thoughtful)</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                 This controls how quickly your agent responds during conversations.
               </p>
             </div>
@@ -663,18 +663,18 @@ export function CallTab({ agent, onSave }: CallTabProps) {
         </Card>
 
         {/* Check User Presence */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-100">Check User Presence</Label>
+              <Clock className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Check User Presence</Label>
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="p-3 bg-white dark:bg-neutral-900">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-gray-900 dark:text-gray-100">Enable User Presence Check</p>
-                <p className="text-sm/6 text-gray-500 dark:text-gray-400">
+                <p className="font-medium text-neutral-900 dark:text-neutral-50">Enable User Presence Check</p>
+                <p className="text-sm/6 text-neutral-500 dark:text-neutral-400">
                   Ask if user is still there after silence
                 </p>
               </div>
@@ -687,10 +687,10 @@ export function CallTab({ agent, onSave }: CallTabProps) {
               <div className="mt-6 space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm text-gray-900 dark:text-gray-100">
+                    <Label className="text-sm text-neutral-900 dark:text-neutral-50">
                       Presence Check Delay
                     </Label>
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                       {presenceMessageDelay} seconds
                     </span>
                   </div>
@@ -702,19 +702,19 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                     onValueChange={(value) => setPresenceMessageDelay(value[0])}
                     className="w-full"
                   />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     Time to wait before asking if the user is still there
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm text-gray-900 dark:text-gray-100">Presence Message</Label>
+                  <Label className="text-sm text-neutral-900 dark:text-neutral-50">Presence Message</Label>
                   <Input
                     value={presenceMessage}
                     onChange={(e) => setPresenceMessage(e.target.value)}
                     placeholder="Are you still there?"
                     className="w-full"
                   />
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     Message to ask user after silence
                   </p>
                 </div>
@@ -724,21 +724,21 @@ export function CallTab({ agent, onSave }: CallTabProps) {
         </Card>
 
         {/* Silence Timeout */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-100">Silence Timeout</Label>
+              <Clock className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Silence Timeout</Label>
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="p-3 bg-white dark:bg-neutral-900">
             <div className="space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm text-gray-900 dark:text-gray-100">
+                  <Label className="text-sm text-neutral-900 dark:text-neutral-50">
                     Silence Duration
                   </Label>
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     {silenceTimeout} seconds
                   </span>
                 </div>
@@ -750,41 +750,47 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                   onValueChange={(value) => setSilenceTimeout(value[0])}
                   className="w-full"
                 />
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   Maximum silence before ending the call
                 </p>
               </div>
               <div className="space-y-2">
-                <Label className="text-sm text-gray-900 dark:text-gray-100">Hang Up Message</Label>
+                <Label className="text-sm text-neutral-900 dark:text-neutral-50">Hang Up Message</Label>
                 <Input
                   value={hangUpMessage}
                   onChange={(e) => setHangUpMessage(e.target.value)}
                   placeholder="I haven't heard from you, so I'll end the call."
+                  maxLength={60}
                   className="w-full"
                 />
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Message before hanging up due to silence
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    Message before hanging up due to silence
+                  </p>
+                  <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                    {hangUpMessage.length}/60
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </Card>
 
         {/* Call Timeout */}
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <Label className="font-medium text-gray-900 dark:text-gray-100">Call Termination</Label>
+              <Clock className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Call Termination</Label>
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="p-3 bg-white dark:bg-neutral-900">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label className="text-sm text-gray-900 dark:text-gray-100">
+                <Label className="text-sm text-neutral-900 dark:text-neutral-50">
                   Maximum Call Duration
                 </Label>
-                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                   {Math.floor(callTimeout / 60)} minutes
                 </span>
               </div>
@@ -796,7 +802,7 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                 onValueChange={(value) => setCallTimeout(value[0])}
                 className="w-full"
               />
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 The call will automatically end after this duration
               </p>
             </div>

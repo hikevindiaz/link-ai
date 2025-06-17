@@ -49,8 +49,8 @@ export function SuccessDialog({ open, onOpenChange, threadId }: SuccessDialogPro
               window.dispatchEvent(event);
             }}
             className={cn(
-              "w-full sm:w-32 bg-indigo-600 hover:bg-indigo-700 text-white",
-              "dark:bg-indigo-600 dark:hover:bg-indigo-700"
+              "w-full sm:w-32 bg-neutral-600 hover:bg-neutral-700 text-white",
+              "dark:bg-neutral-600 dark:hover:bg-neutral-700"
             )}
           >
             OK

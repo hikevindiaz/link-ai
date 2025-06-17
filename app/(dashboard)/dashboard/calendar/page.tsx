@@ -75,7 +75,7 @@ const statusConfig: {
   all: {
     label: "All Appointments",
     iconName: "calendar",
-    color: "text-gray-500",
+    color: "text-neutral-500",
     variant: "default"
   },
   [AppointmentStatus.PENDING]: {
@@ -87,7 +87,7 @@ const statusConfig: {
   [AppointmentStatus.CONFIRMED]: {
     label: "Confirmed",
     iconName: "calendar",
-    color: "text-indigo-500",
+    color: "text-neutral-500",
     variant: "default"
   },
   [AppointmentStatus.COMPLETED]: {
@@ -132,7 +132,7 @@ const colorCombinations = [
   { text: 'text-sky-800 dark:text-sky-500', bg: 'bg-sky-100 dark:bg-sky-500/20' },
   { text: 'text-emerald-800 dark:text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-500/20' },
   { text: 'text-amber-800 dark:text-amber-500', bg: 'bg-amber-100 dark:bg-amber-500/20' },
-  { text: 'text-indigo-800 dark:text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-500/20' },
+  { text: 'text-neutral-800 dark:text-neutral-500', bg: 'bg-neutral-100 dark:bg-neutral-500/20' },
   { text: 'text-rose-800 dark:text-rose-500', bg: 'bg-rose-100 dark:bg-rose-500/20' },
 ];
 
@@ -518,11 +518,11 @@ export default function CalendarPage() {
       sky: "bg-sky-600",
       emerald: "bg-emerald-600",
       amber: "bg-amber-600",
-      indigo: "bg-indigo-600",
+      neutral: "bg-neutral-600",
       rose: "bg-rose-600"
     };
     
-    return colorMap[color] || "bg-gray-600";
+    return colorMap[color] || "bg-neutral-600";
   };
 
   // Get background color class based on appointment color
@@ -532,11 +532,11 @@ export default function CalendarPage() {
       sky: "bg-sky-100",
       emerald: "bg-emerald-100",
       amber: "bg-amber-100",
-      indigo: "bg-indigo-100",
+      neutral: "bg-neutral-100",
       rose: "bg-rose-100"
     };
     
-    return colorMap[color] || "bg-gray-100";
+    return colorMap[color] || "bg-neutral-100";
   };
 
   // Get text color class based on appointment color
@@ -546,11 +546,11 @@ export default function CalendarPage() {
       sky: "text-sky-800",
       emerald: "text-emerald-800",
       amber: "text-amber-800",
-      indigo: "text-indigo-800",
+      neutral: "text-neutral-800",
       rose: "text-rose-800"
     };
     
-    return colorMap[color] || "text-gray-800";
+    return colorMap[color] || "text-neutral-800";
   };
 
   // Get color combination for an appointment
@@ -697,7 +697,7 @@ export default function CalendarPage() {
         startTime: new Date(`${appointmentData.date}T${appointmentData.startTime}:00`), 
         endTime: new Date(`${appointmentData.date}T${appointmentData.endTime}:00`), 
         status: appointmentData.status ?? AppointmentStatus.PENDING,
-        color: appointmentData.color ?? 'indigo',
+        color: appointmentData.color ?? 'neutral',
         description: appointmentData.description ?? '',
         source: 'Manual', // Add the missing source field
         createdAt: new Date(),
@@ -983,11 +983,11 @@ return (
         <div className="flex-1 flex flex-col overflow-auto">
           {/* Mobile Back Button */} 
           {isMobileView && showDetailsOnMobile && selectedAppointment && (
-            <div className="p-2 border-b border-gray-200 dark:border-gray-800 sticky top-0 bg-background z-10">
+            <div className="p-2 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 bg-background z-10">
               <Button
                 variant="ghost"
                 onClick={() => setSelectedAppointment(null)} // Go back by clearing selection
-                className="flex items-center text-sm text-gray-600 dark:text-gray-300"
+                className="flex items-center text-sm text-neutral-600 dark:text-neutral-300"
               >
                 <RiArrowLeftLine className="mr-1 h-4 w-4" />
                 Back to Appointments
@@ -1053,13 +1053,13 @@ return (
                 {/* Empty state when NO calendars exist */}
                 {!isLoading && !error && calendars.length === 0 && (
                     <div className="flex h-full flex-col items-center justify-center text-center p-6">
-                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900">
-                            <Icons.calendar className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-900">
+                            <Icons.calendar className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
                         </div>
-                        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50">
+                        <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
                            No Calendars Found
                         </h1>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                             Create your first calendar using the <Icons.calendarPlus className="inline h-4 w-4 mx-0.5"/> button above to get started.
                         </p>
                         <Button variant="primary" className="mt-6" onClick={() => setCreateCalendarOpen(true)}>
@@ -1117,13 +1117,13 @@ return (
             <div className="space-y-4">
               <div>
                 <Label className="text-sm font-medium">Quick Setup</Label>
-                <p className="text-xs text-gray-500 mt-1">Configure the most important settings now</p>
+                <p className="text-xs text-neutral-500 mt-1">Configure the most important settings now</p>
               </div>
 
               {/* Working Hours */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">Start Time</Label>
+                  <Label className="text-xs text-neutral-500">Start Time</Label>
                   <Select 
                     value={newCalendarSettings.workingHoursStart || '09:00'}
                     onValueChange={(value) => setNewCalendarSettings(prev => ({...prev, workingHoursStart: value}))}
@@ -1139,7 +1139,7 @@ return (
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-gray-500">End Time</Label>
+                  <Label className="text-xs text-neutral-500">End Time</Label>
                   <Select 
                     value={newCalendarSettings.workingHoursEnd || '17:00'}
                     onValueChange={(value) => setNewCalendarSettings(prev => ({...prev, workingHoursEnd: value}))}
@@ -1157,29 +1157,29 @@ return (
               </div>
 
               {/* Weekend Availability */}
-              <div className="flex items-center justify-between py-2 px-3 border rounded-md">
-                <Label className="text-sm text-gray-700">Include weekends</Label>
+              <div className="flex items-center justify-between py-2 px-3 border rounded-xl">
+                <Label className="text-sm text-neutral-700">Include weekends</Label>
                 <div className="flex items-center gap-2">
-                  <Label className="text-xs text-gray-500">Sat</Label>
+                  <Label className="text-xs text-neutral-500">Sat</Label>
                   <input 
                     type="checkbox" 
                     checked={!!newCalendarSettings.includeSaturday}
                     onChange={(e) => setNewCalendarSettings(prev => ({...prev, includeSaturday: e.target.checked}))}
-                    className="h-3 w-3 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-3 w-3 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
-                  <Label className="text-xs text-gray-500 ml-2">Sun</Label>
+                  <Label className="text-xs text-neutral-500 ml-2">Sun</Label>
                   <input 
                     type="checkbox" 
                     checked={!!newCalendarSettings.includeSunday}
                     onChange={(e) => setNewCalendarSettings(prev => ({...prev, includeSunday: e.target.checked}))}
-                    className="h-3 w-3 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                    className="h-3 w-3 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                   />
                 </div>
               </div>
 
               {/* Default Duration */}
-              <div className="flex items-center justify-between py-2 px-3 border rounded-md">
-                <Label className="text-sm text-gray-700">Default appointment duration</Label>
+              <div className="flex items-center justify-between py-2 px-3 border rounded-xl">
+                <Label className="text-sm text-neutral-700">Default appointment duration</Label>
                 <Select 
                   value={newCalendarSettings.defaultDuration?.toString() || '30'}
                   onValueChange={(value) => setNewCalendarSettings(prev => ({...prev, defaultDuration: parseInt(value)}))}
@@ -1196,18 +1196,18 @@ return (
               </div>
 
               {/* Phone Requirement */}
-              <div className="flex items-center justify-between py-2 px-3 border rounded-md">
-                <Label className="text-sm text-gray-700">Require phone number for bookings</Label>
+              <div className="flex items-center justify-between py-2 px-3 border rounded-xl">
+                <Label className="text-sm text-neutral-700">Require phone number for bookings</Label>
                 <input 
                   type="checkbox" 
                   checked={!!newCalendarSettings.requirePhoneNumber}
                   onChange={(e) => setNewCalendarSettings(prev => ({...prev, requirePhoneNumber: e.target.checked}))}
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                  className="h-4 w-4 rounded border-neutral-300 text-neutral-600 focus:ring-neutral-600"
                 />
               </div>
             </div>
             
-            <div className="text-xs text-gray-500 bg-gray-50 dark:bg-gray-900 p-3 rounded-md">
+            <div className="text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-900 p-3 rounded-xl">
               💡 You can customize all settings including notifications, booking rules, and more after creating the calendar.
             </div>
           </div>

@@ -9,7 +9,7 @@ export function DashboardOverview({ selectedPeriod, onPeriodChange }: DashboardO
   return (
     <header>
       <div className="sm:flex sm:items-center sm:justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
           Overview
         </h3>
         <div className="mt-4 items-center sm:mt-0 sm:flex sm:space-x-2">

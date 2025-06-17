@@ -75,13 +75,13 @@ export default function Cta() {
               className={cx(
                 "relative p-8 shadow-md ring-1",
                 plan.mostPopular
-                  ? "scale-105 shadow-xl ring-indigo-500/30 dark:ring-indigo-400/30"
+                  ? "scale-105 shadow-xl ring-neutral-500/30 dark:ring-neutral-400/30"
                   : "ring-gray-200 dark:ring-gray-800",
                 "flex flex-col rounded-3xl",
               )}
             >
               {plan.mostPopular && (
-                <div className="absolute -top-4 left-0 right-0 mx-auto w-fit rounded-full bg-indigo-500 px-3 py-0.5 text-center text-sm font-semibold text-white dark:bg-indigo-600">
+                <div className="absolute -top-4 left-0 right-0 mx-auto w-fit rounded-full bg-neutral-500 px-3 py-0.5 text-center text-sm font-semibold text-white dark:bg-neutral-600">
                   Most popular
                 </div>
               )}
@@ -104,7 +104,7 @@ export default function Cta() {
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start">
                       <RiCheckLine
-                        className="mr-2 mt-0.5 size-4 shrink-0 text-indigo-600 dark:text-indigo-400"
+                        className="mr-2 mt-0.5 size-4 shrink-0 text-neutral-600 dark:text-neutral-400"
                         aria-hidden="true"
                       />
                       {feature}
@@ -118,8 +118,8 @@ export default function Cta() {
                 className={cx(
                   "mt-auto w-full",
                   plan.mostPopular
-                    ? "bg-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600"
-                    : "text-indigo-700 dark:text-indigo-400",
+                    ? "bg-neutral-600 text-white hover:bg-neutral-700 dark:bg-neutral-500 dark:hover:bg-neutral-600"
+                    : "text-neutral-700 dark:text-neutral-400",
                 )}
               >
                 <Link href="#">

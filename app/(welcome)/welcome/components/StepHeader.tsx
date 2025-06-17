@@ -54,10 +54,10 @@ export function StepHeader({
                 className={cn(
                   "group flex flex-col border-l-4 py-2 pl-4 md:border-l-0 md:border-t-4 md:pb-0 md:pl-0 md:pt-4",
                   {
-                    "cursor-pointer border-indigo-600 hover:border-indigo-800": canNavigate && (completedSteps.includes(step.id) || step.id === currentStep),
-                    "border-indigo-600": status === 'current',
+                    "cursor-pointer border-neutral-600 hover:border-neutral-800": canNavigate && (completedSteps.includes(step.id) || step.id === currentStep),
+                    "border-neutral-600": status === 'current',
                     "border-green-600": status === 'complete',
-                    "border-gray-200": status === 'upcoming' || status === 'incomplete',
+                    "border-neutral-200": status === 'upcoming' || status === 'incomplete',
                   }
                 )}
               >

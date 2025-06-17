@@ -48,15 +48,7 @@ export interface Source {
 }
 
 // Color combinations for source icons
-const colorCombinations = [
-  { text: 'text-fuchsia-800 dark:text-fuchsia-500', bg: 'bg-fuchsia-100 dark:bg-fuchsia-500/20' },
-  { text: 'text-indigo-800 dark:text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-500/20' },
-  { text: 'text-pink-800 dark:text-pink-500', bg: 'bg-pink-100 dark:bg-pink-500/20' },
-  { text: 'text-emerald-800 dark:text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-500/20' },
-  { text: 'text-orange-800 dark:text-orange-500', bg: 'bg-orange-100 dark:bg-orange-500/20' },
-  { text: 'text-indigo-800 dark:text-indigo-500', bg: 'bg-indigo-100 dark:bg-indigo-500/20' },
-  { text: 'text-yellow-800 dark:text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-500/20' },
-];
+// Remove colorCombinations - using simple neutral styling instead
 
 // Get initials from source name
 const getInitials = (name: string) => {
@@ -424,7 +416,7 @@ export function SourceSidebar() {
     <div className="flex flex-col h-full">
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
             My Sources
           </h2>
           <Button
@@ -443,62 +435,39 @@ export function SourceSidebar() {
       <div className="flex-1 overflow-auto px-4 pb-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-neutral-600"></div>
             <span className="ml-2 text-sm text-gray-500">Loading sources...</span>
           </div>
         ) : sources.length > 0 ? (
-          <div className="grid grid-cols-1 gap-3 mt-1">
-            {sources.map((source, index) => (
-              <Card 
+          <div className="grid grid-cols-1 gap-2 mt-1">
+            {sources.map((source) => (
+              <div 
                 key={source.id}
+                onClick={() => handleSourceClick(source.id)}
                 className={cn(
-                  "group transition-all duration-200",
-                  "hover:bg-gray-50 dark:hover:bg-gray-900",
+                  "group transition-all duration-200 cursor-pointer p-3 rounded-xl border relative",
+                  "hover:bg-neutral-50 dark:hover:bg-neutral-900",
                   "hover:shadow-sm",
-                  "hover:border-gray-300 dark:hover:border-gray-700",
+                  "bg-white dark:bg-black border-neutral-200 dark:border-neutral-800",
+                  "hover:border-neutral-300 dark:hover:border-neutral-700",
                   currentSourceId === source.id && [
-                    "border-indigo-500 dark:border-indigo-500",
-                    "bg-indigo-50/50 dark:bg-indigo-500/5",
-                    "ring-1 ring-indigo-500/20 dark:ring-indigo-500/20"
+                    "border-neutral-400 dark:border-white",
+                    "bg-neutral-50 dark:bg-neutral-900"
                   ]
                 )}
               >
-                <div className="relative px-3.5 py-2.5">
-                  <div className="flex items-center space-x-3">
-                    <span
-                      className={cn(
-                        colorCombinations[index % colorCombinations.length].bg,
-                        colorCombinations[index % colorCombinations.length].text,
-                        'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium',
-                        'transition-transform duration-200 group-hover:scale-[1.02]',
-                        currentSourceId === source.id && [
-                          "border-2 border-indigo-500 dark:border-indigo-500",
-                          "shadow-[0_0_0_4px_rgba(59,130,246,0.1)]"
-                        ]
-                      )}
-                      aria-hidden={true}
-                    >
-                      {getInitials(source.name)}
-                    </span>
-                    <div className="truncate min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className={cn(
-                          "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
-                          pathname.endsWith(source.id) && "text-indigo-600 dark:text-indigo-400"
-                        )}>
-                          <button 
-                            onClick={() => handleSourceClick(source.id)}
-                            className="focus:outline-none hover:no-underline no-underline text-left"
-                            type="button"
-                          >
-                            <span className="absolute inset-0" aria-hidden="true" />
-                            {source.name}
-                          </button>
-                        </p>
-                        
-                        {/* Status dot */}
-                        {sourceStatuses[source.id] && (
-                          <div className="ml-0.5 z-10">
+                <div className="flex items-center">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-medium">
+                    {getInitials(source.name)}
+                  </span>
+                  <div className="ml-3 w-full overflow-hidden">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center max-w-[70%]">
+                        <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                          {source.name}
+                        </div>
+                        <div className="ml-2 flex-shrink-0">
+                          {sourceStatuses[source.id] && (
                             <KnowledgeSourceBadge 
                               hasContent={sourceStatuses[source.id].hasContent}
                               isAssigned={sourceStatuses[source.id].isAssigned}
@@ -506,70 +475,68 @@ export function SourceSidebar() {
                               needsSaving={false}
                               compact={true}
                             />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline mt-0.5">
-                          ID: {source.id.slice(0, 12)}
-                        </p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="absolute right-2.5 top-2.5">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <RiMoreLine className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="min-w-56">
-                        <DropdownMenuLabel>Source Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        
-                        <DropdownMenuGroup>
-                          <DropdownMenuItem 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSourceToEdit(source);
-                              setEditSourceName(source.name);
-                              setEditSourceDescription(source.description || '');
-                            }}
-                          >
-                            <span className="flex items-center gap-x-2">
-                              <DropdownMenuIconWrapper>
-                                <RiEdit2Line className="size-4" />
-                              </DropdownMenuIconWrapper>
-                              <span>Edit</span>
-                            </span>
-                          </DropdownMenuItem>
-                          
-                          <DropdownMenuItem 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSourceToDelete(source);
-                            }}
-                            className="text-red-600 dark:text-red-400"
-                          >
-                            <span className="flex items-center gap-x-2">
-                              <DropdownMenuIconWrapper>
-                                <RiDeleteBinLine className="size-4 text-inherit" />
-                              </DropdownMenuIconWrapper>
-                              <span>Delete</span>
-                            </span>
-                          </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <p className="mt-1 truncate text-xs text-neutral-600 dark:text-neutral-400">
+                      ID: {source.id.slice(0, 12)}
+                    </p>
                   </div>
                 </div>
-              </Card>
+
+                <div className="absolute right-2 top-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <RiMoreLine className="h-3.5 w-3.5 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="min-w-56">
+                      <DropdownMenuLabel>Source Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSourceToEdit(source);
+                            setEditSourceName(source.name);
+                            setEditSourceDescription(source.description || '');
+                          }}
+                        >
+                          <span className="flex items-center gap-x-2">
+                            <DropdownMenuIconWrapper>
+                              <RiEdit2Line className="size-4" />
+                            </DropdownMenuIconWrapper>
+                            <span>Edit</span>
+                          </span>
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSourceToDelete(source);
+                          }}
+                          className="text-red-600 dark:text-red-400"
+                        >
+                          <span className="flex items-center gap-x-2">
+                            <DropdownMenuIconWrapper>
+                              <RiDeleteBinLine className="size-4 text-inherit" />
+                            </DropdownMenuIconWrapper>
+                            <span>Delete</span>
+                          </span>
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
@@ -684,7 +651,7 @@ export function SourceSidebar() {
           </DialogHeader>
           
           {sourceToDelete && (
-            <div className="mt-4 flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-md">
+            <div className="mt-4 flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
               <span
                 className={cn(
                   'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium',

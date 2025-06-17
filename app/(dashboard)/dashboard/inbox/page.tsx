@@ -301,10 +301,10 @@ export default function InboxPage() {
     <div className="flex h-screen overflow-hidden">
       {/* Left Sidebar: Conversations List */}
       {(!isMobileView || (isMobileView && !showConversationOnMobile)) && (
-        <div className={`${isMobileView ? 'w-full' : 'w-96'} border-r border-gray-200 dark:border-gray-800 flex flex-col`}>
+        <div className={`${isMobileView ? 'w-full' : 'w-96'} border-r border-neutral-200 dark:border-neutral-800 flex flex-col`}>
           <div className="p-4 pb-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+              <h2 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">
                 Inbox
               </h2>
               <div className="flex items-center space-x-2">
@@ -315,7 +315,7 @@ export default function InboxPage() {
                     fetchConversations();
                   }}
                 >
-                  <SelectTrigger className="p-2 border rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-50 w-30 flex-shrink-0">
+                  <SelectTrigger className="p-2 border rounded-xl text-sm bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-200 w-30 flex-shrink-0">
                     <SelectValue placeholder="Select Agent" />
                   </SelectTrigger>
                   <SelectContent>
@@ -369,11 +369,11 @@ export default function InboxPage() {
       {(!isMobileView || (isMobileView && showConversationOnMobile)) && (
         <div className="flex-1 overflow-auto">
           {isMobileView && showConversationOnMobile && (
-            <div className="border-b border-gray-200 dark:border-gray-800 p-2">
+            <div className="border-b border-neutral-200 dark:border-neutral-800 p-2">
               <Button
                 variant="ghost"
                 onClick={handleBackToList}
-                className="flex items-center text-gray-600 dark:text-gray-300"
+                className="flex items-center text-neutral-600 dark:text-neutral-300"
               >
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Back to conversations

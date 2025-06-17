@@ -502,7 +502,7 @@ export function PurchaseConfirmationDialog({
           {/* Confirmation state with existing payment method */}
           {purchaseState === "confirming" && selectedPaymentMethod && subscriptionInfo && (
             <div className="space-y-4">
-              <div className="p-4 rounded-md border border-border dark:border-gray-700 bg-background dark:bg-gray-800">
+              <div className="p-4 rounded-xl border border-border dark:border-gray-700 bg-background dark:bg-gray-800">
                 <h3 className="text-base font-medium text-foreground dark:text-gray-100 mb-4">Purchase Details</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
@@ -531,7 +531,7 @@ export function PurchaseConfirmationDialog({
               </div>
 
               {/* Payment method card display */}
-              <div className="p-4 rounded-md border border-border dark:border-gray-700 bg-background dark:bg-gray-800">
+              <div className="p-4 rounded-xl border border-border dark:border-gray-700 bg-background dark:bg-gray-800">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-base font-medium text-foreground dark:text-gray-100">Payment Method</h3>
                   <Button 
@@ -543,7 +543,7 @@ export function PurchaseConfirmationDialog({
                     Change
                   </Button>
                 </div>
-                <div className="flex items-center p-3 rounded-md bg-accent/50 dark:bg-gray-700">
+                <div className="flex items-center p-3 rounded-xl bg-accent/50 dark:bg-gray-700">
                   {selectedPaymentMethod && (
                     (selectedPaymentMethod.card?.brand || selectedPaymentMethod.brand) 
                       ? getCardBrandIcon((selectedPaymentMethod.card?.brand || selectedPaymentMethod.brand) as string)
@@ -569,7 +569,7 @@ export function PurchaseConfirmationDialog({
               </div>
 
               {/* Information notice */}
-              <div className="flex items-start p-3 rounded-md bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-700 dark:text-blue-300">
+              <div className="flex items-start p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-sm text-blue-700 dark:text-blue-300">
                 <Info className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="font-medium mb-1">How billing works:</p>
@@ -594,14 +594,14 @@ export function PurchaseConfirmationDialog({
               {/* Add divider before important information */}
               <Divider className="my-3" />
               
-              <div className="rounded-lg bg-indigo-50 dark:bg-indigo-900/20 p-3 border border-indigo-200 dark:border-indigo-800">
+              <div className="rounded-lg bg-neutral-50 dark:bg-neutral-900/20 p-3 border border-neutral-200 dark:border-neutral-800">
                 <div className="flex">
-                  <RiInformationLine className="h-5 w-5 text-indigo-400 flex-shrink-0" />
+                  <RiInformationLine className="h-5 w-5 text-neutral-400 flex-shrink-0" />
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                    <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
                       WhatsApp Configuration
                     </h3>
-                    <p className="mt-1 text-xs text-indigo-700 dark:text-indigo-300">
+                    <p className="mt-1 text-xs text-neutral-700 dark:text-neutral-300">
                       After purchase, you can configure this phone number to work with WhatsApp for messaging your customers. Enable the WhatsApp integration from the integrations page to get started.
                     </p>
                   </div>
@@ -633,7 +633,7 @@ export function PurchaseConfirmationDialog({
               <p className="mt-2 text-muted-foreground dark:text-gray-400">
                 Your new phone number {purchasedPhoneNumber || phoneNumber} is now active and ready to use.
               </p>
-              <div className="mt-4 p-3 rounded-md bg-gray-50 dark:bg-gray-800 text-sm">
+              <div className="mt-4 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 text-sm">
                 <p className="text-muted-foreground dark:text-gray-400">
                   The phone number has been added to your subscription and will appear on your next invoice.
                 </p>

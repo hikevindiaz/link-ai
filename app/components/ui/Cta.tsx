@@ -20,7 +20,7 @@ export default function Cta() {
                 <div className="flex size-full gap-2">
                   {Array.from({ length: 41 }, (_, idx2) => (
                     <div key={`inner-${idx}-${idx2}`}>
-                      <div className="size-5 rounded-md shadow shadow-indigo-500/20 ring-1 ring-black/5 dark:shadow-indigo-500/20 dark:ring-white/5"></div>
+                      <div className="size-5 rounded-xl shadow shadow-neutral-500/20 ring-1 ring-black/5 dark:shadow-neutral-500/20 dark:ring-white/5"></div>
                     </div>
                   ))}
                 </div>
@@ -45,7 +45,7 @@ export default function Cta() {
               </p>
             </div>
             <div className="mt-14 w-full rounded-[16px] bg-gray-300/5 p-1.5 ring-1 ring-black/[3%] backdrop-blur dark:bg-gray-900/10 dark:ring-white/[3%]">
-              <div className="rounded-xl bg-white p-4 shadow-lg shadow-indigo-500/10 ring-1 ring-black/5 dark:bg-gray-950 dark:shadow-indigo-500/10 dark:ring-white/5">
+              <div className="rounded-xl bg-white p-4 shadow-lg shadow-neutral-500/10 ring-1 ring-black/5 dark:bg-gray-950 dark:shadow-neutral-500/10 dark:ring-white/5">
                 <form
                   className="flex flex-col items-center gap-3 sm:flex-row"
                   onSubmit={(e) => e.preventDefault()}
@@ -77,7 +77,7 @@ export default function Cta() {
               Not sure where to start?{" "}
               <a
                 href="#"
-                className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-500 dark:hover:text-indigo-400"
+                className="font-semibold text-neutral-600 hover:text-neutral-500 dark:text-neutral-500 dark:hover:text-neutral-400"
               >
                 Talk to sales
               </a>

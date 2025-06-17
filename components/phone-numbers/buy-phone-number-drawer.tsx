@@ -283,7 +283,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
           <DrawerBody className="overflow-auto">
             {isCheckingSubscription || isLoadingCountries ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mb-4"></div>
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-neutral-600 mb-4"></div>
                 <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-2">
                   {isCheckingSubscription ? 'Verifying subscription' : 'Loading countries'}
                 </h3>
@@ -309,7 +309,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
                     <SelectContent>
                       {isLoadingCountries ? (
                         <div className="flex items-center justify-center py-4">
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mr-2"></div>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-neutral-600 mr-2"></div>
                           <span className="text-sm text-gray-500">Loading countries...</span>
                         </div>
                       ) : Array.isArray(countries) && countries.length > 0 ? (
@@ -361,14 +361,14 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
                 )}
                 
                 {selectedNumber && pricingBreakdown && (
-                  <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                    <h4 className="text-sm font-medium text-indigo-900 dark:text-indigo-100 mb-2">Pricing</h4>
+                  <div className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-900/20 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                    <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">Pricing</h4>
                     <div className="space-y-1 text-xs">
-                      <div className="flex justify-between font-medium text-indigo-900 dark:text-indigo-100">
+                      <div className="flex justify-between font-medium text-neutral-900 dark:text-neutral-100">
                         <span>Monthly cost:</span>
                         <span>${pricingBreakdown.total.toFixed(2)}/month</span>
                       </div>
-                      <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1">
+                      <p className="text-xs text-neutral-700 dark:text-neutral-300 mt-1">
                         Prorated charge today, then added to your monthly subscription.
                       </p>
                     </div>

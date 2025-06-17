@@ -160,8 +160,8 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                 className="space-y-6"
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Company Information</h2>
-                  <p className="text-gray-600 text-sm">
+                  <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50 mb-2">Company Information</h2>
+                  <p className="text-neutral-600 dark:text-neutral-400 text-sm">
                     Let's start with some basic information about your company.
                   </p>
                 </div>
@@ -171,7 +171,7 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                   name="companyName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-900">Company Name</FormLabel>
+                      <FormLabel className="text-neutral-900 dark:text-neutral-50">Company Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Acme Inc." {...field} className="h-12" />
                       </FormControl>
@@ -185,7 +185,7 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                   name="businessWebsite"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-900">Business Website (Optional)</FormLabel>
+                      <FormLabel className="text-neutral-900 dark:text-neutral-50">Business Website (Optional)</FormLabel>
                       <FormControl>
                         <Input placeholder="https://example.com" {...field} className="h-12" />
                       </FormControl>
@@ -206,8 +206,8 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                 className="space-y-6"
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Company Details</h2>
-                  <p className="text-gray-600 text-sm">
+                  <h2 className="text-xl font-semibold text-neutral-900 mb-2">Company Details</h2>
+                  <p className="text-neutral-600 text-sm">
                     Help us understand your company better.
                   </p>
                 </div>
@@ -217,7 +217,7 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                   name="companySize"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-900">Company Size</FormLabel>
+                      <FormLabel className="text-neutral-900">Company Size</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-12">
@@ -242,7 +242,7 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                   name="industryType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-900">Industry</FormLabel>
+                      <FormLabel className="text-neutral-900">Industry</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger className="h-12">
@@ -274,8 +274,8 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                 className="space-y-6"
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">What tasks do you want Link AI to perform?</h2>
-                  <p className="text-gray-600 text-sm">
+                  <h2 className="text-xl font-semibold text-neutral-900 mb-2">What tasks do you want Link AI to perform?</h2>
+                  <p className="text-neutral-600 text-sm">
                     Select all that apply. You can always add more later.
                   </p>
                 </div>
@@ -301,24 +301,24 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                               className={cn(
                                 "relative flex items-center gap-3 rounded-lg border p-4 cursor-pointer transition-all",
                                 isSelected
-                                  ? "border-indigo-500 bg-indigo-50"
-                                  : "border-gray-200 hover:border-gray-300"
+                                  ? "border-neutral-500 bg-neutral-50"
+                                  : "border-neutral-200 hover:border-neutral-300"
                               )}
                             >
                               <task.icon
                                 className={cn(
                                   "size-5 shrink-0",
-                                  isSelected ? "text-indigo-500" : "text-gray-400"
+                                  isSelected ? "text-neutral-500" : "text-neutral-400"
                                 )}
                               />
                               <span className={cn(
                                 "text-sm font-medium",
-                                isSelected ? "text-gray-900" : "text-gray-700"
+                                isSelected ? "text-neutral-900" : "text-neutral-700"
                               )}>
                                 {task.label}
                               </span>
                               {isSelected && (
-                                <RiCheckLine className="absolute right-3 top-4 size-5 text-indigo-500" />
+                                <RiCheckLine className="absolute right-3 top-4 size-5 text-neutral-500" />
                               )}
                             </div>
                           );
@@ -341,8 +341,8 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                 className="space-y-6"
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Where do you want to deploy Link AI?</h2>
-                  <p className="text-gray-600 text-sm">
+                  <h2 className="text-xl font-semibold text-neutral-900 mb-2">Where do you want to deploy Link AI?</h2>
+                  <p className="text-neutral-600 text-sm">
                     Choose the channels where your customers can interact with Link AI.
                   </p>
                 </div>
@@ -368,24 +368,24 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                               className={cn(
                                 "relative flex items-center gap-3 rounded-lg border p-4 cursor-pointer transition-all",
                                 isSelected
-                                  ? "border-indigo-500 bg-indigo-50"
-                                  : "border-gray-200 hover:border-gray-300"
+                                  ? "border-neutral-500 bg-neutral-50"
+                                  : "border-neutral-200 hover:border-neutral-300"
                               )}
                             >
                               <channel.icon
                                 className={cn(
                                   "size-5 shrink-0",
-                                  isSelected ? "text-indigo-500" : "text-gray-400"
+                                  isSelected ? "text-neutral-500" : "text-neutral-400"
                                 )}
                               />
                               <span className={cn(
                                 "text-sm font-medium",
-                                isSelected ? "text-gray-900" : "text-gray-700"
+                                isSelected ? "text-neutral-900" : "text-neutral-700"
                               )}>
                                 {channel.label}
                               </span>
                               {isSelected && (
-                                <RiCheckLine className="absolute right-3 top-4 size-5 text-indigo-500" />
+                                <RiCheckLine className="absolute right-3 top-4 size-5 text-neutral-500" />
                               )}
                             </div>
                           );

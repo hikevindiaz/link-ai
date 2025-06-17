@@ -106,7 +106,7 @@ export function CalendarMainView({
           >
             <Icons.chevronLeft className="h-4 w-4" />
           </Button>
-          <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-50 text-center w-40">
+          <h2 className="text-lg md:text-xl font-semibold text-neutral-900 dark:text-neutral-50 text-center w-40">
             {
               calendarView === 'day' ? currentDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) :
               calendarView === 'week' ? `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : // Simple week display
@@ -124,7 +124,7 @@ export function CalendarMainView({
         </div>
 
         {/* View Switcher */}
-        <div className="flex items-center rounded-md p-1 bg-gray-100 dark:bg-gray-800 gap-1">
+        <div className="flex items-center rounded-xl p-1 bg-neutral-100 dark:bg-neutral-800 gap-1">
           {(['day', 'week', 'month'] as const).map((view) => (
              <Button 
               key={view}
@@ -133,8 +133,8 @@ export function CalendarMainView({
               className={cn(
                 "px-3 py-1.5 text-xs font-medium capitalize transition-colors duration-200",
                 calendarView === view 
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-50"
+                  ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-50 shadow-sm"
+                  : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700/50 hover:text-neutral-900 dark:hover:text-neutral-50"
               )}
               onClick={() => onCalendarViewChange(view)}
             >
@@ -145,15 +145,15 @@ export function CalendarMainView({
       </div>
 
       {/* Calendar Grid Area */}
-      <Card className="border dark:border-gray-800 shadow-sm">
+      <Card className="px-0 py-0 border dark:border-neutral-800 shadow-sm">
         {/* Calendar Header - Days of Week (for Month/Week) */}
         {calendarView !== "day" && (
-          <div className="grid grid-cols-7 border-b dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+          <div className="grid grid-cols-7 border-b dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, index) => (
               <div
                 key={day}
                 className={cn(
-                  "py-2.5 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider",
+                  "py-2.5 text-center text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider",
                 )}
               >
                 {day}
@@ -164,11 +164,11 @@ export function CalendarMainView({
         
         {/* Day View Specific Header - Use flat properties */}
         {calendarView === "day" && (
-          <div className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 py-3 px-4">
+          <div className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 py-3 px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Icons.calendar className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Icons.calendar className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
+                <h3 className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   {currentDate.toLocaleDateString('en-US', { 
                     weekday: 'long', 
                     month: 'long', 
@@ -177,7 +177,7 @@ export function CalendarMainView({
                   })}
                 </h3>
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+              <div className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
                 {/* Use flat start/end times and format them */} 
                 {formatTimeString(calendarSettings.workingHoursStart)} - {formatTimeString(calendarSettings.workingHoursEnd)}
               </div>
@@ -196,15 +196,15 @@ export function CalendarMainView({
                 <div
                   key={index}
                   className={cn(
-                    "relative flex flex-col min-h-[110px] p-2 border-b border-r border-gray-200 dark:border-gray-800 transition-colors duration-150",
-                    day.isCurrentMonth ? "bg-white dark:bg-gray-950" : "bg-gray-50 dark:bg-gray-900/30", // Dim non-month days
-                    day.isCurrentMonth && "hover:bg-gray-50 dark:hover:bg-gray-900/70",
+                    "relative flex flex-col min-h-[110px] p-2 border-b border-r border-neutral-200 dark:border-neutral-800 transition-colors duration-150",
+                    day.isCurrentMonth ? "bg-white dark:bg-neutral-950" : "bg-neutral-50 dark:bg-neutral-900/30", // Dim non-month days
+                    day.isCurrentMonth && "hover:bg-neutral-50 dark:hover:bg-neutral-900/70",
                   )}
                 >
                   <span className={cn("text-xs font-medium",
-                      isToday && "flex items-center justify-center size-5 rounded-full bg-indigo-600 text-white",
-                      !isToday && day.isCurrentMonth && "text-gray-900 dark:text-gray-100",
-                      !isToday && !day.isCurrentMonth && "text-gray-400 dark:text-gray-500",
+                      isToday && "flex items-center justify-center size-5 rounded-full bg-neutral-600 text-white",
+                      !isToday && day.isCurrentMonth && "text-neutral-900 dark:text-neutral-100",
+                      !isToday && !day.isCurrentMonth && "text-neutral-400 dark:text-neutral-500",
                   )}>
                     {day.day}
                   </span>
@@ -229,7 +229,7 @@ export function CalendarMainView({
                       </button>
                     ))}
                     {dayAppointments.length > 3 && (
-                      <div className="text-[11px] text-gray-500 dark:text-gray-400 pl-1 mt-1">
+                      <div className="text-[11px] text-neutral-500 dark:text-neutral-400 pl-1 mt-1">
                         +{dayAppointments.length - 3} more
                       </div>
                     )}
@@ -249,11 +249,11 @@ export function CalendarMainView({
                    return (
                      <div 
                        key={dayInfo.date.toISOString()} 
-                       className="relative flex flex-col border-r dark:border-gray-800 min-h-[400px]"
+                       className="relative flex flex-col border-r dark:border-neutral-800 min-h-[400px]"
                      >
                         {/* Placeholder for week view content */}
-                       <div className="p-2 border-b dark:border-gray-800">
-                           <span className={cn("text-xs", dayInfo.isToday ? "font-bold text-indigo-600" : "text-gray-600 dark:text-gray-400")}>
+                       <div className="p-2 border-b dark:border-neutral-800">
+                           <span className={cn("text-xs", dayInfo.isToday ? "font-bold text-neutral-600" : "text-neutral-600 dark:text-neutral-400")}>
                                {dayInfo.dayName} {dayInfo.dayOfMonth}
                            </span>
                        </div>
@@ -283,10 +283,10 @@ export function CalendarMainView({
         {calendarView === "day" && (
           <div className="relative overflow-hidden">
               {/* Hour markers and grid lines */}
-              <div className="absolute left-0 top-0 bottom-0 w-14 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 z-10">
+              <div className="absolute left-0 top-0 bottom-0 w-14 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 z-10">
                   {generateHoursForDay().map((hour) => (
                     <div key={hour} className="h-16 flex items-start justify-center pt-1">
-                      <span className="text-[10px] text-gray-500 dark:text-gray-400">{formatHour(hour)}</span>
+                      <span className="text-[10px] text-neutral-500 dark:text-neutral-400">{formatHour(hour)}</span>
                     </div>
                   ))}
               </div>
@@ -295,8 +295,8 @@ export function CalendarMainView({
                   {generateHoursForDay().map((hour) => (
                     <React.Fragment key={`hour-slot-${hour}`}>
                       {/* Half-hour slots with grid lines */}
-                      <div className="h-8 border-b border-gray-100 dark:border-gray-800" /> 
-                      <div className="h-8 border-b border-gray-200 dark:border-gray-700" /> 
+                      <div className="h-8 border-b border-neutral-100 dark:border-neutral-800" /> 
+                      <div className="h-8 border-b border-neutral-200 dark:border-neutral-700" /> 
                     </React.Fragment>
                   ))}
   
@@ -321,7 +321,7 @@ export function CalendarMainView({
                       <div
                          key={appointment.id}
                          className={cn(
-                           "absolute left-1 right-1 p-1.5 rounded-md shadow-sm overflow-hidden cursor-pointer transition-all hover:opacity-90 hover:shadow-md z-20",
+                           "absolute left-1 right-1 p-1.5 rounded-xl shadow-sm overflow-hidden cursor-pointer transition-all hover:opacity-90 hover:shadow-md z-20",
                            getBgColorClass(appointment.color),
                            getTextColorClass(appointment.color)
                          )}

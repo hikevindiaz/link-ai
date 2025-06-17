@@ -32,13 +32,13 @@ const FileProgressItem: React.FC<FileProgressItemProps> = ({
   
   const getStatusIcon = () => {
     switch (fileStatus.status) {
-      case 'queued': return <Upload className="h-4 w-4 text-indigo-500" />;
-      case 'uploading': return <UploadCloud className="h-4 w-4 animate-pulse text-indigo-500" />;
-      case 'processing': return <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />;
+      case 'queued': return <Upload className="h-4 w-4 text-neutral-500" />;
+      case 'uploading': return <UploadCloud className="h-4 w-4 animate-pulse text-neutral-500" />;
+      case 'processing': return <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />;
       case 'training': return <RiBrainLine className="h-4 w-4 animate-pulse text-purple-500" />;
       case 'complete': return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'error': return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default: return <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />;
+      default: return <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />;
     }
   };
   
@@ -48,10 +48,10 @@ const FileProgressItem: React.FC<FileProgressItemProps> = ({
     : fileStatus.status === 'complete' 
       ? 'bg-green-500' 
       : fileStatus.status === 'uploading'
-        ? 'bg-indigo-500'
+        ? 'bg-neutral-500'
         : fileStatus.status === 'training'
           ? 'bg-purple-500'
-          : 'bg-indigo-500';
+          : 'bg-neutral-500';
   
   // Ensure minimum progress for visibility
   const displayProgress = fileStatus.progress < 5 && fileStatus.status !== 'error' && fileStatus.status !== 'queued' ? 5 : fileStatus.progress;

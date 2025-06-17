@@ -62,7 +62,7 @@ export default async function MessagesExportPage() {
                             chatbots.map((chatbot) => (
                                 chatbot.ChatbotMessagesExport.length > 0 && (
                                     <div key={chatbot.id}>
-                                        <div className="divide-y divide-border rounded-md border">
+                                        <div className="divide-y divide-border rounded-xl border">
                                             {
                                                 chatbot.ChatbotMessagesExport.map((messagesExport) => (
                                                     <ChatExportItem key={messagesExport.id} messagesExport={messagesExport} chatbotName={chatbot.name} />

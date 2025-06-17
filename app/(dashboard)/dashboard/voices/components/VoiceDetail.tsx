@@ -66,10 +66,10 @@ const VoiceDetail = ({
 
   return (
     <div className="p-6">
-      <header className="border-b border-gray-200 dark:border-gray-800 pb-4 mb-4">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 pb-4 mb-4">
         <div className="sm:flex sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
               {capitalizeVoiceName(voice.name)}
             </h3>
             <div className="flex flex-wrap gap-2 mt-2">
@@ -83,7 +83,7 @@ const VoiceDetail = ({
             {/* Voice Description */}
             {voice.description && (
               <div className="mt-3">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
                   <span className="font-medium">Description:</span> {voice.description}
                 </p>
               </div>
@@ -91,7 +91,7 @@ const VoiceDetail = ({
             
             {/* Base Voice Info */}
             <div className="mt-2">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 <span className="font-medium">Base Voice:</span> {capitalizeVoiceName(voice.openaiVoice)}
                 {voice.language && (
                   <span className="ml-2">
@@ -146,16 +146,16 @@ const VoiceDetail = ({
         </div>
       </header>
       <main>
-        <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-          <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+        <Card className="overflow-hidden p-0 bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-900">
+          <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-900 dark:bg-neutral-900">
             <div className="flex items-center gap-2">
-              <Icons.play className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <h4 className="text-md font-semibold text-gray-900 dark:text-gray-50">
+              <Icons.play className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <h4 className="text-md font-semibold text-neutral-900 dark:text-neutral-50">
                 Voice Preview
               </h4>
             </div>
           </div>
-          <div className="p-4 bg-white dark:bg-gray-900/50">
+          <div className="p-4 bg-white dark:bg-neutral-900/50">
             <div className="flex items-center space-x-4">
               <Input
                 type="text"
@@ -178,7 +178,7 @@ const VoiceDetail = ({
               </Button>
             </div>
             <div className="mt-3">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 This voice uses <strong>{capitalizeVoiceName(voice.openaiVoice)}</strong> as the base voice
                 {voice.description && ' with your custom personality description'}.
               </p>
@@ -190,8 +190,8 @@ const VoiceDetail = ({
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="p-4">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Base Voice</p>
-              <p className="text-lg font-semibold text-indigo-600 dark:text-indigo-400">
+              <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">Base Voice</p>
+              <p className="text-lg font-semibold text-neutral-600 dark:text-neutral-400">
                 {capitalizeVoiceName(voice.openaiVoice)}
               </p>
             </div>
@@ -199,7 +199,7 @@ const VoiceDetail = ({
           
           <Card className="p-4">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Status</p>
+              <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">Status</p>
               <p className="text-lg font-semibold text-green-600 dark:text-green-400">
                 {voice.isDefault ? 'Default' : 'Active'}
               </p>
@@ -208,8 +208,8 @@ const VoiceDetail = ({
           
           <Card className="p-4">
             <div className="text-center">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">Created</p>
-              <p className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+              <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">Created</p>
+              <p className="text-lg font-semibold text-neutral-600 dark:text-neutral-400">
                 {new Date(voice.addedOn).toLocaleDateString()}
               </p>
             </div>

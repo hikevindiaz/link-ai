@@ -69,11 +69,11 @@ const VoiceSidebar = ({
     const tags = [];
     
     if (voice.isDefault) {
-      tags.push({ key: 'default', value: 'Default', color: 'indigo' });
+      tags.push({ key: 'default', value: 'Default', color: 'neutral' });
     }
     
     if (voice.language) {
-      tags.push({ key: 'language', value: voice.language, color: 'gray' });
+      tags.push({ key: 'language', value: voice.language, color: 'neutral' });
     }
     
     // Show the base OpenAI voice
@@ -104,10 +104,10 @@ const VoiceSidebar = ({
   };
 
   return (
-    <div className={`flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 flex flex-col ${isMobileView ? 'w-full' : 'w-80'}`}>
+    <div className={`flex-shrink-0 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black flex flex-col ${isMobileView ? 'w-full' : 'w-80'}`}>
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">My Voices</h2>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">My Voices</h2>
           <Button
             variant="secondary"
             className="h-8 w-8 p-0"
@@ -119,17 +119,17 @@ const VoiceSidebar = ({
         </div>
       </div>
 
-      <div className="border-t border-gray-200 dark:border-gray-800 mt-4">
+      <div className="border-t border-neutral-200 dark:border-neutral-800 mt-4">
         <div className="flex-1 overflow-auto px-4 pt-4 pb-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
-              <span className="ml-2 text-sm text-gray-500">Loading voices...</span>
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
+              <span className="ml-2 text-sm text-neutral-500">Loading voices...</span>
             </div>
           ) : userVoices.length === 0 ? (
             <div className="flex h-full items-center justify-center py-8 text-center">
               <div className="flex flex-col items-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   No custom voices yet.
                 </p>
                 <Button
@@ -143,109 +143,88 @@ const VoiceSidebar = ({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3">
+            <div className="grid grid-cols-1 gap-2">
               {userVoices.map((voice) => {
                 const isSelected = voice.id === selectedVoiceId;
                 
                 return (
-                  <Card 
+                  <div 
                     key={voice.id}
+                    onClick={() => onVoiceSelect(voice)}
                     className={cn(
-                      "group transition-all duration-200",
-                      "hover:bg-gray-50 dark:hover:bg-gray-900",
+                      "group transition-all duration-200 cursor-pointer p-3 rounded-xl border relative",
+                      "hover:bg-neutral-50 dark:hover:bg-neutral-900",
                       "hover:shadow-sm",
-                      "hover:border-gray-300 dark:hover:border-gray-700",
+                      "bg-white dark:bg-black border-neutral-200 dark:border-neutral-800",
+                      "hover:border-neutral-300 dark:hover:border-neutral-700",
                       isSelected && [
-                        "border-indigo-500 dark:border-indigo-500",
-                        "bg-indigo-50/50 dark:bg-indigo-500/5",
-                        "ring-1 ring-indigo-500/20 dark:ring-indigo-500/20"
+                        "border-neutral-400 dark:border-white",
+                        "bg-neutral-50 dark:bg-neutral-900"
                       ]
                     )}
                   >
-                    <div className="relative px-3.5 py-2.5">
-                      <div className="flex items-center space-x-3">
-                        <span
-                          className={cn(
-                            'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium',
-                            'bg-indigo-100 dark:bg-indigo-500/20',
-                            'text-indigo-800 dark:text-indigo-500',
-                            'transition-transform duration-200 group-hover:scale-[1.02]',
-                            isSelected && [
-                              "border-2 border-indigo-500 dark:border-indigo-500",
-                              "shadow-[0_0_0_4px_rgba(59,130,246,0.1)]"
-                            ]
-                          )}
-                          aria-hidden={true}
-                        >
-                          <RiMicLine className="h-5 w-5" />
-                        </span>
-                        <div className="truncate min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className={cn(
-                              "truncate text-sm font-medium text-gray-900 dark:text-gray-50",
-                              isSelected && "text-indigo-600 dark:text-indigo-400"
-                            )}>
-                              <button 
-                                onClick={() => onVoiceSelect(voice)}
-                                className="focus:outline-none hover:no-underline no-underline"
-                                type="button"
-                              >
-                                <span className="absolute inset-0" aria-hidden="true" />
-                                {capitalizeVoiceName(voice.name)}
-                              </button>
-                            </p>
-                            <div className="ml-2">
+                    <div className="flex items-center">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-medium">
+                        <RiMicLine className="h-4 w-4" />
+                      </span>
+                      <div className="ml-3 w-full overflow-hidden">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center max-w-[70%]">
+                            <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                              {capitalizeVoiceName(voice.name)}
+                            </div>
+                            <div className="ml-2 flex-shrink-0">
                               {voice.isDefault && (
                                 <Badge 
-                                  className="text-[10px] px-1 py-0.5 bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300"
+                                  className="text-[10px] px-1 py-0.5 bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200"
                                 >
                                   Default
                                 </Badge>
                               )}
                             </div>
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-500 pointer-events-none no-underline mt-0.5">
-                            {capitalizeVoiceName(voice.openaiVoice)} {voice.language ? `• ${voice.language}` : ''}
-                          </p>
                         </div>
-                      </div>
-
-                      <div className="absolute right-2.5 top-2.5">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="h-6 w-6 p-0"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <RiMoreFill className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="min-w-56">
-                            <DropdownMenuLabel>Voice Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuGroup>
-                              <DropdownMenuItem 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(voice.id);
-                                }}
-                                className="text-red-600 dark:text-red-400"
-                              >
-                                <span className="flex items-center gap-x-2">
-                                  <DropdownMenuIconWrapper>
-                                    <RiDeleteBinLine className="size-4 text-inherit" />
-                                  </DropdownMenuIconWrapper>
-                                  <span>Delete</span>
-                                </span>
-                              </DropdownMenuItem>
-                            </DropdownMenuGroup>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <p className="mt-1 truncate text-xs text-neutral-600 dark:text-neutral-400">
+                          {capitalizeVoiceName(voice.openaiVoice)} {voice.language ? `• ${voice.language}` : ''}
+                        </p>
                       </div>
                     </div>
-                  </Card>
+
+                    <div className="absolute right-2 top-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-6 w-6 p-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <RiMoreFill className="h-3.5 w-3.5 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="min-w-56">
+                          <DropdownMenuLabel>Voice Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(voice.id);
+                              }}
+                              className="text-red-600 dark:text-red-400"
+                            >
+                              <span className="flex items-center gap-x-2">
+                                <DropdownMenuIconWrapper>
+                                  <RiDeleteBinLine className="size-4 text-inherit" />
+                                </DropdownMenuIconWrapper>
+                                <span>Delete</span>
+                              </span>
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
                 );
               })}
             </div>

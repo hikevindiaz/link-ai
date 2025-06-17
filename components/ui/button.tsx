@@ -1,4 +1,4 @@
-// Tremor Button [v0.2.0]
+// Tremor Button [v0.2.0] - Updated to match Design System
 
 "use client"
 
@@ -12,86 +12,80 @@ import { cn, focusRing } from "@/lib/utils"
 const buttonVariants = tv({
   base: [
     // base
-    "relative inline-flex items-center justify-center whitespace-nowrap rounded-md border px-3 py-2 text-center text-sm font-medium shadow-sm transition-all duration-100 ease-in-out",
+    "relative inline-flex items-center justify-center whitespace-nowrap rounded-lg border px-0 py-0 text-center text-base font-normal shadow-sm transition-all duration-200 ease-in-out",
     // disabled
-    "disabled:pointer-events-none disabled:shadow-none",
+    "disabled:pointer-events-none disabled:shadow-none disabled:opacity-50",
     // focus
     focusRing,
   ],
   variants: {
     variant: {
       primary: [
-        // border
+        // Design System: Primary button styling
         "border-transparent",
-        // text color
         "text-white dark:text-black",
-        // background color
         "bg-black dark:bg-white",
-        // hover color
-        "hover:bg-gray-800 dark:hover:bg-gray-300",
+        "hover:bg-neutral-800 dark:hover:bg-neutral-200",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
         // disabled
-        "disabled:bg-gray-600 disabled:text-white",
-        "disabled:dark:bg-gray-600 disabled:dark:text-gray-400",
+        "disabled:bg-neutral-600 disabled:text-white",
+        "disabled:dark:bg-neutral-600 disabled:dark:text-neutral-400",
       ],
       secondary: [
-        // border
-        "border-gray-300 dark:border-gray-800",
-        // text color
-        "text-gray-900 dark:text-gray-50",
-        // background color
-        "bg-white dark:bg-gray-950",
-        //hover color
-        "hover:bg-gray-50 dark:hover:bg-gray-900/60",
+        // Design System: Secondary button styling
+        "border-neutral-200 dark:border-neutral-800",
+        "text-neutral-700 dark:text-neutral-200",
+        "bg-white dark:bg-black",
+        "hover:bg-neutral-50 dark:hover:bg-neutral-900",
         // disabled
-        "disabled:text-gray-400",
-        "disabled:dark:text-gray-600",
+        "disabled:text-neutral-400",
+        "disabled:dark:text-neutral-600",
       ],
       light: [
         // base
         "shadow-none",
-        // border
         "border-transparent",
-        // text color
-        "text-gray-900 dark:text-gray-50",
-        // background color
-        "bg-gray-200 dark:bg-gray-900",
-        // hover color
-        "hover:bg-gray-300/70 dark:hover:bg-gray-800/80",
+        "text-neutral-700 dark:text-neutral-200",
+        "bg-neutral-100 dark:bg-neutral-800",
+        "hover:bg-neutral-200 dark:hover:bg-neutral-700",
         // disabled
-        "disabled:bg-gray-100 disabled:text-gray-400",
-        "disabled:dark:bg-gray-800 disabled:dark:text-gray-600",
+        "disabled:bg-neutral-100 disabled:text-neutral-400",
+        "disabled:dark:bg-neutral-800 disabled:dark:text-neutral-600",
       ],
       ghost: [
         // base
         "shadow-none",
-        // border
         "border-transparent",
-        // text color
-        "text-gray-900 dark:text-gray-50",
-        // hover color
-        "bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800/80",
+        "text-neutral-700 dark:text-neutral-200",
+        "bg-transparent hover:bg-neutral-100 dark:hover:bg-neutral-800",
         // disabled
-        "disabled:text-gray-400",
-        "disabled:dark:text-gray-600",
+        "disabled:text-neutral-400",
+        "disabled:dark:text-neutral-600",
       ],
       destructive: [
-        // text color
         "text-white",
-        // border
         "border-transparent",
-        // background color
         "bg-red-600 dark:bg-red-700",
-        // hover color
         "hover:bg-red-700 dark:hover:bg-red-600",
         // disabled
         "disabled:bg-red-300 disabled:text-white",
         "disabled:dark:bg-red-950 disabled:dark:text-red-400",
       ],
+      // Design System: neutral accent variant
+      accent: [
+        "border-transparent",
+        "text-white dark:text-white",
+        "bg-neutral-600 dark:bg-neutral-600",
+        "hover:bg-neutral-700 dark:hover:bg-neutral-500",
+        // disabled
+        "disabled:bg-neutral-300 disabled:text-white",
+        "disabled:dark:bg-neutral-900 disabled:dark:text-neutral-400",
+      ],
     },
     size: {
       default: "h-10 px-4 py-2",
-      sm: "h-9 rounded-md px-3",
-      lg: "h-11 rounded-md px-8",
+      sm: "h-9 rounded-xl px-3 text-sm",
+      lg: "h-12 rounded-lg px-8 text-lg",
       icon: "h-10 w-10",
     },
   },

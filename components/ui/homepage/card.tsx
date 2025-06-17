@@ -1,4 +1,4 @@
-// Tremor Card [v0.0.2]
+// Tremor Card [v0.0.2] - Updated to match Design System
 
 import React from "react"
 import { Slot } from "@radix-ui/react-slot"
@@ -16,12 +16,10 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <Component
         ref={forwardedRef}
         className={cn(
-          // base
-          "relative w-full rounded-lg border p-6 text-left shadow-sm",
-          // background color
-          "bg-white dark:bg-[#090E1A]",
-          // border color
-          "border-gray-200 dark:border-gray-900",
+          // Design System: Standard card styling
+          "relative w-full bg-card-light dark:bg-card-dark p-8 md:p-14 rounded-3xl shadow-sm border-0",
+          // Text colors per design system
+          "text-black dark:text-white",
           className,
         )}
         tremor-id="tremor-raw"

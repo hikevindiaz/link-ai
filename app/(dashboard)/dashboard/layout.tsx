@@ -1,59 +1,39 @@
 "use client";
 
-import { AppSidebar } from "@/components/ui/navigation/AppSidebar";
+import { MinimalAppSidebar } from "@/components/ui/navigation/MinimalAppSidebar";
 import { Toaster } from "@/components/Toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  // Handle initial render and sidebar state
+  // Handle initial render
   useEffect(() => {
     setIsMounted(true);
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setSidebarCollapsed(true);
-      } else if (window.innerWidth > 1280) {
-        setSidebarCollapsed(false);
-      }
-    };
-    
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
   }, []);
 
   if (!isMounted) return null;
 
-  const handleSidebarToggle = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-white dark:bg-gray-950">
+      <div className="min-h-screen bg-white dark:bg-black">
         <Toaster />
-        <AppSidebar collapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
-        <main 
-          className={cn(
-            "transition-all duration-300",
-            "flex flex-col h-screen",
-            sidebarCollapsed ? "ml-[70px]" : "ml-[260px]"
-          )}
-        >
-          <div className="flex-1">
-            {children}
+        <div className="flex h-screen w-full flex-col overflow-hidden bg-white md:flex-row dark:bg-black">
+          <MinimalAppSidebar open={open} setOpen={setOpen} />
+          <div className="flex flex-1 overflow-hidden">
+            <div className="w-full flex-1 rounded-tl-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-black overflow-y-auto">
+              <div className="h-full">
+                {children}
+              </div>
+            </div>
           </div>
-        </main>
+        </div>
       </div>
     </TooltipProvider>
   );

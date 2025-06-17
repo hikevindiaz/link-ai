@@ -109,8 +109,8 @@ export function NotificationSettings({
     <div className="space-y-4">
       <Card className="p-4">
         <div className="flex items-start space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/20">
-            <RiPhoneLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-900/20">
+            <RiPhoneLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
@@ -169,8 +169,8 @@ export function NotificationSettings({
               <Card key={status} className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${template.enabled ? 'bg-indigo-100 dark:bg-indigo-900/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                      <StatusIcon className={`h-5 w-5 ${template.enabled ? statusInfo?.color || 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${template.enabled ? 'bg-neutral-100 dark:bg-neutral-900/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                      <StatusIcon className={`h-5 w-5 ${template.enabled ? statusInfo?.color || 'text-neutral-600 dark:text-neutral-400' : 'text-gray-500 dark:text-gray-400'}`} />
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">
@@ -226,7 +226,7 @@ export function NotificationSettings({
                     />
                   </div>
                   
-                  <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-md">
+                  <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-xl">
                     <h5 className="text-xs font-medium mb-2">Preview</h5>
                     <p className="text-sm text-gray-700 dark:text-gray-300">
                       {editingTemplate.message

@@ -234,7 +234,7 @@ export const createAppointment = async (
         startTime: startTime,
         endTime: endTime,
         status: initialStatus,
-        color: input.color ?? 'indigo',
+        color: input.color ?? 'neutral',
     };
 
     console.log("[createAppointment] Data before Prisma create:", JSON.stringify(dataToCreate, null, 2));

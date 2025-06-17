@@ -55,7 +55,7 @@ const ExistingFilesList: React.FC<ExistingFilesListProps> = ({
       ) : (
         <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
           <div className="text-center">
-            <RiFileLine className="h-12 w-12 text-indigo-300 dark:text-indigo-700 mx-auto mb-3" />
+            <RiFileLine className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
               No files added yet
             </h3>

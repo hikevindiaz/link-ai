@@ -476,7 +476,7 @@ export default function FileUploadTab({ source }: FileUploadTabProps) {
         <div className="space-y-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Book className="h-5 w-5 text-indigo-500" />
+              <Book className="h-5 w-5 text-neutral-500" />
               <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
                 Add Files to Knowledge Base
               </h2>

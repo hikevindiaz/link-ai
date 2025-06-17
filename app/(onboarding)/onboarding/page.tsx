@@ -310,7 +310,7 @@ export default function OnboardingPage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-4 border-neutral-600 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -319,7 +319,7 @@ export default function OnboardingPage() {
   const progressPercentage = (currentGlobalStep / TOTAL_SUBSTEPS) * 100;
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white relative">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white dark:bg-black relative">
       {/* Logout button - absolute positioned */}
       <Button
         variant="secondary"
@@ -347,19 +347,19 @@ export default function OnboardingPage() {
               className="object-contain"
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900 dark:text-neutral-50">
             Welcome to Link AI
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
             Let's get your account set up in just a few steps
           </p>
         </div>
 
         {/* Simple Progress Bar */}
         <div className="mb-8 max-w-md mx-auto">
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-neutral-200 dark:bg-neutral-800 rounded-full h-2">
             <motion.div
-              className="bg-indigo-500 h-2 rounded-full"
+              className="bg-neutral-600 dark:bg-neutral-400 h-2 rounded-full"
               initial={{ width: "12.5%" }}
               animate={{ width: `${progressPercentage}%` }}
               transition={{ duration: 0.3, ease: "easeOut" }}
@@ -410,10 +410,10 @@ export default function OnboardingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
               >
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-50 mb-4">
                   Success!
                 </h2>
-                <p className="text-lg text-gray-600">
+                <p className="text-lg text-neutral-600 dark:text-neutral-400">
                   Your account has been created successfully
                 </p>
               </motion.div>
@@ -425,9 +425,9 @@ export default function OnboardingPage() {
                 transition={{ delay: 0.6 }}
                 className="space-y-4"
               >
-                <div className="w-full max-w-md mx-auto bg-gray-200 rounded-full h-2">
+                <div className="w-full max-w-md mx-auto bg-neutral-200 dark:bg-neutral-800 rounded-full h-2">
                   <motion.div
-                    className="bg-indigo-500 h-2 rounded-full"
+                    className="bg-neutral-600 dark:bg-neutral-400 h-2 rounded-full"
                     initial={{ width: "0%" }}
                     animate={{ width: `${((successStep + 1) / successMessages.length) * 100}%` }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
@@ -440,7 +440,7 @@ export default function OnboardingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.5 }}
-                  className="text-gray-700 font-medium"
+                  className="text-neutral-700 dark:text-neutral-300 font-medium"
                 >
                   {successMessages[successStep]}
                 </motion.p>
@@ -451,7 +451,7 @@ export default function OnboardingPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
-                className="text-sm text-gray-500 space-y-2"
+                className="text-sm text-neutral-500 dark:text-neutral-500 space-y-2"
               >
                 <p>✓ 14-day free trial activated</p>
                 <p>✓ Account settings configured</p>
@@ -507,10 +507,10 @@ export default function OnboardingPage() {
                   className="space-y-6"
                 >
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                    <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50 mb-2">
                       Choose Your Plan
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-neutral-600 dark:text-neutral-400">
                       All plans include a 14-day free trial.
                     </p>
                   </div>
@@ -522,31 +522,31 @@ export default function OnboardingPage() {
                         key={plan.id}
                         className={`relative rounded-lg border-2 p-6 cursor-pointer transition-all ${
                           formData.billing.selectedPlan === plan.id
-                            ? 'border-indigo-500 bg-indigo-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-neutral-400 bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-900'
+                            : 'border-neutral-200 hover:border-neutral-300 dark:border-neutral-700 dark:hover:border-neutral-600'
                         }`}
                         onClick={() => handlePlanSelect(plan.id)}
                       >
                         {plan.recommended && (
                           <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <span className="bg-indigo-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                            <span className="bg-neutral-900 dark:bg-neutral-100 text-white dark:text-black px-3 py-1 rounded-full text-xs font-medium">
                               Recommended
                             </span>
                           </div>
                         )}
                         
-                        <h3 className="font-semibold text-gray-900">
+                        <h3 className="font-semibold text-neutral-900 dark:text-neutral-50">
                           {plan.name}
                         </h3>
-                        <p className="text-2xl font-bold text-gray-900 mt-2">
+                        <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-50 mt-2">
                           {plan.price}
                         </p>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
                           {plan.description}
                         </p>
                         <ul className="mt-4 space-y-2">
                           {plan.features.map((feature, index) => (
-                            <li key={index} className="text-sm text-gray-600">
+                            <li key={index} className="text-sm text-neutral-600 dark:text-neutral-400">
                               ✓ {feature}
                             </li>
                           ))}
@@ -571,7 +571,7 @@ export default function OnboardingPage() {
                         href="https://www.getlinkai.com/pricing"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-indigo-600 hover:underline"
+                        className="text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 underline underline-offset-4"
                       >
                         View detailed pricing
                       </a>
@@ -590,9 +590,9 @@ export default function OnboardingPage() {
         </div>
 
         {/* Help Text */}
-        <p className="text-center text-sm text-gray-500 mt-8">
+        <p className="text-center text-sm text-neutral-500 dark:text-neutral-500 mt-8">
           Need help? Contact{' '}
-          <a href="mailto:support@getlinkai.com" className="text-indigo-600 hover:underline">
+          <a href="mailto:support@getlinkai.com" className="text-neutral-900 dark:text-neutral-100 hover:text-neutral-700 dark:hover:text-neutral-300 underline underline-offset-4">
             support@getlinkai.com
           </a>
         </p>

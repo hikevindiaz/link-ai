@@ -22,7 +22,7 @@ export const CustomTooltip = ({ payload, active }: TooltipProps) => {
   const percentageDiff = calculatePercentageDiff()
 
   return (
-    <div className="flex w-56 items-start justify-between rounded-md border border-gray-200 bg-white p-2 text-sm shadow-md dark:border-gray-800 dark:bg-gray-950">
+    <div className="flex w-56 items-start justify-between rounded-xl border border-gray-200 bg-white p-2 text-sm shadow-md dark:border-gray-800 dark:bg-gray-950">
       <div className="space-y-2">
         {payload.map((category, index) => (
           <div key={index} className="flex space-x-2.5">
@@ -73,7 +73,7 @@ export const CustomTooltip2 = ({
   const categoriesToShow = ["Quotes", "Total deal size"]
 
   return (
-    <div className="w-56 rounded-md border border-gray-200 bg-white text-sm shadow-md dark:border-gray-800 dark:bg-gray-950">
+    <div className="w-56 rounded-xl border border-gray-200 bg-white text-sm shadow-md dark:border-gray-800 dark:bg-gray-950">
       <ul role="list" className="grid grid-cols-2 gap-x-4 p-2">
         {categoriesToShow.map((category, index) => (
           <li key={index} className="flex space-x-2.5">
@@ -131,7 +131,7 @@ export const CustomTooltip3 = ({ payload, active }: TooltipProps) => {
   const cappedValue = Math.min(Math.max(percentageDiff, -100), 100)
 
   return (
-    <div className="w-56 rounded-md border border-gray-200 bg-white text-sm shadow-md dark:border-gray-800 dark:bg-gray-950">
+    <div className="w-56 rounded-xl border border-gray-200 bg-white text-sm shadow-md dark:border-gray-800 dark:bg-gray-950">
       <ul role="list" className="grid grid-cols-2 gap-x-4 p-2">
         {payload.map((category, index) => (
           <li key={index} className="flex space-x-2.5">
@@ -211,7 +211,7 @@ export const CustomTooltip4 = ({ payload, active }: TooltipProps) => {
   const peerDifference = calculateDiff()
 
   return (
-    <div className="w-56 rounded-md border border-gray-200 bg-white text-sm shadow-md dark:border-gray-800 dark:bg-gray-950">
+    <div className="w-56 rounded-xl border border-gray-200 bg-white text-sm shadow-md dark:border-gray-800 dark:bg-gray-950">
       <ul role="list" className="grid grid-cols-2 gap-x-4 p-2">
         <li className="flex space-x-2.5">
           <span

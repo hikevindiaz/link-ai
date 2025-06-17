@@ -336,7 +336,7 @@ export function LogoUpload({
               </p>
             )}
             {isLoading && (
-              <p className="text-xs text-indigo-500 dark:text-indigo-400 animate-pulse">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 animate-pulse">
                 Uploading...
               </p>
             )}
@@ -347,7 +347,7 @@ export function LogoUpload({
                 <button
                   type="button"
                   onClick={openFileDialog}
-                  className="p-1 text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="p-1 text-neutral-500 hover:text-neutral-600 dark:text-neutral-400 dark:hover:text-neutral-300 rounded-full focus:outline-none focus:ring-2 focus:ring-neutral-500"
                   aria-label="Change logo"
                 >
                   <RiUpload2Line className="h-4 w-4" />
@@ -355,7 +355,7 @@ export function LogoUpload({
                 <button
                   type="button"
                   onClick={handleRemoveFile}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-neutral-500"
                   aria-label="Remove logo"
                 >
                   <RiCloseLine className="h-4 w-4" />
@@ -384,7 +384,7 @@ export function LogoUpload({
           onDrop={handleDrop}
           className={cn(
             "flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 px-4 py-6 text-center",
-            dragActive ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "",
+            dragActive ? "border-neutral-500 bg-neutral-50 dark:bg-neutral-900/20" : "",
             isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-gray-400 dark:hover:border-gray-500"
           )}
           onClick={(e) => {
@@ -402,8 +402,8 @@ export function LogoUpload({
             <label
               htmlFor="logo-upload-input"
               className={cn(
-                "relative font-medium text-indigo-600 dark:text-indigo-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 dark:focus-within:ring-offset-gray-900",
-                isLoading ? "cursor-not-allowed" : "cursor-pointer hover:text-indigo-500 dark:hover:text-indigo-300"
+                "relative font-medium text-neutral-600 dark:text-neutral-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-neutral-500 focus-within:ring-offset-2 dark:focus-within:ring-offset-gray-900",
+                isLoading ? "cursor-not-allowed" : "cursor-pointer hover:text-neutral-500 dark:hover:text-neutral-300"
               )}
             >
               <span>Choose file</span>

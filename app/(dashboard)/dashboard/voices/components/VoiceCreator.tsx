@@ -407,11 +407,11 @@ const VoiceCreator = ({ onBack, onVoiceCreated, onVoiceUpdated, isMobileView, vo
 
   return (
     <div className="p-6">
-      <header className="border-b border-gray-200 dark:border-gray-800 pb-4 mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 pb-4 mb-6">
+        <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
           {isEditing ? 'Edit Voice' : 'Create Custom Voice'}
         </h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
           {isEditing 
             ? 'Modify your voice settings and personality'
             : 'Combine OpenAI voices with custom descriptions to create unique voice personalities'
@@ -422,14 +422,14 @@ const VoiceCreator = ({ onBack, onVoiceCreated, onVoiceUpdated, isMobileView, vo
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Voice Configuration */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-4">
             Voice Configuration
           </h2>
           
           <div className="space-y-4">
             {/* Voice Name */}
             <div>
-              <Label htmlFor="voice-name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Label htmlFor="voice-name" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 Voice Name *
               </Label>
               <Input
@@ -444,7 +444,7 @@ const VoiceCreator = ({ onBack, onVoiceCreated, onVoiceUpdated, isMobileView, vo
 
             {/* OpenAI Voice Selection */}
             <div>
-              <Label htmlFor="openai-voice" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Label htmlFor="openai-voice" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 Base Voice *
               </Label>
               <Select 
@@ -459,7 +459,7 @@ const VoiceCreator = ({ onBack, onVoiceCreated, onVoiceUpdated, isMobileView, vo
                     <SelectItem key={voice.id} value={voice.id}>
                       <div className="flex flex-col items-start text-left w-full">
                         <span className="font-medium">{voice.name}</span>
-                        <span className="text-xs text-gray-500">{voice.description}</span>
+                        <span className="text-xs text-neutral-500">{voice.description}</span>
                       </div>
                     </SelectItem>
                   ))}
@@ -470,7 +470,7 @@ const VoiceCreator = ({ onBack, onVoiceCreated, onVoiceUpdated, isMobileView, vo
             {/* Voice Template Selection */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Voice Templates (Optional)
                 </Label>
                 <Button
@@ -493,26 +493,26 @@ const VoiceCreator = ({ onBack, onVoiceCreated, onVoiceUpdated, isMobileView, vo
                       onClick={() => handleTemplateSelect(isSelected ? '' : template.id)}
                       className={cn(
                         "p-3 rounded-lg border text-left transition-all duration-200",
-                        "hover:border-indigo-300 hover:shadow-sm",
+                        "hover:border-neutral-300 hover:shadow-sm",
                         isSelected 
-                          ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-500/20" 
-                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                          ? "border-neutral-500 bg-neutral-50 dark:bg-neutral-500/10 ring-1 ring-neutral-500/20" 
+                          : "border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800"
                       )}
                     >
                       <div className="space-y-1">
                         <h4 className={cn(
                           "font-medium text-sm",
                           isSelected 
-                            ? "text-indigo-900 dark:text-indigo-100" 
-                            : "text-gray-900 dark:text-gray-100"
+                            ? "text-neutral-900 dark:text-neutral-100" 
+                            : "text-neutral-900 dark:text-neutral-100"
                         )}>
                           {template.name}
                         </h4>
                         <p className={cn(
                           "text-xs line-clamp-2",
                           isSelected 
-                            ? "text-indigo-700 dark:text-indigo-300" 
-                            : "text-gray-500 dark:text-gray-400"
+                            ? "text-neutral-700 dark:text-neutral-300" 
+                            : "text-neutral-500 dark:text-neutral-400"
                         )}>
                           {template.preview}
                         </p>
@@ -521,7 +521,7 @@ const VoiceCreator = ({ onBack, onVoiceCreated, onVoiceUpdated, isMobileView, vo
                   );
                 })}
               </div>
-              <p className="text-xs text-gray-500 mt-2">
+              <p className="text-xs text-neutral-500 mt-2">
                 Select a template to auto-fill your voice description, or leave blank to create from scratch
               </p>
             </div>
@@ -529,7 +529,7 @@ const VoiceCreator = ({ onBack, onVoiceCreated, onVoiceUpdated, isMobileView, vo
             {/* Voice Description */}
             <div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="description" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Label htmlFor="description" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Voice Description
                 </Label>
                 <Button
@@ -558,14 +558,14 @@ Features: [Unique characteristics and personality traits]`}
                 className="mt-1"
                 rows={6}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-neutral-500 mt-1">
                 Follow the template format above for consistent voice descriptions
               </p>
             </div>
 
             {/* Language Selection */}
             <div>
-              <Label htmlFor="language" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Label htmlFor="language" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 Primary Language
               </Label>
               <Select 
@@ -585,7 +585,7 @@ Features: [Unique characteristics and personality traits]`}
                 </SelectContent>
               </Select>
               {selectedLanguage && (
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-neutral-500 mt-1">
                   Voice will be optimized for {selectedLanguage.name}
                 </p>
               )}
@@ -594,10 +594,10 @@ Features: [Unique characteristics and personality traits]`}
             {/* Set as Default */}
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="is-default" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Label htmlFor="is-default" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Set as Default Voice
                 </Label>
-                <p className="text-xs text-gray-500">Use this voice as your default for new agents</p>
+                <p className="text-xs text-neutral-500">Use this voice as your default for new agents</p>
               </div>
               <Switch
                 id="is-default"
@@ -610,14 +610,14 @@ Features: [Unique characteristics and personality traits]`}
 
         {/* Voice Testing */}
         <Card className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-4">
             Test Your Voice
           </h2>
           
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between">
-                <Label htmlFor="test-text" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Label htmlFor="test-text" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Test Text
                 </Label>
                 <Button
@@ -675,7 +675,7 @@ Features: [Unique characteristics and personality traits]`}
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
+      <div className="flex items-center justify-between mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-800">
         <Button
           variant="ghost"
           onClick={onBack}

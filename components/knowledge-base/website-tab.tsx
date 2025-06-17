@@ -824,12 +824,12 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
     return (
       <div className="flex justify-between items-center text-sm">
         <div className="flex items-center gap-1.5">
-          <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
-          <span className="font-medium text-indigo-600 dark:text-indigo-400">
+          <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />
+          <span className="font-medium text-neutral-600 dark:text-neutral-400">
             {getStatusText()}
           </span>
         </div>
-        <Badge variant="secondary" className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+        <Badge variant="secondary" className="bg-neutral-50 dark:bg-neutral-950 text-neutral-600 dark:text-neutral-400">
           {website.progress}%
         </Badge>
       </div>
@@ -856,7 +856,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
             <div className="space-y-8">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Globe className="h-5 w-5 text-indigo-500" />
+                  <Globe className="h-5 w-5 text-neutral-500" />
                   <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
                     Add Website Content
                   </h2>
@@ -882,32 +882,40 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <div className="flex space-x-2">
-                  <Input
-                    id="websiteUrl"
-                    name="websiteUrl"
-                    placeholder="https://example.com"
-                    value={liveSearchUrl}
-                    onChange={(e) => setLiveSearchUrl(e.target.value)}
-                    disabled={isSubmitting}
-                    className="flex-1"
-                  />
-                  <Button onClick={handleAddLiveSearchUrl} disabled={isSubmitting} className="whitespace-nowrap bg-black hover:bg-gray-800 text-white">
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Adding...
-                      </>
-                    ) : (
-                      <>
-                        <RiAddLine className="mr-1 h-4 w-4" />
-                        Add URL
-                      </>
-                    )}
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex space-x-2">
+                    <Input
+                      id="websiteUrl"
+                      name="websiteUrl"
+                      placeholder="https://example.com"
+                      value={liveSearchUrl}
+                      onChange={(e) => setLiveSearchUrl(e.target.value)}
+                      disabled={isSubmitting}
+                      className="flex-1"
+                      maxLength={500}
+                    />
+                    <Button onClick={handleAddLiveSearchUrl} disabled={isSubmitting} className="whitespace-nowrap bg-black hover:bg-gray-800 text-white">
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding...
+                        </>
+                      ) : (
+                        <>
+                          <RiAddLine className="mr-1 h-4 w-4" />
+                          Add URL
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex justify-end">
+                    <span className="text-xs text-neutral-500">
+                      {liveSearchUrl.length}/500
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="mt-2">
+                <div className="mt-2 space-y-2">
                   <Input
                     id="websiteInstructions"
                     name="websiteInstructions"
@@ -916,13 +924,19 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                     onChange={(e) => setLiveSearchInstructions(e.target.value)}
                     disabled={isSubmitting}
                     className="w-full"
+                    maxLength={200}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Optional. Provide instructions for when your Agent should search this specific URL.
-                  </p>
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs text-muted-foreground">
+                      Optional. Provide instructions for when your Agent should search this specific URL.
+                    </p>
+                    <span className="text-xs text-neutral-500">
+                      {liveSearchInstructions.length}/200
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-md border border-blue-100 dark:border-blue-900">
+                <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-xl border border-blue-100 dark:border-blue-900">
                   <div className="flex items-start gap-2">
                     <RiInformationLine className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
                     <div className="text-sm text-blue-700 dark:text-blue-300">
@@ -989,7 +1003,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                 ) : (
                   <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
                     <div className="text-center">
-                      <RiGlobalLine className="h-12 w-12 text-indigo-300 dark:text-indigo-700 mx-auto mb-3" />
+                      <RiGlobalLine className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
                       <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                         No URLs added yet
                       </h3>
@@ -1009,7 +1023,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
             <div className="space-y-8">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Globe className="h-5 w-5 text-indigo-500" />
+                  <Globe className="h-5 w-5 text-neutral-500" />
                   <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
                     Add Website Content
                   </h2>
@@ -1019,9 +1033,9 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                 </p>
               </div>
               
-              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-md border border-gray-200 dark:border-gray-800">
+              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
                 <div className="flex items-start gap-2">
-                  <RiInformationLine className="h-5 w-5 text-indigo-500 mt-0.5 flex-shrink-0" />
+                  <RiInformationLine className="h-5 w-5 text-neutral-500 mt-0.5 flex-shrink-0" />
                   <div className="text-sm text-gray-700 dark:text-gray-300">
                     <p className="font-medium mb-1">About Website Crawling</p>
                     <ul className="list-disc list-inside space-y-1 pl-1">
@@ -1050,33 +1064,41 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <div className="flex space-x-2">
-                  <Input
-                    id="crawlerUrl"
-                    name="crawlerUrl"
-                    placeholder="https://example.com"
-                    value={crawlerUrl}
-                    onChange={(e) => setCrawlerUrl(e.target.value)}
-                    disabled={isCrawling}
-                    className="flex-1"
-                  />
-                  <Button 
-                    onClick={handleStartCrawl} 
-                    disabled={isCrawling}
-                    className="whitespace-nowrap bg-black hover:bg-gray-800 text-white"
-                  >
-                    {isCrawling ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Crawling...
-                      </>
-                    ) : (
-                      <>
-                        <Globe className="mr-1 h-4 w-4" />
-                        Crawl Site
-                      </>
-                    )}
-                  </Button>
+                <div className="space-y-2">
+                  <div className="flex space-x-2">
+                    <Input
+                      id="crawlerUrl"
+                      name="crawlerUrl"
+                      placeholder="https://example.com"
+                      value={crawlerUrl}
+                      onChange={(e) => setCrawlerUrl(e.target.value)}
+                      disabled={isCrawling}
+                      className="flex-1"
+                      maxLength={500}
+                    />
+                    <Button 
+                      onClick={handleStartCrawl} 
+                      disabled={isCrawling}
+                      className="whitespace-nowrap bg-black hover:bg-gray-800 text-white"
+                    >
+                      {isCrawling ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Crawling...
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="mr-1 h-4 w-4" />
+                          Crawl Site
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <div className="flex justify-end">
+                    <span className="text-xs text-neutral-500">
+                      {crawlerUrl.length}/500
+                    </span>
+                  </div>
                 </div>
                 
                 {crawlingProgress > 0 && (
@@ -1129,7 +1151,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                 ) : (
                   <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
                     <div className="text-center">
-                      <RiGlobalLine className="h-12 w-12 text-indigo-300 dark:text-indigo-700 mx-auto mb-3" />
+                      <RiGlobalLine className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
                       <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                         No crawled website files
                       </h3>
@@ -1154,7 +1176,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
               Are you sure you want to delete this website? This will remove it from your knowledge source.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-md overflow-hidden text-ellipsis">
+          <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden text-ellipsis">
             {websiteToDelete?.url}
           </div>
           
@@ -1193,7 +1215,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
               Are you sure you want to delete this crawled content? This will remove it from your knowledge base and vector store. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-md">
+          <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-gray-500" />
@@ -1214,8 +1236,8 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
             <div className="mt-3 space-y-3 pb-4">
               <div className="flex justify-between items-center text-sm">
                 <div className="flex items-center gap-1.5">
-                  <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
-                  <span className="font-medium text-indigo-600 dark:text-indigo-400">
+                  <Loader2 className="h-4 w-4 animate-spin text-neutral-500" />
+                  <span className="font-medium text-neutral-600 dark:text-neutral-400">
                     {deleteProgress < 25 
                       ? "Starting content deletion process..." 
                       : deleteProgress < 50
@@ -1225,13 +1247,13 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                           : "Finalizing cleanup operations..."}
                   </span>
                 </div>
-                <Badge variant="secondary" className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                <Badge variant="secondary" className="bg-neutral-50 dark:bg-neutral-950 text-neutral-600 dark:text-neutral-400">
                   {deleteProgress}%
                 </Badge>
               </div>
               <Progress 
                 value={deleteProgress} 
-                className="h-2 bg-indigo-100 text-indigo-600"
+                className="h-2 bg-neutral-100 text-neutral-600"
               />
             </div>
           )}

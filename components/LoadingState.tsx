@@ -19,7 +19,7 @@ export function LoadingState({
 
   return (
     <div className={`flex items-center justify-center py-8 ${className}`}>
-      <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600"></div>
+      <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-neutral-600"></div>
       <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">{text}</span>
     </div>
   );

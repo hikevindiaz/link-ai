@@ -69,7 +69,7 @@ const RadioGroupItem = React.forwardRef<
           // background color
           "bg-white dark:bg-gray-950",
           // checked
-          "group-data-[state=checked]:border-0 group-data-[state=checked]:border-transparent group-data-[state=checked]:bg-indigo-500",
+          "group-data-[state=checked]:border-0 group-data-[state=checked]:border-transparent group-data-[state=checked]:bg-neutral-500",
           // disabled
           "group-data-[disabled]:border",
           "group-data-[disabled]:border-gray-300 group-data-[disabled]:bg-gray-100 group-data-[disabled]:text-gray-400",

@@ -85,7 +85,7 @@ export default async function FilePage() {
                     <CrawlerCreateButton variant={"outline"} />
                 </div>
                 {filesWithCrawler.length ?
-                    <div className="divide-y divide-border rounded-md border">
+                    <div className="divide-y divide-border rounded-xl border">
                         {
                             filesWithCrawler.map((file) => (
                                 <FileItem file={file} key={file.id} />

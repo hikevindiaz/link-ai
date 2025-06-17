@@ -146,7 +146,7 @@ export function StreamingVoiceUI({
       {userTranscript && (
         <div className="mt-4 max-w-md w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-800">
           <p className="text-sm text-gray-700 dark:text-gray-300">
-            <span className="font-medium text-indigo-600 dark:text-indigo-400">You: </span>
+            <span className="font-medium text-neutral-600 dark:text-neutral-400">You: </span>
             {userTranscript}
           </p>
         </div>
@@ -156,7 +156,7 @@ export function StreamingVoiceUI({
       {partialResponse && (
         <div className="mt-2 max-w-md w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-800">
           <p className="text-sm text-gray-700 dark:text-gray-300">
-            <span className="font-medium text-indigo-600 dark:text-indigo-400">AI: </span>
+            <span className="font-medium text-neutral-600 dark:text-neutral-400">AI: </span>
             {partialResponse}
           </p>
         </div>

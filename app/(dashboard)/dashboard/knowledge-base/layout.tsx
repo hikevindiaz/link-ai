@@ -340,7 +340,7 @@ export default function KnowledgeBaseLayout({
           {/* Sidebar - Conditionally Rendered */} 
           {(!isMobileView || (isMobileView && !showDetailsOnMobile)) && (
             <div className={cn(
-              "border-r border-gray-200 dark:border-gray-800 flex-shrink-0", 
+              "border-r border-neutral-200 dark:border-neutral-800 flex-shrink-0", 
               isMobileView ? "w-full" : "w-80"
             )}>
               <SourceSidebar />
@@ -352,11 +352,11 @@ export default function KnowledgeBaseLayout({
             <main className="flex-1 overflow-auto relative">
               {/* Mobile Back Button */} 
               {isMobileView && showDetailsOnMobile && (
-                <div className="border-b border-gray-200 dark:border-gray-800 p-2 sticky top-0 bg-background z-10">
+                <div className="border-b border-neutral-200 dark:border-neutral-800 p-2 sticky top-0 bg-background z-10">
                   <Button
                     variant="ghost"
                     onClick={() => setShowDetailsOnMobile(false)}
-                    className="flex items-center text-gray-600 dark:text-gray-300"
+                    className="flex items-center text-neutral-600 dark:text-neutral-300"
                   >
                     <RiArrowLeftLine className="mr-1 h-4 w-4" />
                     Back to sources

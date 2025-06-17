@@ -63,7 +63,7 @@ export function FileOperations({ file }: FileOperationsProps) {
     return (
         <>
             <DropdownMenu>
-                <DropdownMenuTrigger className="flex h-8 w-8 items-center justify-center rounded-md border transition-colors hover:bg-muted">
+                <DropdownMenuTrigger className="flex h-8 w-8 items-center justify-center rounded-xl border transition-colors hover:bg-muted">
                     <Icons.ellipsis className="h-4 w-4" />
                     <span className="sr-only">Download</span>
                 </DropdownMenuTrigger>

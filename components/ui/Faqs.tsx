@@ -54,7 +54,7 @@ export function Faqs() {
             hesitate to get in touch with our{" "}
             <a
               href="#"
-              className="font-medium text-indigo-600 hover:text-indigo-300 dark:text-indigo-400"
+              className="font-medium text-neutral-600 hover:text-neutral-300 dark:text-neutral-400"
             >
               customer support
             </a>{" "}

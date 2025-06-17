@@ -7,7 +7,7 @@ function Event({ event, timestamp }) {
   const isClient = event.event_id && !event.event_id.startsWith("event_");
 
   return (
-    <div className="flex flex-col gap-2 p-2 rounded-md bg-gray-50">
+    <div className="flex flex-col gap-2 p-2 rounded-xl bg-gray-50">
       <div
         className="flex items-center gap-2 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -23,7 +23,7 @@ function Event({ event, timestamp }) {
         </div>
       </div>
       <div
-        className={`text-gray-500 bg-gray-200 p-2 rounded-md overflow-x-auto ${
+        className={`text-gray-500 bg-gray-200 p-2 rounded-xl overflow-x-auto ${
           isExpanded ? "block" : "hidden"
         }`}
       >

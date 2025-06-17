@@ -6,7 +6,7 @@ import { tv, type VariantProps } from "tailwind-variants"
 import { cn } from "@/lib/utils"
 
 const calloutVariants = tv({
-  base: "flex flex-col overflow-hidden rounded-md p-4 text-sm",
+  base: "flex flex-col overflow-hidden rounded-xl p-4 text-sm",
   variants: {
     variant: {
       default: [

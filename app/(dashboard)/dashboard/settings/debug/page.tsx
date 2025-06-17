@@ -198,7 +198,7 @@ export default function DebugSettings() {
             <CardTitle>Current Configuration</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="p-4 bg-muted rounded-md overflow-auto max-h-60">
+            <pre className="p-4 bg-muted rounded-xl overflow-auto max-h-60">
               {JSON.stringify({verbosity, enabledModules}, null, 2)}
             </pre>
           </CardContent>

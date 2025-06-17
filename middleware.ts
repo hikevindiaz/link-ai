@@ -80,7 +80,12 @@ export async function middleware(req: NextRequest) {
        pathname.startsWith("/api/knowledge-sources") ||
        pathname.startsWith("/api/files/upload") ||
        pathname.startsWith("/api/document") ||
-       pathname.startsWith("/api/chat"))) {
+       pathname.startsWith("/api/chat") ||
+       pathname.startsWith("/api/voice-chat") ||
+       pathname.startsWith("/api/voice-stream") ||
+       pathname.startsWith("/api/voice-credentials") ||
+       pathname.startsWith("/api/openai/tts") ||
+       pathname.startsWith("/api/elevenlabs/"))) {
     return NextResponse.next();
   }
 

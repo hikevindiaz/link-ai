@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
 import type { Agent } from "@/types/agent"
 import { toast } from "sonner"
-import { RiMoreFill, RiMessage2Line, RiUserLine, RiErrorWarningLine, RiDeleteBinLine } from "@remixicon/react"
+import { RiMoreFill, RiMessage2Line, RiUserLine, RiErrorWarningLine, RiDeleteBinLine, RiDraftLine, RiCheckboxCircleLine } from "@remixicon/react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,28 @@ interface AgentHeaderProps {
   showActions?: boolean;
 }
 
+// Agent Status Badge Component
+function AgentStatusBadge({ agent }: { agent: Agent }) {
+  const hasPrompt = agent.prompt && agent.prompt.trim().length > 0;
+  const baseClasses = "flex items-center gap-1 px-3 py-1 font-medium";
+  
+  if (hasPrompt) {
+    return (
+      <Badge variant="secondary" className={`${baseClasses} bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400`}>
+        <RiCheckboxCircleLine className="h-3.5 w-3.5" />
+        <span>Active</span>
+      </Badge>
+    );
+  }
+  
+  return (
+    <Badge variant="secondary" className={`${baseClasses} bg-neutral-100 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400`}>
+      <RiDraftLine className="h-3.5 w-3.5" />
+      <span>Draft</span>
+    </Badge>
+  );
+}
+
 export function AgentHeader({ agent, onChatClick, onDeleteClick, showActions = true }: AgentHeaderProps) {
   const copyToClipboard = (text: string, type: string) => {
     navigator.clipboard.writeText(text)
@@ -42,7 +64,7 @@ export function AgentHeader({ agent, onChatClick, onDeleteClick, showActions = t
               <TooltipTrigger asChild>
                 <button
                   onClick={() => copyToClipboard(agent.name, "Name")}
-                  className="text-2xl font-semibold tracking-tight dark:text-white hover:text-gray-600 dark:hover:text-gray-300"
+                  className="text-2xl font-semibold tracking-tight dark:text-white hover:text-neutral-600 dark:hover:text-neutral-300"
                 >
                   {agent.name}
                 </button>
@@ -50,13 +72,7 @@ export function AgentHeader({ agent, onChatClick, onDeleteClick, showActions = t
               <TooltipContent>Click to copy name</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <div className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
-            agent.status === 'live' 
-              ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-              : 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'
-          }`}>
-            {agent.status === 'live' ? 'Live' : 'Draft'}
-          </div>
+          <AgentStatusBadge agent={agent} />
         </div>
         <div className="flex items-center gap-1">
           <TooltipProvider>
@@ -64,7 +80,7 @@ export function AgentHeader({ agent, onChatClick, onDeleteClick, showActions = t
               <TooltipTrigger asChild>
                 <button
                   onClick={() => copyToClipboard(agent.id, "ID")}
-                  className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="text-sm text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
                 >
                   ID: {agent.id}
                 </button>
@@ -80,7 +96,7 @@ export function AgentHeader({ agent, onChatClick, onDeleteClick, showActions = t
             variant="secondary"
             size="sm"
             onClick={onChatClick}
-            className="border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800 dark:hover:border-gray-700 dark:text-gray-100"
+            className="border-neutral-200 bg-white hover:bg-neutral-50 hover:border-neutral-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:bg-neutral-800 dark:hover:border-neutral-700 dark:text-neutral-100"
           >
             Talk to your agent
           </Button>
@@ -92,7 +108,7 @@ export function AgentHeader({ agent, onChatClick, onDeleteClick, showActions = t
                 size="sm"
                 className="h-6 w-6 p-0"
               >
-                <RiMoreFill className="h-3.5 w-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" />
+                <RiMoreFill className="h-3.5 w-3.5 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">

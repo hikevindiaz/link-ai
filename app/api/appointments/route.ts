@@ -7,6 +7,7 @@ import { sendAppointmentSMS } from '@/lib/calendar-sms';
 // We need a way to get the ACTUAL user ID server-side
 // import { getCurrentUserId } from '@/lib/auth'; 
 import type { AppointmentInput } from "@/lib/api/appointments"; // Import input type
+import { NotificationTriggers } from '@/lib/services/notificationService';
 
 // GET /api/appointments
 export async function GET(request: Request) {
@@ -123,6 +124,15 @@ export async function POST(request: Request) {
         // Don't fail the creation if SMS fails - just log the error
       }
     }
+
+    // 🔔 CREATE NOTIFICATION - This is the key part!
+    await NotificationTriggers.onAppointmentCreated({
+      id: newAppointment.id,
+      customerName: newAppointment.clientName,
+      date: new Date(newAppointment.startTime).toLocaleDateString(),
+      time: new Date(newAppointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      businessOwnerId: userId
+    });
 
     return NextResponse.json(newAppointment, { status: 201 }); // 201 Created
 

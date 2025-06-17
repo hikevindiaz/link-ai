@@ -79,7 +79,7 @@ export function EditAppointmentDialog({
         date: formatDateForInput(appointment.startTime), // Format from Date object
         startTime: formatTimeForInput(appointment.startTime), // Format from Date object
         endTime: formatTimeForInput(appointment.endTime), // Format from Date object
-        color: appointment.color ?? 'indigo',
+        color: appointment.color ?? 'neutral',
         status: appointment.status ?? AppointmentStatus.PENDING,
       });
       setError(null);
@@ -193,7 +193,7 @@ export function EditAppointmentDialog({
             </Label>
             <textarea
               id="edit-description"
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-[80px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               value={formData.description ?? ""}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Meeting description"
@@ -252,7 +252,7 @@ export function EditAppointmentDialog({
               Color
             </Label>
             <Select
-              value={formData.color ?? "indigo"}
+              value={formData.color ?? "neutral"}
               onValueChange={(value) => handleInputChange('color', value)}
               disabled={isSubmitting}
             >
@@ -265,7 +265,7 @@ export function EditAppointmentDialog({
                  <SelectItem value="sky">Sky</SelectItem>
                  <SelectItem value="emerald">Emerald</SelectItem>
                  <SelectItem value="amber">Amber</SelectItem>
-                 <SelectItem value="indigo">Indigo</SelectItem>
+                 <SelectItem value="neutral">neutral</SelectItem>
                  <SelectItem value="rose">Rose</SelectItem>
               </SelectContent>
             </Select>

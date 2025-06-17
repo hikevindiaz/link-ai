@@ -13,10 +13,10 @@ const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, description, actio
   return (
     <div className="flex h-full items-center justify-center p-8">
       <Card className="sm:mx-auto sm:max-w-lg">
-        <div className="flex h-52 items-center justify-center rounded-md border border-dashed border-gray-300 p-4 dark:border-gray-800">
+        <div className="flex h-52 items-center justify-center rounded-xl border border-dashed border-gray-300 p-4 dark:border-gray-800">
           <div className="text-center">
             <div className="mb-4 flex items-center justify-center">
-              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-500">
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-500/20 text-neutral-800 dark:text-neutral-500">
                 {React.cloneElement(icon as React.ReactElement, { className: "h-5 w-5" })}
               </span>
             </div>

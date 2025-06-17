@@ -293,8 +293,8 @@ export function ChatThread({ conversation }: { conversation: Conversation }) {
         {isLoadingThread ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex flex-col items-center">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-indigo-600 mb-2"></div>
-              <span className="text-sm text-gray-500">Loading conversation...</span>
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600 mb-2"></div>
+              <span className="text-sm text-neutral-600 dark:text-neutral-400">Loading conversation...</span>
             </div>
           </div>
         ) : (
@@ -330,7 +330,7 @@ export function ChatThread({ conversation }: { conversation: Conversation }) {
             ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No messages in this conversation.</p>
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">No messages in this conversation.</p>
                 </div>
               </div>
             )}

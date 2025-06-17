@@ -32,7 +32,7 @@ const defaultNewAppointmentState: AppointmentInput = {
   startTime: "09:00",
   endTime: "10:00",
   status: AppointmentStatus.PENDING,
-  color: "indigo",
+  color: "neutral",
   calendarId: null,
 };
 
@@ -93,7 +93,7 @@ export function CreateAppointmentDialog({
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/70 overflow-y-auto">
       <div className="min-h-screen py-8 px-4 flex items-center justify-center">
-        <div className="bg-white dark:bg-[#090E1A] rounded-md border border-gray-200 dark:border-gray-900 shadow-lg w-full max-w-[500px] p-6">
+        <div className="bg-white dark:bg-[#090E1A] rounded-xl border border-gray-200 dark:border-gray-900 shadow-lg w-full max-w-[500px] p-6">
           <div className="pb-6">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Create New Appointment</h2>
             <p className="text-gray-500 dark:text-gray-500">Add a new appointment to your calendar.</p>
@@ -168,7 +168,7 @@ export function CreateAppointmentDialog({
               </label>
               <textarea
                 id="description"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[80px] w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={newAppointment.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Meeting description"
@@ -183,7 +183,7 @@ export function CreateAppointmentDialog({
               <input
                 id="date"
                 type="date"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={newAppointment.date}
                 onChange={(e) => handleInputChange('date', e.target.value)}
                 disabled={isSubmitting}
@@ -198,7 +198,7 @@ export function CreateAppointmentDialog({
                 <input
                   id="startTime"
                   type="time"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={newAppointment.startTime}
                   onChange={(e) => handleInputChange('startTime', e.target.value)}
                   disabled={isSubmitting}
@@ -212,7 +212,7 @@ export function CreateAppointmentDialog({
                 <input
                   id="endTime"
                   type="time"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={newAppointment.endTime}
                   onChange={(e) => handleInputChange('endTime', e.target.value)}
                   disabled={isSubmitting}
@@ -237,7 +237,7 @@ export function CreateAppointmentDialog({
                   <SelectItem value="sky">Sky</SelectItem>
                   <SelectItem value="emerald">Emerald</SelectItem>
                   <SelectItem value="amber">Amber</SelectItem>
-                  <SelectItem value="indigo">Indigo</SelectItem>
+                  <SelectItem value="neutral">neutral</SelectItem>
                   <SelectItem value="rose">Rose</SelectItem>
                 </SelectContent>
               </Select>

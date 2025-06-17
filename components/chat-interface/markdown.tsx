@@ -101,7 +101,7 @@ const components: Partial<Components> = {
         alt={alt || "Markdown image content"}
         width={width}
         height={height}
-        className="rounded-md my-2 max-w-xs h-auto object-contain block"
+        className="rounded-xl my-2 max-w-xs h-auto object-contain block"
         {...props}
       />
     );

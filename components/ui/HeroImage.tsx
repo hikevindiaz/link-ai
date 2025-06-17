@@ -13,7 +13,7 @@ export default function HeroImage() {
             alt="A preview of the Database web app"
             width={2400}
             height={1600}
-            className="rounded-xl shadow-2xl dark:shadow-indigo-600/10"
+            className="rounded-xl shadow-2xl dark:shadow-neutral-600/10"
           />
         </div>
       </div>

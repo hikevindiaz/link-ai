@@ -67,7 +67,7 @@ function CodeSnippet({ code }: { code: string }) {
               "transition-all duration-200",
               "hover:bg-gray-100 dark:hover:bg-gray-800",
               "border-gray-200 dark:border-gray-800",
-              "focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-500"
+              "focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-500"
             )}
           >
             <div className="relative">
@@ -317,7 +317,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
           <AccordionItem
             key={option.title}
             value={option.title}
-            className="rounded-md border !border-gray-300 px-4 !shadow-sm dark:border-gray-800"
+            className="rounded-xl border !border-gray-300 px-4 !shadow-sm dark:border-gray-800"
           >
             <AccordionTrigger>
               <div className="flex items-center space-x-2">
@@ -514,7 +514,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
                             <div className="text-center">
                               <RiFileLine className="mx-auto h-12 w-12 text-gray-400" />
                               <div className="mt-4 flex text-sm leading-6 text-gray-500">
-                                <label className="relative cursor-pointer rounded-md font-semibold text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-600">
+                                <label className="relative cursor-pointer rounded-xl font-semibold text-neutral-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-neutral-600 focus-within:ring-offset-2 hover:text-neutral-600">
                                   <span>Upload a file</span>
                                   <input 
                                     ref={inputFileRef}

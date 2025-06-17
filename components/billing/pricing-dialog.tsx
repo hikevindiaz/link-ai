@@ -315,7 +315,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
           <div className="py-6">
             {/* Header Section */}
             <section className="text-center mb-12">
-              <div className="w-fit mx-auto rounded-lg px-3 py-1 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400 mb-4">
+              <div className="w-fit mx-auto rounded-lg px-3 py-1 bg-neutral-50 text-neutral-700 dark:bg-neutral-900/20 dark:text-neutral-400 mb-4">
                 <span className="text-sm font-medium">Transparent Pricing</span>
               </div>
               <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-50 mb-4">
@@ -360,7 +360,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                     <div key={plan.id} className="relative">
                       {plan.isRecommended && (
                         <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                          <span className="bg-indigo-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                          <span className="bg-neutral-500 text-white px-4 py-1 rounded-full text-sm font-medium">
                             Most Popular
                           </span>
                         </div>
@@ -368,7 +368,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                       
                       <div className={classNames(
                         plan.isRecommended 
-                          ? 'border-2 border-indigo-500 shadow-lg' 
+                          ? 'border-2 border-neutral-500 shadow-lg' 
                           : 'border border-gray-200 dark:border-gray-800',
                         'rounded-xl bg-white dark:bg-gray-950 p-8 h-full flex flex-col'
                       )}>
@@ -376,7 +376,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                           <div className="flex items-center justify-between mb-2">
                             <h3 className={classNames(
                               "text-xl font-bold",
-                              plan.isRecommended ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-50"
+                              plan.isRecommended ? "text-neutral-600 dark:text-neutral-400" : "text-gray-900 dark:text-gray-50"
                             )}>
                               {plan.name}
                             </h3>
@@ -386,7 +386,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                                 Current Plan
                               </span>
                             ) : plan.isRecommended ? (
-                              <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-sm font-medium dark:bg-indigo-900/20 dark:text-indigo-400">
+                              <span className="bg-neutral-100 text-neutral-600 px-3 py-1 rounded-full text-sm font-medium dark:bg-neutral-900/20 dark:text-neutral-400">
                                 Recommended
                               </span>
                             ) : null}
@@ -426,7 +426,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                           <ul className="space-y-3">
                             {plan.features.map((feature) => (
                               <li key={feature} className="flex items-center gap-3">
-                                <RiCheckLine className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+                                <RiCheckLine className="h-4 w-4 text-neutral-500 flex-shrink-0" />
                                 <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
                               </li>
                             ))}
@@ -481,7 +481,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                         <th key={plan.id} className="px-6 py-4 text-center text-sm font-semibold">
                           <div className="flex items-center justify-center gap-2 mb-1">
                             <div className={classNames(
-                              plan.isRecommended ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-900 dark:text-gray-50'
+                              plan.isRecommended ? 'text-neutral-600 dark:text-neutral-400' : 'text-gray-900 dark:text-gray-50'
                             )}>
                               {plan.name}
                             </div>
@@ -525,7 +525,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                                     {feature.plans[plan.name]}
                                   </span>
                                 ) : feature.plans[plan.name] === true ? (
-                                  <RiCheckLine className="h-5 w-5 text-indigo-500 mx-auto" />
+                                  <RiCheckLine className="h-5 w-5 text-neutral-500 mx-auto" />
                                 ) : (
                                   <RiSubtractLine className="h-5 w-5 text-gray-400 mx-auto" />
                                 )}
@@ -563,7 +563,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                           {section.features.map((feature) => 
                             feature.plans[plan.name] ? (
                               <li key={feature.name} className="flex items-center gap-3">
-                                <RiCheckLine className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+                                <RiCheckLine className="h-4 w-4 text-neutral-500 flex-shrink-0" />
                                 <span className="text-sm text-gray-700 dark:text-gray-300">
                                   {feature.name}
                                   {typeof feature.plans[plan.name] === 'string' && (

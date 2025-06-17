@@ -154,14 +154,14 @@ function PaymentMethodForm({
 
   return (
     <div className="space-y-6">
-      <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+      <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-lg">
         <div className="flex items-center gap-3 mb-2">
-          <RiShieldCheckLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-          <span className="font-medium text-indigo-900 dark:text-indigo-100">
+          <RiShieldCheckLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+          <span className="font-medium text-neutral-900 dark:text-neutral-100">
             Secure Payment
           </span>
         </div>
-        <p className="text-sm text-indigo-700 dark:text-indigo-300">
+        <p className="text-sm text-neutral-700 dark:text-neutral-300">
           Your payment information is securely processed by Stripe. We never store your card details.
         </p>
       </div>
@@ -432,7 +432,7 @@ export function CheckoutConfirmationDialog({
               <Button
                 variant="ghost"
                 onClick={() => setShowPaymentForm(false)}
-                className="mb-4 p-0 h-auto font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                className="mb-4 p-0 h-auto font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
               >
                 <RiArrowLeftLine className="h-4 w-4 mr-1" />
                 Back to checkout
@@ -512,7 +512,7 @@ export function CheckoutConfirmationDialog({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {selectedPlan.features.slice(0, 4).map((feature) => (
                       <div key={feature} className="flex items-center gap-2">
-                        <RiCheckLine className="h-4 w-4 text-indigo-500 flex-shrink-0" />
+                        <RiCheckLine className="h-4 w-4 text-neutral-500 flex-shrink-0" />
                         <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
                       </div>
                     ))}
@@ -535,14 +535,14 @@ export function CheckoutConfirmationDialog({
                   // Simple billing summary for onboarding flow
                   <div className="space-y-3">
                     {/* Trial Information */}
-                    <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg mb-4">
+                    <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-lg mb-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <RiCheckLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                        <span className="font-medium text-indigo-900 dark:text-indigo-100">
+                        <RiCheckLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+                        <span className="font-medium text-neutral-900 dark:text-neutral-100">
                           14-Day Free Trial
                         </span>
                       </div>
-                      <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                      <p className="text-sm text-neutral-700 dark:text-neutral-300">
                         A payment method is required to start your trial. You will not be charged during the 14-day trial period.
                       </p>
                     </div>
@@ -585,14 +585,14 @@ export function CheckoutConfirmationDialog({
                   billingPreview.isTrial ? (
                     <div className="space-y-3">
                       {/* Trial Information */}
-                      <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg mb-4">
+                      <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-lg mb-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <RiCheckLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                          <span className="font-medium text-indigo-900 dark:text-indigo-100">
+                          <RiCheckLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+                          <span className="font-medium text-neutral-900 dark:text-neutral-100">
                             {billingPreview.isChangingPlan ? 'Trial Plan Update' : '14-Day Free Trial'}
                           </span>
                         </div>
-                        <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                        <p className="text-sm text-neutral-700 dark:text-neutral-300">
                           {billingPreview.isChangingPlan 
                             ? 'Your trial will continue with the updated plan. No charges until trial ends.'
                             : 'A payment method is required to start your trial. You will not be charged during the 14-day trial period.'
@@ -764,14 +764,14 @@ export function CheckoutConfirmationDialog({
                   ) : (
                     <div className="space-y-3">
                       {/* New Subscription Trial */}
-                      <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg mb-4">
+                      <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-lg mb-4">
                         <div className="flex items-center gap-2 mb-2">
-                          <RiCheckLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                          <span className="font-medium text-indigo-900 dark:text-indigo-100">
+                          <RiCheckLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+                          <span className="font-medium text-neutral-900 dark:text-neutral-100">
                             14-Day Free Trial
                           </span>
                         </div>
-                        <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                        <p className="text-sm text-neutral-700 dark:text-neutral-300">
                           A payment method is required to start your trial. You will not be charged during the 14-day trial period.
                         </p>
                       </div>
@@ -830,7 +830,7 @@ export function CheckoutConfirmationDialog({
                   )
                 ) : (
                   <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin h-6 w-6 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-6 w-6 border-2 border-neutral-500 border-t-transparent rounded-full"></div>
                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                       Calculating billing...
                     </span>
@@ -869,7 +869,7 @@ export function CheckoutConfirmationDialog({
                       </div>
                     </div>
                     {defaultPaymentMethod.isDefault && (
-                      <span className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 px-2 py-1 rounded-full">
                         Default
                       </span>
                     )}

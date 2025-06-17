@@ -60,7 +60,7 @@ export async function GithubCard() {
                         {siteConfig.description}
                     </CardDescription>
                 </div>
-                <div className="flex hidden items-center space-x-1 rounded-md bg-secondary text-secondary-foreground">
+                <div className="flex hidden items-center space-x-1 rounded-xl bg-secondary text-secondary-foreground">
                     <Button variant="secondary" className="px-3 shadow-none">
                         <StarIcon className="mr-2 h-4 w-4" />
                         Star

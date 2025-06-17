@@ -2,10 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { Button } from '@/components/Button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { RiMailLine, RiRefreshLine, RiCheckLine, RiErrorWarningLine } from '@remixicon/react';
+import { RiMailLine, RiRefreshLine, RiCheckLine, RiErrorWarningLine, RiLogoutBoxLine } from '@remixicon/react';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -182,13 +182,24 @@ export default function VerifyEmailPage() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-indigo-600 border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-4 border-neutral-600 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-black p-4 relative">
+      {/* Sign out button - absolute positioned */}
+      <Button
+        variant="secondary"
+        size="sm"
+        onClick={() => signOut({ callbackUrl: '/login' })}
+        className="absolute top-4 right-4 flex items-center gap-2"
+      >
+        <RiLogoutBoxLine className="h-4 w-4" />
+        <span className="hidden sm:inline">Sign out</span>
+      </Button>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -196,22 +207,22 @@ export default function VerifyEmailPage() {
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 dark:bg-indigo-900/20 rounded-full mb-4">
-            <RiMailLine className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 dark:bg-neutral-800 rounded-full mb-4">
+            <RiMailLine className="w-8 h-8 text-neutral-600 dark:text-neutral-400" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-50">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
             Verify your email
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-neutral-600 dark:text-neutral-400">
             We sent a 6-digit code to <strong>{session?.user?.email}</strong>
           </p>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-500">
             Make sure to check your spam folder 😉
           </p>
         </div>
 
         {/* Code Input */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-8">
+        <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg p-8 border border-neutral-200 dark:border-neutral-800">
           {/* Message Display */}
           <AnimatePresence mode="wait">
             {message && (
@@ -254,9 +265,9 @@ export default function VerifyEmailPage() {
                 className={`
                   w-12 h-14 text-center text-xl font-semibold
                   border-2 rounded-lg transition-all
-                  ${digit ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-300 dark:border-gray-700'}
-                  focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20
-                  dark:bg-gray-800 dark:text-gray-50
+                  ${digit ? 'border-neutral-400 bg-neutral-50 dark:bg-neutral-800 dark:border-neutral-600' : 'border-neutral-300 dark:border-neutral-700'}
+                  focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-400/20 dark:focus:ring-neutral-600/20
+                  dark:bg-neutral-800 dark:text-neutral-50
                   disabled:opacity-50 disabled:cursor-not-allowed
                 `}
                 disabled={isVerifying}
@@ -269,7 +280,7 @@ export default function VerifyEmailPage() {
             <button
               onClick={handleResendCode}
               disabled={isSending || isVerifying}
-              className="inline-flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors underline underline-offset-4"
             >
               <RiRefreshLine className={`w-4 h-4 ${isSending ? 'animate-spin' : ''}`} />
               {isSending ? 'Sending...' : 'Resend code'}
@@ -295,9 +306,9 @@ export default function VerifyEmailPage() {
         )}
 
         {/* Help Text */}
-        <p className="text-center text-sm text-gray-500 dark:text-gray-500 mt-6">
+        <p className="text-center text-sm text-neutral-500 dark:text-neutral-500 mt-6">
           Having trouble? Contact{' '}
-          <a href="mailto:support@getlinkai.com" className="text-indigo-600 dark:text-indigo-400 hover:underline">
+          <a href="mailto:support@getlinkai.com" className="text-neutral-900 dark:text-neutral-100 hover:text-neutral-700 dark:hover:text-neutral-300 underline underline-offset-4">
             support@getlinkai.com
           </a>
         </p>

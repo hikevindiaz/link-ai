@@ -95,22 +95,22 @@ export function PaymentMethodDialog({
         <div className="py-4">
           {type === 'add' ? (
             <>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 Adding a new payment method will:
               </p>
-              <ul className="mt-2 ml-5 list-disc text-sm text-gray-500 dark:text-gray-400 space-y-1">
+              <ul className="mt-2 ml-5 list-disc text-sm text-neutral-500 dark:text-neutral-400 space-y-1">
                 <li>Allow you to purchase phone numbers</li>
                 <li>Enable automatic billing for your subscription</li>
                 <li>Make future purchases simpler without re-entering your card</li>
               </ul>
-              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
                 Your payment information is securely processed and stored by Stripe. 
                 We never store your full card details on our servers.
               </p>
             </>
           ) : (
             <>
-              <div className="rounded-md bg-yellow-50 p-4 dark:bg-yellow-900/20">
+              <div className="rounded-xl bg-yellow-50 p-4 dark:bg-yellow-900/20">
                 <div className="flex">
                   <Icons.warning className="h-5 w-5 text-yellow-400 dark:text-yellow-500" />
                   <div className="ml-3">
@@ -130,7 +130,7 @@ export function PaymentMethodDialog({
                   </div>
                 </div>
               </div>
-              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400">
                 This action cannot be undone. Are you sure you want to proceed?
               </p>
             </>

@@ -136,10 +136,10 @@ export function AccountDetailsTab() {
   return (
     <>
       <form onSubmit={handleUpdateProfile}>
-        <h2 className="font-semibold text-gray-900 dark:text-gray-50">
+        <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
           Personal Information
         </h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-500">
           Update your personal information associated with this account.
         </p>
         <div className="mt-6">
@@ -169,7 +169,7 @@ export function AccountDetailsTab() {
             value={email}
             disabled
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-neutral-500">
             Your email is used for login and cannot be changed.
           </p>
         </div>
@@ -289,10 +289,10 @@ export function AccountDetailsTab() {
       <Divider className="my-8" />
       
       <form onSubmit={handleUpdateNotifications}>
-        <h2 className="font-semibold text-gray-900 dark:text-gray-50">
+        <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
           Notification Settings
         </h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-500">
           Configure how and when you receive notifications.
         </p>
         
@@ -302,7 +302,7 @@ export function AccountDetailsTab() {
               <Label htmlFor="notifications" className="text-sm font-medium">
                 Inquiry Notifications
               </Label>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-neutral-500">
                 Receive email notifications when there are new inquiries.
               </p>
             </div>
@@ -318,7 +318,7 @@ export function AccountDetailsTab() {
               <Label htmlFor="marketing" className="text-sm font-medium">
                 Marketing Emails
               </Label>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-neutral-500">
                 Receive emails about new features and product updates.
               </p>
             </div>

@@ -463,7 +463,7 @@ export async function handleBookAppointment(params: any, calendarConfig: Calenda
       startTime: startDateTime.toTimeString().substring(0, 5), // Extract time part (HH:MM)
       endTime: new Date(startDateTime.getTime() + (params.duration_minutes || calendarConfig.defaultDuration) * 60000).toTimeString().substring(0, 5),
       status: 'PENDING' as const,
-      color: "indigo"
+      color: "neutral"
     };
     
     // Validate required fields

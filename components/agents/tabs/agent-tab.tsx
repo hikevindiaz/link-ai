@@ -138,14 +138,14 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
       <Form {...form}>
         <div className="space-y-6 pt-0 overflow-x-hidden w-full">
           {/* Basic Info */}
-          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900 w-full">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 w-full">
+            <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
               <div className="flex items-center gap-2">
-                <Icons.user className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Label className="font-medium text-gray-900 dark:text-gray-50">Basic Info</Label>
+                <Icons.user className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                <Label className="font-medium text-neutral-900 dark:text-neutral-50">Basic Info</Label>
               </div>
             </div>
-            <div className="p-4 bg-white dark:bg-gray-900/50">
+            <div className="p-3 bg-white dark:bg-neutral-900">
               <FormField
                 control={form.control}
                 name="name"
@@ -156,11 +156,12 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
                       <Input 
                         {...field}
                         placeholder="Customer Service Agent"
-                        className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900 w-full"
+                        maxLength={50}
+                        className="w-full"
                       />
                     </FormControl>
                     <FormMessage />
-                    <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                    <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-400">
                       This name will be displayed to users when they interact with your agent.
                     </p>
                   </FormItem>
@@ -170,14 +171,14 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
           </Card>
 
           {/* Welcome Message */}
-          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+            <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
               <div className="flex items-center gap-2">
-                <Icons.message className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Label className="font-medium text-gray-900 dark:text-gray-50">Welcome Message</Label>
+                <Icons.message className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                <Label className="font-medium text-neutral-900 dark:text-neutral-50">Welcome Message</Label>
               </div>
             </div>
-            <div className="p-4 bg-white dark:bg-gray-900/50">
+            <div className="p-3 bg-white dark:bg-neutral-900">
               <FormField
                 control={form.control}
                 name="welcomeMessage"
@@ -187,11 +188,11 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
                       <Input 
                         {...field}
                         placeholder="Hello, how can I help you today?"
-                        className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
+                        maxLength={120}
                       />
                     </FormControl>
                     <FormMessage />
-                    <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                    <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-400">
                       The welcome message that will be sent to the user when they start a conversation.
                     </p>
                   </FormItem>
@@ -201,14 +202,14 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
           </Card>
 
           {/* Default Prompt */}
-          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+            <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
               <div className="flex items-center gap-2">
-                <Icons.post className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Label className="font-medium text-gray-900 dark:text-gray-50">Default Prompt</Label>
+                <Icons.post className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                <Label className="font-medium text-neutral-900 dark:text-neutral-50">Default Prompt</Label>
               </div>
             </div>
-            <div className="p-4 bg-white dark:bg-gray-900/50">
+            <div className="p-3 bg-white dark:bg-neutral-900">
               <FormField
                 control={form.control}
                 name="prompt"
@@ -218,13 +219,19 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
                       <Textarea 
                         {...field}
                         placeholder="You are a helpful assistant..."
-                        className="min-h-32 resize-y bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
+                        maxLength={2000}
+                        className="min-h-32 resize-y"
                       />
                     </FormControl>
                     <FormMessage />
-                    <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
-                      The system prompt that guides your agent's behavior. This is not seen by the user.
-                    </p>
+                    <div className="flex justify-between items-center mt-2">
+                      <p className="text-sm/6 text-neutral-500 dark:text-neutral-400">
+                        The system prompt that guides your agent's behavior. This is not seen by the user.
+                      </p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                        {field.value?.length || 0}/2000
+                      </p>
+                    </div>
                   </FormItem>
                 )}
               />
@@ -232,14 +239,14 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
           </Card>
 
           {/* Error Message */}
-          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+            <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
               <div className="flex items-center gap-2">
-                <Icons.warning className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Label className="font-medium text-gray-900 dark:text-gray-50">Error Message</Label>
+                <Icons.warning className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                <Label className="font-medium text-neutral-900 dark:text-neutral-50">Error Message</Label>
               </div>
             </div>
-            <div className="p-4 bg-white dark:bg-gray-900/50">
+            <div className="p-3 bg-white dark:bg-neutral-900">
               <FormField
                 control={form.control}
                 name="errorMessage"
@@ -249,11 +256,11 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
                       <Input 
                         {...field}
                         placeholder="I'm sorry, I encountered an error. Please try again later."
-                        className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900"
+                        maxLength={100}
                       />
                     </FormControl>
                     <FormMessage />
-                    <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                    <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-400">
                       This message will be shown to users if there's an error processing their request.
                     </p>
                   </FormItem>
@@ -263,14 +270,14 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
           </Card>
 
           {/* Language Settings */}
-          <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-900">
-            <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-900 dark:bg-gray-900">
+          <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+            <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
               <div className="flex items-center gap-2">
-                <Icons.speech className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <Label className="font-medium text-gray-900 dark:text-gray-50">Language Settings</Label>
+                <Icons.speech className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                <Label className="font-medium text-neutral-900 dark:text-neutral-50">Language Settings</Label>
               </div>
             </div>
-            <div className="p-4 bg-white dark:bg-gray-900/50">
+            <div className="p-3 bg-white dark:bg-neutral-900">
               <div className="grid gap-6">
                 <FormField
                   control={form.control}
@@ -283,7 +290,7 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900">
+                          <SelectTrigger>
                             <SelectValue placeholder="Select language" />
                           </SelectTrigger>
                         </FormControl>
@@ -296,7 +303,7 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                      <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                      <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-400">
                         The primary language your agent will use to communicate.
                       </p>
                     </FormItem>
@@ -314,7 +321,7 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
                         defaultValue={field.value}
                       >
                         <FormControl>
-                          <SelectTrigger className="bg-white dark:bg-gray-900/50 border-gray-200 dark:border-gray-900">
+                          <SelectTrigger>
                             <SelectValue placeholder="Select secondary language" />
                           </SelectTrigger>
                         </FormControl>
@@ -328,7 +335,7 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                      <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+                      <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-400">
                         Optional secondary language support for your agent.
                       </p>
                     </FormItem>

@@ -226,7 +226,7 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
             <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-3">
               Order Items
             </h2>
-            <div className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-800">
+            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                 <thead className="bg-gray-50 dark:bg-gray-900">
                   <tr>

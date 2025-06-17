@@ -7,7 +7,6 @@ import MagicLoginForm from '../../../components/magic-login-form';
 import { signIn } from 'next-auth/react';
 import { useTheme } from 'next-themes';
 import { cn } from "../../../lib/utils";
-import { Card } from '../../../components/ui/card';
 
 // Define the fade-in animation style
 const fadeInStyle = {
@@ -108,13 +107,13 @@ const LoginForm = () => {
                 </div>
               </div>
               <div className="my-4">
-                <div className="h-20 bg-gray-100 rounded-md"></div>
+                <div className="h-20 bg-neutral-100 dark:bg-neutral-800 rounded-xl"></div>
               </div>
               <div className="my-4">
                 <Divider>or</Divider>
               </div>
               <div className="my-4">
-                <div className="h-10 bg-gray-100 rounded-md w-full"></div>
+                <div className="h-10 bg-neutral-100 dark:bg-neutral-800 rounded-xl w-full"></div>
               </div>
               <div className="mt-4">
                 <p className="text-xs">
@@ -131,17 +130,17 @@ const LoginForm = () => {
   return (
     <div className={cn(wrapperClass, {
       'bg-white': resolvedTheme === 'light',
-      'bg-gray-950': resolvedTheme === 'dark'
+      'bg-black': resolvedTheme === 'dark'
     })}>
       <div className="absolute left-4 top-4 md:left-8 md:top-8 flex gap-2">
         <a href="https://www.getlinkai.com/">
-          <Button variant="secondary" className="flex items-center">
+          <Button variant="secondary" className="flex items-center bg-white dark:bg-black border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900">
             {icons?.chevronLeft && (
               <icons.chevronLeft className="h-4 w-4" aria-hidden="true" />
             )}
           </Button>
         </a>
-        <Button variant="secondary" className="flex items-center" onClick={toggleTheme}>
+        <Button variant="secondary" className="flex items-center bg-white dark:bg-black border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900" onClick={toggleTheme}>
           {resolvedTheme === 'light' ? (
             icons?.moon && <icons.moon className="h-4 w-4" aria-hidden="true" />
           ) : (
@@ -158,10 +157,10 @@ const LoginForm = () => {
                   <icons.LinkAIIcon className={`h-10 w-10 pb-3 -ml-2 ${resolvedTheme === 'light' ? 'text-black' : 'text-white'}`} />
                 )}
                 <div>
-                  <h2 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-50">
+                  <h2 className="text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
                     Welcome to Link AI
                   </h2>
-                  <p className="text-sm text-gray-700 dark:text-gray-400 pb-6">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 pb-6">
                     Enter your credentials to login or sign up
                   </p>
                 </div>
@@ -177,7 +176,7 @@ const LoginForm = () => {
             </AnimatedElement>
 
             <AnimatedElement index={3}>
-              <Button className="w-full" variant="secondary" onClick={handleGoogleLogin}>
+              <Button className="w-full bg-white dark:bg-black border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-neutral-900 dark:text-neutral-100" variant="secondary" onClick={handleGoogleLogin}>
                 <span className="inline-flex items-center gap-2">
                   {icons?.googleIcon && (
                     <icons.googleIcon className="size-4" aria-hidden="true" />
@@ -189,18 +188,18 @@ const LoginForm = () => {
 
             <AnimatedElement index={4}>
               <div className="mt-4">
-                <p className="text-xs text-gray-700 dark:text-gray-400">
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
                   By signing in, you agree to our{' '}
                   <a
                     href="https://www.getlinkai.com/legal"
-                    className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-500 hover:dark:text-indigo-600"
+                    className="text-neutral-900 dark:text-neutral-100 hover:text-neutral-700 dark:hover:text-neutral-300 underline underline-offset-4"
                   >
                     Terms of Service
                   </a>{' '}
                   and{' '}
                   <a
                     href="https://www.getlinkai.com/legal"
-                    className="text-indigo-500 hover:text-indigo-600 dark:text-indigo-500 hover:dark:text-indigo-600"
+                    className="text-neutral-900 dark:text-neutral-100 hover:text-neutral-700 dark:hover:text-neutral-300 underline underline-offset-4"
                   >
                     Privacy Policy
                   </a>.
@@ -215,13 +214,13 @@ const LoginForm = () => {
         aria-label="Product showcase"
         style={{ ...fadeInStyle, animationDelay: '300ms' }}
       >
-        <Card className="relative w-full max-w-[650px] aspect-square overflow-hidden bg-gray-950 shadow-lg rounded-2xl p-0">
+        <div className="relative w-full max-w-[650px] aspect-square overflow-hidden bg-neutral-950 dark:bg-neutral-100 shadow-lg rounded-2xl p-0">
           <img 
             src="/LINK LOGIN.png" 
             alt="Link AI Login Animation"
             className="w-full h-full object-cover"
           />
-        </Card>
+        </div>
       </aside>
     </div>
   );

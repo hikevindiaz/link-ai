@@ -114,16 +114,16 @@ export function FloatingActionCard({
     <div className="fixed inset-x-0 bottom-4 flex justify-center z-50 pointer-events-none">
       <div
         className={cn(
-          "bg-white border border-gray-200 rounded-lg shadow-lg p-4 flex items-center gap-4 max-w-md w-full mx-4 pointer-events-auto transition-all duration-300 dark:bg-gray-900 dark:text-white dark:border-gray-800",
+          "bg-white border border-neutral-200 rounded-lg shadow-lg p-4 flex items-center gap-4 max-w-md w-full mx-4 pointer-events-auto transition-all duration-300 dark:bg-neutral-900 dark:text-white dark:border-neutral-800",
           isAnimatingOut ? "opacity-0 transform translate-y-8" : "opacity-100 transform translate-y-0",
-          saveStatus === "error" ? "border-red-500 dark:border-red-600" : "border-gray-200 dark:border-gray-800"
+          saveStatus === "error" ? "border-red-500 dark:border-red-600" : "border-neutral-200 dark:border-neutral-800"
         )}
       >
         <div className="flex-1">
           <p
             className={cn(
               "text-sm font-medium",
-              saveStatus === "error" ? "text-red-600 dark:text-red-400" : "text-gray-800 dark:text-gray-200"
+              saveStatus === "error" ? "text-red-600 dark:text-red-400" : "text-neutral-800 dark:text-neutral-200"
             )}
           >
             {statusMessage}

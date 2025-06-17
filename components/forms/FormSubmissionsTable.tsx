@@ -78,7 +78,7 @@ export function FormSubmissionsTable({
               e.stopPropagation();
               onViewSubmission(row.original);
             }}
-            className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+            className="text-neutral-600 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-300"
           >
             View
           </button>
