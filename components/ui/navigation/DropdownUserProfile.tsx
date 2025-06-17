@@ -14,7 +14,7 @@ import {
   DropdownMenuSubMenuTrigger,
   DropdownMenuTrigger,
 } from "@/components/DropdownMenu"
-import { ArrowUpRight, Monitor, Moon, Sun } from "lucide-react"
+import { ArrowUpRight, Monitor, Moon, Sun, Settings } from "lucide-react"
 import { useTheme } from "next-themes"
 import { signOut, useSession } from "next-auth/react";
 import * as React from "react"
@@ -93,24 +93,24 @@ export function DropdownUserProfile({
   return (
     <>
       <AlertDialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
-        <AlertDialogContent className="bg-white border dark:border-gray-800 dark:bg-gray-900">
+        <AlertDialogContent className="bg-white border dark:border-neutral-800 dark:bg-black">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground dark:text-gray-100">
+            <AlertDialogTitle className="text-foreground dark:text-neutral-200">
               Are you sure you want to sign out?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-muted-foreground dark:text-gray-400">
+            <AlertDialogDescription className="text-muted-foreground dark:text-neutral-400">
               You will be redirected to the login page.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+            <AlertDialogCancel className="border-neutral-300 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleSignOut}
               className={cn(
-                "bg-indigo-600 hover:bg-indigo-700 text-white",
-                "dark:bg-indigo-600 dark:hover:bg-indigo-700"
+                "bg-neutral-600 hover:bg-neutral-700 text-white",
+                "dark:bg-neutral-600 dark:hover:bg-neutral-700"
               )}
             >
               Sign out
@@ -123,24 +123,24 @@ export function DropdownUserProfile({
         <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
         <DropdownMenuContent
           align={align}
-          className="sm:!min-w-[calc(var(--radix-dropdown-menu-trigger-width))] border dark:border-gray-800 bg-white dark:bg-gray-900"
+          className="sm:!min-w-[calc(var(--radix-dropdown-menu-trigger-width))] border dark:border-neutral-800 bg-white dark:bg-black z-[200] p-1"
         >
-          <DropdownMenuLabel className="text-foreground dark:text-gray-100">{session?.user?.email || "Loading..."}</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-sm font-medium text-neutral-700 dark:text-neutral-200 px-2 py-2">{session?.user?.email || "Loading..."}</DropdownMenuLabel>
           <DropdownMenuGroup>
             <DropdownMenuSubMenu>
-              <DropdownMenuSubMenuTrigger>
+              <DropdownMenuSubMenuTrigger className="text-sm text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-xl">
                 <div className="flex items-center gap-2">
                   {currentTheme === "dark" ? (
-                    <Moon className="size-4 shrink-0" aria-hidden="true" />
+                    <Moon className="h-5 w-5 shrink-0" aria-hidden="true" />
                   ) : currentTheme === "light" ? (
-                    <Sun className="size-4 shrink-0" aria-hidden="true" />
+                    <Sun className="h-5 w-5 shrink-0" aria-hidden="true" />
                   ) : (
-                    <Monitor className="size-4 shrink-0" aria-hidden="true" />
+                    <Monitor className="h-5 w-5 shrink-0" aria-hidden="true" />
                   )}
-                  Theme: {currentTheme && currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}
+                  <span>Theme: {currentTheme && currentTheme.charAt(0).toUpperCase() + currentTheme.slice(1)}</span>
                 </div>
               </DropdownMenuSubMenuTrigger>
-              <DropdownMenuSubMenuContent className="border dark:border-gray-800 bg-white dark:bg-gray-900">
+              <DropdownMenuSubMenuContent className="border dark:border-neutral-800 bg-white dark:bg-black p-1">
                 <DropdownMenuRadioGroup
                   value={theme}
                   onValueChange={handleThemeChange}
@@ -149,70 +149,88 @@ export function DropdownUserProfile({
                     aria-label="Switch to Light Mode"
                     value="light"
                     iconType="check"
-                    className="text-foreground dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="text-sm text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-xl"
                   >
-                    <Sun className="size-4 shrink-0" aria-hidden="true" />
-                    Light
+                    <div className="flex items-center gap-2">
+                      <Sun className="h-5 w-5 shrink-0" aria-hidden="true" />
+                      <span>Light</span>
+                    </div>
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem
                     aria-label="Switch to Dark Mode"
                     value="dark"
                     iconType="check"
-                    className="text-foreground dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="text-sm text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-xl"
                   >
-                    <Moon className="size-4 shrink-0" aria-hidden="true" />
-                    Dark
+                    <div className="flex items-center gap-2">
+                      <Moon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                      <span>Dark</span>
+                    </div>
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem
                     aria-label="Switch to System Mode"
                     value="system"
                     iconType="check"
-                    className="text-foreground dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="text-sm text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-xl"
                   >
-                    <Monitor className="size-4 shrink-0" aria-hidden="true" />
-                    System
+                    <div className="flex items-center gap-2">
+                      <Monitor className="h-5 w-5 shrink-0" aria-hidden="true" />
+                      <span>System</span>
+                    </div>
                   </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuSubMenuContent>
             </DropdownMenuSubMenu>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator className="dark:border-gray-800" />
+          <DropdownMenuSeparator className="dark:border-neutral-800 my-1" />
           <DropdownMenuGroup>
-            <DropdownMenuItem className="text-foreground dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <a href="https://www.getlinkai.com/legal" className="w-full">
-                Terms of Use
-              </a>
-              <ArrowUpRight
-                className="mb-1 ml-1 size-3 shrink-0 text-gray-500 dark:text-gray-500"
-                aria-hidden="true"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-foreground dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <a href="https://www.getlinkai.com/legal" className="w-full">
-                Privacy Policy
-              </a>
-              <ArrowUpRight
-                className="mb-1 ml-1 size-3 shrink-0 text-gray-500 dark:text-gray-500"
-                aria-hidden="true"
-              />
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-foreground dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <a href="https://www.instagram.com/getlinkai/" className="w-full">
-                Follow us on Instagram
-              </a>
-              <ArrowUpRight
-                className="mb-1 ml-1 size-3 shrink-0 text-gray-500 dark:text-gray-500"
-                aria-hidden="true"
-              />
+            <DropdownMenuItem 
+              onClick={() => router.push('/dashboard/settings')}
+              className="text-sm text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-xl"
+            >
+              <div className="flex items-center gap-2">
+                <Settings className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span>Settings</span>
+              </div>
             </DropdownMenuItem>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator className="dark:border-gray-800" />
+          <DropdownMenuSeparator className="dark:border-neutral-800 my-1" />
+          <DropdownMenuGroup>
+            <DropdownMenuItem className="text-sm text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-xl">
+              <a href="https://www.getlinkai.com/legal" className="flex items-center gap-2 w-full">
+                <span>Terms of Use</span>
+                <ArrowUpRight
+                  className="h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 ml-auto"
+                  aria-hidden="true"
+                />
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-sm text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-xl">
+              <a href="https://www.getlinkai.com/legal" className="flex items-center gap-2 w-full">
+                <span>Privacy Policy</span>
+                <ArrowUpRight
+                  className="h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 ml-auto"
+                  aria-hidden="true"
+                />
+              </a>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-sm text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-xl">
+              <a href="https://www.instagram.com/getlinkai/" className="flex items-center gap-2 w-full">
+                <span>Follow us on Instagram</span>
+                <ArrowUpRight
+                  className="h-4 w-4 shrink-0 text-neutral-600 dark:text-neutral-400 ml-auto"
+                  aria-hidden="true"
+                />
+              </a>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator className="dark:border-neutral-800 my-1" />
           <DropdownMenuGroup>
             <DropdownMenuItem 
               onClick={() => setShowSignOutDialog(true)}
-              className="text-foreground dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="text-sm text-neutral-700 dark:text-neutral-200 px-2 py-2 rounded-xl"
             >
-              Sign out
+              <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
