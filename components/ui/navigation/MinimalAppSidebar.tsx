@@ -64,22 +64,12 @@ const navigation = [
   },
 ];
 
-// Agents section navigation
+// Agents section navigation - ordered with most recent first
 const agentsNavigation = [
   {
-    name: "My Agents",
-    href: "/dashboard/agents",
-    icon: IconCircleDot,
-  },
-  {
-    name: "Knowledge Base",
-    href: "/dashboard/knowledge-base",
-    icon: IconFileIsr,
-  },
-  {
-    name: "Phone Numbers",
-    href: "/dashboard/phone-numbers",
-    icon: IconPhone,
+    name: "Integrations",
+    href: "/dashboard/integrations",
+    icon: IconPuzzle,
   },
   {
     name: "Voices",
@@ -87,25 +77,29 @@ const agentsNavigation = [
     icon: IconMicrophone,
   },
   {
-    name: "Integrations",
-    href: "/dashboard/integrations",
-    icon: IconPuzzle,
+    name: "Phone Numbers",
+    href: "/dashboard/phone-numbers",
+    icon: IconPhone,
+  },
+  {
+    name: "Knowledge Base",
+    href: "/dashboard/knowledge-base",
+    icon: IconFileIsr,
+  },
+  {
+    name: "My Agents",
+    href: "/dashboard/agents",
+    icon: IconCircleDot,
   },
 ];
 
-// Define all potential modules for Products section
+// Define all potential modules for Products section - ordered with most recent first
 const allModules: ModuleItem[] = [
   {
-    id: 'module-calendar',
-    name: 'Calendar', 
-    href: '/dashboard/calendar',
-    icon: IconCalendar,
-  },
-  {
-    id: 'module-orders',
-    name: 'Orders', 
-    href: '/dashboard/orders', 
-    icon: IconShoppingBag,
+    id: 'module-tickets',
+    name: 'Tickets', 
+    href: '/dashboard/tickets', 
+    icon: IconTicket,
   },
   {
     id: 'module-forms',
@@ -114,10 +108,16 @@ const allModules: ModuleItem[] = [
     icon: IconClipboardList,
   },
   {
-    id: 'module-tickets',
-    name: 'Tickets', 
-    href: '/dashboard/tickets', 
-    icon: IconTicket,
+    id: 'module-orders',
+    name: 'Orders', 
+    href: '/dashboard/orders', 
+    icon: IconShoppingBag,
+  },
+  {
+    id: 'module-calendar',
+    name: 'Calendar', 
+    href: '/dashboard/calendar',
+    icon: IconCalendar,
   },
 ];
 

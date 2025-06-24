@@ -1,9 +1,9 @@
-import { DashboardLayoutSkeleton } from "@/components/ui/dashboard-layout-skeleton"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function TicketsLoading() {
   return (
-    <DashboardLayoutSkeleton 
-      sidebarTitle="Customer Tickets"
+    <UnifiedPageSkeleton 
+      sidebarTitle="Tickets"
       hasAddButton={true}
       itemCount={8}
     />

@@ -1,11 +1,11 @@
-import { DashboardLayoutSkeleton } from "@/components/ui/dashboard-layout-skeleton"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function FormsLoading() {
   return (
-    <DashboardLayoutSkeleton 
+    <UnifiedPageSkeleton 
       sidebarTitle="Smart Forms"
       hasAddButton={true}
-      itemCount={5}
+      itemCount={10}
     />
   )
 } 

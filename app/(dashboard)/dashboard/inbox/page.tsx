@@ -304,7 +304,7 @@ export default function InboxPage() {
         <div className={`${isMobileView ? 'w-full' : 'w-96'} border-r border-neutral-200 dark:border-neutral-800 flex flex-col`}>
           <div className="p-4 pb-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">
+              <h2 className="text-xl font-normal text-neutral-700 dark:text-neutral-200">
                 Inbox
               </h2>
               <div className="flex items-center space-x-2">

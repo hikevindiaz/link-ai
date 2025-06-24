@@ -1,11 +1,11 @@
-import { DashboardLayoutSkeleton } from "@/components/ui/dashboard-layout-skeleton"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function AgentsLoading() {
   return (
-    <DashboardLayoutSkeleton 
+    <UnifiedPageSkeleton 
       sidebarTitle="My Agents"
       hasAddButton={true}
-      itemCount={4}
+      itemCount={8}
     />
   )
 } 

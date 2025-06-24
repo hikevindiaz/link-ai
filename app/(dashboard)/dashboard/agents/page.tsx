@@ -528,7 +528,7 @@ export default function TestChatbotPage() {
           isMobileView ? "w-full" : "w-80")}>
           <div className="p-4 pb-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+              <h2 className="text-xl font-normal text-neutral-700 dark:text-neutral-200">
                 My Agents
               </h2>
               <Button
@@ -546,8 +546,8 @@ export default function TestChatbotPage() {
           <div className="px-4 pb-4 flex-1 overflow-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-                <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">Loading agents...</span>
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
+                <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">Loading agents...</span>
               </div>
             ) : agents.length > 0 ? (
               <div className="grid grid-cols-1 gap-2 mt-2">
@@ -713,7 +713,7 @@ export default function TestChatbotPage() {
                   <div className="flex flex-wrap items-center justify-between gap-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <h1 className={cn(
-                        "text-xl sm:text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50",
+                        "text-xl sm:text-2xl font-normal text-neutral-700 dark:text-neutral-200",
                         isMobileView && "pr-2"
                       )}>
                         {selectedAgent.name}
@@ -940,12 +940,12 @@ export default function TestChatbotPage() {
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
                   <LinkAIAgentIcon className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
                 </div>
-                <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
+                <h1 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">
                   {agents.length > 0 
                     ? 'Select an Agent' 
                     : 'Welcome to Agents'}
                 </h1>
-                <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+                <p className="mt-2 text-neutral-500 dark:text-neutral-400">
                   {agents.length > 0 
                     ? 'Select an agent from the sidebar or create a new one to get started.' 
                     : 'Create your first agent to enhance your business operations.'}

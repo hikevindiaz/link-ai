@@ -235,7 +235,7 @@ export default function KnowledgeBasePage() {
       <div className="flex h-full items-center justify-center">
         <div className="flex items-center">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-          <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">Loading...</span>
+          <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">Loading...</span>
         </div>
       </div>
     );
@@ -283,8 +283,8 @@ export default function KnowledgeBasePage() {
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
           <RiDatabase2Line className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
         </div>
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">Knowledge Base</h1>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+        <h1 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">Knowledge Base</h1>
+        <p className="mt-2 text-neutral-500 dark:text-neutral-400">
           Add knowledge to make your AI assistants smarter.
         </p>
         <div className="mt-6 flex justify-center gap-2">

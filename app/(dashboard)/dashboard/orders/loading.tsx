@@ -1,8 +1,8 @@
-import { DashboardLayoutSkeleton } from "@/components/ui/dashboard-layout-skeleton"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function OrdersLoading() {
   return (
-    <DashboardLayoutSkeleton 
+    <UnifiedPageSkeleton 
       sidebarTitle="Orders"
       hasAddButton={false}
       itemCount={10}

@@ -504,8 +504,8 @@ const PhoneNumbersPage = () => {
           isMobileView ? "w-full" : "w-80")}>
           <div className="p-4 pb-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-                My Phone Numbers
+              <h2 className="text-xl font-normal text-neutral-700 dark:text-neutral-200">
+                Phone Numbers
               </h2>
               <Button
                 variant="secondary"
@@ -889,7 +889,7 @@ const PhoneNumbersPage = () => {
                 <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-900">
                   <RiPhoneLine className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
                 </div>
-                <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
+                <h1 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">
                   {phoneNumbers.length > 0 
                     ? 'Select a Phone Number' 
                     : 'Welcome to Phone Numbers'}
