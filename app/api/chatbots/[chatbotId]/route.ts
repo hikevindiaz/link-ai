@@ -72,8 +72,7 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            description: true,
-            vectorStoreId: true
+            description: true
           }
         }
       };
@@ -112,8 +111,7 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            description: true,
-            vectorStoreId: true
+            description: true
           }
         },
         phoneNumber: true,
