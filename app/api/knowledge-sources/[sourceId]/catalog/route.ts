@@ -3,8 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { put } from '@vercel/blob';
-import { processContentToVectorStore, updateCatalogContentVector } from '@/lib/knowledge-vector-integration';
 
 // Schema for route parameters
 const routeParamsSchema = z.object({
@@ -113,55 +111,52 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid JSON request' }, { status: 400 });
     }
 
-    // Check if catalog content already exists
-    const existingCatalogContent = await db.catalogContent.findFirst({
-      where: {
-        knowledgeSourceId: sourceId,
-      },
-    });
-
-    // Create or update catalog content
-    let catalogContent;
-
-    if (existingCatalogContent) {
-      // Update existing catalog content
-      catalogContent = await db.catalogContent.update({
-        where: { id: existingCatalogContent.id },
-        data: {
-          instructions: instructions,
-        },
-        include: {
-          products: true,
-        },
-      });
-    } else {
-      // Create new catalog content
-      catalogContent = await db.catalogContent.create({
-        data: {
+    try {
+      // Check if catalog content already exists
+      const existingCatalogContent = await db.catalogContent.findFirst({
+        where: {
           knowledgeSourceId: sourceId,
-          instructions: instructions,
-        },
-        include: {
-          products: true,
         },
       });
-    }
 
-    // Send the updated content to the vector store
-    if (catalogContent) {
-      updateCatalogContentVector(sourceId, catalogContent.id)
-        .then(openAIFileId => {
-          console.log(`Successfully updated catalog content in vector store: ${openAIFileId}`);
-        })
-        .catch(error => {
-          console.error('Error updating catalog content in vector store:', error);
+      // SIMPLE DATABASE OPERATION - No vectorization needed for instructions
+      console.log(`💾 Saving catalog instructions to database...`);
+      let catalogContent;
+
+      if (existingCatalogContent) {
+        // Update existing catalog content
+        catalogContent = await db.catalogContent.update({
+          where: { id: existingCatalogContent.id },
+          data: {
+            instructions: instructions || '', // Ensure empty string instead of undefined
+          },
+          include: {
+            products: true,
+          },
         });
-    }
+        console.log(`✅ Updated catalog instructions for knowledge source ${sourceId}`);
+      } else {
+        // Create new catalog content
+        catalogContent = await db.catalogContent.create({
+          data: {
+            knowledgeSourceId: sourceId,
+            instructions: instructions || '', // Ensure empty string instead of undefined
+          },
+          include: {
+            products: true,
+          },
+        });
+        console.log(`✅ Created new catalog instructions for knowledge source ${sourceId}`);
+      }
 
-    return NextResponse.json(catalogContent);
+      return NextResponse.json(catalogContent);
+    } catch (error) {
+      console.error('Error saving catalog instructions:', error);
+      return NextResponse.json({ error: 'Failed to save catalog instructions' }, { status: 500 });
+    }
   } catch (error) {
-    console.error('Error creating catalog content:', error);
-    return NextResponse.json({ error: 'Failed to create catalog content' }, { status: 500 });
+    console.error('Error in POST request:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -196,8 +191,7 @@ export async function DELETE(
         userId: session.user.id,
       },
       select: {
-        id: true,
-        vectorStoreId: true
+        id: true
       }
     });
 
@@ -223,46 +217,18 @@ export async function DELETE(
       }
     });
 
-    // If we have a vector store ID and catalog contents, clean up the vector store
-    if (knowledgeSource.vectorStoreId && catalogContentIds.length > 0) {
-      // Import necessary modules
-      const { getOpenAIClient } = await import('@/lib/openai');
-      const { removeFileFromVectorStore } = await import('@/lib/vector-store');
-      const openai = getOpenAIClient();
+    // Clean up vector store for all catalog contents
+    if (catalogContentIds.length > 0) {
+      const { deleteContent } = await import('@/lib/vector-service');
 
-      // Get openAIFileIds using SQL to bypass the type checking
       for (const content of catalogContentIds) {
         try {
-          // Use a raw query to get the openAIFileId
-          const result = await db.$queryRaw`
-            SELECT "openAIFileId" FROM "catalog_contents" 
-            WHERE id = ${content.id}
-            AND "openAIFileId" IS NOT NULL
-          `;
-
-          // Check if we got a result with an openAIFileId
-          if (Array.isArray(result) && result.length > 0 && result[0].openAIFileId) {
-            const openAIFileId = result[0].openAIFileId as string;
-            
-            // Remove file from vector store
-            try {
-              await removeFileFromVectorStore(knowledgeSource.vectorStoreId, openAIFileId);
-              console.log(`Removed file ${openAIFileId} from vector store ${knowledgeSource.vectorStoreId}`);
+            // Remove from vector store using new service
+              await deleteContent(sourceId, 'catalog', content.id);
+              console.log(`Removed catalog content ${content.id} from vector store`);
             } catch (removeError) {
-              console.error(`Error removing file from vector store:`, removeError);
-            }
-            
-            // Delete the file from OpenAI
-            try {
-              await openai.files.del(openAIFileId);
-              console.log(`Deleted OpenAI file ${openAIFileId}`);
-            } catch (deleteError) {
-              console.error(`Error deleting OpenAI file ${openAIFileId}:`, deleteError);
-            }
-          }
-        } catch (error) {
-          console.error(`Error querying for openAIFileId:`, error);
-          // Continue with deletion even if cleanup fails
+              console.error(`Error removing catalog content from vector store:`, removeError);
+          // Continue with deletion even if vector store cleanup fails
         }
       }
     }
@@ -274,12 +240,11 @@ export async function DELETE(
       }
     });
 
-    // Update the vector store timestamp to indicate a change
+    // Reset the catalog mode to allow selecting a new one
     await db.knowledgeSource.update({
       where: { id: sourceId },
       data: { 
-        vectorStoreUpdatedAt: new Date(),
-        catalogMode: null // Reset the catalog mode to allow selecting a new one
+        catalogMode: null
       }
     });
 

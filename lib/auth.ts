@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
-    error: "/login?error=true",
+    error: "/login?error=AccountBlocked",
   },
   logger: {
     error(code, metadata) {
@@ -221,6 +221,8 @@ export const authOptions: NextAuthOptions = {
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.image = token.picture;
+        session.user.role = token.role as string || 'USER'; // 🔥 ADD role with fallback
+        session.user.status = token.status as string || 'ACTIVE'; // 🔥 ADD status with fallback
         session.user.integrationSettings = token.integrationSettings as IntegrationSettingsMap ?? {};
         session.user.emailVerified = token.emailVerified as boolean ?? false;
         session.user.onboardingCompleted = token.onboardingCompleted as boolean ?? false;
@@ -255,6 +257,8 @@ export const authOptions: NextAuthOptions = {
             token.picture = dbUser.image;
             token.emailVerified = Boolean(dbUser.emailVerified);
             token.onboardingCompleted = dbUser.onboardingCompleted;
+            token.role = dbUser.role || 'USER'; // 🔥 ADD role with fallback
+            token.status = dbUser.status || 'ACTIVE'; // 🔥 ADD status with fallback
 
             // Process integration settings into a map
             const settingsMap: IntegrationSettingsMap = {};
@@ -292,7 +296,36 @@ export const authOptions: NextAuthOptions = {
     },
     async signIn({ user, account, profile, email, credentials }) {
         console.log("signIn callback:", { user, account, profile, email, credentials });
-        return true // Or custom logic
+        
+        // Check if user is blocked - this applies to ALL sign-in methods
+        if (user?.email) {
+          try {
+            const dbUser = await db.user.findUnique({
+              where: { email: user.email },
+              select: { status: true, email: true, id: true }
+            });
+            
+            if (dbUser?.status === 'BLOCKED') {
+              console.log(`Blocked user attempted to sign in via ${account?.provider || 'unknown'}: ${user.email}`);
+              
+              // Delete any existing sessions for this user
+              await db.session.deleteMany({
+                where: { userId: dbUser.id }
+              });
+              
+              // Prevent sign-in by returning false
+              return false;
+            }
+          } catch (error) {
+            console.error('Error checking user status during sign-in:', error);
+            // If there's a database error, prevent sign-in for security
+            if (error instanceof Error && error.message.includes('status')) {
+              return false;
+            }
+          }
+        }
+        
+        return true;
       },
   },
   events: {

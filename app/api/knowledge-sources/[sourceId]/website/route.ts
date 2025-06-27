@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import crypto from 'crypto';
+import { createRollbackHandler } from '@/lib/rollback-system';
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -185,22 +186,25 @@ export async function POST(
       throw new Error('Invalid request format - no valid URLs provided');
     }
 
-    // Create website content entries for each URL
+    // Create website content entries for each URL with rollback protection
     const results = await Promise.all(
       urlsToProcess.map(async (url) => {
+        const rollback = createRollbackHandler('website-content');
+        
         try {
-          // Handle the instructions field with raw SQL or type casting
-          // The 'instructions' field might not be in the Prisma client types yet
+          // CHECKPOINT 1: DATABASE ENTRY
+          console.log(`💾 CHECKPOINT 1: Creating website content in database for URL: ${url}`);
           
-          // Option 1: Using raw SQL to create the website content with instructions
+          let websiteContentId: string;
+          
+          // Handle the instructions field with raw SQL or type casting
           if (instructions) {
             // Generate a random ID
             const id = crypto.randomUUID();
             
-            const websiteContent = await db.$executeRaw`
+            await db.$executeRaw`
               INSERT INTO website_contents (id, url, "searchType", instructions, "knowledgeSourceId", created_at, updated_at)
               VALUES (${id}, ${url}, 'live', ${instructions}, ${sourceId}, NOW(), NOW())
-              RETURNING id;
             `;
             
             // Find the newly created content to return its ID
@@ -214,7 +218,7 @@ export async function POST(
               },
             });
             
-            return { success: true, url, id: result?.id || id };
+            websiteContentId = result?.id || id;
           } else {
             // If no instructions, use the standard Prisma client
             const websiteContent = await db.websiteContent.create({
@@ -228,10 +232,27 @@ export async function POST(
                 },
               },
             });
-            return { success: true, url, id: websiteContent.id };
+            websiteContentId = websiteContent.id;
           }
+
+          // Record successful database entry for rollback
+          rollback.recordDatabaseSuccess('website', websiteContentId);
+          console.log(`✅ CHECKPOINT 1 COMPLETE: Website content created with ID: ${websiteContentId}`);
+
+          // Note: Website URLs (Live Search) don't require vector processing
+          // They are used for real-time search, not stored in vector database
+          
+          // ALL CHECKPOINTS SUCCESSFUL
+          rollback.clear();
+          console.log(`🎉 ALL CHECKPOINTS COMPLETE: Website content operation successful`);
+
+          return { success: true, url, id: websiteContentId };
         } catch (error) {
           console.error(`Error saving URL ${url}:`, error);
+          
+          // Execute rollback for any partial operations
+          await rollback.executeRollback(error instanceof Error ? error.message : 'Unknown error');
+          
           return { success: false, url, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       })

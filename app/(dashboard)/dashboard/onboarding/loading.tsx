@@ -1,17 +1,12 @@
-import { CardSkeleton } from "@/components/card-skeleton"
-import { DashboardHeader } from "@/components/header"
-import { DashboardShell } from "@/components/shell"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
-export default function CrawlersSettingsLoading() {
+export default function OnboardingLoading() {
     return (
-        <DashboardShell>
-            <DashboardHeader
-                heading="Onboarding"
-                text="Create your first chatbot"
-            />
-            <div className="grid gap-10">
-                <CardSkeleton />
-            </div>
-        </DashboardShell>
+        <UnifiedPageSkeleton 
+            sidebarTitle="Onboarding"
+            hasAddButton={false}
+            itemCount={4}
+            showMainContent={true}
+        />
     )
 }

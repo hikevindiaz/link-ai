@@ -70,8 +70,8 @@ export default function Example() {
     <>
       <Card className="overflow-hidden p-0 sm:mx-auto sm:w-full">
         <div className="p-6">
-          <p className="text-sm text-gray-500 dark:text-gray-500">Balance</p>
-          <p className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
+          <p className="text-sm text-neutral-500 dark:text-neutral-500">Balance</p>
+          <p className="text-2xl font-semibold text-neutral-900 dark:text-neutral-50">
             $60,143
           </p>
           <AreaChart
@@ -96,9 +96,9 @@ export default function Example() {
             className="mt-8 h-48 sm:hidden"
           />
         </div>
-        <div className="rounded-b-md border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-900 dark:bg-[#090E1A]">
+        <div className="rounded-b-md border-t border-neutral-200 bg-neutral-50 px-6 py-4 dark:border-neutral-900 dark:bg-[#090E1A]">
           <div className="flex justify-between">
-            <span className="inline-flex select-none items-center rounded-xl bg-white px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-400/20">
+            <span className="inline-flex select-none items-center rounded-xl bg-white px-2 py-1 text-xs font-medium text-neutral-700 ring-1 ring-inset ring-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:ring-neutral-400/20">
               Team access
             </span>
             <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export default function Example() {
                 />
               </a>
               <span
-                className="hidden h-6 w-px bg-gray-200 dark:bg-gray-800 sm:block"
+                className="hidden h-6 w-px bg-neutral-200 dark:bg-neutral-800 sm:block"
                 aria-hidden={true}
               />
               <a

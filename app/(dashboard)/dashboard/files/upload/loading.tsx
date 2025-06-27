@@ -1,17 +1,12 @@
-import { CardSkeleton } from "@/components/card-skeleton"
-import { DashboardHeader } from "@/components/header"
-import { DashboardShell } from "@/components/shell"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function UploadFileLoading() {
     return (
-        <DashboardShell>
-            <DashboardHeader
-                heading="Upload file"
-                text="Upload a file and then you'll be able to use it with your chatbot."
-            />
-            <div className="grid gap-10">
-                <CardSkeleton />
-            </div>
-        </DashboardShell>
+        <UnifiedPageSkeleton 
+            sidebarTitle="Upload File"
+            hasAddButton={false}
+            itemCount={6}
+            showMainContent={true}
+        />
     )
 }

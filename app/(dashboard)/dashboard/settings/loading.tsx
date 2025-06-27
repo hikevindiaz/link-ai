@@ -1,17 +1,12 @@
-import { CardSkeleton } from "@/components/card-skeleton"
-import { DashboardHeader } from "@/components/header"
-import { DashboardShell } from "@/components/shell"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
-export default function DashboardBillingLoading() {
+export default function SettingsLoading() {
     return (
-        <DashboardShell>
-            <DashboardHeader
-                heading="Billing"
-                text="Manage billing and your subscription plan."
-            />
-            <div className="grid gap-10">
-                <CardSkeleton />
-            </div>
-        </DashboardShell>
+        <UnifiedPageSkeleton 
+            sidebarTitle="Settings"
+            hasAddButton={false}
+            itemCount={5}
+            showMainContent={true}
+        />
     )
 }

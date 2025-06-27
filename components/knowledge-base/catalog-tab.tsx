@@ -219,11 +219,11 @@ export function CatalogTab({ source, onSave }: CatalogTabProps) {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <RiListCheck2 className="h-5 w-5 text-neutral-500" />
-            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
+            <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
               Product Catalog
             </h2>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
             Add products to your catalog with details like title, price, description, and categories. Your Agent will reference this information when responding to queries.
           </p>
         </div>
@@ -235,16 +235,16 @@ export function CatalogTab({ source, onSave }: CatalogTabProps) {
         ) : (
           <>
             {/* Shared Instructions Section */}
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800">
+            <div className="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4 border border-neutral-200 dark:border-neutral-800">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
-                  <h3 className="font-medium text-gray-900 dark:text-gray-50">
+                  <h3 className="font-medium text-neutral-900 dark:text-neutral-50">
                     Catalog Instructions
                   </h3>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="ml-2 text-gray-500 cursor-help">
+                        <div className="ml-2 text-neutral-500 cursor-help">
                           <Info className="h-4 w-4" />
                         </div>
                       </TooltipTrigger>
@@ -261,7 +261,7 @@ export function CatalogTab({ source, onSave }: CatalogTabProps) {
                     size="sm" 
                     onClick={saveInstructions}
                     disabled={isSavingInstructions}
-                    className="bg-black hover:bg-gray-800 text-white"
+                    className="bg-black hover:bg-neutral-800 text-white"
                   >
                     {isSavingInstructions ? (
                       <div className="flex items-center gap-1.5">
@@ -287,7 +287,7 @@ export function CatalogTab({ source, onSave }: CatalogTabProps) {
                   maxLength={500}
                 />
                 <div className="flex justify-between items-center">
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-neutral-500">
                     Add specific instructions about how products should be processed or what information is most important.
                   </p>
                   <span className="text-xs text-neutral-500">

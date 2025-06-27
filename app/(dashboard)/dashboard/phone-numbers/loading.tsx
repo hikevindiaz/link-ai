@@ -1,11 +1,11 @@
-import { DashboardLayoutSkeleton } from "@/components/ui/dashboard-layout-skeleton"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function PhoneNumbersLoading() {
   return (
-    <DashboardLayoutSkeleton 
-      sidebarTitle="My Phone Numbers"
+    <UnifiedPageSkeleton 
+      sidebarTitle="Phone Numbers"
       hasAddButton={true}
-      itemCount={3}
+      itemCount={6}
     />
   )
 } 

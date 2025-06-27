@@ -1,0 +1,19 @@
+AI & Vectors
+
+The best vector database is the database you already have.
+
+Supabase provides an open source toolkit for developing AI applications using Postgres and pgvector. Use the Supabase client libraries to store, index, and query your vector embeddings at scale.
+
+The toolkit includes:
+
+A vector store and embeddings support using Postgres and pgvector.
+A Python client for managing unstructured embeddings.
+An embedding generation process using open source models directly in Edge Functions.
+Database migrations for managing structured embeddings.
+Integrations with all popular AI providers, such as OpenAI, Hugging Face, LangChain, and more.
+Search#
+You can use Supabase to build different types of search features for your app, including:
+
+Semantic search: search by meaning rather than exact keywords
+Keyword search: search by words or phrases
+Hybrid search: combine semantic search with keyword search

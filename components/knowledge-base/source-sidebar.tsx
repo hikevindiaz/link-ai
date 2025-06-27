@@ -35,6 +35,7 @@ import { useSession } from 'next-auth/react';
 import { KnowledgeSourceBadge } from './source-settings';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useKnowledgeBase } from '@/app/(dashboard)/dashboard/knowledge-base/layout'; // Corrected import path
+import { DeleteKnowledgeSourceDialog } from './delete-knowledge-source-dialog';
 
 export interface Source {
   id: string;
@@ -177,7 +178,7 @@ export function SourceSidebar() {
       }
       
       try {
-        const websiteRes = await fetch(`/api/knowledge-sources/${sourceId}/websites`);
+        const websiteRes = await fetch(`/api/knowledge-sources/${sourceId}/website`);
         if (websiteRes.ok) {
           const websiteData = await websiteRes.json();
           hasWebsite = Array.isArray(websiteData) && websiteData.length > 0;
@@ -331,13 +332,11 @@ export function SourceSidebar() {
   };
 
   // Handle source deletion
-  const handleDeleteSource = async () => {
-    if (!sourceToDelete) return;
-    
+  const handleDeleteSource = async (sourceId: string) => {
     setIsDeleting(true);
     
     try {
-      const response = await fetch(`/api/knowledge-sources/${sourceToDelete.id}`, {
+      const response = await fetch(`/api/knowledge-sources/${sourceId}`, {
         method: 'DELETE',
       });
 
@@ -346,17 +345,18 @@ export function SourceSidebar() {
       }
 
       // Remove the source from the list
-      setSources(prev => prev.filter(source => source.id !== sourceToDelete.id));
+      setSources(prev => prev.filter(source => source.id !== sourceId));
       
       toast.success('Knowledge source deleted successfully');
       
       // Navigate to the knowledge base home if the current source was deleted
-      if (pathname.includes(sourceToDelete.id)) {
+      if (pathname.includes(sourceId)) {
         router.push('/dashboard/knowledge-base');
       }
     } catch (error) {
       console.error('Error deleting source:', error);
       toast.error('Failed to delete knowledge source');
+      throw error; // Re-throw so the dialog can handle the error
     } finally {
       setIsDeleting(false);
       setSourceToDelete(null);
@@ -640,59 +640,13 @@ export function SourceSidebar() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={!!sourceToDelete} onOpenChange={(open) => !open && setSourceToDelete(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Knowledge Source</DialogTitle>
-            <DialogDescription className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
-              Are you sure you want to delete this knowledge source? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {sourceToDelete && (
-            <div className="mt-4 flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
-              <span
-                className={cn(
-                  'flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium',
-                  'bg-red-100 dark:bg-red-500/20',
-                  'text-red-800 dark:text-red-500'
-                )}
-              >
-                <RiAlertLine className="size-5" />
-              </span>
-              <div>
-                <p className="font-medium text-gray-900 dark:text-gray-50">{sourceToDelete.name}</p>
-                {sourceToDelete.description && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">
-                    {sourceToDelete.description}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter className="mt-6">
-            <DialogClose asChild>
-              <Button
-                variant="secondary"
-                className="mt-2 w-full sm:mt-0 sm:w-fit"
-                onClick={() => setSourceToDelete(null)}
-              >
-                Cancel
-              </Button>
-            </DialogClose>
-            <Button 
-              variant="destructive"
-              className="w-full sm:w-fit"
-              onClick={handleDeleteSource}
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete Source'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Enhanced Delete Confirmation Dialog */}
+      <DeleteKnowledgeSourceDialog
+        open={!!sourceToDelete}
+        onOpenChange={(open) => !open && setSourceToDelete(null)}
+        sourceToDelete={sourceToDelete}
+        onConfirmDelete={handleDeleteSource}
+      />
     </div>
   );
 } 

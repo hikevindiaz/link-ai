@@ -1,0 +1,68 @@
+Sticking purely to the JVM/JavaScript world, you really have two viable paths:
+
+1. Apache Tika Server + Node client
+Run Tika as a standalone service (Docker or embedded Java process) with Tesseract installed for OCR—and then hit it from your Edge/Functions layer. This gives you battle-tested, uniform support for PDF (including tables, multi-col, images), DOCX/PPTX, HTML, CSV, etc.
+
+Pros
+
+One endpoint handles everything
+
+OCR on scanned pages or embedded images
+
+Rich metadata (MIME type detection, language, author, etc.)
+
+Cons
+
+Requires managing a JVM/Tika container alongside your Node stack
+
+Quick start (Docker + Node)
+bash
+Copy
+Edit
+# 1. Run Tika + Tesseract
+docker run -d -p 9998:9998 apache/tika:latest \
+  && apt-get update && apt-get install -y tesseract-ocr
+ts
+Copy
+Edit
+// 2. Call it from Node/TypeScript
+import fetch from "node-fetch";
+
+export async function extractText(buffer: Buffer, mimeType: string) {
+  const res = await fetch("http://localhost:9998/tika", {
+    method: "PUT",
+    headers: { "Content-Type": mimeType },
+    body: buffer,
+  });
+  return res.text();
+}
+2. Pure-Node “universal” extractor: textract (+ OCR)
+If you absolutely can’t stand an extra service, the textract NPM module supports a wide swath of formats out of the box:
+
+Format	Support via textract
+PDF	Uses pdftotext under the hood
+DOC, DOCX	Via antiword and docx2txt
+PPT, PPTX	Uses pptx2txt
+HTML, TXT	Native
+CSV	Native
+Images	Can invoke Tesseract if you install it
+
+ts
+Copy
+Edit
+import textract from "textract";
+
+textract.fromBufferWithMime(buffer, mimeType, (err, text) => {
+  if (err) throw err;
+  console.log(text);
+});
+Caveats:
+
+PDF layout may be flatter (multi-column text can merge)
+
+OCR is slower and less tunable than a dedicated Tika+Tesseract setup
+
+My recommendation
+For robust RAG ingestion—especially large, chart-filled PDFs—you’ll thank yourself for the Tika route. It handles layout, tables, figures, and OCR in one shot, and you can still “stay Node” by calling it over HTTP.
+
+If you need a zero-ops, single-package solution, start with textract and layer in tesseract.js for images—but be ready to tune edge cases (multi-column, complex tables) with specialized libraries later.

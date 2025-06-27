@@ -43,7 +43,11 @@ const AnimatedElement = ({
   </div>
 );
 
-const LoginForm = () => {
+interface LoginFormProps {
+  error?: string;
+}
+
+const LoginForm = ({ error }: LoginFormProps) => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);
   const [icons, setIcons] = useState<{
@@ -167,15 +171,32 @@ const LoginForm = () => {
               </div>
             </AnimatedElement>
 
-            <AnimatedElement index={1}>
+            {error === 'AccountBlocked' && (
+              <AnimatedElement index={1}>
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm text-red-800 dark:text-red-200 text-center">
+                    Your account has been locked, please contact{' '}
+                    <a 
+                      href="mailto:hi@getlinkai.com" 
+                      className="underline hover:no-underline font-medium"
+                    >
+                      hi@getlinkai.com
+                    </a>{' '}
+                    for support.
+                  </p>
+                </div>
+              </AnimatedElement>
+            )}
+
+            <AnimatedElement index={error === 'AccountBlocked' ? 2 : 1}>
               <MagicLoginForm />
             </AnimatedElement>
 
-            <AnimatedElement index={2}>
+            <AnimatedElement index={error === 'AccountBlocked' ? 3 : 2}>
               <Divider>or</Divider>
             </AnimatedElement>
 
-            <AnimatedElement index={3}>
+            <AnimatedElement index={error === 'AccountBlocked' ? 4 : 3}>
               <Button className="w-full bg-white dark:bg-black border-neutral-300 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-900 text-neutral-900 dark:text-neutral-100" variant="secondary" onClick={handleGoogleLogin}>
                 <span className="inline-flex items-center gap-2">
                   {icons?.googleIcon && (
@@ -186,7 +207,7 @@ const LoginForm = () => {
               </Button>
             </AnimatedElement>
 
-            <AnimatedElement index={4}>
+            <AnimatedElement index={error === 'AccountBlocked' ? 5 : 4}>
               <div className="mt-4">
                 <p className="text-xs text-neutral-600 dark:text-neutral-400">
                   By signing in, you agree to our{' '}

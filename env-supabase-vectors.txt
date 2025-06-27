@@ -1,0 +1,13 @@
+# Supabase Vector Store Configuration
+# Add these to your existing .env.local file
+
+# Feature flag to control vector store type (set to true after migration)
+USE_SUPABASE_VECTORS=false
+
+# Supabase Service Role Key (get from Supabase Dashboard > Settings > API)
+# This should already exist in your .env.local
+# SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# The system now uses the open-source gte-small model in Edge Functions
+# No API keys needed for any LLM providers!
+# Embeddings are generated locally in Supabase Edge Functions 

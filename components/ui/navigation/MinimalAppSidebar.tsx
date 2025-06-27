@@ -20,6 +20,8 @@ import {
   IconBell,
   IconChevronUp,
   IconChevronDown,
+  IconFingerprint,
+  IconUsers,
 } from "@tabler/icons-react";
 import Image from "next/image";
 import { UserProfile } from "./UserProfile";
@@ -43,6 +45,7 @@ interface SessionUserWithSettings {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  role?: string;
   integrationSettings?: Record<string, boolean>;
 }
 
@@ -96,6 +99,12 @@ const agentsNavigation = [
 // Define all potential modules for Products section
 const allModules: ModuleItem[] = [
   {
+    id: 'module-contacts',
+    name: 'Contacts', 
+    href: '/dashboard/contacts',
+    icon: IconGrain,
+  },
+  {
     id: 'module-calendar',
     name: 'Calendar', 
     href: '/dashboard/calendar',
@@ -118,6 +127,28 @@ const allModules: ModuleItem[] = [
     name: 'Tickets', 
     href: '/dashboard/tickets', 
     icon: IconTicket,
+  },
+];
+
+// Admin modules - only shown to admin users
+const adminModules: ModuleItem[] = [
+  {
+    id: 'admin-dashboard',
+    name: 'Dashboard', 
+    href: '/dashboard/admin',
+    icon: IconGridDots,
+  },
+  {
+    id: 'admin-manage',
+    name: 'Manage', 
+    href: '/dashboard/admin/manage',
+    icon: IconUsers,
+  },
+  {
+    id: 'admin-marketing',
+    name: 'Marketing', 
+    href: '/dashboard/admin/marketing',
+    icon: IconMail,
   },
 ];
 
@@ -250,6 +281,72 @@ const CollapsibleProductsSection = ({
   );
 };
 
+const CollapsibleAdminSection = ({ 
+  modules, 
+  open: sidebarOpen, 
+  isExpanded, 
+  setIsExpanded 
+}: { 
+  modules: ModuleItem[]; 
+  open: boolean; 
+  isExpanded: boolean; 
+  setIsExpanded: (expanded: boolean) => void; 
+}) => {
+  if (modules.length === 0) return null;
+
+  return (
+    <div className="mb-2">
+      {/* Collapsible Header - styled like SidebarLink */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={cn(
+          "flex items-center justify-start gap-2 group/sidebar py-2 w-full text-left",
+          "text-neutral-700 dark:text-neutral-200 transition-colors"
+        )}
+      >
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2">
+            <IconFingerprint className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />
+            {sidebarOpen && (
+              <span className="text-sm font-medium group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre">
+                Admin
+              </span>
+            )}
+          </div>
+          {sidebarOpen && (
+            <div className="ml-auto">
+              {isExpanded ? 
+                <IconChevronUp className="h-4 w-4 shrink-0 text-neutral-700 dark:text-neutral-200" /> : 
+                <IconChevronDown className="h-4 w-4 shrink-0 text-neutral-700 dark:text-neutral-200" />
+              }
+            </div>
+          )}
+        </div>
+      </button>
+
+      {/* Expandable Content - only show when sidebar is open AND expanded */}
+      {sidebarOpen && isExpanded && (
+        <div className="ml-8 mt-1 space-y-1">
+          {modules.map((module, idx) => (
+            <a
+              key={`admin-${idx}`}
+              href={module.href}
+              className={cn(
+                "flex items-center gap-3 rounded-xl px-2 py-2 text-sm font-medium transition-colors",
+                "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                "text-neutral-700 dark:text-neutral-200"
+              )}
+            >
+              <div className="h-0.5 w-3 bg-neutral-300 dark:bg-neutral-600 rounded-full shrink-0" />
+              <span>{module.name}</span>
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Notifications Section Component
 const NotificationsSection = ({ 
   open, 
@@ -302,6 +399,7 @@ export function MinimalAppSidebar({ open: propOpen, setOpen: propSetOpen }: Mini
   const [isMounted, setIsMounted] = useState(false);
   const [internalOpen, setInternalOpen] = useState(false);
   const [productsExpanded, setProductsExpanded] = useState(false);
+  const [adminExpanded, setAdminExpanded] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   
   // Use notifications hook
@@ -311,12 +409,28 @@ export function MinimalAppSidebar({ open: propOpen, setOpen: propSetOpen }: Mini
   const open = propOpen !== undefined ? propOpen : internalOpen;
   const setOpen = propSetOpen !== undefined ? propSetOpen : setInternalOpen;
 
+  // Check if user is admin
+  const isAdmin = React.useMemo(() => {
+    if (sessionStatus !== 'authenticated' || !session?.user) {
+      return false;
+    }
+    const currentUser = session.user as SessionUserWithSettings;
+    return currentUser.role === 'ADMIN';
+  }, [session, sessionStatus]);
+
   // Auto-close Products section when sidebar collapses
   useEffect(() => {
     if (!open && productsExpanded) {
       setProductsExpanded(false);
     }
   }, [open, productsExpanded]);
+
+  // Auto-close Admin section when sidebar collapses
+  useEffect(() => {
+    if (!open && adminExpanded) {
+      setAdminExpanded(false);
+    }
+  }, [open, adminExpanded]);
 
   // Filter modules based on session data
   const enabledModules = React.useMemo(() => {
@@ -327,6 +441,10 @@ export function MinimalAppSidebar({ open: propOpen, setOpen: propSetOpen }: Mini
     const settings = currentUser.integrationSettings ?? {};
     
     return allModules.filter(module => {
+        // Always show Contacts as it's a core feature
+        if (module.id === 'module-contacts') {
+          return true;
+        }
         const isEnabled = settings[module.id] === true;
         return isEnabled;
     });
@@ -426,11 +544,23 @@ export function MinimalAppSidebar({ open: propOpen, setOpen: propSetOpen }: Mini
             {agentsNavigationLinks.map((link, idx) => (
               <SidebarLink key={`agents-${idx}`} link={link} />
             ))}
+            
+
           </div>
         </div>
         
-        {/* Footer with Collapsible Products, Notifications, and User Profile */}
+        {/* Footer with Collapsible Admin, Products, Notifications, and User Profile */}
         <div className="space-y-2 flex-shrink-0 overflow-hidden">
+          {/* Collapsible Admin Section - Only show if user is admin */}
+          {isAdmin && (
+            <CollapsibleAdminSection
+              modules={adminModules}
+              open={open}
+              isExpanded={adminExpanded}
+              setIsExpanded={setAdminExpanded}
+            />
+          )}
+          
           {/* Collapsible Products Section */}
           <CollapsibleProductsSection
             modules={enabledModules}

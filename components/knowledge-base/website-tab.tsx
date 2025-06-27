@@ -857,11 +857,11 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Globe className="h-5 w-5 text-neutral-500" />
-                  <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
+                  <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
                     Add Website Content
                   </h2>
                 </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                   Add website content to this knowledge source. Your Agent will be able to reference information from these websites when responding to queries.
                 </p>
               </div>
@@ -872,7 +872,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400">
+                        <Button variant="ghost" size="icon" className="h-5 w-5 text-neutral-400">
                           <RiInformationLine className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
@@ -894,7 +894,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                       className="flex-1"
                       maxLength={500}
                     />
-                    <Button onClick={handleAddLiveSearchUrl} disabled={isSubmitting} className="whitespace-nowrap bg-black hover:bg-gray-800 text-white">
+                    <Button onClick={handleAddLiveSearchUrl} disabled={isSubmitting} className="whitespace-nowrap bg-black hover:bg-neutral-800 text-white">
                       {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -961,7 +961,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
               )}
               
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Saved URLs for Live Search</h3>
+                <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">Saved URLs for Live Search</h3>
                 {isLoading ? (
                   <LoadingState />
                 ) : savedWebsites.length > 0 ? (
@@ -1001,13 +1001,13 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+                  <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-900/20">
                     <div className="text-center">
                       <RiGlobalLine className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
-                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                      <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
                         No URLs added yet
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 max-w-xs mx-auto">
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-xs mx-auto">
                         Add URLs for your Agent to search when answering questions
                       </p>
                     </div>
@@ -1024,19 +1024,19 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Globe className="h-5 w-5 text-neutral-500" />
-                  <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
+                  <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
                     Add Website Content
                   </h2>
                 </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                   Add website content to this knowledge source. Your Agent will be able to reference information from these websites when responding to queries.
                 </p>
               </div>
               
-              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
+              <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800">
                 <div className="flex items-start gap-2">
                   <RiInformationLine className="h-5 w-5 text-neutral-500 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                  <div className="text-sm text-neutral-700 dark:text-neutral-300">
                     <p className="font-medium mb-1">About Website Crawling</p>
                     <ul className="list-disc list-inside space-y-1 pl-1">
                       <li>The crawler will extract content from the website and add it to your knowledge base</li>
@@ -1054,7 +1054,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-5 w-5 text-gray-400">
+                        <Button variant="ghost" size="icon" className="h-5 w-5 text-neutral-400">
                           <RiInformationLine className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
@@ -1079,7 +1079,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                     <Button 
                       onClick={handleStartCrawl} 
                       disabled={isCrawling}
-                      className="whitespace-nowrap bg-black hover:bg-gray-800 text-white"
+                      className="whitespace-nowrap bg-black hover:bg-neutral-800 text-white"
                     >
                       {isCrawling ? (
                         <>
@@ -1113,7 +1113,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
               </div>
               
               <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Crawled Website Files</h3>
+                <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">Crawled Website Files</h3>
                 {isLoading ? (
                   <LoadingState />
                 ) : crawlerFiles.length > 0 ? (
@@ -1149,13 +1149,13 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
                     </TableBody>
                   </Table>
                 ) : (
-                  <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+                  <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-900/20">
                     <div className="text-center">
                       <RiGlobalLine className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
-                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                      <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
                         No crawled website files
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 max-w-xs mx-auto">
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-xs mx-auto">
                         Crawl a website to add content to your knowledge base
                       </p>
                     </div>
@@ -1176,7 +1176,7 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
               Are you sure you want to delete this website? This will remove it from your knowledge source.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden text-ellipsis">
+          <div className="mt-2 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-xl overflow-hidden text-ellipsis">
             {websiteToDelete?.url}
           </div>
           
@@ -1215,18 +1215,18 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
               Are you sure you want to delete this crawled content? This will remove it from your knowledge base and vector store. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl">
+          <div className="mt-2 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-xl">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-gray-500" />
+                <Globe className="h-4 w-4 text-neutral-500" />
                 <span className="font-medium">File name:</span>
-                <span className="text-gray-600 dark:text-gray-400">{fileToDelete?.name}</span>
+                <span className="text-neutral-600 dark:text-neutral-400">{fileToDelete?.name}</span>
               </div>
               {fileToDelete?.blobUrl && (
                 <div className="flex items-center gap-2">
-                  <RiGlobalLine className="h-4 w-4 text-gray-500" />
+                  <RiGlobalLine className="h-4 w-4 text-neutral-500" />
                   <span className="font-medium">Source URL:</span>
-                  <span className="text-gray-600 dark:text-gray-400 break-all">{fileToDelete.blobUrl}</span>
+                  <span className="text-neutral-600 dark:text-neutral-400 break-all">{fileToDelete.blobUrl}</span>
                 </div>
               )}
             </div>

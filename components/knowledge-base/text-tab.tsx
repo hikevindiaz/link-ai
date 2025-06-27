@@ -568,17 +568,17 @@ export function TextContentTab({ source }: TextContentTabProps) {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <FileText className="h-5 w-5 text-neutral-500" />
-            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
+            <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
               Add Text Content
             </h2>
           </div>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             Add text content to this knowledge source. Your Agent will be able to reference this information when responding to queries.
           </p>
           
           <div className="mt-4 space-y-4">
             <div>
-              <label htmlFor="textContent" className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
+              <label htmlFor="textContent" className="block text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-1">
                 Content
               </label>
               <div className="space-y-2">
@@ -602,7 +602,7 @@ export function TextContentTab({ source }: TextContentTabProps) {
               <Button
                 onClick={handleAddText}
                 disabled={!textContent.trim()}
-                className="flex items-center gap-1.5 bg-black hover:bg-gray-800 text-white"
+                className="flex items-center gap-1.5 bg-black hover:bg-neutral-800 text-white"
               >
                 <Plus className="h-4 w-4" />
                 Add to Knowledge Base
@@ -616,10 +616,10 @@ export function TextContentTab({ source }: TextContentTabProps) {
           <div className="mt-4">
             <div className="space-y-3">
               {processingTexts.map((item) => (
-                <Card key={item.id} className="p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
+                <Card key={item.id} className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="font-medium text-sm text-gray-900 dark:text-gray-100">{getContentPreview(item.content, 100)}</div>
+                      <div className="font-medium text-sm text-neutral-900 dark:text-neutral-100">{getContentPreview(item.content, 100)}</div>
                     </div>
                   </div>
                   {renderProgressStatus(item)}
@@ -630,7 +630,7 @@ export function TextContentTab({ source }: TextContentTabProps) {
         )}
         
         <div>
-          <h3 className="font-medium text-lg text-gray-900 dark:text-gray-50 flex items-center gap-2">
+          <h3 className="font-medium text-lg text-neutral-900 dark:text-neutral-50 flex items-center gap-2">
             <RiBrainLine className="h-5 w-5 text-neutral-500" />
             Agent Text Knowledge
           </h3>
@@ -642,7 +642,7 @@ export function TextContentTab({ source }: TextContentTabProps) {
               {savedTexts.map((text) => (
                 <Card 
                   key={text.id} 
-                  className="overflow-hidden border-gray-200 dark:border-gray-800 hover:border-neutral-200 dark:hover:border-neutral-800 transition-all duration-200"
+                  className="overflow-hidden border-neutral-200 dark:border-neutral-800 hover:border-neutral-200 dark:hover:border-neutral-800 transition-all duration-200"
                 >
                   <div className="p-4">
                     <div className="flex justify-between items-start">
@@ -651,11 +651,11 @@ export function TextContentTab({ source }: TextContentTabProps) {
                           <Badge variant="secondary" className="text-xs bg-neutral-50 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-800">
                             Text
                           </Badge>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400">
                             Updated {formatDate(text.updatedAt)}
                           </span>
                         </div>
-                        <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                        <div className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
                           {text.content.length > 300 
                             ? `${text.content.substring(0, 300)}...` 
                             : text.content}
@@ -667,7 +667,7 @@ export function TextContentTab({ source }: TextContentTabProps) {
                           size="icon"
                           onClick={() => openEditDialog(text)}
                           title="Edit text"
-                          className="text-gray-500 hover:text-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-950"
+                          className="text-neutral-500 hover:text-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-950"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -676,7 +676,7 @@ export function TextContentTab({ source }: TextContentTabProps) {
                           size="icon"
                           onClick={() => confirmDeleteText(text)}
                           title="Delete text"
-                          className="text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                          className="text-neutral-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -687,18 +687,18 @@ export function TextContentTab({ source }: TextContentTabProps) {
               ))}
             </div>
           ) : (
-            <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+            <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-900/20">
               <div className="text-center">
                 <RiBrainLine className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
                   No text content saved yet
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 max-w-xs mx-auto">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-xs mx-auto">
                   Add text using the form above to enrich your Agent's knowledge
                 </p>
                 <Button 
                   variant="secondary" 
-                  className="mt-4 border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800" 
+                  className="mt-4 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800" 
                   onClick={() => document.getElementById('textContent')?.focus()}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -743,14 +743,14 @@ export function TextContentTab({ source }: TextContentTabProps) {
             <Button
               variant="secondary"
               onClick={() => setEditDialogOpen(false)}
-              className="border-gray-200 dark:border-gray-800"
+              className="border-neutral-200 dark:border-neutral-800"
             >
               Cancel
             </Button>
             <Button
               onClick={handleUpdateText}
               disabled={!editedContent.trim()}
-              className="bg-black hover:bg-gray-800 text-white"
+              className="bg-black hover:bg-neutral-800 text-white"
             >
               Update & Train Agent
             </Button>
@@ -774,7 +774,7 @@ export function TextContentTab({ source }: TextContentTabProps) {
           {textToDelete && (
             <div className="py-4">
               <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-100 dark:border-red-900">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   {textToDelete.content.length > 100 
                     ? `${textToDelete.content.substring(0, 100)}...` 
                     : textToDelete.content}

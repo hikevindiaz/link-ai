@@ -71,7 +71,6 @@ export function ManualMode({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Product deletion state
@@ -138,35 +137,7 @@ export function ManualMode({
     }
   };
 
-  const uploadImageToSupabase = async (file: File): Promise<string | null> => {
-    if (!file || !session?.user?.id) return null;
-    
-    setIsUploading(true);
-    
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('userId', session.user.id);
-      
-      const response = await fetch('/api/upload/image', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
-      
-      const data = await response.json();
-      return data.url;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
-      return null;
-    } finally {
-      setIsUploading(false);
-    }
-  };
+
 
   const handleSaveProduct = async () => {
     if (!newProduct.title.trim()) {
@@ -182,38 +153,44 @@ export function ManualMode({
     setIsSubmitting(true);
     
     try {
-      // Upload image to Supabase if selected
-      let imageUrl = newProduct.imageUrl;
+      let response;
+      
+      // Check if we need to upload a new image or use existing image URL
       if (selectedImage && session?.user?.id) {
-        const uploadedUrl = await uploadImageToSupabase(selectedImage);
-        if (uploadedUrl) {
-          imageUrl = uploadedUrl;
-        } else {
-          // Continue without image if upload fails
-          toast.error("Image upload failed, but product will be saved without an image");
-          imageUrl = '';
-        }
-      }
-      
-      // Create a proper payload for the API
-      const payload = {
-        knowledgeSourceId: source.id,
-        catalogContentId: catalogContent?.id,
-        product: {
+        // Use multipart form data for new image upload
+        const formData = new FormData();
+        formData.append('image', selectedImage);
+        formData.append('catalogContentId', catalogContent?.id || '');
+        formData.append('product', JSON.stringify({
           ...newProduct,
-          imageUrl, // Use the uploaded image URL or existing URL
+          imageUrl: '', // Will be set by the server after upload
           id: isEditing && editingProductId ? editingProductId : undefined
-        }
-      };
-      
-      // Make the API request to save the product
-      const response = await fetch(`/api/knowledge-sources/${source.id}/catalog/products`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+        }));
+        
+        response = await fetch(`/api/knowledge-sources/${source.id}/catalog/products`, {
+          method: 'POST',
+          body: formData, // No Content-Type header - browser will set it with boundary
+        });
+      } else {
+        // Use JSON for existing image URL or no image
+        const payload = {
+          knowledgeSourceId: source.id,
+          catalogContentId: catalogContent?.id,
+          product: {
+            ...newProduct,
+            imageUrl: newProduct.imageUrl, // Use existing URL or empty string
+            id: isEditing && editingProductId ? editingProductId : undefined
+          }
+        };
+        
+        response = await fetch(`/api/knowledge-sources/${source.id}/catalog/products`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+      }
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -362,10 +339,10 @@ export function ManualMode({
   };
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 bg-white dark:bg-neutral-900">
       <div className="flex sm:items-center sm:justify-between sm:space-x-10">
         <div>
-          <h3 className="font-semibold text-gray-900 dark:text-gray-50">
+          <h3 className="font-semibold text-neutral-900 dark:text-neutral-50">
             Product List
           </h3>
         </div>
@@ -373,7 +350,7 @@ export function ManualMode({
         <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
           <DrawerTrigger asChild>
             <Button 
-              className="mt-2 w-full sm:mt-0 sm:w-fit bg-black hover:bg-gray-800 text-white"
+              className="mt-2 w-full sm:mt-0 sm:w-fit bg-black hover:bg-neutral-800 text-white"
               onClick={() => {
                 // Reset form when opening drawer for a new product
                 if (!isEditing) {
@@ -495,7 +472,7 @@ export function ManualMode({
                 
                 {newProduct.imageUrl ? (
                   <div className="mt-2 relative">
-                    <div className="relative w-full h-40 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800">
                       <img 
                         src={newProduct.imageUrl} 
                         alt="Product preview" 
@@ -504,7 +481,7 @@ export function ManualMode({
                       <button
                         type="button"
                         onClick={handleRemoveImage}
-                        className="absolute top-2 right-2 p-1 rounded-full bg-white/80 text-gray-700 hover:bg-white"
+                        className="absolute top-2 right-2 p-1 rounded-full bg-white/80 text-neutral-700 hover:bg-white"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -514,14 +491,14 @@ export function ManualMode({
                   <div className="mt-2">
                     <label
                       htmlFor="product-image-input"
-                      className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl border-gray-300 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                      className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl border-neutral-300 dark:border-neutral-700 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-900/50"
                     >
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <ImageIcon className="w-10 h-10 mb-3 text-gray-400" />
-                        <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                        <ImageIcon className="w-10 h-10 mb-3 text-neutral-400" />
+                        <p className="mb-2 text-sm text-neutral-500 dark:text-neutral-400">
                           <span className="font-semibold">Click to upload</span> or drag and drop
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400">
                           JPG, PNG, GIF or WebP (MAX. 5MB)
                         </p>
                       </div>
@@ -536,7 +513,7 @@ export function ManualMode({
                     </label>
                   </div>
                 )}
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                   Add an image of your product to enhance visibility.
                 </p>
               </div>
@@ -550,7 +527,7 @@ export function ManualMode({
                       <button 
                         type="button" 
                         onClick={() => handleRemoveCategory(category)}
-                        className="ml-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                        className="ml-1 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -621,13 +598,13 @@ export function ManualMode({
                     setDrawerOpen(false);
                   });
                 }} 
-                disabled={isSubmitting || isUploading}
-                className="bg-black hover:bg-gray-800 text-white"
+                disabled={isSubmitting}
+                className="bg-black hover:bg-neutral-800 text-white"
               >
-                {isSubmitting || isUploading ? (
+                {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isUploading ? 'Uploading...' : 'Saving...'}
+                    Saving...
                   </>
                 ) : isEditing ? 'Update Product' : 'Add Product'}
               </Button>
@@ -638,7 +615,7 @@ export function ManualMode({
       
       {products.length > 0 ? (
         <div className="mt-4">
-          <div className="rounded-xl border border-gray-200 dark:border-gray-800">
+          <div className="rounded-xl border border-neutral-200 dark:border-neutral-800">
             <TableRoot>
               <Table>
                 <TableHead>
@@ -665,8 +642,8 @@ export function ManualMode({
                             </div>
                           )}
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-gray-50">{product.title}</div>
-                            <div className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{product.description}</div>
+                            <div className="font-medium text-neutral-900 dark:text-neutral-50">{product.title}</div>
+                            <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1">{product.description}</div>
                           </div>
                         </div>
                       </TableCell>
@@ -714,18 +691,18 @@ export function ManualMode({
           </div>
         </div>
       ) : (
-        <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+        <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-900/20">
           <div className="text-center">
             <RiListCheck2 className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
               No products added yet
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 max-w-xs mx-auto">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-xs mx-auto">
               Click "Add Product" to start building your catalog
             </p>
             <Button 
               variant="secondary" 
-              className="mt-4 border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800" 
+              className="mt-4 border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800" 
               onClick={() => setDrawerOpen(true)}
             >
               <Plus className="mr-2 h-4 w-4" />

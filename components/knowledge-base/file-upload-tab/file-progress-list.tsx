@@ -43,10 +43,10 @@ const FileProgressList: React.FC<FileProgressListProps> = ({
       </div>
       <ul className="space-y-4">
         {pendingFiles.map((fileStatus) => (
-          <li key={fileStatus.id} className="p-3 border rounded-xl bg-gray-50 dark:bg-gray-900">
+          <li key={fileStatus.id} className="p-3 border rounded-xl bg-neutral-50 dark:bg-neutral-900">
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center">
-                <File className="h-4 w-4 mr-2 text-gray-500" />
+                <File className="h-4 w-4 mr-2 text-neutral-500" />
                 <span className="text-sm font-medium">{fileStatus.file.name}</span>
               </div>
               {(fileStatus.status === 'error' || fileStatus.status === 'queued') && (

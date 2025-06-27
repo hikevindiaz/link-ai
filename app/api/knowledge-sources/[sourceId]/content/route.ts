@@ -3,12 +3,11 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { put } from '@vercel/blob';
-import OpenAI from "openai";
 import { randomUUID } from 'crypto';
 import { Prisma } from "@prisma/client";
-import { ensureVectorStore, updateChatbotsWithKnowledgeSource } from "@/lib/knowledge-vector-integration";
-import { getOpenAIClient } from "@/lib/openai";
-import { addFileToVectorStore } from "@/lib/vector-store";
+import { processContentV2, deleteContent, formatContent, VECTOR_SERVICE_VERSION } from "@/lib/vector-service";
+import { createRollbackHandler } from '@/lib/rollback-system';
+import { uploadToSupabase, ensureRequiredBuckets } from '@/lib/supabase';
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -156,26 +155,38 @@ export async function GET(
   }
 }
 
-// Handle file uploads
+// Handle file uploads with robust rollback
 async function handleFileUpload(req: Request, context: z.infer<typeof routeContextSchema>) {
+  // Create rollback handler
+  const rollback = createRollbackHandler('file-upload');
   let fileId: string | undefined;
 
   try {
-    console.log("Starting file upload handling");
+    console.log("=== STARTING SIMPLIFIED FILE UPLOAD PROCESS ===");
+    console.log(`🔧 VECTOR SERVICE VERSION: ${VECTOR_SERVICE_VERSION}`);
     const session = await getServerSession(authOptions);
     if (!session?.user) {
+      console.log("❌ No session or user found");
       return new Response("Unauthorized", { status: 403 });
     }
 
     const { sourceId } = context.params;
-    console.log(`Processing file upload for knowledge source: ${sourceId}`);
+    console.log(`✅ Session found for user: ${session.user.id}`);
+    console.log(`✅ Processing file upload for knowledge source: ${sourceId}`);
     
+    // Verify access to knowledge source
+    const hasAccess = await verifyUserHasAccessToSource(sourceId, session.user.id);
+    if (!hasAccess) {
+      return new Response("Unauthorized", { status: 403 });
+    }
+
     try {
+      console.log("📋 Parsing form data...");
       const formData = await req.formData();
       const file = formData.get('file') as File;
 
       if (!file) {
-        console.error("No file provided in form data");
+        console.error("❌ No file provided in form data");
         return new Response(
           JSON.stringify({ error: "No file provided" }),
           { 
@@ -185,7 +196,7 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
         );
       }
 
-      console.log(`Received file: ${file.name}, Type: ${file.type}, Size: ${file.size} bytes`);
+      console.log(`✅ Received file: ${file.name}, Type: ${file.type}, Size: ${file.size} bytes`);
 
       // Check file type
       const allowedTypes = [
@@ -225,11 +236,10 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
         );
       }
 
-      // Import the uploadToSupabase function and ensure required buckets exist
-      const { uploadToSupabase, ensureRequiredBuckets } = await import('@/lib/supabase');
+      // STEP 1: UPLOAD TO STORAGE
+      console.log("📦 STEP 1: Uploading to storage...");
       await ensureRequiredBuckets();
 
-      // Upload to Supabase
       const uploadResult = await uploadToSupabase(
         file,
         'files',  // bucket
@@ -239,76 +249,112 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
       );
 
       if (!uploadResult) {
+        console.error("❌ STEP 1 FAILED: Failed to upload file to storage");
         throw new Error('Failed to upload file to storage');
       }
+      
+      // Record successful bucket upload for rollback
+      rollback.recordBucketSuccess(uploadResult.url, 'files');
+      console.log(`✅ STEP 1 COMPLETE: File uploaded to storage: ${uploadResult.url}`);
 
-      // Upload to OpenAI
-      const openai = getOpenAIClient();
-      const uploadedFile = await openai.files.create({
-        file,
-        purpose: "assistants"
-      });
-
-      // Create the file record with the actual OpenAI file ID
-      fileId = crypto.randomUUID();
-      await db.file.create({
+      // STEP 2: CREATE DATABASE RECORD
+      console.log("💾 STEP 2: Creating database record...");
+      const fileRecord = await db.file.create({
         data: {
-          id: fileId,
-          userId: session.user.id,
           name: file.name,
-          openAIFileId: uploadedFile.id,
-          blobUrl: uploadResult.url, // Keep for backwards compatibility
-          // @ts-ignore - storageUrl and storageProvider exist in the schema but TypeScript doesn't recognize them
+          blobUrl: uploadResult.url,
           storageUrl: uploadResult.url,
           storageProvider: 'supabase',
-          createdAt: new Date(),
-          knowledgeSourceId: sourceId
+          user: {
+            connect: { id: session.user.id }
+          },
+          knowledgeSource: {
+            connect: { id: sourceId }
+          }
         }
       });
+      
+      fileId = fileRecord.id;
+      
+      // Record successful database entry for rollback
+      rollback.recordDatabaseSuccess('file', fileRecord.id);
+      console.log(`✅ STEP 2 COMPLETE: Database record created with ID: ${fileId}`);
 
-      // Ensure vector store exists and add file to it
-      const vectorStoreId = await ensureVectorStore(sourceId);
-      if (!vectorStoreId) {
-        throw new Error('Failed to create or get vector store');
-      }
-
-      // Add file to vector store
+      // STEP 3: CREATE SINGLE EMBEDDING JOB (NO TEXT EXTRACTION HERE)
+      console.log(`🧠 STEP 3: Creating embedding job for processing...`);
+      
       try {
-        await addFileToVectorStore(vectorStoreId, uploadedFile.id);
-        console.log(`Successfully added file ${uploadedFile.id} to vector store ${vectorStoreId}`);
-      } catch (vectorError) {
-        console.error('Error adding file to vector store:', vectorError);
-        // Clean up the OpenAI file since vector store integration failed
-        try {
-          await openai.files.del(uploadedFile.id);
-          console.log(`Cleaned up OpenAI file ${uploadedFile.id} after vector store integration failed`);
-        } catch (deleteError) {
-          console.error('Error cleaning up OpenAI file:', deleteError);
+        // Let processContentV2 handle all job checking and creation logic
+        // This eliminates race conditions from double-checking
+        const jobId = await processContentV2(
+          sourceId,
+          fileId,
+          'file', // Use 'file' type so the edge function knows to extract text
+          {
+            content: '', // Empty content - edge function will extract
+            metadata: {
+              fileId: fileId,
+              fileName: file.name,
+              mimeType: file.type,
+              storageUrl: uploadResult.url,
+              storageProvider: 'supabase',
+              uploadedAt: new Date().toISOString(),
+              fileSize: file.size
+            }
+          }
+        );
+
+        if (jobId) {
+          console.log(`✅ STEP 3 COMPLETE: Embedding job created: ${jobId}`);
+          rollback.recordVectorSuccess(sourceId, fileId, 'file');
+        } else {
+          console.log(`✅ STEP 3 COMPLETE: File uploaded (vector document already exists)`);
         }
-        throw vectorError;
+        
+      } catch (vectorError) {
+        console.error(`❌ STEP 3 FAILED: Embedding job creation failed`);
+        console.error('Vector error details:', {
+          message: vectorError instanceof Error ? vectorError.message : 'Unknown error',
+          stack: vectorError instanceof Error ? vectorError.stack : undefined
+        });
+        
+        // EXECUTE ROLLBACK
+        await rollback.executeRollback(`Embedding job creation failed: ${vectorError instanceof Error ? vectorError.message : 'Unknown error'}`);
+        
+        // Return error to user with rollback confirmation
+        throw new Error(`File processing failed at embedding job creation stage. All changes have been rolled back. Error: ${vectorError instanceof Error ? vectorError.message : 'Unknown error'}`);
       }
+
+      // ALL STEPS SUCCESSFUL - Clear rollback data
+      rollback.clear();
+      console.log(`🎉 ALL STEPS COMPLETE: File upload operation successful`);
 
       // Return success response
       return new Response(
         JSON.stringify({
           id: fileId,
           name: file.name,
-          openAIFileId: uploadedFile.id,
           blobUrl: uploadResult.url,
           storageUrl: uploadResult.url,
-          message: 'File uploaded and added to vector store successfully'
+          message: 'File uploaded successfully and queued for processing'
         }),
         { 
           status: 200,
           headers: { "Content-Type": "application/json" }
         }
       );
-    } catch (formDataError) {
-      console.error("Error processing form data:", formDataError);
+
+    } catch (formError) {
+      console.error("Error processing form data:", formError);
+      
+      // Execute rollback if we have a fileId
+      if (fileId) {
+        await rollback.executeRollback(`Form processing error: ${formError instanceof Error ? formError.message : 'Unknown error'}`);
+      }
+      
       return new Response(
         JSON.stringify({ 
-          error: "Error processing upload data",
-          details: formDataError instanceof Error ? formDataError.message : "Unknown error"
+          error: `Error processing form data: ${formError instanceof Error ? formError.message : 'Unknown error'}` 
         }),
         { 
           status: 500,
@@ -316,12 +362,18 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
         }
       );
     }
-  } catch (error) {
-    console.error("Error in handleFileUpload:", error);
+
+  } catch (outerError) {
+    console.error("Outer catch - Critical error in file upload:", outerError);
+    
+    // Execute rollback if we have a fileId
+    if (fileId) {
+      await rollback.executeRollback(`Critical error: ${outerError instanceof Error ? outerError.message : 'Unknown error'}`);
+    }
+    
     return new Response(
       JSON.stringify({ 
-        error: "Failed to process file upload", 
-        details: error instanceof Error ? error.message : "Unknown error"
+        error: `Critical error in file upload: ${outerError instanceof Error ? outerError.message : 'Unknown error'}` 
       }),
       { 
         status: 500,
@@ -366,23 +418,82 @@ export async function POST(
     // Normalize the type value
     const normalizedType = body.type.toLowerCase() === "textcontent" ? "text" : body.type;
 
-    // Create content based on type
+    // Create content based on type with rollback protection
     if (normalizedType === "text") {
-      const textContent = await db.textContent.create({
-        data: {
-          content: body.content,
-          knowledgeSource: {
-            connect: {
-              id: sourceId,
+      const rollback = createRollbackHandler('text-content');
+      
+      try {
+        // CHECKPOINT 1: DATABASE ENTRY
+        console.log("💾 CHECKPOINT 1: Creating text content in database...");
+        const textContent = await db.textContent.create({
+          data: {
+            content: body.content,
+            knowledgeSource: {
+              connect: {
+                id: sourceId,
+              },
             },
           },
-        },
-      });
+        });
 
-      return new Response(JSON.stringify(textContent), {
-        status: 201,
-        headers: { "Content-Type": "application/json" },
-      });
+        // Record successful database entry for rollback
+        rollback.recordDatabaseSuccess('text', textContent.id);
+        console.log(`✅ CHECKPOINT 1 COMPLETE: Text content created with ID: ${textContent.id}`);
+
+        // CHECKPOINT 2: VECTOR PROCESSING
+        try {
+          console.log(`🧠 CHECKPOINT 2: Processing vectors for text content...`);
+          const jobId = await processContentV2(sourceId, textContent.id, 'text', {
+            content: body.content,
+            metadata: {
+              source: 'text_content',
+              type: 'text'
+            }
+          });
+          
+          if (jobId) {
+            console.log(`✅ CHECKPOINT 2 COMPLETE: Vector processing initiated for text content`);
+          } else {
+            console.log(`✅ CHECKPOINT 2 COMPLETE: Vector document already exists, skipping embedding`);
+          }
+          
+          // Record successful vector processing for rollback
+          rollback.recordVectorSuccess(sourceId, textContent.id, 'text');
+          
+        } catch (vectorError) {
+          console.error(`❌ CHECKPOINT 2 FAILED: Vector processing failed`);
+          
+          // EXECUTE ROLLBACK
+          await rollback.executeRollback(`Vector processing failed: ${vectorError instanceof Error ? vectorError.message : 'Unknown error'}`);
+          
+          throw new Error(`Text content processing failed at vector stage. All changes have been rolled back. Error: ${vectorError instanceof Error ? vectorError.message : 'Unknown error'}`);
+        }
+
+        // ALL CHECKPOINTS SUCCESSFUL
+        rollback.clear();
+        console.log(`🎉 ALL CHECKPOINTS COMPLETE: Text content operation successful`);
+
+        return new Response(JSON.stringify(textContent), {
+          status: 201,
+          headers: { "Content-Type": "application/json" },
+        });
+        
+      } catch (error) {
+        // Execute rollback for any partial operations
+        await rollback.executeRollback(error instanceof Error ? error.message : 'Unknown error');
+        
+        return new Response(
+          JSON.stringify({ 
+            error: "Text content creation failed", 
+            details: error instanceof Error ? error.message : "Unknown error",
+            message: "All changes have been rolled back"
+          }),
+          { 
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+          }
+        );
+      }
     } else {
       return new Response(JSON.stringify({ error: "Invalid content type" }), {
         status: 400,
@@ -454,6 +565,21 @@ export async function PUT(
         },
       });
 
+      // Update vector embeddings
+      try {
+        // STEP 1: Delete existing vector documents to force re-processing
+        console.log(`Deleting existing vectors for text content ${textContent.id} before update`);
+        await deleteContent(sourceId, 'text', textContent.id);
+        
+        // STEP 2: Process updated content
+        const { content, metadata } = formatContent('text', { content: body.content });
+        await processContentV2(sourceId, textContent.id, 'text', { content, metadata });
+        console.log(`Queued updated text content ${textContent.id} for vector processing`);
+      } catch (vectorError) {
+        console.error(`Error queuing updated text content for vector processing:`, vectorError);
+        // Don't fail the request if vector processing fails
+      }
+
       return new Response(JSON.stringify(textContent), {
         headers: { "Content-Type": "application/json" },
       });
@@ -519,8 +645,7 @@ export async function DELETE(
     if (type === "text" || type === "TextContent") {
       try {
         // First handle vector store cleanup
-        const { handleTextContentDeletion } = await import('@/lib/knowledge-vector-integration');
-        await handleTextContentDeletion(sourceId, id);
+        await deleteContent(sourceId, 'text', id);
         console.log(`Handled vector store cleanup for text content ${id}`);
         
         // Then delete from database

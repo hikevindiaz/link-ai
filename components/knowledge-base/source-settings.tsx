@@ -180,7 +180,7 @@ export function SourceSettings({ source, onSave }: SourceSettingsProps) {
         
         // Check website content
         try {
-          const websiteResponse = await fetch(`/api/knowledge-sources/${source.id}/websites`);
+          const websiteResponse = await fetch(`/api/knowledge-sources/${source.id}/website`);
           if (websiteResponse.ok) {
             const websiteData = await websiteResponse.json();
             hasWebsite = Array.isArray(websiteData) && websiteData.length > 0;

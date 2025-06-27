@@ -130,21 +130,23 @@ model Chatbot {
 }
 
 model File {
-  id                String           @id @default(cuid())
+  id                String            @id @default(cuid())
   userId            String
   name              String
-  openAIFileId      String           @unique
-  createdAt         DateTime         @default(now()) @map("created_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
   blobUrl           String
   crawlerId         String?
   knowledgeSourceId String?
-  storageProvider   String           @default("vercel")
+  storageProvider   String            @default("vercel")
   storageUrl        String?
+  vectorDocumentId  String?           @map("vector_document_id") @db.Uuid
+  extractedText     String?
   ChatbotFiles      ChatbotFiles[]
   CatalogContent    CatalogContent[]
-  crawler           Crawler?         @relation(fields: [crawlerId], references: [id], onDelete: Cascade)
-  knowledgeSource   KnowledgeSource? @relation(fields: [knowledgeSourceId], references: [id])
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  crawler           Crawler?          @relation(fields: [crawlerId], references: [id], onDelete: Cascade)
+  knowledgeSource   KnowledgeSource?  @relation(fields: [knowledgeSourceId], references: [id])
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vector_documents  vector_documents? @relation(fields: [vectorDocumentId], references: [id], onUpdate: NoAction)
 
   @@map("files")
 }
@@ -238,69 +240,70 @@ model Session {
 }
 
 model User {
-  id                       String                   @id @default(cuid())
-  name                     String?
-  email                    String?                  @unique
-  emailVerified            DateTime?
-  image                    String?
-  createdAt                DateTime                 @default(now()) @map("created_at")
-  updatedAt                DateTime                 @updatedAt
-  inquiryEmailEnabled      Boolean                  @default(true)
-  marketingEmailEnabled    Boolean                  @default(true)
-  stripeSubscriptionStatus String?
-  stripeCurrentPeriodEnd   DateTime?                @map("stripe_current_period_end")
-  stripeCustomerId         String?                  @unique @map("stripe_customer_id")
-  stripePriceId            String?                  @map("stripe_price_id")
-  stripeSubscriptionId     String?                  @unique @map("stripe_subscription_id")
-  twilioSubaccountSid      String?                  @unique @map("twilio_subaccount_sid")
-  twilioSubaccountAuthToken String?
-  addressLine1             String?
-  addressLine2             String?
-  businessAddress          String?
-  businessName             String?
-  businessWebsite          String?
+  id                         String                   @id @default(cuid())
+  name                       String?
+  email                      String?                  @unique
+  emailVerified              DateTime?
+  image                      String?
+  createdAt                  DateTime                 @default(now()) @map("created_at")
+  inquiryEmailEnabled        Boolean                  @default(true)
+  marketingEmailEnabled      Boolean                  @default(true)
+  stripeSubscriptionStatus   String?
+  stripeCurrentPeriodEnd     DateTime?                @map("stripe_current_period_end")
+  stripeCustomerId           String?                  @unique @map("stripe_customer_id")
+  stripePriceId              String?                  @map("stripe_price_id")
+  stripeSubscriptionId       String?                  @unique @map("stripe_subscription_id")
+  twilioSubaccountSid        String?                  @unique @map("twilio_subaccount_sid")
+  addressLine1               String?
+  addressLine2               String?
+  businessWebsite            String?
+  city                       String?
+  companyName                String?
+  companySize                String?
+  country                    String?                  @default("US")
+  industryType               String?                  @default("other")
+  onboardingCompleted        Boolean                  @default(false)
+  postalCode                 String?
+  state                      String?
+  a2pBrandSid                String?
+  a2pProfileBundleSid        String?
+  businessAddress            String?
+  businessName               String?
   businessRegistrationNumber String?
-  city                     String?
-  companyName              String?
-  companyType              String?    // 'standard' | 'sole_proprietor'
-  companySize              String?
-  country                  String?                  @default("US")
-  industryType             String?                  @default("other")
-  onboardingCompleted      Boolean                  @default(false)
-  postalCode               String?
-  state                    String?
-  taxId                    String?
-  accounts                 Account[]
-  openAIConfig             OpenAIConfig?
-  sessions                 Session[]
-  bookedAppointments       Appointment[]            @relation("BookedAppointments")
-  calendars                Calendar[]
-  chatbots                 Chatbot[]
-  conversationSummaries    ConversationSummary[]
-  crawlers                 Crawler[]
-  files                    File[]
-  forms                    Form[]
-  invoices                 Invoice[]
-  knowledgeSources         KnowledgeSource[]
-  messages                 Message[]
-  paymentMethods           PaymentMethod[]
-  phoneNumbers             TwilioPhoneNumber[]
-  subscriptionItems        SubscriptionItem[]
-  integrationSettings      UserIntegrationSetting[]
-  voices                   UserVoice[]
-  usageRecords             UsageRecord[]
-  emailVerificationToken   EmailVerificationToken?
-  notifications            Notification[]
-  
-  // A2P 10DLC Registration relationships
-  twilioA2PBrand           TwilioA2PBrand?
-  twilioA2PCampaigns       TwilioA2PCampaign[]
-  
-  // 10DLC Trust Hub fields
-  trustHubProfileSid       String?    // Primary Customer Profile SID
-  a2pProfileBundleSid      String?    // A2P Messaging Profile Bundle SID
-  a2pBrandSid              String?    // Brand Registration SID
-  
+  companyType                String?
+  taxId                      String?
+  trustHubProfileSid         String?
+  twilioSubaccountAuthToken  String?
+  updatedAt                  DateTime                 @updatedAt
+  role                       String                   @default("USER")
+  blockedAt                  DateTime?
+  blockedBy                  String?
+  status                     String                   @default("ACTIVE")
+  accounts                   Account[]
+  openAIConfig               OpenAIConfig?
+  sessions                   Session[]
+  bookedAppointments         Appointment[]            @relation("BookedAppointments")
+  calendars                  Calendar[]
+  chatbots                   Chatbot[]
+  conversationSummaries      ConversationSummary[]
+  crawlers                   Crawler[]
+  emailVerificationToken     EmailVerificationToken?
+  files                      File[]
+  forms                      Form[]
+  invitationsSent            Invitation[]             @relation("InvitationsSent")
+  invoices                   Invoice[]
+  knowledgeSources           KnowledgeSource[]
+  messages                   Message[]
+  notifications              Notification[]
+  paymentMethods             PaymentMethod[]
+  subscriptionItems          SubscriptionItem[]
+  twilioA2PBrand             TwilioA2PBrand?
+  twilioA2PCampaigns         TwilioA2PCampaign[]
+  phoneNumbers               TwilioPhoneNumber[]
+  usageRecords               UsageRecord[]
+  integrationSettings        UserIntegrationSetting[]
+  voices                     UserVoice[]
+
   @@map("users")
 }
 
@@ -313,87 +316,92 @@ model VerificationToken {
 }
 
 model EmailVerificationToken {
-  id         String   @id @default(cuid())
-  userId     String   @unique
-  code       String
-  createdAt  DateTime @default(now())
-  expiresAt  DateTime
-  
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  code      String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("email_verification_tokens")
 }
 
 model KnowledgeSource {
-  id                   String           @id @default(cuid())
-  name                 String
-  description          String?
-  createdAt            DateTime         @default(now()) @map("created_at")
-  updatedAt            DateTime         @updatedAt @map("updated_at")
-  userId               String
-  catalogMode          String?
-  vectorStoreId        String?
-  vectorStoreUpdatedAt DateTime?
-  catalogContents      CatalogContent[]
-  files                File[]
-  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  qaContents           QAContent[]
-  textContents         TextContent[]
-  websiteContents      WebsiteContent[]
-  chatbots             Chatbot[]        @relation("ChatbotToKnowledgeSource")
+  id                  String           @id @default(cuid())
+  name                String
+  description         String?
+  createdAt           DateTime         @default(now()) @map("created_at")
+  updatedAt           DateTime         @updatedAt @map("updated_at")
+  userId              String
+  catalogMode         String?
+  embeddingDimensions Int              @default(384)
+  embeddingModel      String           @default("gte-small")
+  embeddingProvider   String           @default("supabase")
+  catalogContents     CatalogContent[]
+  files               File[]
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qaContents          QAContent[]
+  textContents        TextContent[]
+  websiteContents     WebsiteContent[]
+  chatbots            Chatbot[]        @relation("ChatbotToKnowledgeSource")
 
   @@map("knowledge_sources")
 }
 
 model TextContent {
-  id                String          @id @default(cuid())
+  id                String            @id @default(cuid())
   content           String
-  createdAt         DateTime        @default(now()) @map("created_at")
-  updatedAt         DateTime        @updatedAt @map("updated_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
   knowledgeSourceId String
-  openAIFileId      String?
-  knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  vectorDocumentId  String?           @map("vector_document_id") @db.Uuid
+  knowledgeSource   KnowledgeSource   @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  vector_documents  vector_documents? @relation(fields: [vectorDocumentId], references: [id], onUpdate: NoAction)
 
   @@map("text_contents")
 }
 
 model WebsiteContent {
-  id                String          @id @default(cuid())
+  id                String            @id @default(cuid())
   url               String
-  createdAt         DateTime        @default(now()) @map("created_at")
-  updatedAt         DateTime        @updatedAt @map("updated_at")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
   knowledgeSourceId String
-  searchType        String          @default("crawl")
+  searchType        String            @default("crawl")
   instructions      String?
-  knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  vectorDocumentId  String?           @map("vector_document_id") @db.Uuid
+  knowledgeSource   KnowledgeSource   @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  vector_documents  vector_documents? @relation(fields: [vectorDocumentId], references: [id], onUpdate: NoAction)
 
   @@map("website_contents")
 }
 
 model QAContent {
-  id                String          @id @default(cuid())
-  createdAt         DateTime        @default(now()) @map("created_at")
-  updatedAt         DateTime        @updatedAt @map("updated_at")
+  id                String            @id @default(cuid())
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
   knowledgeSourceId String
   answer            String
   question          String
-  openAIFileId      String?
-  knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  vectorDocumentId  String?           @map("vector_document_id") @db.Uuid
+  knowledgeSource   KnowledgeSource   @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  vector_documents  vector_documents? @relation(fields: [vectorDocumentId], references: [id], onUpdate: NoAction)
 
   @@map("qa_contents")
 }
 
 model CatalogContent {
-  id                String          @id @default(cuid())
-  createdAt         DateTime        @default(now()) @map("created_at")
-  updatedAt         DateTime        @updatedAt @map("updated_at")
+  id                String            @id @default(cuid())
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
   instructions      String?
   knowledgeSourceId String
   fileId            String?
-  extractedContent  String?         @map("extracted_content")
-  openAIFileId      String?
-  file              File?           @relation(fields: [fileId], references: [id])
-  knowledgeSource   KnowledgeSource @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  extractedContent  String?           @map("extracted_content")
+  vectorDocumentId  String?           @map("vector_document_id") @db.Uuid
+  file              File?             @relation(fields: [fileId], references: [id])
+  knowledgeSource   KnowledgeSource   @relation(fields: [knowledgeSourceId], references: [id], onDelete: Cascade)
+  vector_documents  vector_documents? @relation(fields: [vectorDocumentId], references: [id], onUpdate: NoAction)
   products          Product[]
 
   @@map("catalog_contents")
@@ -499,86 +507,71 @@ model PaymentMethod {
 }
 
 model TwilioPhoneNumber {
-  id           String    @id @default(cuid())
-  phoneNumber  String    @unique
-  twilioSid    String    @unique
-  country      String
-  monthlyPrice Decimal   @db.Decimal(10, 2)
-  status       String    @default("pending") // pending, active, suspended
-  purchasedAt  DateTime  @default(now())
-  userId       String
-  chatbotId    String?   @unique
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  
-  // Subaccount information for validation
-  subaccountSid        String?  // The Twilio subaccount SID that owns this number
-  subaccountAuthToken  String?  // The auth token for webhook validation (encrypted in production)
-  
-  // Stripe subscription tracking (NEW APPROACH)
-  subscriptionItemId String? // Reference to SubscriptionItem
-  
-  // Legacy fields to keep for now
-  renewalDate  DateTime // Keep for display purposes
-  
-  // Additional data storage
-  metadata     Json?    // Store purchase details, pricing info, etc.
-  
-  // WhatsApp Configuration
-  whatsappEnabled      Boolean  @default(false)
-  whatsappBusinessId   String?  // WhatsApp Business Account ID
-  whatsappDisplayName  String?  // Display name for WhatsApp
-  whatsappConfiguredAt DateTime?
-  
-  // Legacy 10DLC fields (to be removed)
-  // Keep temporarily for migration
-  a2pRegistrationStatus String?
-  a2pRegistrationError  String?
-  a2pRegisteredAt       DateTime?
-  a2pCampaignSid        String?
+  id                    String            @id @default(cuid())
+  phoneNumber           String            @unique
+  twilioSid             String            @unique
+  country               String
+  monthlyPrice          Decimal           @db.Decimal(10, 2)
+  status                String            @default("pending")
+  purchasedAt           DateTime          @default(now())
+  renewalDate           DateTime
+  userId                String
+  chatbotId             String?           @unique
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  subscriptionItemId    String?
+  metadata              Json?
   a2pBrandSid           String?
-  
-  invoices          Invoice[]
-  chatbot           Chatbot?         @relation(fields: [chatbotId], references: [id])
-  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subscriptionItem  SubscriptionItem? @relation(fields: [subscriptionItemId], references: [id])
+  a2pCampaignSid        String?
+  a2pRegisteredAt       DateTime?
+  a2pRegistrationError  String?
+  a2pRegistrationStatus String?
+  whatsappBusinessId    String?
+  whatsappConfiguredAt  DateTime?
+  whatsappDisplayName   String?
+  whatsappEnabled       Boolean           @default(false)
+  subaccountAuthToken   String?
+  subaccountSid         String?
+  invoices              Invoice[]
+  chatbot               Chatbot?          @relation(fields: [chatbotId], references: [id])
+  subscriptionItem      SubscriptionItem? @relation(fields: [subscriptionItemId], references: [id])
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("twilio_phone_numbers")
 }
 
 model SubscriptionItem {
-  id                       String             @id @default(cuid())
+  id                       String              @id @default(cuid())
   userId                   String
-  stripeSubscriptionItemId String             @unique
-  stripePriceId            String             // e.g., price_phone_number, price_premium_features
-  itemType                 String             // 'phone_number', 'premium_features', 'extra_storage'
-  itemId                   String?            // Reference to TwilioPhoneNumber.id if applicable
-  quantity                 Int                @default(1)
-  isActive                 Boolean            @default(true)
-  metadata                 Json?              // Store additional data like phone number, feature details
-  createdAt                DateTime           @default(now())
-  updatedAt                DateTime           @updatedAt
-  
-  user                     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  phoneNumbers             TwilioPhoneNumber[] // One subscription item can have multiple phone numbers
+  stripeSubscriptionItemId String              @unique
+  stripePriceId            String
+  itemType                 String
+  itemId                   String?
+  quantity                 Int                 @default(1)
+  isActive                 Boolean             @default(true)
+  metadata                 Json?
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+  user                     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phoneNumbers             TwilioPhoneNumber[]
 
   @@map("subscription_items")
 }
 
 model UserVoice {
   id          String   @id @default(cuid())
-  name        String   // Custom name given by user
-  openaiVoice String   // OpenAI voice: alloy, ash, ballad, coral, echo, sage, shimmer, verse
-  description String?  // Custom description/instructions for the voice
-  language    String?  // Language code if specified
-  isDefault   Boolean  @default(false) // Whether this is the user's default voice
+  name        String
+  language    String?
   addedOn     DateTime @default(now())
   userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  description String?
+  isDefault   Boolean  @default(false)
+  openaiVoice String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, name]) // Each user can have unique voice names
+  @@unique([userId, name])
   @@map("user_voices")
 }
 
@@ -593,9 +586,9 @@ model Invoice {
   userId                String
   twilioPhoneNumberId   String?
   pdfUrl                String?
-  metadata              Json?              // Store additional data
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
+  metadata              Json?
   twilioPhoneNumber     TwilioPhoneNumber? @relation(fields: [twilioPhoneNumberId], references: [id])
   user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -625,8 +618,6 @@ model Calendar {
   workingHoursEnd           String        @default("17:00")
   includeSaturday           Boolean       @default(true)
   includeSunday             Boolean       @default(false)
-  notificationEmailEnabled  Boolean       @default(true)
-  emailReminderEnabled      Boolean       @default(true)
   smsReminderEnabled        Boolean       @default(true)
   reminderTimeMinutes       Int           @default(30)
   askForDuration            Boolean       @default(true)
@@ -644,6 +635,8 @@ model Calendar {
   confirmationRequired      Boolean       @default(true)
   confirmationTimeoutHours  Int           @default(24)
   notificationSmsEnabled    Boolean       @default(true)
+  emailReminderEnabled      Boolean       @default(true)
+  notificationEmailEnabled  Boolean       @default(true)
   appointments              Appointment[]
   user                      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   chatbots                  Chatbot[]
@@ -687,105 +680,175 @@ model UserIntegrationSetting {
   @@map("user_integration_settings")
 }
 
-enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  COMPLETED
-  CANCELLED
-}
-
 model UsageRecord {
-  id                   String   @id @default(cuid())
-  userId               String
-  usageType            String   // 'message', 'sms', 'web_search', 'conversation_summary', 'whatsapp_conversation', 'voice_minute'
-  quantity             Int      @default(1)
-  metadata             Json?    // Store additional context like chatbotId, phoneNumber, etc.
-  billingPeriodStart   DateTime
-  billingPeriodEnd     DateTime
-  createdAt            DateTime @default(now())
-  
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id                 String   @id @default(cuid())
+  userId             String
+  usageType          String
+  quantity           Int      @default(1)
+  metadata           Json?
+  billingPeriodStart DateTime
+  billingPeriodEnd   DateTime
+  createdAt          DateTime @default(now())
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, billingPeriodStart, billingPeriodEnd])
   @@index([userId, usageType, billingPeriodStart])
   @@index([createdAt])
   @@map("usage_records")
 }
 
-// New model to track A2P 10DLC Brand registrations per user
 model TwilioA2PBrand {
-  id                    String   @id @default(cuid())
-  userId                String   @unique // One brand per user
-  twilioAccountSid      String   // Which Twilio account (main or subaccount)
-  brandSid             String   @unique // Twilio Brand SID
-  brandStatus          String   // draft, pending, approved, failed, suspended
-  brandType            String   @default("standard") // standard, low_volume, starter
-  companyName          String
-  businessWebsite      String?
-  entityType           String   @default("private_for_profit") // private_for_profit, public_for_profit, non_profit, government
-  registrationReason   String   @default("marketing") // marketing, mixed, political, charity, 2fa, higher_education, emergency
-  vertical             String   // healthcare, finance, retail, etc.
-  ein                  String?  // Tax ID (optional)
-  address              Json     // Address information
-  contactInfo          Json     // Contact information  
-  registrationData     Json?    // Full registration payload
-  submittedAt          DateTime?
-  approvedAt           DateTime?
-  rejectedAt           DateTime?
-  errorMessage         String?
-  reviewNotes          String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  campaigns            TwilioA2PCampaign[]
+  id                 String              @id @default(cuid())
+  userId             String              @unique
+  twilioAccountSid   String
+  brandSid           String              @unique
+  brandStatus        String
+  brandType          String              @default("standard")
+  companyName        String
+  businessWebsite    String?
+  entityType         String              @default("private_for_profit")
+  registrationReason String              @default("marketing")
+  vertical           String
+  ein                String?
+  address            Json
+  contactInfo        Json
+  registrationData   Json?
+  submittedAt        DateTime?
+  approvedAt         DateTime?
+  rejectedAt         DateTime?
+  errorMessage       String?
+  reviewNotes        String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaigns          TwilioA2PCampaign[]
 
   @@map("twilio_a2p_brands")
 }
 
-// New model to track A2P 10DLC Campaign registrations
 model TwilioA2PCampaign {
-  id                    String   @id @default(cuid())
-  userId                String   
-  brandId               String   // Reference to TwilioA2PBrand
-  twilioAccountSid      String   // Which Twilio account (main or subaccount)
-  campaignSid          String   @unique // Twilio Campaign SID
-  campaignStatus       String   // draft, pending, approved, failed, suspended
-  useCaseCategory      String   @default("mixed") // mixed, marketing, 2fa, higher_education, public_service_announcement, emergency, charity, low_volume
-  description          String
-  messageFlow          String   // Description of message flow
-  helpMessage          String   // Help/STOP message
-  optInMessage         String   // Opt-in confirmation
-  sampleMessages       Json     // Array of sample messages
-  registrationData     Json?    // Full campaign registration payload
-  submittedAt          DateTime?
-  approvedAt           DateTime?
-  rejectedAt           DateTime?
-  errorMessage         String?
-  reviewNotes          String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  
-  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brand                TwilioA2PBrand     @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  id               String         @id @default(cuid())
+  userId           String
+  brandId          String
+  twilioAccountSid String
+  campaignSid      String         @unique
+  campaignStatus   String
+  useCaseCategory  String         @default("mixed")
+  description      String
+  messageFlow      String
+  helpMessage      String
+  optInMessage     String
+  sampleMessages   Json
+  registrationData Json?
+  submittedAt      DateTime?
+  approvedAt       DateTime?
+  rejectedAt       DateTime?
+  errorMessage     String?
+  reviewNotes      String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  brand            TwilioA2PBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("twilio_a2p_campaigns")
 }
 
 model Notification {
-  id                String   @id @default(cuid())
-  userId            String
-  type              String   // 'appointment', 'order', 'user', 'system', 'reminder'
-  title             String
-  message           String
-  read              Boolean  @default(false)
-  actionUrl         String?  @map("action_url")
-  metadata          Json?    // Store additional data like appointmentId, customerName, etc.
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-  
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  actionUrl String?  @map("action_url")
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, read, createdAt(sort: Desc)])
   @@map("notifications")
+}
+
+model Invitation {
+  id            String    @id @default(cuid())
+  email         String
+  role          String    @default("USER")
+  token         String    @unique
+  status        String    @default("pending")
+  invitedBy     String
+  acceptedBy    String?
+  acceptedAt    DateTime?
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  invitedByUser User      @relation("InvitationsSent", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@index([email, status])
+  @@index([token])
+  @@index([expiresAt, status])
+  @@map("invitations")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model embedding_jobs {
+  job_id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  knowledge_source_id String
+  content_type        String
+  content_id          String
+  content             String
+  metadata            Json?     @default("{}")
+  model_name          String?   @default("text-embedding-3-small")
+  dimensions          Int?      @default(1536)
+  status              String?   @default("pending")
+  error               String?
+  result              Json?
+  started_at          DateTime? @db.Timestamptz(6)
+  completed_at        DateTime? @db.Timestamptz(6)
+  created_at          DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime? @default(now()) @db.Timestamptz(6)
+  chunking_enabled    Boolean?  @default(false)
+  max_chunk_size      Int?      @default(1800)
+  chunk_overlap       Int?      @default(150)
+  chunks_generated    Int?      @default(1)
+
+  @@index([created_at], map: "idx_embedding_jobs_created")
+  @@index([knowledge_source_id], map: "idx_embedding_jobs_knowledge_source")
+  @@index([status], map: "idx_embedding_jobs_status")
+  @@index([chunking_enabled, status], map: "idx_embedding_jobs_chunking")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model vector_documents {
+  id                  String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  knowledge_source_id String
+  content_type        String
+  content_id          String
+  content             String
+  embedding           Unsupported("vector(1536)")?
+  metadata            Json                   @default("{}")
+  created_at          DateTime?              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?              @default(now()) @db.Timestamptz(6)
+  catalog_contents    CatalogContent[]
+  files               File[]
+  qa_contents         QAContent[]
+  text_contents       TextContent[]
+  website_contents    WebsiteContent[]
+
+  @@unique([knowledge_source_id, content_type, content_id])
+  @@index([embedding])
+  @@index([metadata], type: Gin)
+  @@index([knowledge_source_id], map: "vector_documents_source_idx")
+  @@index([content_type], map: "vector_documents_type_idx")
+  @@index([knowledge_source_id, content_type, content_id], map: "idx_vector_documents_content_id_chunk")
+}
+
+
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
 }

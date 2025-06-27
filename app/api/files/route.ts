@@ -14,15 +14,17 @@ export async function GET(request: Request) {
         const { user } = session
 
         const files = await db.file.findMany({
+            where: {
+                userId: session.user.id,
+            },
             select: {
                 id: true,
                 name: true,
-                blobUrl: true,
-                openAIFileId: true,
                 createdAt: true,
+                blobUrl: true,
             },
-            where: {
-                userId: user?.id,
+            orderBy: {
+                createdAt: 'desc',
             },
         })
 

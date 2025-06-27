@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { NextResponse } from 'next/server';
-import { createVectorStore } from '@/lib/vector-store';
+// No longer using OpenAI vector stores - using Supabase vectors
 
 // Schema for creating a new knowledge source
 const createSourceSchema = z.object({
@@ -70,20 +70,12 @@ export async function GET(req: Request) {
       // Get knowledge sources with their contents
       const knowledgeSources = await db.knowledgeSource.findMany({
         where,
-        // Use select instead of include to get all fields
-        select: {
-          id: true,
-          name: true,
-          description: true,
-          createdAt: true,
-          updatedAt: true,
-          userId: true,
-          vectorStoreId: true, // Explicitly include vectorStoreId
-          catalogMode: true,
-          // Include all relations
+        include: {
           textContents: true,
           websiteContents: true,
           qaContents: true,
+          files: true,
+          catalogContents: true,
           chatbots: true,
         }
       });
@@ -167,29 +159,8 @@ export async function POST(req: Request) {
 
     console.log('Created knowledge source:', knowledgeSource);
 
-    // Create a vector store for this knowledge source
-    try {
-      const vectorStore = await createVectorStore(
-        `Vector Store for ${body.name}`,
-        body.description || '',
-        knowledgeSource.id
-      );
-      
-      // Update the knowledge source with the vector store ID
-      await db.knowledgeSource.update({
-        where: { id: knowledgeSource.id },
-        data: { vectorStoreId: vectorStore.id }
-      });
-
-      console.log(`Created and linked vector store ${vectorStore.id} for knowledge source ${knowledgeSource.id}`);
-    } catch (error) {
-      console.error('Error creating vector store:', error);
-      // If vector store creation fails, delete the knowledge source
-      await db.knowledgeSource.delete({
-        where: { id: knowledgeSource.id }
-      });
-      throw new Error('Failed to create vector store for knowledge source');
-    }
+    // Vector store is created automatically when content is added
+    // No need to create OpenAI vector stores anymore
 
     return NextResponse.json(knowledgeSource);
   } catch (error) {

@@ -285,28 +285,12 @@ export default function FileUploadTab({ source }: FileUploadTabProps) {
           openAIFileId: data.openAIFileId
         });
         
-        // Create additional vector store request directly
-        if (data.id && data.openAIFileId) {
-          updateFileStatus(fileId, { status: 'training', progress: 70 });
-          
-          // Make direct call to vector endpoint
-          const vectorResponse = await fetch(`/api/knowledge-sources/${source.id}/content/${data.id}/vector`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              openAIFileId: data.openAIFileId
-            })
-          });
-          
-          updateFileStatus(fileId, { progress: 90 });
-          
-          if (!vectorResponse.ok) {
-            const vectorText = await vectorResponse.text();
-            throw new Error(vectorText || `Failed to process file for AI training: ${vectorResponse.status}`);
-          }
-        }
+        // Remove the deprecated vector endpoint call - processing now happens automatically
+        // The main upload route already handles embedding job creation
+        updateFileStatus(fileId, { status: 'training', progress: 85 });
+        
+        // Short delay to show progress
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Success! Show message and update UI
         toast.success(`File "${fileStatus.file.name}" uploaded and processed successfully`);

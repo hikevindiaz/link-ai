@@ -1,8 +1,8 @@
-import { DashboardLayoutSkeleton } from "@/components/ui/dashboard-layout-skeleton"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function VoicesLoading() {
   return (
-    <DashboardLayoutSkeleton 
+    <UnifiedPageSkeleton 
       sidebarTitle="Voices"
       hasAddButton={true}
       itemCount={6}

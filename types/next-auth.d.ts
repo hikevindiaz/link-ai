@@ -14,6 +14,8 @@ declare module "next-auth/jwt" {
         integrationSettings?: IntegrationSettingsMap
         emailVerified?: boolean
         onboardingCompleted?: boolean
+        role?: string
+        status?: string
     }
 }
 
@@ -25,6 +27,8 @@ declare module "next-auth" {
             integrationSettings?: IntegrationSettingsMap
             emailVerified: boolean
             onboardingCompleted: boolean
+            role: string
+            status: string
         } & DefaultSession["user"]
     }
 
@@ -33,5 +37,7 @@ declare module "next-auth" {
         integrationSettings?: IntegrationSettingsMap
         emailVerified?: boolean
         onboardingCompleted?: boolean
+        role?: string
+        status?: string
     }
 } 

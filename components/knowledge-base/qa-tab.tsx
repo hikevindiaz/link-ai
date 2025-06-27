@@ -511,11 +511,11 @@ export default function QATab({ source }: QATabProps) {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <FileQuestion className="h-5 w-5 text-neutral-500" />
-            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-50">
+            <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
               Add Q&A Content
             </h2>
           </div>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             Add question and answer pairs to your knowledge source. Your Agent will use these to provide more accurate and specific answers.
           </p>
           
@@ -535,9 +535,9 @@ export default function QATab({ source }: QATabProps) {
           
           {/* Add/Edit form - show by default if no pairs exist */}
           {((showAddForm || showEditForm) || (!showEditForm && qaPairs.length === 0 && !isLoading)) && (
-            <div className="mt-4 border border-gray-200 dark:border-gray-800 rounded-lg p-4 bg-gray-50/30 dark:bg-gray-900/20">
+            <div className="mt-4 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4 bg-neutral-50/30 dark:bg-neutral-900/20">
               <form onSubmit={handleSubmit} className="space-y-4">
-                <h3 className="text-lg font-medium mb-2 flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                <h3 className="text-lg font-medium mb-2 flex items-center gap-2 text-neutral-900 dark:text-neutral-100">
                   {showEditForm ? (
                     <>
                       <RiEditLine className="h-4 w-4" />
@@ -552,7 +552,7 @@ export default function QATab({ source }: QATabProps) {
                 </h3>
                 
                 <div className="space-y-2">
-                  <label htmlFor="question" className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <label htmlFor="question" className="block text-sm font-medium text-neutral-900 dark:text-neutral-100">
                     Question
                   </label>
                   <div className="space-y-2">
@@ -575,7 +575,7 @@ export default function QATab({ source }: QATabProps) {
                 </div>
                 
                 <div className="space-y-2">
-                  <label htmlFor="answer" className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <label htmlFor="answer" className="block text-sm font-medium text-neutral-900 dark:text-neutral-100">
                     Answer
                   </label>
                   <div className="space-y-2">
@@ -602,13 +602,13 @@ export default function QATab({ source }: QATabProps) {
                     type="button" 
                     variant="secondary" 
                     onClick={handleCancel}
-                    className="border-gray-200 dark:border-gray-800"
+                    className="border-neutral-200 dark:border-neutral-800"
                   >
                     Cancel
                   </Button>
                   <Button 
                     type="submit"
-                    className="bg-black hover:bg-gray-700 text-white"
+                    className="bg-black hover:bg-neutral-700 text-white"
                   >
                     {showEditForm ? (
                       <>Update & Train Agent</>
@@ -627,10 +627,10 @@ export default function QATab({ source }: QATabProps) {
           <div className="mt-4">
             <div className="space-y-3">
               {processingPairs.map((pair) => (
-                <Card key={pair.id} className="p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
+                <Card key={pair.id} className="p-4 border border-neutral-200 dark:border-neutral-800 shadow-sm">
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-gray-100">{pair.question}</h4>
-                    <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <h4 className="font-medium text-neutral-900 dark:text-neutral-100">{pair.question}</h4>
+                    <div className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
                       {truncateText(pair.answer, 150)}
                     </div>
                   </div>
@@ -643,7 +643,7 @@ export default function QATab({ source }: QATabProps) {
         
         {/* List of existing QA pairs */}
         <div>
-          <h3 className="font-medium text-lg text-gray-900 dark:text-gray-50 flex items-center gap-2">
+          <h3 className="font-medium text-lg text-neutral-900 dark:text-neutral-50 flex items-center gap-2">
             <RiBrainLine className="h-5 w-5 text-neutral-500" />
             Agent Knowledge Q&A
           </h3>
@@ -655,7 +655,7 @@ export default function QATab({ source }: QATabProps) {
               {qaPairs.map((pair) => (
                 <Card 
                   key={pair.id} 
-                  className="overflow-hidden border-gray-200 dark:border-gray-800 hover:border-neutral-200 dark:hover:border-neutral-800 transition-all duration-200"
+                  className="overflow-hidden border-neutral-200 dark:border-neutral-800 hover:border-neutral-200 dark:hover:border-neutral-800 transition-all duration-200"
                 >
                   <div className="p-4">
                     <div className="flex items-start justify-between">
@@ -664,13 +664,13 @@ export default function QATab({ source }: QATabProps) {
                           <Badge variant="secondary" className="text-xs bg-neutral-50 dark:bg-neutral-950 text-neutral-700 dark:text-neutral-300 border-neutral-200 dark:border-neutral-800">
                             Q&A
                           </Badge>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          <span className="text-xs text-neutral-500 dark:text-neutral-400">
                             Updated {formatDate(pair.updatedAt)}
                           </span>
                         </div>
                         
-                        <h4 className="font-medium text-gray-900 dark:text-gray-100">{pair.question}</h4>
-                        <div className="mt-2 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                        <h4 className="font-medium text-neutral-900 dark:text-neutral-100">{pair.question}</h4>
+                        <div className="mt-2 text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
                           {pair.answer}
                         </div>
                       </div>
@@ -680,7 +680,7 @@ export default function QATab({ source }: QATabProps) {
                           size="icon"
                           onClick={() => handleEdit(pair)}
                           title="Edit Q&A"
-                          className="text-gray-500 hover:text-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-950"
+                          className="text-neutral-500 hover:text-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-950"
                         >
                           <RiEditLine className="h-4 w-4" />
                         </Button>
@@ -689,7 +689,7 @@ export default function QATab({ source }: QATabProps) {
                           size="icon"
                           onClick={() => confirmDelete(pair)}
                           title="Delete Q&A"
-                          className="text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                          className="text-neutral-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -700,13 +700,13 @@ export default function QATab({ source }: QATabProps) {
               ))}
             </div>
           ) : (
-            <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+            <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-900/20">
               <div className="text-center">
                 <Brain className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
                   No Q&A pairs saved yet
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 max-w-xs mx-auto">
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-xs mx-auto">
                   Add Q&A pairs to teach your Agent specific questions and answers
                 </p>
               </div>
@@ -731,7 +731,7 @@ export default function QATab({ source }: QATabProps) {
           {currentPairId && (
             <div className="py-4">
               <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-100 dark:border-red-900">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   {qaPairs.find(pair => pair.id === currentPairId)?.question}
                 </p>
               </div>
@@ -742,7 +742,7 @@ export default function QATab({ source }: QATabProps) {
             <Button
               variant="secondary"
               onClick={() => setDeleteDialogOpen(false)}
-              className="border-gray-200 dark:border-gray-800"
+              className="border-neutral-200 dark:border-neutral-800"
             >
               Cancel
             </Button>

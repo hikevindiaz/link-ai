@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { updateCatalogContentVector } from '@/lib/knowledge-vector-integration';
+import { processContentV2, formatContent } from '@/lib/vector-service';
 
 // Schema for route parameters
 const routeParamsSchema = z.object({
@@ -62,7 +62,7 @@ export async function PATCH(
       catalogContent = await db.catalogContent.create({
         data: {
           knowledgeSourceId: sourceId,
-          instructions: instructions || undefined,
+          instructions: instructions, // Allow empty strings
         },
         include: {
           file: true,
@@ -77,7 +77,7 @@ export async function PATCH(
           id: catalogContent.id,
         },
         data: {
-          instructions: instructions || undefined,
+          instructions: instructions, // Allow empty strings
         },
         include: {
           file: true,
@@ -86,10 +86,12 @@ export async function PATCH(
       });
     }
 
-    // Process content to vector store if we have a file or products
-    if ((catalogContent.file || catalogContent.products.length > 0) && knowledgeSource.vectorStoreId) {
+    // Process content to vector store if we have products (always update vectors when instructions change)
+    if (catalogContent.products.length > 0) {
       try {
-        await updateCatalogContentVector(sourceId, catalogContent.id);
+        // Use updateCatalogVector to properly regenerate vectors with new instructions
+        const { updateCatalogVector } = await import('@/lib/vector-service');
+        await updateCatalogVector(sourceId, catalogContent.id);
         console.log(`Updated vector store for catalog content ${catalogContent.id} with new instructions`);
       } catch (vectorError) {
         console.error(`Error updating vector store:`, vectorError);

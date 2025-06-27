@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { handleTextContentDeletion } from '@/lib/knowledge-vector-integration';
+import { deleteContent } from '@/lib/vector-service';
 
 // Define schema for route parameters
 const routeParamsSchema = z.object({
@@ -39,7 +39,7 @@ export async function DELETE(
 
     // First, handle vector store deletion
     console.log(`Handling vector store cleanup for text content ${contentId}`);
-    await handleTextContentDeletion(sourceId, contentId);
+    await deleteContent(sourceId, 'text', contentId);
 
     // Then delete the text content from the database
     await db.textContent.delete({

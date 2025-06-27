@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { ensureVectorStore, updateChatbotsWithKnowledgeSource, processContentToVectorStore } from '@/lib/knowledge-vector-integration';
+// Migration endpoint deprecated - vector processing now happens automatically
 import { z } from 'zod';
 
 // Schema for validating request body

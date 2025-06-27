@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth/next"
 
 import { authOptions } from "@/lib/auth"
 import { db } from '@/lib/db';
-import OpenAI from 'openai';
 import { getUserSubscriptionPlan } from '@/lib/subscription';
 import { RequiresHigherPlanError } from '@/lib/exceptions';
 import { fileTypes as codeTypes } from '@/lib/validations/codeInterpreter';
@@ -68,38 +67,6 @@ export async function POST(request: Request) {
             return new Response('Failed to upload file to storage', { status: 500 });
         }
 
-        const openAIConfig = await db.openAIConfig.findUnique({
-            select: {
-                globalAPIKey: true,
-                id: true,
-            },
-            where: {
-                userId: session?.user?.id
-            }
-        })
-
-        if (!openAIConfig?.globalAPIKey) {
-            return new Response("Missing OpenAI API key. Add your API key in the Settings tab.", { status: 400, statusText: "Missing OpenAI API key" })
-        }
-
-        const openai = new OpenAI({
-            apiKey: openAIConfig?.globalAPIKey
-        })
-
-        // Fetch the file from Supabase
-        const response = await fetch(uploadResult.url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch file from storage: ${response.statusText}`);
-        }
-
-        const fileContent = await response.blob();
-
-        // Upload to OpenAI
-        const file = await openai.files.create({
-            file: new File([fileContent], filename),
-            purpose: 'assistants'
-        });
-
         // Create file record
         await db.file.create({
             data: {
@@ -108,8 +75,9 @@ export async function POST(request: Request) {
                 // @ts-ignore - storageUrl and storageProvider exist in the schema but TypeScript doesn't recognize them
                 storageUrl: uploadResult.url,
                 storageProvider: 'supabase',
-                openAIFileId: file.id,
-                userId: session?.user?.id,
+                user: {
+                    connect: { id: session.user.id }
+                }
             }
         });
 

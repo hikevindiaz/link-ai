@@ -1,11 +1,11 @@
-import { DashboardLayoutSkeleton } from "@/components/ui/dashboard-layout-skeleton"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function CalendarLoading() {
   return (
-    <DashboardLayoutSkeleton 
+    <UnifiedPageSkeleton 
       sidebarTitle="Calendar"
       hasAddButton={true}
-      itemCount={12}
+      itemCount={8}
     />
   )
 } 

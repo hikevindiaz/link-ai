@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { processContentToVectorStore } from "@/lib/knowledge-vector-integration";
+import { processContent, formatContent } from "@/lib/vector-service";
 
 const routeParamsSchema = z.object({
   sourceId: z.string(),

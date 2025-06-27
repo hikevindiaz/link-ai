@@ -1,17 +1,12 @@
-import { CardSkeleton } from "@/components/card-skeleton"
-import { ChatbotCreateButton } from "@/components/chatbot-create-button"
-import { DashboardHeader } from "@/components/header"
-import { DashboardShell } from "@/components/shell"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function DashboardLoading() {
     return (
-        <DashboardShell>
-            <DashboardHeader heading="Dashboard" text="Welcome to Your Chatbot Dashboard">
-                <ChatbotCreateButton />
-            </DashboardHeader>
-            <CardSkeleton />
-            <CardSkeleton />
-            <CardSkeleton />
-        </DashboardShell>
+        <UnifiedPageSkeleton
+            sidebarTitle="Dashboard"
+            hasAddButton={true}
+            itemCount={6}
+            showMainContent={true}
+        />
     )
 }

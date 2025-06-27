@@ -2,11 +2,9 @@ import { getServerSession } from "next-auth/next";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { del } from '@vercel/blob';
-import { removeFileFromVectorStore } from "@/lib/vector-store";
-import OpenAI from "openai";
-import { getOpenAIClient } from "@/lib/openai";
+import { deleteContent } from "@/lib/vector-service";
 import { NextResponse } from "next/server";
+import { deleteFromSupabase } from "@/lib/supabase";
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -78,42 +76,57 @@ export async function DELETE(
       }
     }
 
-    // If file is associated with a knowledge source with a vector store, clean up there
-    if (file.knowledgeSource?.vectorStoreId && file.openAIFileId) {
-      try {
-        const removed = await removeFileFromVectorStore(
-          file.knowledgeSource.vectorStoreId, 
-          file.openAIFileId
-        );
+    // Clean up from vector store
+    try {
+      if (file.crawler) {
+        // For crawler files, we need to delete by crawler pattern since they use unique content IDs
+        console.log(`Deleting crawler vector content for crawler: ${file.crawler.id}`);
         
-        if (removed) {
-          console.log(`Removed file ${file.openAIFileId} from vector store ${file.knowledgeSource.vectorStoreId}`);
-          
-          // Update the knowledge source's vectorStoreUpdatedAt timestamp
-          await db.knowledgeSource.update({
-            where: { id: file.knowledgeSource.id },
-            data: {
-              vectorStoreUpdatedAt: new Date()
-            }
-          });
-        } else {
-          console.warn(`Failed to remove file from vector store - continuing with deletion`);
+        await db.$executeRaw`
+          DELETE FROM embedding_jobs 
+          WHERE knowledge_source_id = ${params.sourceId}
+          AND content_type = 'website'
+          AND content_id LIKE ${'crawler-' + file.crawler.id + '-%'}
+        `;
+        
+        await db.$executeRaw`
+          DELETE FROM vector_documents 
+          WHERE knowledge_source_id = ${params.sourceId}
+          AND content_type = 'website'
+          AND content_id LIKE ${'crawler-' + file.crawler.id + '-%'}
+        `;
+        
+        console.log(`Removed crawler vector content for crawler: ${file.crawler.id}`);
+      } else {
+        // For regular files, we need to delete both 'text' and 'file' type vector documents
+        // because files create 'text' type vectors when we extract text locally
+        try {
+          await deleteContent(params.sourceId, 'text', file.id);
+          console.log(`Removed text-type vector content for file ${file.id}`);
+        } catch (textDeleteError) {
+          console.error('Error deleting text-type vector content:', textDeleteError);
         }
-      } catch (vectorError) {
-        console.error('Error removing file from vector store:', vectorError);
-        // Continue with file deletion even if vector store cleanup fails
+        
+        try {
+          await deleteContent(params.sourceId, 'file', file.id);
+          console.log(`Removed file-type vector content for file ${file.id}`);
+        } catch (fileDeleteError) {
+          console.error('Error deleting file-type vector content:', fileDeleteError);
+        }
       }
+    } catch (vectorError) {
+      console.error('Error removing file from vector store:', vectorError);
+      // Continue with file deletion even if vector store cleanup fails
     }
 
-    // Delete the OpenAI file if it exists
-    if (file.openAIFileId) {
+    // Delete the file from Supabase storage if it exists
+    if (file.storageProvider === 'supabase' && file.storageUrl) {
       try {
-        const openai = getOpenAIClient();
-        await openai.files.del(file.openAIFileId);
-        console.log(`Deleted OpenAI file: ${file.openAIFileId}`);
-      } catch (openaiError) {
-        console.error('Error deleting OpenAI file:', openaiError);
-        // Continue with file deletion even if OpenAI deletion fails
+        await deleteFromSupabase(file.storageUrl, 'files');
+        console.log(`Deleted file from Supabase storage: ${file.storageUrl}`);
+      } catch (storageError) {
+        console.error('Error deleting file from Supabase storage:', storageError);
+        // Continue with database deletion even if storage deletion fails
       }
     }
 

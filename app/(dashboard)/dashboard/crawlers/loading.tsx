@@ -1,17 +1,12 @@
-import { CardSkeleton } from "@/components/card-skeleton"
-import { DashboardHeader } from "@/components/header"
-import { DashboardShell } from "@/components/shell"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function CrawlersSettingsLoading() {
     return (
-        <DashboardShell>
-            <DashboardHeader
-                heading="Crawlers"
-                text="Manage your crawlers and crawling configuration."
-            />
-            <div className="grid gap-10">
-                <CardSkeleton />
-            </div>
-        </DashboardShell>
+        <UnifiedPageSkeleton 
+            sidebarTitle="Crawlers"
+            hasAddButton={true}
+            itemCount={6}
+            showMainContent={true}
+        />
     )
 }

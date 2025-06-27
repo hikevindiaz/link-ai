@@ -4,7 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { NextResponse } from 'next/server';
-import { processContentToVectorStore, handleQAContentDeletion } from "@/lib/knowledge-vector-integration";
+import { processContentV2, deleteContent, formatContent } from "@/lib/vector-service";
+import { createRollbackHandler } from '@/lib/rollback-system';
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -108,10 +109,14 @@ export async function POST(
     const json = await req.json();
     const body = qaContentArraySchema.parse(json);
 
-    // Create QA content entries
+    // Create QA content entries with rollback protection
     const results = await Promise.all(
       body.map(async (qa) => {
+        const rollback = createRollbackHandler('qa-content');
+        
         try {
+          // CHECKPOINT 1: DATABASE ENTRY
+          console.log(`💾 CHECKPOINT 1: Creating QA content in database...`);
           const qaContent = await db.qAContent.create({
             data: {
               question: qa.question,
@@ -124,32 +129,54 @@ export async function POST(
             },
           });
 
-          // Process to vector store
+          // Record successful database entry for rollback
+          rollback.recordDatabaseSuccess('qa', qaContent.id);
+          console.log(`✅ CHECKPOINT 1 COMPLETE: QA content created with ID: ${qaContent.id}`);
+
+          // CHECKPOINT 2: VECTOR PROCESSING
           try {
-            // Process to vector store and get the OpenAI file ID
-            const openAIFileId = await processContentToVectorStore(sourceId, {
-              question: qa.question,
-              answer: qa.answer
-            }, 'qa', qaContent.id);
+            console.log(`🧠 CHECKPOINT 2: Processing vectors for QA content...`);
+            const vectorJobId = await processContentV2(
+              sourceId,
+              qaContent.id,
+              'qa',
+              {
+                content: '', // Will be formatted by processContentV2
+                metadata: {
+                  question: qa.question,
+                  answer: qa.answer,
+                  source: 'qa_pair'
+                }
+              }
+            );
             
-            if (openAIFileId) {
-              // If we got a file ID back, update the QA content with it using raw SQL
-              // to avoid TypeScript errors with the new field
-              await db.$executeRaw`
-                UPDATE "qa_contents"
-                SET "openAIFileId" = ${openAIFileId}
-                WHERE id = ${qaContent.id}
-              `;
-              console.log(`Updated QA content ${qaContent.id} with OpenAI file ID ${openAIFileId}`);
+            // Record successful vector processing for rollback
+            rollback.recordVectorSuccess(sourceId, qaContent.id, 'qa');
+            console.log(`✅ CHECKPOINT 2 COMPLETE: Vector processing initiated for QA content`);
+            
+            if (vectorJobId) {
+              console.log(`Successfully created embedding job ${vectorJobId} for QA content ${qaContent.id}`);
             }
           } catch (vectorStoreError) {
-            console.error(`Error adding QA to vector store:`, vectorStoreError);
-            // Continue even if vector store processing fails
+            console.error(`❌ CHECKPOINT 2 FAILED: Vector processing failed`);
+            
+            // EXECUTE ROLLBACK
+            await rollback.executeRollback(`Vector processing failed: ${vectorStoreError instanceof Error ? vectorStoreError.message : 'Unknown error'}`);
+            
+            throw new Error(`QA content processing failed at vector stage. All changes have been rolled back. Error: ${vectorStoreError instanceof Error ? vectorStoreError.message : 'Unknown error'}`);
           }
+
+          // ALL CHECKPOINTS SUCCESSFUL
+          rollback.clear();
+          console.log(`🎉 ALL CHECKPOINTS COMPLETE: QA content operation successful`);
 
           return { success: true, id: qaContent.id, question: qa.question };
         } catch (error) {
           console.error(`Error saving QA pair:`, error);
+          
+          // Execute rollback for any partial operations
+          await rollback.executeRollback(error instanceof Error ? error.message : 'Unknown error');
+          
           return { success: false, question: qa.question, error: error instanceof Error ? error.message : 'Unknown error' };
         }
       })
@@ -224,40 +251,25 @@ export async function PUT(
       },
     });
 
-    // Get the current OpenAI file ID (if any)
-    const qaWithFile = await db.$queryRaw`
-      SELECT "openAIFileId" FROM "qa_contents" WHERE id = ${id}
-    `;
-
-    // If there's an existing file, delete it
-    if (qaWithFile && Array.isArray(qaWithFile) && qaWithFile.length > 0 && qaWithFile[0].openAIFileId) {
-      try {
-        const oldFileId = qaWithFile[0].openAIFileId;
-        console.log(`Found existing OpenAI file ID ${oldFileId} for updated QA content ${id}`);
-        
-        // Clean up the old file
-        await handleQAContentDeletion(sourceId, id);
-      } catch (cleanupError) {
-        console.error(`Error cleaning up old OpenAI file for QA content ${id}:`, cleanupError);
-        // Continue even if cleanup fails
-      }
-    }
-
-    // Create a new file in the vector store
+    // Process updated content to vector store
     try {
-      const newOpenAIFileId = await processContentToVectorStore(sourceId, {
-        question: data.question,
-        answer: data.answer
-      }, 'qa', id);
+      // STEP 1: Delete existing vector documents to force re-processing
+      console.log(`Deleting existing vectors for QA content ${id} before update`);
+      await deleteContent(sourceId, 'qa', id);
       
-      if (newOpenAIFileId) {
-        // Update the QA record with the new file ID
-        await db.$executeRaw`
-          UPDATE "qa_contents"
-          SET "openAIFileId" = ${newOpenAIFileId}
-          WHERE id = ${id}
-        `;
-        console.log(`Updated QA content ${id} with new OpenAI file ID ${newOpenAIFileId}`);
+      // STEP 2: Process updated content
+      const { content, metadata } = formatContent('qa', qaContent);
+      const jobId = await processContentV2(
+        sourceId,
+        id,
+        'qa',
+        { content, metadata }
+      );
+      
+      if (jobId) {
+        console.log(`Successfully queued updated QA content ${id} for vector processing with job ID: ${jobId}`);
+      } else {
+        console.log(`Updated QA content already has current vectors, no new job created`);
       }
     } catch (vectorStoreError) {
       console.error(`Error updating QA in vector store:`, vectorStoreError);
@@ -328,7 +340,7 @@ export async function DELETE(
 
     // First, handle vector store cleanup
     try {
-      await handleQAContentDeletion(sourceId, contentId);
+      await deleteContent(sourceId, 'qa', contentId);
       console.log(`Successfully handled vector store cleanup for QA content ${contentId}`);
     } catch (vectorError) {
       console.error(`Error cleaning up vector store:`, vectorError);

@@ -318,7 +318,7 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button onClick={closeChat} variant="ghost" className="cursor-pointer">
-                      <Icons.close style={{ color: chatbot.chatHeaderTextColor }} className="h-5 w-5 text-gray-500" />
+                      <Icons.close style={{ color: chatbot.chatHeaderTextColor }} className="h-5 w-5 text-neutral-500" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Exit Chat</TooltipContent>
@@ -412,10 +412,10 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
                 {
                   fileUploaded &&
                   <div className="flex w-full sm:w-1/2 items-center p-2 bg-white border rounded-lg shadow-sm">
-                    <Icons.document className="text-gray-400 w-6 h-6 flex-shrink-0" />
+                    <Icons.document className="text-neutral-400 w-6 h-6 flex-shrink-0" />
                     <div className="flex flex-col pl-3 pr-6 flex-1 min-w-0">
-                      <span className="font-sm text-gray-800 truncate">{inputFileRef.current?.files![0].name}</span>
-                      <span className="text-sm text-gray-500">
+                      <span className="font-sm text-neutral-800 truncate">{inputFileRef.current?.files![0].name}</span>
+                      <span className="text-sm text-neutral-500">
                         {inputFileRef.current?.files![0].type === 'image/jpeg'
                           ? 'Image'
                           : inputFileRef.current?.files![0].type === 'image/png'
@@ -429,7 +429,7 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
                       inputFileRef.current!.value = '';
                       setFileUploaded(false);
                     }}>
-                      <Icons.close className="text-gray-400 w-4 h-4" />
+                      <Icons.close className="text-neutral-400 w-4 h-4" />
                     </Button>
                   </div>
                 }
@@ -460,7 +460,7 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
                       tabIndex={0}
                       onKeyDown={onKeyDown}
                       placeholder={chatbot.chatMessagePlaceHolder}
-                      className="border-0 border-gray-300 rounded-lg min-h-[60px] w-full resize-none bg-white pl-4 py-[1rem] sm:text-sm shadow-sm focus-visible:ring-0"
+                      className="border-0 border-neutral-300 rounded-lg min-h-[60px] w-full resize-none bg-white pl-4 py-[1rem] sm:text-sm shadow-sm focus-visible:ring-0"
                       spellCheck={false}
                       autoComplete="off"
                       autoCorrect="off"

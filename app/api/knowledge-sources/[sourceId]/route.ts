@@ -4,9 +4,56 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { NextResponse } from 'next/server';
-import { getOpenAIClient } from '@/lib/openai';
-import { removeFileFromVectorStore } from '@/lib/vector-store';
+import { deleteContent } from '@/lib/vector-service';
 import { deleteFromSupabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Initialize Supabase client for vector operations
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Helper function to delete crawler vectors by pattern
+async function deleteCrawlerVectors(knowledgeSourceId: string, crawlerId: string): Promise<void> {
+  console.log(`[deleteCrawlerVectors] Deleting vectors for crawler ${crawlerId}`);
+  
+  try {
+    // Find all vector documents for this crawler (content_id starts with 'crawler-{crawlerId}-')
+    const { data: vectors, error: queryError } = await supabase
+      .from('vector_documents')
+      .select('id, content_id')
+      .eq('knowledge_source_id', knowledgeSourceId)
+      .eq('content_type', 'website')
+      .like('content_id', `crawler-${crawlerId}-%`);
+
+    if (queryError) {
+      console.error('[deleteCrawlerVectors] Error querying vectors:', queryError);
+      return;
+    }
+
+    if (!vectors || vectors.length === 0) {
+      console.log(`[deleteCrawlerVectors] No vectors found for crawler ${crawlerId}`);
+      return;
+    }
+
+    console.log(`[deleteCrawlerVectors] Found ${vectors.length} vectors for crawler ${crawlerId}`);
+
+    // Delete all found vectors
+    for (const vector of vectors) {
+      try {
+        await deleteContent(knowledgeSourceId, 'website', vector.content_id);
+        console.log(`[deleteCrawlerVectors] Deleted vector with content_id: ${vector.content_id}`);
+      } catch (error) {
+        console.error(`[deleteCrawlerVectors] Error deleting vector ${vector.content_id}:`, error);
+      }
+    }
+
+    console.log(`[deleteCrawlerVectors] Successfully processed ${vectors.length} vectors for crawler ${crawlerId}`);
+  } catch (error) {
+    console.error('[deleteCrawlerVectors] Error:', error);
+    throw error;
+  }
+}
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -182,7 +229,11 @@ export async function DELETE(
     const knowledgeSource = await db.knowledgeSource.findUnique({
       where: { id: params.sourceId },
       include: {
-        files: true,
+        files: {
+          include: {
+            crawler: true // Include crawler data to clean up crawler records
+          }
+        },
         textContents: true,
         qaContents: true,
         websiteContents: true,
@@ -196,58 +247,126 @@ export async function DELETE(
 
     console.log(`Starting deletion of knowledge source ${params.sourceId}`);
 
-    // If there's a vector store, delete all files from it first
-    if (knowledgeSource.vectorStoreId) {
-      const openai = getOpenAIClient();
+    // First, handle crawler cleanup (before regular file cleanup)
+    const crawlerIds = new Set<string>();
+    const crawlerFiles = new Set<string>();
+    
+    for (const file of knowledgeSource.files) {
+      if (file.crawler) {
+        crawlerIds.add(file.crawler.id);
+        crawlerFiles.add(file.id);
+      }
+    }
+
+    if (crawlerIds.size > 0) {
+      console.log(`Found ${crawlerIds.size} crawler(s) with ${crawlerFiles.size} files to clean up for knowledge source ${params.sourceId}`);
       
-      console.log(`Deleting files from vector store ${knowledgeSource.vectorStoreId}`);
-      
-      // Delete all files from the vector store
-      for (const file of knowledgeSource.files) {
-        if (file.openAIFileId) {
-          try {
-            await removeFileFromVectorStore(knowledgeSource.vectorStoreId!, file.openAIFileId);
-            console.log(`Removed file ${file.openAIFileId} from vector store`);
-          } catch (error) {
-            console.error(`Error removing file ${file.openAIFileId} from vector store:`, error);
-          }
+      // Clean up crawler vectors first (using pattern matching)
+      for (const crawlerId of crawlerIds) {
+        try {
+          // Use helper function to find and delete all vectors for this crawler
+          await deleteCrawlerVectors(params.sourceId, crawlerId);
+          console.log(`Removed crawler vectors for crawler ${crawlerId} from vector store`);
+        } catch (error) {
+          console.error(`Error removing crawler ${crawlerId} vectors from vector store:`, error);
         }
       }
 
-      // Also remove OpenAI file IDs for text and QA content
-      for (const textContent of knowledgeSource.textContents) {
-        if (textContent.openAIFileId) {
+      // Delete crawler files from storage
+      for (const file of knowledgeSource.files) {
+        if (file.crawler && crawlerFiles.has(file.id)) {
           try {
-            await removeFileFromVectorStore(knowledgeSource.vectorStoreId!, textContent.openAIFileId);
-            console.log(`Removed text content file ${textContent.openAIFileId} from vector store`);
+            // @ts-ignore - Type might not include storageProvider and storageUrl properties yet
+            const storageProvider = file.storageProvider;
+            // @ts-ignore - Type might not include storageProvider and storageUrl properties yet
+            const storageUrl = file.storageUrl;
+            
+            if (storageProvider === 'supabase' && storageUrl) {
+              await deleteFromSupabase(storageUrl, 'files');
+              console.log(`Deleted crawler file from Supabase: ${storageUrl}`);
+            }
           } catch (error) {
-            console.error(`Error removing text content file ${textContent.openAIFileId} from vector store:`, error);
+            console.error(`Error deleting crawler file ${file.id} from storage:`, error);
           }
+        }
+      }
+      
+      // Delete crawler records (this will cascade delete their file records from DB)
+      for (const crawlerId of crawlerIds) {
+        try {
+          await db.crawler.delete({
+            where: { id: crawlerId }
+          });
+          console.log(`Deleted crawler record: ${crawlerId}`);
+        } catch (error) {
+          console.error(`Error deleting crawler ${crawlerId}:`, error);
+        }
+      }
+    }
+
+    // Clean up all remaining vector documents for this knowledge source
+    try {
+      console.log(`Cleaning up remaining vector documents for knowledge source ${params.sourceId}`);
+      
+      // Delete vector documents for non-crawler files
+      for (const file of knowledgeSource.files) {
+        // Skip files that were handled by crawler cleanup
+        if (crawlerFiles.has(file.id)) continue;
+        
+        try {
+          await deleteContent(params.sourceId, 'file', file.id);
+          console.log(`Removed file ${file.id} from vector store`);
+        } catch (error) {
+          console.error(`Error removing file ${file.id} from vector store:`, error);
+        }
+      }
+
+      for (const textContent of knowledgeSource.textContents) {
+        try {
+          await deleteContent(params.sourceId, 'text', textContent.id);
+          console.log(`Removed text content ${textContent.id} from vector store`);
+        } catch (error) {
+          console.error(`Error removing text content ${textContent.id} from vector store:`, error);
         }
       }
 
       for (const qaContent of knowledgeSource.qaContents) {
-        if (qaContent.openAIFileId) {
-          try {
-            await removeFileFromVectorStore(knowledgeSource.vectorStoreId!, qaContent.openAIFileId);
-            console.log(`Removed QA content file ${qaContent.openAIFileId} from vector store`);
-          } catch (error) {
-            console.error(`Error removing QA content file ${qaContent.openAIFileId} from vector store:`, error);
-          }
+        try {
+          await deleteContent(params.sourceId, 'qa', qaContent.id);
+          console.log(`Removed QA content ${qaContent.id} from vector store`);
+        } catch (error) {
+          console.error(`Error removing QA content ${qaContent.id} from vector store:`, error);
         }
       }
 
-      // Delete the vector store itself
-      try {
-        await openai.vectorStores.del(knowledgeSource.vectorStoreId);
-        console.log(`Deleted vector store ${knowledgeSource.vectorStoreId}`);
-      } catch (error) {
-        console.error(`Error deleting vector store ${knowledgeSource.vectorStoreId}:`, error);
+      for (const websiteContent of knowledgeSource.websiteContents) {
+        try {
+          await deleteContent(params.sourceId, 'website', websiteContent.id);
+          console.log(`Removed website content ${websiteContent.id} from vector store`);
+        } catch (error) {
+          console.error(`Error removing website content ${websiteContent.id} from vector store:`, error);
+        }
       }
+
+      for (const catalogContent of knowledgeSource.catalogContents) {
+        try {
+          await deleteContent(params.sourceId, 'catalog', catalogContent.id);
+          console.log(`Removed catalog content ${catalogContent.id} from vector store`);
+        } catch (error) {
+          console.error(`Error removing catalog content ${catalogContent.id} from vector store:`, error);
+        }
+      }
+
+      console.log(`Vector cleanup completed for knowledge source ${params.sourceId}`);
+    } catch (error) {
+      console.error(`Error during vector cleanup:`, error);
     }
 
-    // Delete files from storage (Vercel Blob or Supabase)
+    // Delete remaining files from storage (non-crawler files)
     for (const file of knowledgeSource.files) {
+      // Skip files that were handled by crawler cleanup
+      if (crawlerFiles.has(file.id)) continue;
+      
       try {
         // Check if the file has storage provider and URL properties
         // @ts-ignore - Type might not include storageProvider and storageUrl properties yet
@@ -257,19 +376,8 @@ export async function DELETE(
         
         // If file is stored in Supabase
         if (storageProvider === 'supabase' && storageUrl) {
-          // Extract the path from the storage URL
-          const url = new URL(storageUrl);
-          const pathMatch = url.pathname.match(/\/storage\/v1\/object\/public\/([^\/]+)\/(.+)$/);
-          
-          if (pathMatch && pathMatch.length >= 3) {
-            const bucket = pathMatch[1];
-            const path = pathMatch[2];
-            
-            await deleteFromSupabase(path, bucket);
-            console.log(`Deleted file from Supabase: ${path} (bucket: ${bucket})`);
-          } else {
-            console.warn(`Could not extract path from Supabase URL: ${storageUrl}`);
-          }
+          await deleteFromSupabase(storageUrl, 'files');
+          console.log(`Deleted file from Supabase: ${storageUrl}`);
         }
         
         // For other storage providers like Vercel Blob, deletion happens automatically
@@ -293,6 +401,18 @@ export async function DELETE(
     });
     
     if (products.length > 0) {
+      // Delete product images first
+      for (const product of products) {
+        if (product.imageUrl) {
+          try {
+            await deleteFromSupabase(product.imageUrl, 'files');
+            console.log(`Deleted product image: ${product.imageUrl}`);
+          } catch (error) {
+            console.error(`Error deleting product image ${product.imageUrl}:`, error);
+          }
+        }
+      }
+      
       await db.product.deleteMany({
         where: {
           catalogContent: {
@@ -324,11 +444,14 @@ export async function DELETE(
     });
     console.log(`Deleted text content for source ${params.sourceId}`);
 
-    // Delete all files from the database
+    // Delete remaining files from the database (crawler files already deleted by cascade)
     await db.file.deleteMany({
-      where: { knowledgeSourceId: params.sourceId }
+      where: { 
+        knowledgeSourceId: params.sourceId,
+        crawlerId: null // Only delete files that aren't associated with crawlers
+      }
     });
-    console.log(`Deleted all files for source ${params.sourceId}`);
+    console.log(`Deleted remaining non-crawler files for source ${params.sourceId}`);
 
     // Finally, delete the knowledge source
     await db.knowledgeSource.delete({

@@ -1,17 +1,12 @@
-import { CardSkeleton } from "@/components/card-skeleton"
-import { DashboardHeader } from "@/components/header"
-import { DashboardShell } from "@/components/shell"
+import { UnifiedPageSkeleton } from "@/components/ui/unified-skeleton"
 
 export default function CrawlingLoading() {
     return (
-        <DashboardShell>
-            <DashboardHeader
-                heading="Crawling"
-                text="Start crawling to import files."
-            />
-            <div className="grid gap-10">
-                <CardSkeleton />
-            </div>
-        </DashboardShell>
+        <UnifiedPageSkeleton 
+            sidebarTitle="Crawling"
+            hasAddButton={false}
+            itemCount={6}
+            showMainContent={true}
+        />
     )
 }

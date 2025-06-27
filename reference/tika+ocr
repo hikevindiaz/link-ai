@@ -1,0 +1,138 @@
+Here’s a concrete, end-to-end recipe for standing up an Apache Tika + Tesseract OCR service on Fly.io, and calling it from your Supabase Edge Functions in pure TypeScript:
+
+1. Dockerize Tika + Tesseract
+Create a Dockerfile in a new folder (e.g. tika-service/):
+
+dockerfile
+Copy
+Edit
+# Dockerfile
+FROM openjdk:11-jre-slim
+
+# Install Tesseract for OCR
+RUN apt-get update \
+  && apt-get install -y tesseract-ocr libtesseract-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+# Fetch and install Tika Server
+ENV TIKA_VERSION=2.9.0
+ADD https://downloads.apache.org/tika/tika-server-${TIKA_VERSION}.jar /tika-server.jar
+
+# Expose the default port
+EXPOSE 9998
+
+# Launch Tika in server mode with OCR enabled
+ENTRYPOINT ["java", "-jar", "/tika-server.jar", "-h", "0.0.0.0", "--enableUnsecureFeatures", "--ocrLanguage=eng"]
+Notes
+
+We enable Tika’s unsecure features so it can load the Tesseract OCR bridge.
+
+You can add --ocrLanguage=spa+eng (or any languages) once you install the corresponding tesseract-ocr-<lang> packages.
+
+2. Fly.io Deployment
+Login & init
+
+bash
+Copy
+Edit
+flyctl auth login
+cd tika-service
+flyctl init --name link-tika --image your-dockerhub-username/link-tika
+Choose a region near your Supabase Edge instance (e.g. iad for Virginia).
+
+Configure fly.toml
+Ensure your fly.toml looks like:
+
+toml
+Copy
+Edit
+app = "link-tika"
+kill_signal = "SIGINT"
+kill_timeout = 5
+primary_region = "iad"
+
+[build]
+  image = "your-dockerhub-username/link-tika"
+
+[[services]]
+  internal_port = 9998
+  protocol = "tcp"
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+Deploy
+
+bash
+Copy
+Edit
+flyctl deploy
+After a minute, you’ll get a secure public hostname, e.g. https://link-tika.fly.dev.
+
+3. Secure It (optional but recommended)
+On Fly.io, you can enable a simple API key by wrapping Tika behind a tiny middleware (e.g. a Node “edge” that verifies a header) or by using Fly’s built-in TLS and basic auth.
+
+You could also restrict inbound IPs to only your Supabase Edge Function CIDR.
+
+4. Call from Supabase Edge Function
+In your Edge Function (Deno/TypeScript), simply fetch() the Tika server:
+
+ts
+Copy
+Edit
+// supabase/functions/extract-text.ts
+export async function POST(req: Request) {
+  const fileBuffer = await req.arrayBuffer();
+  const mime = req.headers.get("content-type") || "application/octet-stream";
+
+  // Your Fly URL (env var)
+  const TIKA_URL = Deno.env.get("TIKA_URL")!; // e.g. https://link-tika.fly.dev
+
+  // Forward the file to Tika
+  const tikaRes = await fetch(`${TIKA_URL}/tika`, {
+    method: "PUT",
+    headers: { "Content-Type": mime },
+    body: fileBuffer,
+  });
+
+  if (!tikaRes.ok) {
+    return new Response("Tika extraction failed", { status: 500 });
+  }
+
+  const text = await tikaRes.text();
+
+  // Optionally parse metadata:
+  // const metaRes = await fetch(`${TIKA_URL}/meta`, { ... });
+  // const metadata = await metaRes.json();
+
+  return new Response(JSON.stringify({ text }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
+DO set TIKA_URL in your Edge Function’s secrets (supabase secrets set TIKA_URL=https://...).
+
+DO pass through the original content-type so Tika knows how to parse.
+
+5. From RAG Pipeline to Vector Store
+Upload the user’s file → your Edge Function → get back text.
+
+Chunk and embed via text-embedding-3-small
+
+Store vectors in Supabase.
+
+Because Tika preserves multi-column layouts, figure captions, and OCR’d image text, you’ll get much cleaner chunks for downstream retrieval and embedding.
+
+Why this works well for you
+Node-centric: your ingestion logic stays in JavaScript/TypeScript.
+
+No JVM in Edge: Tika lives on Fly.io.
+
+Full-coverage: PDF (tables, images, columns), Office docs, HTML, CSV, plus OCR’d scans.
+
+Scalable: Fly.io auto-scales your Docker service, and Edge Functions remain lean.
+
+Let me know if you need more on securing the endpoint, tuning OCR languages, or sample chunking logic!

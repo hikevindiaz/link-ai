@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import * as z from "zod";
-import { ensureVectorStore } from "@/lib/knowledge-vector-integration";
+// Removed unused imports - vector processing happens in the crawling route
 
 // Define the schema for crawler request validation
 const crawlerSchema = z.object({
@@ -56,8 +56,8 @@ export async function POST(
           create: {
             name: `Crawled content from ${body.crawlUrl}`,
             userId: session.user.id,
-            openAIFileId: "", // Leave empty until we have the actual OpenAI file
             blobUrl: body.crawlUrl,
+            storageProvider: 'supabase', // Mark as Supabase storage
             knowledgeSourceId: sourceId
           }
         }
@@ -72,7 +72,7 @@ export async function POST(
       success: true,
       message: "Crawler started successfully. The content will be processed and added to your knowledge base.",
       crawlerId: crawler.id,
-      fileId: crawler.File[0].id,
+      fileId: crawler.File?.[0]?.id,
       status: {
         phase: "initialized",
         progress: 0,

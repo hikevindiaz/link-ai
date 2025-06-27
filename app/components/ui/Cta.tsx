@@ -33,19 +33,19 @@ export default function Cta() {
             <div>
               <h3
                 id="cta-title"
-                className="inline-block bg-gradient-to-t from-gray-900 to-gray-800 bg-clip-text p-2 text-4xl font-bold tracking-tighter text-transparent md:text-6xl dark:from-gray-50 dark:to-gray-300"
+                className="inline-block bg-gradient-to-t from-neutral-900 to-neutral-800 bg-clip-text p-2 text-4xl font-bold tracking-tighter text-transparent md:text-6xl dark:from-neutral-50 dark:to-neutral-300"
               >
                 Ready to get started?
               </h3>
-              <p className="mx-auto mt-4 max-w-2xl text-gray-600 sm:text-lg dark:text-gray-400">
+              <p className="mx-auto mt-4 max-w-2xl text-neutral-600 sm:text-lg dark:text-neutral-400">
                 <Balancer>
                   Launch a new cluster or migrate to Database with zero
                   downtime.
                 </Balancer>
               </p>
             </div>
-            <div className="mt-14 w-full rounded-[16px] bg-gray-300/5 p-1.5 ring-1 ring-black/[3%] backdrop-blur dark:bg-gray-900/10 dark:ring-white/[3%]">
-              <div className="rounded-xl bg-white p-4 shadow-lg shadow-neutral-500/10 ring-1 ring-black/5 dark:bg-gray-950 dark:shadow-neutral-500/10 dark:ring-white/5">
+            <div className="mt-14 w-full rounded-[16px] bg-neutral-300/5 p-1.5 ring-1 ring-black/[3%] backdrop-blur dark:bg-neutral-900/10 dark:ring-white/[3%]">
+              <div className="rounded-xl bg-white p-4 shadow-lg shadow-neutral-500/10 ring-1 ring-black/5 dark:bg-neutral-950 dark:shadow-neutral-500/10 dark:ring-white/5">
                 <form
                   className="flex flex-col items-center gap-3 sm:flex-row"
                   onSubmit={(e) => e.preventDefault()}
@@ -73,7 +73,7 @@ export default function Cta() {
                 </form>
               </div>
             </div>
-            <p className="mt-4 text-xs text-gray-600 sm:text-sm dark:text-gray-400">
+            <p className="mt-4 text-xs text-neutral-600 sm:text-sm dark:text-neutral-400">
               Not sure where to start?{" "}
               <a
                 href="#"

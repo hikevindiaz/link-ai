@@ -47,7 +47,7 @@ export default function TestSaveCard() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="test-input">Test Input</Label>
-              <p className="text-sm text-gray-500 mb-2">
+              <p className="text-sm text-neutral-500 mb-2">
                 Change this value to see the save card appear
               </p>
               <Input 

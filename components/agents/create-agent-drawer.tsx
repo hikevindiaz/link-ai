@@ -127,8 +127,8 @@ export function CreateAgentDrawer({ open, onClose, onCreateAgent }: CreateAgentD
       <Drawer open={open} onOpenChange={handleClose}>
         <DrawerContent>
           <form id="create-agent-form" onSubmit={handleSubmit}>
-            <DrawerHeader className="border-gray-100 dark:border-gray-800 pb-4">
-              <DrawerTitle className="text-gray-900 dark:text-gray-100 text-lg font-semibold after:content-none">
+            <DrawerHeader className="border-neutral-100 dark:border-neutral-800 pb-4">
+              <DrawerTitle className="text-neutral-900 dark:text-neutral-100 text-lg font-semibold after:content-none">
                 Create New Agent
               </DrawerTitle>
               <DrawerDescription>
@@ -137,20 +137,20 @@ export function CreateAgentDrawer({ open, onClose, onCreateAgent }: CreateAgentD
             </DrawerHeader>
             <div className="px-4 py-2 space-y-6">
               <div>
-                <Label className="font-medium text-gray-900 dark:text-gray-100">Agent Name</Label>
+                <Label className="font-medium text-neutral-900 dark:text-neutral-100">Agent Name</Label>
                 <div className="mt-2">
                   <Input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter agent name"
-                    className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-800"
+                    className="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 border-neutral-200 dark:border-neutral-800"
                     disabled={isSubmitting}
                   />
                 </div>
               </div>
 
               <fieldset className="space-y-3">
-                <Label className="font-medium text-gray-900 dark:text-gray-100">Template</Label>
+                <Label className="font-medium text-neutral-900 dark:text-neutral-100">Template</Label>
                 <RadioCardGroup
                   value={selectedTemplate}
                   onValueChange={setSelectedTemplate}
@@ -161,13 +161,13 @@ export function CreateAgentDrawer({ open, onClose, onCreateAgent }: CreateAgentD
                       key={template.id} 
                       value={template.id}
                       disabled={template.disabled}
-                      className="border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                      className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900"
                     >
                       <div className="flex items-start gap-3">
                         <RadioCardIndicator className="mt-1 text-blue-500 dark:text-blue-400" />
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="leading-6 text-gray-900 dark:text-gray-100">
+                            <span className="leading-6 text-neutral-900 dark:text-neutral-100">
                               {template.name}
                             </span>
                             {template.isRecommended && (
@@ -177,7 +177,7 @@ export function CreateAgentDrawer({ open, onClose, onCreateAgent }: CreateAgentD
                               <Badge variant="secondary">Coming Soon</Badge>
                             )}
                           </div>
-                          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                             {template.description}
                           </p>
                         </div>
@@ -193,7 +193,7 @@ export function CreateAgentDrawer({ open, onClose, onCreateAgent }: CreateAgentD
                 </div>
               )}
             </div>
-            <DrawerFooter className="border-t border-gray-100 dark:border-gray-800">
+            <DrawerFooter className="border-t border-neutral-100 dark:border-neutral-800">
               <DrawerClose asChild>
                 <Button variant="secondary" type="button" disabled={isSubmitting}>Cancel</Button>
               </DrawerClose>
@@ -221,10 +221,10 @@ export function CreateAgentDrawer({ open, onClose, onCreateAgent }: CreateAgentD
         <DialogContent className="sm:max-w-md">
           <DialogHeader className="flex flex-col items-center text-center">
             <CheckCircle2 className="h-12 w-12 text-green-500 mb-2" />
-            <DialogTitle className="font-semibold text-gray-900 dark:text-gray-50 text-xl">
+            <DialogTitle className="font-semibold text-neutral-900 dark:text-neutral-50 text-xl">
               Agent Created
             </DialogTitle>
-            <DialogDescription className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+            <DialogDescription className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
               Your agent has been successfully created.
             </DialogDescription>
           </DialogHeader>

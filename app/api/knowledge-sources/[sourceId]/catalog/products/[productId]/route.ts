@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { processContentToVectorStore } from '@/lib/knowledge-vector-integration';
+import { updateCatalogVector } from '@/lib/vector-service';
+import { deleteProductImage } from '@/lib/supabase';
 
 // Schema for route parameters
 const routeParamsSchema = z.object({
@@ -66,49 +67,50 @@ export async function DELETE(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    // Delete the product
+    // Delete the product image if it exists
+    if (product.imageUrl) {
+      console.log(`[Product Deletion] Step 1: Deleting product image from storage: ${product.imageUrl}`);
+      try {
+        const deleted = await deleteProductImage(product.imageUrl);
+        if (deleted) {
+          console.log(`[Product Deletion] ✓ Successfully deleted product image: ${product.imageUrl}`);
+        } else {
+          console.log(`[Product Deletion] ⚠️ Failed to delete product image: ${product.imageUrl}`);
+        }
+      } catch (deleteError) {
+        console.error('[Product Deletion] ✗ Error deleting product image:', deleteError);
+        // Continue with deletion even if image deletion fails
+      }
+    } else {
+      console.log('[Product Deletion] No image to delete for this product');
+    }
+
+    // Delete the product from database
+    console.log(`[Product Deletion] Step 2: Deleting product ${productId} from database`);
     await db.product.delete({
       where: {
         id: productId,
       },
     });
+    console.log(`[Product Deletion] ✓ Successfully deleted product ${productId} from database`);
 
     // Update the vector store to reflect the catalog change
+    console.log(`[Product Deletion] Step 3: Updating vector store for catalog`);
     try {
-      // Get remaining products for this catalog content
-      const remainingProducts = await db.product.findMany({
-        where: {
-          catalogContentId: catalogContent.id
-        }
-      });
-      
-      if (knowledgeSource.vectorStoreId) {
-        console.log(`Updating vector store ${knowledgeSource.vectorStoreId} after deleting product ${productId}`);
+      console.log(`[Product Deletion] Updating vector store for catalog content ${catalogContent.id}`);
         
-        // Process to vector store with all remaining products
-        await processContentToVectorStore(
-          sourceId,
-          {
-            instructions: catalogContent.instructions || '',
-            products: remainingProducts,
-            file: null // No file in manual mode
-          },
-          'catalog',
-          catalogContent.id
-        );
+      // Update catalog vector with the remaining products
+      // This will automatically handle the removal of the deleted product from vectors
+      await updateCatalogVector(sourceId, catalogContent.id);
         
-        console.log(`Updated vector store after product ${productId} deletion with ${remainingProducts.length} remaining products`);
-        
-        // Update the knowledge source timestamp
-        await db.knowledgeSource.update({
-          where: { id: sourceId },
-          data: { vectorStoreUpdatedAt: new Date() },
-        });
-      }
+      console.log(`[Product Deletion] ✓ Successfully updated vector store after product deletion`);
     } catch (vectorError) {
-      console.error(`Error updating vector store after product deletion:`, vectorError);
+      console.error(`[Product Deletion] ✗ Error updating vector store:`, vectorError);
       // Continue even if vector store processing fails
+      // The product is already deleted from DB, so we don't want to fail the whole operation
     }
+
+    console.log(`[Product Deletion] ✓ Product deletion completed successfully`);
 
     return NextResponse.json({ 
       success: true,

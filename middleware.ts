@@ -144,6 +144,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
   
+  // Only check authenticated routes (not login, public pages, etc.)
+  const isProtectedRoute = pathname.startsWith('/dashboard') || 
+                          pathname.startsWith('/api') ||
+                          pathname.startsWith('/chat') ||
+                          pathname.startsWith('/onboarding');
+
+  if (!isProtectedRoute) {
+    return NextResponse.next();
+  }
+
+  // User status checking removed from middleware due to Edge Runtime limitations
+  // This check will be handled in API routes that need it
   return NextResponse.next();
 }
 
@@ -152,11 +164,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api/auth (NextAuth routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|public).*)',
   ],
 };
