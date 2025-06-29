@@ -237,7 +237,7 @@ const LoginForm = ({ error }: LoginFormProps) => {
       >
         <div className="relative w-full max-w-[650px] aspect-square overflow-hidden bg-neutral-950 dark:bg-neutral-100 shadow-lg rounded-2xl p-0">
           <img 
-            src="/LINK LOGIN.png" 
+            src="https://ugnyocjdcpdlneirkfiq.supabase.co/storage/v1/object/public/brand-assets/website-images/IMG_2311.png" 
             alt="Link AI Login Animation"
             className="w-full h-full object-cover"
           />

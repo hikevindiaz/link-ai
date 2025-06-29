@@ -30,6 +30,7 @@ import {
 import { AreaChart } from '@/components/AreaChart';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from "@/components/ui/skeleton";
+import LiveSystemHealthTab from '@/components/admin/LiveSystemHealthTab';
 
 // Tab definitions
 const tabs = [
@@ -37,7 +38,7 @@ const tabs = [
   { id: 'analytics', label: 'Analytics', icon: RiBarChartLine, disabled: true },
   { id: 'users', label: 'Users', icon: RiUserLine, disabled: true },
   { id: 'agents', label: 'Agents', icon: RiRobotLine, disabled: true },
-  { id: 'system-health', label: 'System Health', icon: RiHeartPulseLine, disabled: true },
+  { id: 'system-health', label: 'System Health', icon: RiHeartPulseLine, disabled: false },
   { id: 'error-logs', label: 'Error Logs', icon: RiAlertLine, disabled: true },
 ];
 
@@ -725,26 +726,7 @@ export default function AdminDashboard() {
         );
 
       case 'system-health':
-        return (
-          <div className="space-y-4">
-            {mockData.systemHealth.map((system, index) => (
-              <div key={index} className="grid grid-cols-4 gap-4 py-3 border-b border-neutral-200 dark:border-neutral-700 last:border-b-0">
-                <div>
-                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">{system.component}</p>
-                </div>
-                <div className="flex items-center">
-                  <Badge variant={system.status === 'Healthy' ? 'success' : 'warning'}>{system.status}</Badge>
-                </div>
-                <div className="flex items-center">
-                  <p className="text-sm text-neutral-900 dark:text-neutral-50">{system.uptime}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400">{system.lastCheck}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
+        return <LiveSystemHealthTab />;
 
       default:
         return null;
