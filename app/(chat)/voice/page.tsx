@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { StreamingVoiceUI } from '@/components/chat-interface/streaming-voice-ui';
+import { RealtimeVoiceInterface } from '@/components/chat-interface/realtime-voice-interface';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { ArrowLeft } from 'lucide-react';
@@ -12,7 +12,9 @@ export default function VoiceExperiencePage() {
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   
   // Handle when a transcript is finalized
-  const handleTranscriptFinalized = useCallback((transcript: string) => {
+  const handleTranscriptFinalized = useCallback((transcript: string, isFinal: boolean) => {
+    if (!isFinal) return; // Only process final transcripts
+    
     // Add user message to history
     setMessages(prev => [...prev, { role: 'user', content: transcript }]);
     
@@ -50,18 +52,18 @@ export default function VoiceExperiencePage() {
           </Button>
         </Link>
         <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-          Streaming Voice Experience
+          Realtime Voice Experience
         </h1>
       </header>
       
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Voice Interface */}
         <div className="w-full md:w-1/2">
-          <StreamingVoiceUI
+          <RealtimeVoiceInterface
             chatbotId="demo-chatbot"
-            welcomeMessage="Hello! This is a demo of our streaming voice interface. How can I help you today?"
-            onTranscriptFinalized={handleTranscriptFinalized}
-            className="h-full"
+            welcomeMessage="Hello! This is a demo of our realtime voice interface. How can I help you today?"
+            onTranscriptReceived={handleTranscriptFinalized}
+            debug={false}
           />
         </div>
         
@@ -101,7 +103,7 @@ export default function VoiceExperiencePage() {
       
       <footer className="border-t border-neutral-200 dark:border-neutral-800 p-4 text-center text-sm text-neutral-500 dark:text-neutral-400">
         <p>
-          Streaming voice interface uses real-time audio processing with minimal latency.
+          Realtime voice interface uses WebRTC with minimal latency for the best experience.
         </p>
       </footer>
     </div>
