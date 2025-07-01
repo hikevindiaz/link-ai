@@ -90,16 +90,16 @@ serve(async (req) => {
             }
           )
         }
-      } else {
-        console.error('❌ No job_id or jobs array found in request:', requestBody)
-        return new Response(
-          JSON.stringify({ success: false, error: 'Missing job_id or jobs array' }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
+              } else {
+          console.error('❌ No job_id or jobs array found in request:', requestBody)
+          return new Response(
+            JSON.stringify({ success: false, error: 'Missing job_id or jobs array' }),
+            { 
+              status: 400, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          )
+        }
       
     } catch (parseError) {
       console.error('❌ JSON parsing error:', parseError)
@@ -233,7 +233,7 @@ serve(async (req) => {
       body: JSON.stringify({
         model: 'text-embedding-3-small',
         input: textContent.substring(0, 8000), // Limit content size
-        dimensions: 1536
+        dimensions: 1536 // Match your working configuration
       }),
     })
 

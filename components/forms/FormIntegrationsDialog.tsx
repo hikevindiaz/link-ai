@@ -81,24 +81,24 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg bg-white dark:bg-gray-900 border dark:border-gray-800">
+      <DialogContent className="sm:max-w-lg bg-white dark:bg-neutral-900 border dark:border-neutral-800">
         <DialogHeader>
-          <DialogTitle className="text-gray-900 dark:text-gray-100">Form Integrations</DialogTitle>
-          <DialogDescription className="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+          <DialogTitle className="text-neutral-900 dark:text-neutral-100">Form Integrations</DialogTitle>
+          <DialogDescription className="mt-1 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
             Integrate this form with your chatbots or external applications.
           </DialogDescription>
         </DialogHeader>
         
         <div className="mt-4">
           {/* Tabs */}
-          <div className="flex border-b border-gray-200 dark:border-gray-800">
+          <div className="flex border-b border-neutral-200 dark:border-neutral-800">
             <Button
               variant="ghost"
               className={cn(
                 "px-4 py-2 text-sm font-medium rounded-none",
                 activeTab === 'chatbot'
                   ? "border-b-2 border-neutral-500 text-neutral-600 dark:text-neutral-400"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300"
               )}
               onClick={() => setActiveTab('chatbot')}
             >
@@ -111,7 +111,7 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
                 "px-4 py-2 text-sm font-medium rounded-none",
                 activeTab === 'api'
                   ? "border-b-2 border-neutral-500 text-neutral-600 dark:text-neutral-400"
-                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  : "text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300"
               )}
               onClick={() => setActiveTab('api')}
             >
@@ -124,17 +124,17 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
           <div className="mt-4">
             {activeTab === 'chatbot' && (
               <div>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                <p className="text-sm text-neutral-700 dark:text-neutral-300 mb-4">
                   Add this form to your chatbots to collect structured information from users during conversations.
                 </p>
                 
                 <div className="relative">
-                  <pre className="rounded-xl bg-gray-50 p-4 text-sm text-gray-800 overflow-x-auto dark:bg-gray-900 dark:text-gray-300">
+                  <pre className="rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 overflow-x-auto dark:bg-neutral-900 dark:text-neutral-300">
                     {chatbotIntegrationCode}
                   </pre>
                   <Button
                     variant="secondary"
-                    className="absolute top-2 right-2 p-1.5 h-8 w-8 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    className="absolute top-2 right-2 p-1.5 h-8 w-8 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
                     onClick={() => handleCopyCode(chatbotIntegrationCode)}
                   >
                     {copied ? (
@@ -145,11 +145,11 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
                   </Button>
                 </div>
                 
-                <div className="mt-4 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <div className="mt-4 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+                  <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                     Chatbot Integration Steps
                   </h3>
-                  <ol className="mt-2 space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  <ol className="mt-2 space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
                     <li>1. Copy the form ID shown above</li>
                     <li>2. Go to your chatbot settings</li>
                     <li>3. Add this form to the chatbot's configuration</li>
@@ -161,17 +161,17 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
             
             {activeTab === 'api' && (
               <div>
-                <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                <p className="text-sm text-neutral-700 dark:text-neutral-300 mb-4">
                   Use our API to programmatically submit data to this form from external applications.
                 </p>
                 
                 <div className="relative">
-                  <pre className="rounded-xl bg-gray-50 p-4 text-sm text-gray-800 overflow-x-auto dark:bg-gray-900 dark:text-gray-300">
+                  <pre className="rounded-xl bg-neutral-50 p-4 text-sm text-neutral-800 overflow-x-auto dark:bg-neutral-900 dark:text-neutral-300">
                     {apiIntegrationCode}
                   </pre>
                   <Button
                     variant="secondary"
-                    className="absolute top-2 right-2 p-1.5 h-8 w-8 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                    className="absolute top-2 right-2 p-1.5 h-8 w-8 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700"
                     onClick={() => handleCopyCode(apiIntegrationCode)}
                   >
                     {copied ? (
@@ -182,14 +182,14 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
                   </Button>
                 </div>
                 
-                <div className="mt-4 rounded-xl border border-gray-200 p-4 dark:border-gray-800">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <div className="mt-4 rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
+                  <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                     API Authentication
                   </h3>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
                     API requests require authentication. Use your API key in the Authorization header:
                   </p>
-                  <pre className="mt-2 rounded-xl bg-gray-50 p-2 text-xs text-gray-800 overflow-x-auto dark:bg-gray-900 dark:text-gray-300">
+                  <pre className="mt-2 rounded-xl bg-neutral-50 p-2 text-xs text-neutral-800 overflow-x-auto dark:bg-neutral-900 dark:text-neutral-300">
                     Authorization: Bearer YOUR_API_KEY
                   </pre>
                 </div>
@@ -202,7 +202,7 @@ ${form.fields.map(field => `    "${field.name}": "value for ${field.name}"`).joi
           <DialogClose asChild>
             <Button 
               variant="secondary"
-              className="dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:border-gray-700"
+              className="dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:border-neutral-700"
             >
               Close
             </Button>

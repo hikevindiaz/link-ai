@@ -3,17 +3,50 @@ import { cn } from '@/lib/utils';
 import { ThumbsUp, ThumbsDown, Copy, Check, Bot } from 'lucide-react';
 import { Button } from '@/components/chat-interface/ui/button';
 
-// Simple markdown renderer component
+// Enhanced markdown renderer component with better formatting support
 const SimpleMarkdown = ({ content }: { content: string }) => {
-  // This is a very basic implementation - you might want to use a proper markdown library
   const formattedContent = content
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-    .split('\n').join('<br />');
+    // Handle code blocks first (to avoid conflicts with other formatting)
+    .replace(/```([\s\S]*?)```/g, '<pre class="bg-neutral-100 dark:bg-neutral-800 rounded-md p-3 my-2 overflow-x-auto"><code class="text-sm">$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code class="bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
+    
+    // Handle headers
+    .replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold mt-5 mb-3">$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-6 mb-3 border-b border-neutral-200 dark:border-neutral-700 pb-2">$1</h1>')
+    
+    // Handle bold and italic
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+    
+    // Handle lists (basic support)
+    .replace(/^[\s]*[-*+] (.*)$/gm, '<li class="ml-4 list-disc list-inside mb-1">$1</li>')
+    .replace(/^[\s]*\d+\. (.*)$/gm, '<li class="ml-4 list-decimal list-inside mb-1">$1</li>')
+    
+    // Handle blockquotes
+    .replace(/^> (.*)$/gm, '<blockquote class="border-l-4 border-neutral-300 pl-4 py-1 italic text-neutral-700 dark:text-neutral-300">$1</blockquote>')
+    
+    // Handle horizontal rules
+    .replace(/^---$/gm, '<hr class="my-4 border-t border-neutral-300 dark:border-neutral-600" />')
+    
+    // Handle line breaks - convert double newlines to paragraphs, single newlines to <br>
+    .replace(/\n\n/g, '</p><p class="mb-3">')
+    .replace(/\n/g, '<br />');
   
-  return <div dangerouslySetInnerHTML={{ __html: formattedContent }} />;
+  // Wrap in paragraph tags if content doesn't start with a block element
+  const wrappedContent = formattedContent.startsWith('<h') || 
+                         formattedContent.startsWith('<pre') || 
+                         formattedContent.startsWith('<blockquote') ||
+                         formattedContent.startsWith('<li')
+    ? formattedContent 
+    : `<p class="mb-3 leading-relaxed">${formattedContent}</p>`;
+  
+  return (
+    <div 
+      className="prose prose-sm max-w-none text-inherit"
+      dangerouslySetInnerHTML={{ __html: wrappedContent }} 
+    />
+  );
 };
 
 interface ChatMessageProps {
@@ -62,14 +95,14 @@ export function ChatMessage({
     <div className={cn('flex flex-col space-y-1 mb-4', isUser ? 'items-end' : 'items-start')}>
       {isAssistant && !isLoading && (
         <div className="flex items-center gap-2 ml-2 mb-1">
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center overflow-hidden">
             {chatbotLogoURL ? (
               <img src={chatbotLogoURL} alt="AI" className="w-full h-full object-cover" />
             ) : (
-              <Bot className="w-5 h-5 text-gray-600" />
+              <Bot className="w-5 h-5 text-neutral-600" />
             )}
           </div>
-          <span className="text-sm font-medium text-gray-700">{chatbotName}</span>
+          <span className="text-sm font-medium text-neutral-700">{chatbotName}</span>
         </div>
       )}
       <div className="flex flex-row items-start gap-2">
@@ -100,36 +133,36 @@ export function ChatMessage({
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 rounded-full hover:bg-gray-100"
+              className="h-8 w-8 rounded-full hover:bg-neutral-100"
               onClick={() => copyToClipboard(message.content)}
             >
               {copied ? (
                 <Check className="h-4 w-4 text-green-500" />
               ) : (
-                <Copy className="h-4 w-4 text-gray-500" />
+                <Copy className="h-4 w-4 text-neutral-500" />
               )}
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 rounded-full hover:bg-gray-100"
+              className="h-8 w-8 rounded-full hover:bg-neutral-100"
               onClick={() => setLiked(!liked)}
             >
-              <ThumbsUp className={cn('h-4 w-4', liked ? 'fill-current text-blue-500' : 'text-gray-500')} />
+              <ThumbsUp className={cn('h-4 w-4', liked ? 'fill-current text-blue-500' : 'text-neutral-500')} />
             </Button>
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-8 w-8 rounded-full hover:bg-gray-100"
+              className="h-8 w-8 rounded-full hover:bg-neutral-100"
               onClick={() => setDisliked(!disliked)}
             >
-              <ThumbsDown className={cn('h-4 w-4', disliked ? 'fill-current text-blue-500' : 'text-gray-500')} />
+              <ThumbsDown className={cn('h-4 w-4', disliked ? 'fill-current text-blue-500' : 'text-neutral-500')} />
             </Button>
           </div>
         )}
       </div>
       {isUser && (
-        <div className="text-xs text-gray-500 mr-2 mt-1">You</div>
+        <div className="text-xs text-neutral-500 mr-2 mt-1">You</div>
       )}
     </div>
   );

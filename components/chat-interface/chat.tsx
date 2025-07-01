@@ -258,7 +258,7 @@ export function Chat({
   }, [error, setMessages]);
 
   return (
-    <div className="chat-interface-container flex flex-col min-w-0 h-dvh bg-white dark:bg-gray-950">
+    <div className="chat-interface-container flex flex-col min-w-0 h-dvh bg-white dark:bg-neutral-950">
       <ChatHeader
         chatId={currentThreadId}
         selectedModelId={selectedChatModel}

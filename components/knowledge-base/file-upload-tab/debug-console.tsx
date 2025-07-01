@@ -46,7 +46,7 @@ const DebugConsole: React.FC<DebugConsoleProps> = ({ logs, onRunTest }) => {
       </div>
       <div 
         ref={consoleRef}
-        className="bg-gray-50 dark:bg-gray-900 p-2 font-mono text-xs text-gray-800 dark:text-gray-200 max-h-40 overflow-y-auto"
+        className="bg-neutral-50 dark:bg-neutral-900 p-2 font-mono text-xs text-neutral-800 dark:text-neutral-200 max-h-40 overflow-y-auto"
       >
         {logs.map((log, i) => (
           <div key={i} className="whitespace-pre-wrap mb-1">{log}</div>

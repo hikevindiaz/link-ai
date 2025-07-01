@@ -224,27 +224,37 @@ export async function PATCH(
       updateData.chatbotLogoURL = body.chatbotLogoURL;
     }
     
-    // Always use the default model
+    // Handle model ID update
     if (body.modelId !== undefined) {
-      // Get or create the model if needed
-      const modelName = "gpt-4.1-mini-2025-04-14";
+      // First check if the provided modelId is a direct model name (from agent modes)
       let model = await prisma.chatbotModel.findFirst({
         where: {
-          name: modelName,
+          name: body.modelId,
         },
       });
       
-      // If the model doesn't exist, create it
+      // If not found by name, try to find by ID
       if (!model) {
+        model = await prisma.chatbotModel.findUnique({
+          where: {
+            id: body.modelId,
+          },
+        });
+      }
+      
+      // If still not found, create the model with the provided name
+      if (!model) {
+        console.log(`Creating new model: ${body.modelId}`);
         model = await prisma.chatbotModel.create({
           data: {
-            name: modelName,
+            name: body.modelId,
           },
         });
       }
       
       // Set modelId using the actual model ID from the database
       updateData.modelId = model.id;
+      console.log(`Updated model for chatbot ${chatbotId}: ${model.name} (ID: ${model.id})`);
     }
     
     if (body.temperature !== undefined) updateData.temperature = body.temperature;
@@ -346,8 +356,7 @@ export async function PATCH(
           select: {
             id: true,
             name: true,
-            description: true,
-            vectorStoreId: true
+            description: true
           }
         }
       },

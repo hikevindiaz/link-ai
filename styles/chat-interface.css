@@ -99,8 +99,8 @@
 
 /* REMOVE Override for specific Tailwind class */
 /*
-.chat-interface-container textarea.bg-gray-900\/50,
-.chat-interface-container .Textarea.bg-gray-900\/50 {
+.chat-interface-container textarea.bg-neutral-900\/50,
+.chat-interface-container .Textarea.bg-neutral-900\/50 {
   background-color: var(--chat-input-background) !important;
 }
 */

@@ -11,11 +11,11 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gray-50 text-gray-700 ring-gray-600/20 dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20",
+          "bg-neutral-50 text-neutral-700 ring-neutral-600/20 dark:bg-neutral-400/10 dark:text-neutral-400 dark:ring-neutral-400/20",
         primary:
           "bg-neutral-50 text-neutral-700 ring-neutral-600/20 dark:bg-neutral-400/10 dark:text-neutral-400 dark:ring-neutral-400/20",
         secondary:
-          "bg-gray-50 text-gray-700 ring-gray-600/20 dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20",
+          "bg-neutral-50 text-neutral-700 ring-neutral-600/20 dark:bg-neutral-400/10 dark:text-neutral-400 dark:ring-neutral-400/20",
         success:
           "bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-400/10 dark:text-green-400 dark:ring-green-400/20",
         info:
@@ -25,7 +25,7 @@ const badgeVariants = cva(
         danger:
           "bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-400/10 dark:text-red-400 dark:ring-red-400/20",
         neutral:
-          "bg-gray-50 text-gray-700 ring-gray-600/20 dark:bg-gray-400/10 dark:text-gray-400 dark:ring-gray-400/20",
+          "bg-neutral-50 text-neutral-700 ring-neutral-600/20 dark:bg-neutral-400/10 dark:text-neutral-400 dark:ring-neutral-400/20",
       },
     },
     defaultVariants: {

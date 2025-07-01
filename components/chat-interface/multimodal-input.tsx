@@ -245,7 +245,7 @@ function PureMultimodalInput({
         placeholder="Send a message..."
         className={cx(
           'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base ',
-          'bg-zinc-100 dark:bg-gray-900 border border-zinc-300 dark:border-gray-800 placeholder:text-gray-500 dark:placeholder:text-gray-600',
+          'bg-zinc-100 dark:bg-neutral-900 border border-zinc-300 dark:border-neutral-800 placeholder:text-neutral-500 dark:placeholder:text-neutral-600',
           'pb-10',
           'focus-visible:outline-none',
           className,

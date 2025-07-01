@@ -46,7 +46,7 @@ const DeleteFileDialog: React.FC<DeleteFileDialogProps> = ({
             Are you sure you want to remove this file? Your agent will no longer have access to this information.
           </DialogDescription>
         </DialogHeader>
-        <div className="mt-2 p-4 bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden text-ellipsis">
+        <div className="mt-2 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-xl overflow-hidden text-ellipsis">
           {fileToDelete?.name}
         </div>
         

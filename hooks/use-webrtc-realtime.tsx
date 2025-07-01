@@ -1,12 +1,29 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { createWebRTCRealtimeSession } from '@/lib/realtime-api/webrtc-session-manager';
+import { createLLMAgnosticWebRTCSession } from '@/lib/realtime-api/llm-agnostic-webrtc-manager';
 import type { 
   WebRTCSessionManager, 
   RealtimeConnectionState, 
   RealtimeSessionState,
   RealtimeEvent 
 } from '@/lib/realtime-api/webrtc-session-manager';
+import type { LLMAgnosticWebRTCManager } from '@/lib/realtime-api/llm-agnostic-webrtc-manager';
+
+// Unified types for both voice implementations
+type UnifiedConnectionState = 'disconnected' | 'connecting' | 'connected' | 'error' | 'reconnecting';
+type UnifiedSessionState = 'idle' | 'listening' | 'thinking' | 'processing' | 'speaking' | 'user_speaking';
+
+// Helper functions to map between different state types
+const mapConnectionState = (state: RealtimeConnectionState | 'disconnected' | 'connecting' | 'connected' | 'error'): UnifiedConnectionState => {
+  return state as UnifiedConnectionState;
+};
+
+const mapSessionState = (state: RealtimeSessionState | 'idle' | 'listening' | 'processing' | 'speaking'): UnifiedSessionState => {
+  // Map 'processing' to 'thinking' for consistency with Realtime API
+  if (state === 'processing') return 'thinking';
+  return state as UnifiedSessionState;
+};
 
 export interface WebRTCRealtimeProps {
   chatbotId?: string;
@@ -21,8 +38,8 @@ export interface WebRTCRealtimeProps {
 export interface WebRTCRealtimeReturn {
   // State
   isCallActive: boolean;
-  connectionState: RealtimeConnectionState;
-  sessionState: RealtimeSessionState;
+  connectionState: UnifiedConnectionState;
+  sessionState: UnifiedSessionState;
   statusText: string;
   userTranscript: string;
   assistantTranscript: string;
@@ -57,14 +74,16 @@ export const useWebRTCRealtime = ({
   
   // State
   const [isCallActive, setIsCallActive] = useState(false);
-  const [connectionState, setConnectionState] = useState<RealtimeConnectionState>('disconnected');
-  const [sessionState, setSessionState] = useState<RealtimeSessionState>('idle');
+  const [connectionState, setConnectionState] = useState<UnifiedConnectionState>('disconnected');
+  const [sessionState, setSessionState] = useState<UnifiedSessionState>('idle');
   const [userTranscript, setUserTranscript] = useState('');
   const [assistantTranscript, setAssistantTranscript] = useState('');
   const [hasPlayedWelcome, setHasPlayedWelcome] = useState(false);
   const [isPreConnected, setIsPreConnected] = useState(false);
+  const [useLLMAgnosticVoice, setUseLLMAgnosticVoice] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
   
-  // Refs
+  // Refs for OpenAI Realtime API
   const sessionManagerRef = useRef<WebRTCSessionManager | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const assistantItemIdRef = useRef<string | null>(null);
@@ -82,22 +101,74 @@ export const useWebRTCRealtime = ({
     calendarTools?: any[];
     chatbotUserId?: string;
   } | null>(null);
+
+  // Refs for LLM-Agnostic Voice
+  const llmAgnosticManagerRef = useRef<LLMAgnosticWebRTCManager | null>(null);
+
+  // Determine which voice implementation to use
+  const determineVoiceImplementation = useCallback(async () => {
+    if (!chatbotId) return false;
+
+    try {
+      // Check if we should use LLM-agnostic voice by calling the session endpoint
+      const response = await fetch('/api/voice/llm-agnostic-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chatbotId })
+      });
+
+      if (response.ok) {
+        const sessionData = await response.json();
+        // If the endpoint succeeds, it means we should use LLM-agnostic voice
+        // (The endpoint checks for Gemini models or environment flags)
+        log("Using LLM-agnostic voice implementation");
+        return true;
+      } else {
+        log("Using OpenAI Realtime API implementation");
+        return false;
+      }
+    } catch (error) {
+      log("Falling back to OpenAI Realtime API due to error:", error);
+      return false;
+    }
+  }, [chatbotId, log]);
   
   // Initialize session
   const initializeSession = useCallback(async () => {
-    if (sessionManagerRef.current) {
+    if (sessionManagerRef.current || llmAgnosticManagerRef.current) {
       log("Session already exists");
       return;
     }
     
     try {
-      log("Initializing WebRTC session");
+      log("Determining voice implementation...");
+      const shouldUseLLMAgnostic = await determineVoiceImplementation();
+      setUseLLMAgnosticVoice(shouldUseLLMAgnostic);
       
       // Create audio element if not exists
       if (!audioElementRef.current) {
         audioElementRef.current = document.createElement('audio');
         audioElementRef.current.autoplay = true;
       }
+
+      if (shouldUseLLMAgnostic) {
+        await initializeLLMAgnosticSession();
+      } else {
+        await initializeRealtimeSession();
+      }
+      
+      log("Voice session initialized successfully");
+      
+    } catch (err) {
+      console.error("Failed to initialize voice session", err);
+      if (onError) onError("Failed to connect");
+      throw err;
+    }
+  }, [chatbotId, log, onError]);
+
+  // Initialize OpenAI Realtime API session
+  const initializeRealtimeSession = useCallback(async () => {
+    log("Initializing OpenAI Realtime session");
       
       // Create session manager
       sessionManagerRef.current = createWebRTCRealtimeSession();
@@ -105,12 +176,12 @@ export const useWebRTCRealtime = ({
       // Setup event listeners
       sessionManagerRef.current.onConnectionChange((state) => {
         log("Connection state changed:", state);
-        setConnectionState(state);
+      setConnectionState(mapConnectionState(state));
       });
       
       sessionManagerRef.current.onStateChange((state) => {
         log("Session state changed:", state);
-        setSessionState(state);
+      setSessionState(mapSessionState(state));
       });
       
       sessionManagerRef.current.onEvent((event: RealtimeEvent) => {
@@ -150,17 +221,54 @@ export const useWebRTCRealtime = ({
       
       // Store session info in a ref for the event handler
       sessionInfoRef.current = sessionInfo;
-      
-      log("WebRTC connection established");
-      
-    } catch (err) {
-      console.error("Failed to initialize WebRTC session", err);
-      if (onError) onError("Failed to connect");
-      throw err;
+  }, [chatbotId, log, welcomeMessage]);
+
+  // Initialize LLM-Agnostic session
+  const initializeLLMAgnosticSession = useCallback(async () => {
+    log("Initializing LLM-agnostic session");
+    
+    // Create LLM-agnostic manager
+    llmAgnosticManagerRef.current = createLLMAgnosticWebRTCSession();
+    
+    // Setup event listeners
+    llmAgnosticManagerRef.current.onConnectionChange((state) => {
+      log("LLM-agnostic connection state changed:", state);
+      setConnectionState(mapConnectionState(state));
+    });
+    
+    llmAgnosticManagerRef.current.onStateChange((state) => {
+      log("LLM-agnostic session state changed:", state);
+      setSessionState(mapSessionState(state));
+    });
+    
+    llmAgnosticManagerRef.current.onTranscript((transcript, isFinal) => {
+      log("LLM-agnostic transcript:", transcript, "final:", isFinal);
+      if (isFinal) {
+        setUserTranscript(transcript);
+        if (onTranscriptReceived) {
+          onTranscriptReceived(transcript, isFinal);
+        }
+      }
+    });
+    
+    llmAgnosticManagerRef.current.onAudio((level) => {
+      setAudioLevel(level);
+    });
+    
+    // Connect to LLM-agnostic voice service
+    await llmAgnosticManagerRef.current.connect(chatbotId!, audioElementRef.current!);
+    
+    // Play welcome message if configured
+    if (welcomeMessage && !hasPlayedWelcome) {
+      setTimeout(() => {
+        log("Playing welcome message:", welcomeMessage);
+        llmAgnosticManagerRef.current?.sendText(welcomeMessage);
+        setHasPlayedWelcome(true);
+      }, 1000);
     }
-  }, [chatbotId, log, onError]);
+  }, [chatbotId, log, welcomeMessage, hasPlayedWelcome, onTranscriptReceived]);
   
-  // Handle function calls from the AI
+  // Handle function calls from the AI (for Realtime API)
   const handleFunctionCall = useCallback(async (event: RealtimeEvent) => {
     const functionName = event.name;
     const functionArgs = event.arguments ? JSON.parse(event.arguments) : {};
@@ -389,28 +497,36 @@ export const useWebRTCRealtime = ({
         setAssistantTranscript('');
         log("Keeping connection alive (pre-connected)");
       } else {
+        // Cleanup both implementations
         sessionManagerRef.current?.cleanup();
         sessionManagerRef.current = null;
+        llmAgnosticManagerRef.current?.disconnect();
+        llmAgnosticManagerRef.current = null;
         setConnectionState('disconnected');
         setSessionState('idle');
         setUserTranscript('');
         setAssistantTranscript('');
         setHasPlayedWelcome(false);
         setIsPreConnected(false);
+        setUseLLMAgnosticVoice(false);
       }
     } else {
       log("Starting call");
       setIsCallActive(true);
       
       // If already pre-connected, just send welcome message
-      if (isPreConnected && sessionManagerRef.current) {
+      if (isPreConnected && (sessionManagerRef.current || llmAgnosticManagerRef.current)) {
         log("Using pre-connected session");
         // Send welcome message
         const actualWelcomeMessage = sessionInfoRef.current?.welcomeMessage || welcomeMessage;
         if (actualWelcomeMessage && !hasPlayedWelcome) {
           setTimeout(() => {
             log("Sending welcome message:", actualWelcomeMessage);
+            if (useLLMAgnosticVoice && llmAgnosticManagerRef.current) {
+              llmAgnosticManagerRef.current.sendText(actualWelcomeMessage);
+            } else {
             sendTextRef.current(actualWelcomeMessage);
+            }
             setHasPlayedWelcome(true);
           }, 100);
         }
@@ -428,7 +544,7 @@ export const useWebRTCRealtime = ({
   
   // Pre-connect on mount if enabled
   useEffect(() => {
-    if (preConnect && !sessionManagerRef.current && !isCallActive) {
+    if (preConnect && !sessionManagerRef.current && !llmAgnosticManagerRef.current && !isCallActive) {
       log("Pre-connecting on mount");
       initializeSession().catch(err => {
         console.error("Pre-connection failed:", err);
@@ -440,6 +556,7 @@ export const useWebRTCRealtime = ({
   useEffect(() => {
     return () => {
       sessionManagerRef.current?.cleanup();
+      llmAgnosticManagerRef.current?.disconnect();
     };
   }, []);
   
@@ -480,10 +597,10 @@ export const useWebRTCRealtime = ({
   // Compute orb states
   const orbIsListening = sessionState === 'listening';
   const orbIsUserSpeaking = sessionState === 'user_speaking';
-  const orbIsProcessing = sessionState === 'thinking';
-  const orbIsConnecting = connectionState === 'connecting';
+  const orbIsProcessing = sessionState === 'thinking' || sessionState === 'processing';
+  const orbIsConnecting = connectionState === 'connecting' || connectionState === 'reconnecting';
   const orbIsSpeaking = sessionState === 'speaking';
-  const orbAudioLevel = 0; // WebRTC handles audio internally
+  const orbAudioLevel = useLLMAgnosticVoice ? audioLevel : 0; // Use actual audio level for LLM-agnostic
   
   return {
     // State
@@ -496,6 +613,8 @@ export const useWebRTCRealtime = ({
     
     // Controls
     toggleCall,
+    sendText: useLLMAgnosticVoice && llmAgnosticManagerRef.current ? 
+      (text: string) => llmAgnosticManagerRef.current?.sendText(text) : 
     sendText,
     
     // Orb states

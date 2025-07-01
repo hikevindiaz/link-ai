@@ -27,6 +27,12 @@ export interface ChannelContext {
   phoneNumber?: string;
   threadId: string;
   capabilities: ChannelCapabilities;
+  userLocation?: {
+    country?: string;
+    region?: string;
+    city?: string;
+    timezone?: string;
+  };
   metadata?: {
     callSid?: string; // For Twilio calls
     whatsappBusinessId?: string;
@@ -70,6 +76,7 @@ export interface AgentConfig {
   prompt: string;
   modelId?: string;
   modelName?: string; // Will be resolved from ChatbotModel relation
+  openaiKey?: string;
   temperature: number;
   maxCompletionTokens: number;
   maxPromptTokens: number;
@@ -107,6 +114,16 @@ export interface AgentConfig {
   
   // Knowledge and tools
   knowledgeSourceIds: string[];
+  knowledgeConfig?: {
+    knowledgeSourceIds: string[]; // Supabase knowledge source IDs for vector search
+    vectorStoreIds: string[]; // Legacy OpenAI vector store IDs (deprecated)
+    websiteUrls: string[];
+    websiteInstructions: Array<{url: string, instructions?: string}>;
+    textKnowledge: string;
+    useSupabaseVectorSearch: boolean; // Use Supabase vector search
+    useFileSearch: boolean; // Legacy OpenAI file search (deprecated)
+    useWebSearch: boolean;
+  };
   tools?: AgentTool[];
   
   // Channel-specific overrides
@@ -191,4 +208,20 @@ export interface AIProviderOptions {
   maxTokens: number;
   tools?: any[];
   toolChoice?: any;
+  systemPrompt?: string;
+  knowledgeSourceIds?: string[]; // Supabase knowledge source IDs for vector search
+  vectorStoreIds?: string[]; // Legacy OpenAI vector store IDs (deprecated)
+}
+
+// Interface for processing messages with all context
+export interface MessageProcessingInput {
+  messages: AgentMessage[];
+  threadId: string;
+  stream?: boolean;
+  userLocation?: {
+    country?: string;
+    region?: string;
+    city?: string;
+    timezone?: string;
+  };
 } 

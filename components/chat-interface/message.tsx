@@ -58,7 +58,7 @@ const PurePreviewMessage = ({
           )}
         >
           {message.role === 'assistant' && (
-            <div className="text-black size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-gray-100 dark:bg-white">
+            <div className="text-black size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-neutral-100 dark:bg-white">
               <div className="translate-y-px">
                 <SparklesIcon size={14} />
               </div>
@@ -98,7 +98,7 @@ const PurePreviewMessage = ({
                     'px-2 h-fit py-2 rounded-xl break-words',
                     message.role === 'user'
                       ? 'bg-black text-white dark:bg-white dark:text-black ml-auto max-w-[90%]'
-                      : 'bg-white-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
+                      : 'bg-white-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100'
                   )}
                 >
                   <Markdown>{message.content}</Markdown>

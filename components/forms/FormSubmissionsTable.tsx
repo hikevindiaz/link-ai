@@ -139,7 +139,7 @@ export function FormSubmissionsTable({
     return (
       <div className="flex h-full flex-col items-center justify-center p-8 text-center">
         <div className="flex max-w-md flex-col items-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             No submissions yet for this form.
           </p>
         </div>
@@ -157,10 +157,10 @@ export function FormSubmissionsTable({
       >
         {tabs.map((tab) => (
           <FormRadioItem key={tab.name} value={tab.name}>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+            <p className="text-sm text-neutral-500 dark:text-neutral-500">
               {tab.name}
             </p>
-            <p className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+            <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
               {tab.value}
             </p>
           </FormRadioItem>
@@ -177,7 +177,7 @@ export function FormSubmissionsTable({
                     key={header.id}
                     className={cn(
                       (header.column.columnDef.meta as ColumnMeta)?.align,
-                      "sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950"
+                      "sticky top-0 z-10 border-b border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950"
                     )}
                     onClick={header.column.getToggleSortingHandler()}
                   >
@@ -202,7 +202,7 @@ export function FormSubmissionsTable({
                     key={cell.id}
                     className={cn(
                       (cell.column.columnDef.meta as ColumnMeta)?.align,
-                      "border-b border-gray-200 dark:border-gray-800"
+                      "border-b border-neutral-200 dark:border-neutral-800"
                     )}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

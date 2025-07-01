@@ -8,8 +8,9 @@ const PORT = process.env.PORT || 3000;
 const DATABASE_URL = process.env.DATABASE_URL;
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'];
 
-// Import the WebSocket handler and call config
+// Import the WebSocket handlers and call config
 const { handleTwilioWebSocket } = require('./lib/twilio-websocket-handler');
+const { handleLLMAgnosticVoice } = require('./lib/llm-agnostic-voice-handler');
 const { getCallConfig, getAgentConfiguration } = require('./lib/call-config');
 
 // Create HTTP server
@@ -150,12 +151,22 @@ server.on('upgrade', async (request, socket, head) => {
             // Remove this temporary handler
             ws.removeListener('message', startMessageHandler);
             
-            // Now handle the connection with the full config
-            console.log('Starting Twilio WebSocket handler with full configuration...');
+            // Determine which handler to use based on configuration
+            const useLLMAgnosticVoice = process.env.USE_LLM_AGNOSTIC_VOICE === 'true' || 
+                                       config.model?.includes('gemini') ||
+                                       process.env.FORCE_LLM_AGNOSTIC === 'true';
             
+            if (useLLMAgnosticVoice) {
+              console.log('Starting LLM-agnostic voice handler with full configuration...');
+              // Pass the original start message to the handler
+              config.startMessage = message;
+              await handleLLMAgnosticVoice(ws, config);
+            } else {
+              console.log('Starting Twilio WebSocket handler with full configuration...');
             // Pass the original start message to the handler
             config.startMessage = message;
             await handleTwilioWebSocket(ws, config);
+            }
           }
         } catch (error) {
           console.error('Error processing start message:', error);

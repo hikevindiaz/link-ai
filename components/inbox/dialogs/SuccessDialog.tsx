@@ -23,14 +23,14 @@ export function SuccessDialog({ open, onOpenChange, threadId }: SuccessDialogPro
       onOpenChange={onOpenChange}
     >
       <DialogContent className={cn(
-        "sm:max-w-md bg-white dark:bg-gray-900 border dark:border-gray-800",
+        "sm:max-w-md bg-white dark:bg-neutral-900 border dark:border-neutral-800",
       )}>
         <DialogHeader className="flex flex-col items-center text-center">
           <CheckCircle2 className="h-12 w-12 text-green-500 dark:text-green-400 mb-2" />
-          <DialogTitle className="font-semibold text-gray-900 dark:text-gray-50 text-xl">
+          <DialogTitle className="font-semibold text-neutral-900 dark:text-neutral-50 text-xl">
             Conversation Deleted
           </DialogTitle>
-          <DialogDescription className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+          <DialogDescription className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
             Your conversation has been successfully deleted.
           </DialogDescription>
         </DialogHeader>

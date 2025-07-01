@@ -111,10 +111,10 @@ export const RealtimeVoiceInterface = forwardRef<RealtimeVoiceInterfaceHandle, R
           </div>
           
           {/* Status text */}
-          <p className="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300 text-center">
+          <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300 text-center">
             {statusText}
             {debug && (
-              <span className="ml-2 text-xs text-gray-500">
+              <span className="ml-2 text-xs text-neutral-500">
                 (Session: {sessionState}, Connection: {connectionState})
               </span>
             )}
@@ -124,13 +124,13 @@ export const RealtimeVoiceInterface = forwardRef<RealtimeVoiceInterfaceHandle, R
           {isCallActive && (userTranscript || assistantTranscript) && (
             <div className="mt-4 w-full max-w-md space-y-2 max-h-48 overflow-y-auto">
               {userTranscript && (
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300">
+                <div className="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-3 text-sm text-neutral-700 dark:text-neutral-300">
                   <span className="font-medium text-neutral-600 dark:text-neutral-400">You: </span>
                   {userTranscript}
                 </div>
               )}
               {assistantTranscript && (
-                <div className="bg-neutral-50 dark:bg-neutral-900/20 rounded-lg p-3 text-sm text-gray-700 dark:text-gray-300">
+                <div className="bg-neutral-50 dark:bg-neutral-900/20 rounded-lg p-3 text-sm text-neutral-700 dark:text-neutral-300">
                   <span className="font-medium text-neutral-600 dark:text-neutral-400">Assistant: </span>
                   {assistantTranscript}
                 </div>
@@ -170,9 +170,9 @@ export const RealtimeVoiceInterface = forwardRef<RealtimeVoiceInterfaceHandle, R
 
           {/* Debug information */}
           {debug && isCallActive && (
-            <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs w-full max-w-md">
+            <div className="mt-4 p-3 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-xs w-full max-w-md">
               <h4 className="font-medium mb-2">Debug Info:</h4>
-              <div className="space-y-1 text-gray-600 dark:text-gray-400">
+              <div className="space-y-1 text-neutral-600 dark:text-neutral-400">
                 <div>Session State: {sessionState}</div>
                 <div>Connection: {connectionState}</div>
                 <div>Audio Level: {orbAudioLevel.toFixed(3)}</div>

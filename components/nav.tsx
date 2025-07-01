@@ -28,7 +28,7 @@ export function DashboardNav({ items }: { items: SidebarNavItem[] }) {
           alt="Link AI Logo"
           className="h-8 w-auto"
         />
-        <div className="w-full border-t border-gray-200" />
+        <div className="w-full border-t border-neutral-200" />
       </div>
 
       {/* Middle Section: Navigation Items */}
@@ -41,7 +41,7 @@ export function DashboardNav({ items }: { items: SidebarNavItem[] }) {
               href={item.disabled ? "/" : item.href || "#"}
               className={cn(
                 "group flex items-center rounded-xl px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                path === item.href ? "bg-[#3c82f6] text-white" : "text-gray-700",
+                path === item.href ? "bg-[#3c82f6] text-white" : "text-neutral-700",
                 item.disabled && "cursor-not-allowed opacity-50"
               )}
             >
@@ -58,15 +58,15 @@ export function DashboardNav({ items }: { items: SidebarNavItem[] }) {
           onClick={() =>
             setTheme(theme === "dark" || resolvedTheme === "dark" ? "light" : "dark")
           }
-          className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+          className="flex items-center justify-center h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600"
         >
-          <Icons.sun className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+          <Icons.sun className="h-5 w-5 text-neutral-600 dark:text-neutral-300" />
         </button>
         <Link
           href="/dashboard/settings"
-          className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600"
+          className="flex items-center justify-center h-10 w-10 rounded-full bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600"
         >
-          <Icons.settings className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+          <Icons.settings className="h-5 w-5 text-neutral-600 dark:text-neutral-300" />
         </Link>
       </div>
     </nav>

@@ -217,7 +217,7 @@ html, body, #__next {
 
 /* 10. Tremor Card Customization */
 .tremor-card {
-  @apply bg-white dark:bg-gray-900 shadow-md rounded-lg p-4;
+  @apply bg-white dark:bg-neutral-900 shadow-md rounded-lg p-4;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 

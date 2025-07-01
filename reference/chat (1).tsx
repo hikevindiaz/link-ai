@@ -423,7 +423,7 @@ export function Chat({
   />
 
   return (
-    <div className="chat-interface-container flex flex-col min-w-0 h-dvh bg-white dark:bg-gray-950">
+    <div className="chat-interface-container flex flex-col min-w-0 h-dvh bg-white dark:bg-neutral-950">
       <ChatHeader
         chatId={currentThreadId}
         selectedModelId={selectedChatModel}
@@ -495,13 +495,13 @@ export function Chat({
             audioLevel={orbAudioLevel}
           />
           
-          <p className="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="mt-4 text-sm font-medium text-neutral-700 dark:text-neutral-300">
             {statusText}
           </p>
           
           {elevenLabsUserTranscript && (
-            <div className="mt-4 max-w-md w-full bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-800">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+            <div className="mt-4 max-w-md w-full bg-neutral-50 dark:bg-neutral-900 rounded-lg p-3 border border-neutral-200 dark:border-neutral-800">
+              <p className="text-sm text-neutral-700 dark:text-neutral-300">
                 <span className="font-medium text-neutral-600 dark:text-neutral-400">You: </span>
                 {elevenLabsUserTranscript}
               </p>

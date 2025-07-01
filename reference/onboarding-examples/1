@@ -61,7 +61,7 @@ export default function Example() {
         );
       case 'complete':
         return (
-          <div className="inline-flex w-full min-w-[126px] flex-nowrap items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-gray-300 px-3 py-2 text-center text-sm font-medium text-white dark:bg-gray-700 dark:text-white sm:w-fit">
+          <div className="inline-flex w-full min-w-[126px] flex-nowrap items-center justify-center whitespace-nowrap rounded-md border border-transparent bg-neutral-300 px-3 py-2 text-center text-sm font-medium text-white dark:bg-neutral-700 dark:text-white sm:w-fit">
             Done
           </div>
         );
@@ -71,16 +71,16 @@ export default function Example() {
   return (
     <>
       <div className="py-16 sm:mx-auto sm:max-w-2xl">
-        <div className="relative mx-auto w-fit rounded-full bg-gray-50/50 p-1 shadow-md shadow-black/10 ring-1 ring-black/10 dark:bg-gray-900 dark:ring-gray-800">
+        <div className="relative mx-auto w-fit rounded-full bg-neutral-50/50 p-1 shadow-md shadow-black/10 ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-neutral-800">
           <div className="w-fit rounded-full bg-gradient-to-b from-blue-400 to-blue-600 p-3 shadow-sm shadow-blue-500/50 ring-1 ring-inset ring-white/25">
             <RiContrast2Line className="size-8 text-white" aria-hidden="true" />
           </div>
         </div>
-        <h1 className="mt-8 max-w-lg text-xl font-semibold text-gray-900 dark:text-gray-50 sm:mx-auto sm:text-center sm:text-2xl">
+        <h1 className="mt-8 max-w-lg text-xl font-semibold text-neutral-900 dark:text-neutral-50 sm:mx-auto sm:text-center sm:text-2xl">
           Welcome to Fragment, your single platform to get answers and make
           decisions
         </h1>
-        <p className="mt-8 max-w-xl text-gray-500 dark:text-gray-500 sm:mx-auto sm:text-center sm:text-sm/6">
+        <p className="mt-8 max-w-xl text-neutral-500 dark:text-neutral-500 sm:mx-auto sm:text-center sm:text-sm/6">
           To get the best experience, we recommend setting up at least one
           integration. This is necessary for us to have a source to generate
           reports for you.
@@ -89,11 +89,11 @@ export default function Example() {
           {integrations.map((integration) => (
             <li
               key={integration.id}
-              className="relative rounded-lg bg-white p-4 shadow-lg shadow-black/5 ring-1 ring-black/5 dark:bg-gray-900/50 dark:ring-white/10"
+              className="relative rounded-lg bg-white p-4 shadow-lg shadow-black/5 ring-1 ring-black/5 dark:bg-neutral-900/50 dark:ring-white/10"
             >
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border p-2 dark:border-gray-800">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border p-2 dark:border-neutral-800">
                     <img
                       alt={`${integration.title} logo`}
                       src={integration.logo}
@@ -102,7 +102,7 @@ export default function Example() {
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-gray-900 dark:text-gray-50">
+                    <h3 className="font-medium text-neutral-900 dark:text-neutral-50">
                       {integration.title}
                     </h3>
                     {integration.recommended && (
@@ -116,10 +116,10 @@ export default function Example() {
           ))}
         </ul>
         <div className="mt-20">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">
+          <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
             Need help?
           </h4>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-500">
             Connect with a member of our team at{' '}
             <a
               href="mailto:support@company.com"

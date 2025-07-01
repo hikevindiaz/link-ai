@@ -427,7 +427,7 @@ export async function searchContent(
   query: string,
   options: SearchOptions = {}
 ): Promise<any[]> {
-  const { limit = 10, threshold = 0.7, contentTypes } = options;
+  const { limit = 10, threshold = 0.5, contentTypes } = options;
 
   try {
     console.log(`[searchContent] Searching: "${query.substring(0, 100)}..."`);
@@ -457,7 +457,7 @@ export async function searchContent(
 }
 
 /**
- * Generate embedding for search query
+ * Generate embedding for search query using OpenAI (to match existing system)
  */
 async function generateQueryEmbedding(query: string): Promise<number[]> {
   const response = await fetch('https://api.openai.com/v1/embeddings', {
@@ -469,7 +469,7 @@ async function generateQueryEmbedding(query: string): Promise<number[]> {
     body: JSON.stringify({
       model: 'text-embedding-3-small',
       input: query,
-      dimensions: 1536
+      dimensions: 1536 // Match your working Edge Function configuration
     }),
   });
 

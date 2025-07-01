@@ -53,7 +53,7 @@ function CodeSnippet({ code }: { code: string }) {
     <div className="relative">
       <div className="flex">
         <div className="relative flex-grow">
-          <pre className="relative text-sm sm:text-base bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+          <pre className="relative text-sm sm:text-base bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
             <code className="language-html break-all whitespace-pre-wrap">
               {code}
             </code>
@@ -65,15 +65,15 @@ function CodeSnippet({ code }: { code: string }) {
             className={cn(
               "flex items-center justify-center h-10 w-10 rounded-lg border",
               "transition-all duration-200",
-              "hover:bg-gray-100 dark:hover:bg-gray-800",
-              "border-gray-200 dark:border-gray-800",
+              "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+              "border-neutral-200 dark:border-neutral-800",
               "focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:focus:ring-neutral-500"
             )}
           >
             <div className="relative">
               <RiClipboardLine 
                 className={cn(
-                  "h-5 w-5 text-gray-500 dark:text-gray-400",
+                  "h-5 w-5 text-neutral-500 dark:text-neutral-400",
                   "transition-opacity duration-200",
                   copied ? "opacity-0" : "opacity-100"
                 )} 
@@ -90,7 +90,7 @@ function CodeSnippet({ code }: { code: string }) {
           <div 
             className={cn(
               "absolute top-full left-1/2 -translate-x-1/2 mt-2",
-              "text-xs text-gray-500 dark:text-gray-400",
+              "text-xs text-neutral-500 dark:text-neutral-400",
               "whitespace-nowrap",
               "transition-opacity duration-200",
               copied ? "opacity-100" : "opacity-0"
@@ -233,18 +233,18 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
   return (
     <div className="mt-8 space-y-6">
       {/* Enable Widget */}
-      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-        <div className="border-b border-gray-200 bg-gray-50/50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/50">
+      <Card className="overflow-hidden p-0 bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
+        <div className="border-b border-neutral-200 bg-neutral-50/50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-            <Label className="font-medium text-gray-900 dark:text-gray-100">Enable Widget</Label>
+            <Globe className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+            <Label className="font-medium text-neutral-900 dark:text-neutral-100">Enable Widget</Label>
           </div>
         </div>
-        <div className="p-4 bg-white dark:bg-gray-950">
+        <div className="p-4 bg-white dark:bg-neutral-950">
           <div className="flex items-center justify-between">
               <div>
-              <p className="font-medium text-gray-900 dark:text-gray-100">Enable Website Widget</p>
-              <p className="text-sm/6 text-gray-500 dark:text-gray-400">
+              <p className="font-medium text-neutral-900 dark:text-neutral-100">Enable Website Widget</p>
+              <p className="text-sm/6 text-neutral-500 dark:text-neutral-400">
                 Add a chat widget to your website
               </p>
             </div>
@@ -257,25 +257,25 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
       </Card>
 
       {/* Theme Selection */}
-      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-        <div className="border-b border-gray-200 bg-gray-50/50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/50">
+      <Card className="overflow-hidden p-0 bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
+        <div className="border-b border-neutral-200 bg-neutral-50/50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
           <div className="flex items-center gap-2">
-            <Palette className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-            <Label className="font-medium text-gray-900 dark:text-gray-100">Theme</Label>
+            <Palette className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+            <Label className="font-medium text-neutral-900 dark:text-neutral-100">Theme</Label>
               </div>
             </div>
-        <div className="p-4 bg-white dark:bg-gray-950">
+        <div className="p-4 bg-white dark:bg-neutral-950">
           <div className="flex-1">
             <div className="relative">
-              <Palette className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+              <Palette className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
               <Input 
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
                 placeholder="Enter theme"
-                className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800"
+                className="pl-9 bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800"
               />
             </div>
-            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-400">
               Choose the theme for your widget.
             </p>
           </div>
@@ -283,25 +283,25 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
       </Card>
 
       {/* Layout Selection */}
-      <Card className="overflow-hidden p-0 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800">
-        <div className="border-b border-gray-200 bg-gray-50/50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/50">
+      <Card className="overflow-hidden p-0 bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800">
+        <div className="border-b border-neutral-200 bg-neutral-50/50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900/50">
           <div className="flex items-center gap-2">
-            <Layout className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-            <Label className="font-medium text-gray-900 dark:text-gray-100">Layout</Label>
+            <Layout className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+            <Label className="font-medium text-neutral-900 dark:text-neutral-100">Layout</Label>
           </div>
         </div>
-        <div className="p-4 bg-white dark:bg-gray-950">
+        <div className="p-4 bg-white dark:bg-neutral-950">
           <div className="flex-1">
             <div className="relative">
-              <Layout className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400 z-10" />
+              <Layout className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
               <Input 
                 value={layout}
                 onChange={(e) => setLayout(e.target.value)}
                 placeholder="Enter layout"
-                className="pl-9 bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800"
+                className="pl-9 bg-white dark:bg-neutral-950 border-neutral-200 dark:border-neutral-800"
               />
             </div>
-            <p className="mt-2 text-sm/6 text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-400">
               Choose the layout for your widget.
             </p>
           </div>
@@ -317,7 +317,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
           <AccordionItem
             key={option.title}
             value={option.title}
-            className="rounded-xl border !border-gray-300 px-4 !shadow-sm dark:border-gray-800"
+            className="rounded-xl border !border-neutral-300 px-4 !shadow-sm dark:border-neutral-800"
           >
             <AccordionTrigger>
               <div className="flex items-center space-x-2">
@@ -326,15 +326,15 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
                   aria-hidden={true}
                 >
                   <option.icon
-                    className="h-5 w-5 text-gray-500 dark:text-gray-400"
+                    className="h-5 w-5 text-neutral-500 dark:text-neutral-400"
                     aria-hidden={true}
                   />
                 </span>
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     {option.title}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {option.subtitle}
                   </p>
                 </div>
@@ -342,7 +342,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
             </AccordionTrigger>
             <AccordionContent className="pb-4 pt-2">
               <div className="space-y-4">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
                   {option.description}
                 </p>
                 
@@ -510,10 +510,10 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
 
                         <div className="space-y-4">
                           <h3 className="text-sm font-medium">Chatbot Image</h3>
-                          <div className="flex justify-center rounded-lg border border-dashed border-gray-300 px-6 py-10 dark:border-gray-800">
+                          <div className="flex justify-center rounded-lg border border-dashed border-neutral-300 px-6 py-10 dark:border-neutral-800">
                             <div className="text-center">
-                              <RiFileLine className="mx-auto h-12 w-12 text-gray-400" />
-                              <div className="mt-4 flex text-sm leading-6 text-gray-500">
+                              <RiFileLine className="mx-auto h-12 w-12 text-neutral-400" />
+                              <div className="mt-4 flex text-sm leading-6 text-neutral-500">
                                 <label className="relative cursor-pointer rounded-xl font-semibold text-neutral-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-neutral-600 focus-within:ring-offset-2 hover:text-neutral-600">
                                   <span>Upload a file</span>
                                   <input 
@@ -530,7 +530,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
                                 </label>
                                 <p className="pl-1">or drag and drop</p>
                               </div>
-                              <p className="text-xs leading-5 text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                              <p className="text-xs leading-5 text-neutral-500">PNG, JPG, GIF up to 10MB</p>
                             </div>
                           </div>
                           
@@ -542,7 +542,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
                             />
                             <label 
                               htmlFor="useDefault" 
-                              className="text-sm text-gray-500 cursor-pointer"
+                              className="text-sm text-neutral-500 cursor-pointer"
                             >
                               Use default chatbot image
                             </label>

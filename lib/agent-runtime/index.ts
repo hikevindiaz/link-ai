@@ -8,11 +8,12 @@ import {
   ConversationState,
   ConversationEvent,
   StreamingResponse,
-  AgentTool
+  AgentTool,
+  MessageProcessingInput
 } from './types';
 import { ConversationManager } from './conversation-manager';
 import { AIProvider } from './types';
-import { OpenAIProvider } from './providers/openai-provider';
+import { ProviderFactory, SupportedProvider } from './provider-factory';
 import { ToolExecutor, builtInTools } from './tool-executor';
 import { AnalyticsService } from './analytics';
 
@@ -24,10 +25,20 @@ export class AgentRuntime {
   private activeStreams: Map<string, StreamingResponse> = new Map();
   private analytics: AnalyticsService;
   
+  // Static caches for performance optimization
+  private static configCache = new Map<string, { config: AgentConfig; timestamp: number }>();
+  private static CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  
   constructor(config: AgentConfig) {
     this.config = config;
     this.conversationManager = new ConversationManager();
-    this.aiProvider = new OpenAIProvider(); // Default to OpenAI
+    
+    // Initialize AI provider based on model name
+    this.aiProvider = ProviderFactory.getProviderFromModelName(
+      config.modelName || 'gpt-4',
+      config.openaiKey
+    );
+    
     this.toolExecutor = new ToolExecutor();
     this.analytics = AnalyticsService.getInstance();
     
@@ -46,20 +57,53 @@ export class AgentRuntime {
   }
   
   /**
-   * Create an AgentRuntime instance from a chatbot ID
+   * Create an AgentRuntime instance from a chatbot ID with full context
    */
-  static async fromChatbotId(chatbotId: string): Promise<AgentRuntime> {
+  static async fromChatbotId(
+    chatbotId: string, 
+    channelContext?: Partial<ChannelContext>
+  ): Promise<AgentRuntime> {
+    // Check cache first for performance optimization
+    const now = Date.now();
+    const cached = this.configCache.get(chatbotId);
+    
+    if (cached && (now - cached.timestamp) < this.CACHE_TTL) {
+      console.log(`[Agent Runtime] Using cached configuration for ${chatbotId} (${((now - cached.timestamp) / 1000).toFixed(1)}s old)`);
+      return new AgentRuntime(cached.config);
+    }
+    
+    console.log(`[Agent Runtime] Loading fresh configuration for ${chatbotId}`);
+    const startTime = Date.now();
+    
     const chatbot = await prisma.chatbot.findUnique({
       where: { id: chatbotId },
       include: {
         model: true,
-        knowledgeSources: true
+        knowledgeSources: {
+          include: {
+            textContents: true,
+            websiteContents: true,
+            qaContents: true
+          }
+        },
+        calendar: true,
+        user: {
+          select: {
+            companyName: true
+          }
+        }
       }
     });
     
     if (!chatbot) {
       throw new Error(`Chatbot not found: ${chatbotId}`);
     }
+
+    // Process knowledge sources
+    const knowledgeConfig = await this.processKnowledgeSources(chatbot.knowledgeSources);
+    
+    // Build system prompt with all context
+    const systemPrompt = await this.buildSystemPrompt(chatbot, channelContext);
     
     // Convert Prisma Chatbot to AgentConfig
     const config: AgentConfig = {
@@ -68,9 +112,10 @@ export class AgentRuntime {
       userId: chatbot.userId,
       
       // Core AI settings from database
-      prompt: chatbot.prompt || 'You are a helpful assistant.',
+      prompt: systemPrompt, // Use the built system prompt
       modelId: chatbot.modelId || undefined,
-      modelName: chatbot.model?.name || 'gpt-3.5-turbo',
+      modelName: chatbot.model?.name || 'gpt-4o-mini',
+      openaiKey: chatbot.openaiKey || undefined,
       temperature: chatbot.temperature,
       maxCompletionTokens: chatbot.maxCompletionTokens,
       maxPromptTokens: chatbot.maxPromptTokens,
@@ -108,12 +153,24 @@ export class AgentRuntime {
       
       // Knowledge sources
       knowledgeSourceIds: chatbot.knowledgeSources.map(ks => ks.id),
+      knowledgeConfig,
       
       // Tools will be loaded separately
       tools: []
     };
     
-    return new AgentRuntime(config);
+    // Cache the configuration for future requests
+    this.configCache.set(chatbotId, { config, timestamp: now });
+    console.log(`[Agent Runtime] Configuration loaded and cached in ${Date.now() - startTime}ms`);
+    
+    const runtime = new AgentRuntime(config);
+    
+    // Load calendar tools if enabled
+    if (chatbot.calendarEnabled && chatbot.calendar) {
+      await runtime.loadCalendarTools(chatbot.calendar);
+    }
+    
+    return runtime;
   }
   
   /**
@@ -153,8 +210,58 @@ export class AgentRuntime {
       // Apply channel-specific overrides
       const channelConfig = this.getChannelConfig(context.type);
       
-      // Prepare messages for AI
-      const aiMessages = await this.prepareAIMessages(conversation, channelConfig);
+      // Get user query for vector search
+      const userQuery = message.content || '';
+      
+      // START PARALLEL PROCESSING: Vector search + message preparation
+      const vectorSearchPromise = (async () => {
+        if (channelConfig.knowledgeConfig?.useSupabaseVectorSearch && 
+            channelConfig.knowledgeConfig?.knowledgeSourceIds?.length > 0) {
+          
+          try {
+            const { searchVectorDocuments, formatVectorResultsForPrompt } = await import('./supabase-vector-search');
+            
+            let vectorResults = await searchVectorDocuments(
+              channelConfig.knowledgeConfig.knowledgeSourceIds,
+              userQuery,
+              { matchThreshold: 0.6, matchCount: 8, contentTypes: ['text', 'qa', 'file', 'catalog', 'website'] }
+            );
+            
+            if (vectorResults.length === 0) {
+              vectorResults = await searchVectorDocuments(
+                channelConfig.knowledgeConfig.knowledgeSourceIds,
+                userQuery,
+                { matchThreshold: 0.4, matchCount: 8, contentTypes: ['text', 'qa', 'file', 'catalog', 'website'] }
+              );
+            }
+
+            if (vectorResults.length > 0) {
+              return formatVectorResultsForPrompt(vectorResults);
+            }
+          } catch (vectorError) {
+            logger.error('Error performing vector search', { error: vectorError.message }, 'agent-runtime');
+          }
+        }
+        return '';
+      })();
+
+      // Prepare base AI messages (in parallel with vector search)
+      const baseAiMessages = await this.prepareAIMessages(conversation, channelConfig);
+      
+      // Wait for vector search to complete
+      const vectorContext = await vectorSearchPromise;
+
+      // Build enhanced system prompt with vector context
+      let enhancedPrompt = channelConfig.prompt;
+      if (vectorContext) {
+        enhancedPrompt = `${vectorContext}\n\n--- ORIGINAL SYSTEM PROMPT ---\n${channelConfig.prompt}`;
+      }
+
+      // Update system message with enhanced prompt
+      const aiMessages = baseAiMessages;
+      if (aiMessages.length > 0 && aiMessages[0].role === 'system') {
+        aiMessages[0].content = enhancedPrompt;
+      }
       
       // Get AI response
       let responseContent: string;
@@ -552,6 +659,448 @@ export class AgentRuntime {
     }
     
     return messages;
+  }
+
+  /**
+   * Process knowledge sources and extract relevant information for Supabase vector storage
+   */
+  private static async processKnowledgeSources(knowledgeSources: any[]): Promise<any> {
+    let knowledgeSourceIds: string[] = [];
+    let websiteUrls: string[] = [];
+    let websiteInstructions: Array<{url: string, instructions?: string}> = [];
+    let textKnowledge = '';
+
+    // Extract knowledge source IDs for Supabase vector search
+    knowledgeSourceIds = knowledgeSources
+      .map(source => source.id)
+      .filter(id => id && typeof id === 'string' && id.trim() !== '');
+
+    console.log(`[Agent Runtime] Processing ${knowledgeSources.length} knowledge sources:`, knowledgeSourceIds);
+
+    // Process each knowledge source
+    for (const source of knowledgeSources) {
+      // Check if source has vector documents in Supabase
+      const hasVectorContent = await this.checkVectorContent(source.id);
+      
+      if (hasVectorContent) {
+        console.log(`[Agent Runtime] Knowledge source ${source.id} has vector content in Supabase`);
+      }
+
+      // Process text contents (fallback for non-vectorized content)
+      if (source.textContents && source.textContents.length > 0) {
+        // Only include non-vectorized text content as fallback
+        const nonVectorizedText = source.textContents
+          .filter((text: any) => !text.vectorDocumentId)
+          .map((text: any) => 
+            `YOU ARE THE COMPANY/BUSINESS ITSELF. The following is our official company information that should be conveyed in first person always and never in the third person (we/us/our) Always begin each response with "As a company, we believe, Our, etc:":\n\n${text.content}`
+          ).join('\n\n---\n\n');
+        
+        if (nonVectorizedText) {
+          textKnowledge += nonVectorizedText;
+          console.log(`[Agent Runtime] Added ${source.textContents.length} non-vectorized text contents as fallback`);
+        }
+      }
+
+      // Process Q&A contents (fallback for non-vectorized content)
+      if (source.qaContents && source.qaContents.length > 0) {
+        const nonVectorizedQA = source.qaContents
+          .filter((qa: any) => !qa.vectorDocumentId)
+          .map((qa: any) => 
+            `Q: ${qa.question}\nA: As a company, we respond: ${qa.answer}`
+          ).join('\n\n');
+        
+        if (nonVectorizedQA) {
+          textKnowledge += nonVectorizedQA;
+          console.log(`[Agent Runtime] Added ${source.qaContents.length} non-vectorized Q&A contents as fallback`);
+        }
+      }
+
+      // Process website contents for live search
+      if (source.websiteContents && source.websiteContents.length > 0) {
+        const liveSearchUrls = source.websiteContents
+          .filter((web: any) => web.searchType === 'live' || !web.searchType)
+          .map((web: any) => ({
+            url: web.url,
+            instructions: web.instructions
+          }));
+        
+        if (liveSearchUrls.length > 0) {
+          websiteUrls = [...websiteUrls, ...liveSearchUrls.map(w => w.url)];
+          websiteInstructions = [...websiteInstructions, ...liveSearchUrls];
+          console.log(`[Agent Runtime] Added ${liveSearchUrls.length} website URLs for live search`);
+        }
+      }
+    }
+
+    // Use Supabase vector search instead of OpenAI vector stores
+    const useSupabaseVectorSearch = knowledgeSourceIds.length > 0;
+    const useWebSearch = websiteUrls.length > 0;
+
+    console.log(`[Agent Runtime] Knowledge processing complete:`, {
+      knowledgeSourceIds: knowledgeSourceIds.length,
+      useSupabaseVectorSearch,
+      useWebSearch,
+      fallbackTextLength: textKnowledge.length
+    });
+
+    return {
+      knowledgeSourceIds, // Use Supabase knowledge source IDs instead of vectorStoreIds
+      websiteUrls,
+      websiteInstructions,
+      textKnowledge,
+      useSupabaseVectorSearch, // Use Supabase instead of OpenAI file search
+      useWebSearch
+    };
+  }
+
+  /**
+   * Check if a knowledge source has vector content in Supabase
+   */
+  private static async checkVectorContent(knowledgeSourceId: string): Promise<boolean> {
+    try {
+      // Import Supabase client dynamically to avoid circular dependencies
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      const { data, error } = await supabase
+        .from('vector_documents')
+        .select('id')
+        .eq('knowledge_source_id', knowledgeSourceId)
+        .limit(1);
+
+      if (error) {
+        console.warn(`[Agent Runtime] Error checking vector content for ${knowledgeSourceId}:`, error);
+        return false;
+      }
+
+      return (data && data.length > 0);
+    } catch (error) {
+      console.warn(`[Agent Runtime] Failed to check vector content:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Build system prompt with all context
+   */
+  private static async buildSystemPrompt(chatbot: any, channelContext?: Partial<ChannelContext>): Promise<string> {
+    const companyName = chatbot.user?.companyName || 'our company';
+    const chatbotName = chatbot.name || 'Assistant';
+    const basePrompt = chatbot.prompt || 'You are a helpful assistant.';
+    
+    let systemPrompt = basePrompt;
+
+    // Add company context
+    systemPrompt += `\n\nYou are ${chatbotName}, representing ${companyName}.`;
+
+    // Add channel-specific context
+    if (channelContext?.type) {
+      switch (channelContext.type) {
+        case 'voice':
+        case 'phone':
+          systemPrompt += '\n\nYou are currently in a voice conversation. Keep responses concise and conversational.';
+          break;
+        case 'web':
+          systemPrompt += '\n\nYou are helping users through our website chat interface.';
+          break;
+        case 'whatsapp':
+          systemPrompt += '\n\nYou are communicating via WhatsApp. Keep messages friendly and mobile-appropriate.';
+          break;
+        case 'sms':
+          systemPrompt += '\n\nYou are communicating via SMS. Keep messages brief and clear.';
+          break;
+      }
+    }
+
+    // Add calendar context if enabled
+    if (chatbot.calendarEnabled && chatbot.calendar) {
+      systemPrompt += '\n\nYou can help users schedule appointments. Use the calendar tools when users want to book, view, or manage appointments.';
+    }
+
+    // Add location context if available
+    if (channelContext?.userLocation) {
+      const location = channelContext.userLocation;
+      systemPrompt += `\n\nUser location context: ${[location.city, location.region, location.country].filter(Boolean).join(', ')}`;
+      if (location.timezone) {
+        systemPrompt += ` (Timezone: ${location.timezone})`;
+      }
+    }
+
+    return systemPrompt;
+  }
+
+  /**
+   * Load calendar tools for this agent
+   */
+  async loadCalendarTools(calendar: any): Promise<void> {
+    // Import calendar tools dynamically to avoid circular dependencies
+    try {
+      const { getCalendarTools } = await import('../../app/api/chat-interface/tools/calendar-tools');
+      
+      const calendarConfig = {
+        defaultCalendarId: calendar.id,
+        askForDuration: calendar.askForDuration ?? true,
+        askForNotes: calendar.askForNotes ?? true,
+        defaultDuration: calendar.defaultDuration || 30,
+        bufferBetweenAppointments: calendar.bufferBetweenAppointments || 15,
+        maxBookingsPerSlot: calendar.maxBookingsPerSlot || 1,
+        minimumAdvanceNotice: calendar.minimumAdvanceNotice || 60,
+        requirePhoneNumber: calendar.requirePhoneNumber ?? true,
+        defaultLocation: calendar.defaultLocation || null,
+        bookingPrompt: calendar.bookingPrompt || 'I can help you schedule appointments on our calendar.',
+        confirmationMessage: calendar.confirmationMessage || 'I\'ve successfully scheduled your appointment! You will receive a confirmation email.',
+      };
+
+      const calendarToolDefinitions = getCalendarTools(calendarConfig);
+      
+      // Convert OpenAI function definitions to AgentTools
+      const calendarTools: AgentTool[] = calendarToolDefinitions.map(toolDef => ({
+        id: toolDef.name,
+        name: toolDef.name,
+        description: toolDef.description,
+        parameters: toolDef.parameters,
+        handler: async (args: any, context: AgentContext) => {
+          // Import calendar handlers dynamically
+          const { 
+            handleCheckAvailability,
+            handleBookAppointment,
+            handleViewAppointment,
+            handleModifyAppointment,
+            handleCancelAppointment
+          } = await import('../../app/api/chat-interface/handlers/calendar');
+          
+          switch (toolDef.name) {
+            case 'check_availability':
+              return await handleCheckAvailability(args, calendarConfig);
+            case 'book_appointment':
+              return await handleBookAppointment(args, calendarConfig, context.agent.userId);
+            case 'view_appointment':
+              return await handleViewAppointment(args);
+            case 'modify_appointment':
+              return await handleModifyAppointment(args, calendarConfig);
+            case 'cancel_appointment':
+              return await handleCancelAppointment(args);
+            default:
+              throw new Error(`Unknown calendar tool: ${toolDef.name}`);
+          }
+        }
+      }));
+      
+      // Register calendar tools
+      calendarTools.forEach(tool => {
+        this.toolExecutor.registerTool(tool);
+      });
+
+      logger.info('Calendar tools loaded', { 
+        calendarId: calendar.id,
+        toolCount: calendarTools.length 
+      }, 'agent-runtime');
+    } catch (error) {
+      logger.error('Failed to load calendar tools', { error: error.message }, 'agent-runtime');
+    }
+  }
+
+  /**
+   * Unified message processing method that handles all channels with Supabase vector search
+   */
+  async processMessages(input: MessageProcessingInput, channelContext: ChannelContext, streaming?: StreamingResponse): Promise<any> {
+    try {
+      logger.info('Processing messages', { 
+        threadId: input.threadId,
+        messageCount: input.messages.length,
+        channel: channelContext.type 
+      }, 'agent-runtime');
+
+      // Convert input messages to AgentMessages
+      const agentMessages: AgentMessage[] = input.messages.map(msg => ({
+        id: msg.id || this.generateMessageId(),
+        role: msg.role,
+        content: msg.content,
+        type: 'text',
+        timestamp: new Date(msg.timestamp || Date.now())
+      }));
+
+      // Get or create conversation
+      const conversation = await this.conversationManager.getOrCreateConversation(
+        input.threadId,
+        channelContext
+      );
+
+      // Add messages to conversation
+      conversation.messages.push(...agentMessages);
+
+      // Get user query for vector search
+      const userQuery = agentMessages[agentMessages.length - 1]?.content || '';
+      
+      // START PARALLEL PROCESSING: Vector search runs in parallel with message prep
+      let vectorContext = '';
+      
+      // Start vector search immediately (don't await yet)
+      const vectorSearchPromise = (async () => {
+        if (this.config.knowledgeConfig?.useSupabaseVectorSearch && 
+            this.config.knowledgeConfig?.knowledgeSourceIds?.length > 0) {
+          
+          logger.info('Performing Supabase vector search', { 
+            knowledgeSourceCount: this.config.knowledgeConfig.knowledgeSourceIds.length,
+            queryPreview: userQuery.substring(0, 100)
+          }, 'agent-runtime');
+          
+          try {
+            // Import the vector search utility
+            const { searchVectorDocuments, formatVectorResultsForPrompt } = await import('./supabase-vector-search');
+            
+            // Search for relevant vector documents
+            let vectorResults = await searchVectorDocuments(
+              this.config.knowledgeConfig.knowledgeSourceIds,
+              userQuery,
+              {
+                matchThreshold: 0.6,
+                matchCount: 8,
+                contentTypes: ['text', 'qa', 'file', 'catalog', 'website']
+              }
+            );
+            
+            // If no results with 0.6 threshold, try with lower threshold
+            if (vectorResults.length === 0) {
+              console.log('[DEBUG] No results with 0.6 threshold, trying with 0.4 for website content...');
+              vectorResults = await searchVectorDocuments(
+                this.config.knowledgeConfig.knowledgeSourceIds,
+                userQuery,
+                {
+                  matchThreshold: 0.4,
+                  matchCount: 8,
+                  contentTypes: ['text', 'qa', 'file', 'catalog', 'website']
+                }
+              );
+            }
+
+            if (vectorResults.length > 0) {
+              console.log('[DEBUG] Vector Results Found:', vectorResults.map(r => ({
+                content: r.content.substring(0, 100),
+                similarity: r.similarity,
+                content_type: r.content_type
+              })));
+              
+              const contentTypeBreakdown = vectorResults.reduce((acc, r) => {
+                acc[r.content_type] = (acc[r.content_type] || 0) + 1;
+                return acc;
+              }, {});
+              console.log('[DEBUG] Content types found:', contentTypeBreakdown);
+              
+              const context = formatVectorResultsForPrompt(vectorResults);
+              console.log('[DEBUG] Formatted vector context length:', context.length);
+              
+              logger.info('Vector search successful', { 
+                resultCount: vectorResults.length,
+                contentTypes: contentTypeBreakdown
+              }, 'agent-runtime');
+              
+              return context;
+            } else {
+              logger.info('No relevant vector documents found', {}, 'agent-runtime');
+              return '';
+            }
+          } catch (vectorError) {
+            logger.error('Error performing vector search', { error: vectorError.message }, 'agent-runtime');
+            return '';
+          }
+        }
+        return '';
+      })();
+
+      // Prepare base AI messages (in parallel with vector search)
+      const aiMessages = await this.prepareAIMessages(conversation, this.config);
+      
+      // Wait for vector search to complete
+      vectorContext = await vectorSearchPromise;
+      
+      console.log('[DEBUG] Parallel processing complete - vector context ready');
+
+      // Build enhanced system prompt with vector context
+      let enhancedSystemPrompt = this.config.prompt;
+      if (vectorContext) {
+        enhancedSystemPrompt = `${vectorContext}\n\n--- ORIGINAL SYSTEM PROMPT ---\n${this.config.prompt}`;
+        console.log('[DEBUG] Enhanced system prompt with vector context');
+      }
+
+      // Update the system message with enhanced prompt
+      if (aiMessages.length > 0 && aiMessages[0].role === 'system') {
+        aiMessages[0].content = enhancedSystemPrompt;
+        console.log('[DEBUG] Updated system message with enhanced prompt');
+      }
+
+      // Add vector store IDs for file search if available (legacy support)
+      const aiOptions: any = {
+        model: this.config.modelName || 'gpt-4o-mini',
+        temperature: this.config.temperature,
+        maxTokens: this.config.maxCompletionTokens,
+        tools: this.toolExecutor.getToolDefinitions(),
+        toolChoice: 'auto',
+        knowledgeSourceIds: this.config.knowledgeConfig?.knowledgeSourceIds || []
+      };
+
+      // Legacy OpenAI vector store support
+      if (this.config.knowledgeConfig?.useFileSearch && this.config.knowledgeConfig.vectorStoreIds?.length > 0) {
+        aiOptions.vectorStoreIds = this.config.knowledgeConfig.vectorStoreIds;
+      }
+
+      // Generate response with optional streaming
+      let responseContent: string;
+      
+      if (streaming) {
+        // Use streaming generation
+        responseContent = await this.aiProvider.generateStream(
+          aiMessages, 
+          aiOptions,
+          streaming.onToken || (() => {})
+        );
+        
+        // Notify streaming complete
+        streaming.onComplete?.();
+      } else {
+        // Use non-streaming generation
+        responseContent = await this.aiProvider.generate(aiMessages, aiOptions);
+      }
+
+      // Create assistant message
+      const assistantMessage: AgentMessage = {
+        id: this.generateMessageId(),
+        role: 'assistant',
+        content: responseContent,
+        type: 'text',
+        timestamp: new Date()
+      };
+
+      // Add to conversation and save
+      conversation.messages.push(assistantMessage);
+      await this.conversationManager.saveMessage(assistantMessage, channelContext);
+
+      // Track analytics
+      this.analytics.trackMessage(input.threadId, assistantMessage);
+
+      logger.info('Message processing completed', { 
+        threadId: input.threadId,
+        responseLength: responseContent.length,
+        usedVectorSearch: !!vectorContext
+      }, 'agent-runtime');
+
+      return assistantMessage;
+    } catch (error) {
+      logger.error('Error processing messages', { 
+        error: error.message,
+        threadId: input.threadId 
+      }, 'agent-runtime');
+      
+      // Notify streaming error if streaming is enabled
+      if (streaming?.onError) {
+        streaming.onError(error as Error);
+      }
+      
+      throw error;
+    }
   }
 }
 

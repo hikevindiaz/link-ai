@@ -98,9 +98,9 @@ const TypewriterSubtitle: React.FC<TypewriterSubtitleProps> = ({
   }
 
   return (
-    <p className="text-lg text-gray-600 dark:text-gray-400 mt-4 h-6"> {/* Fixed height */}
+    <p className="text-lg text-neutral-600 dark:text-neutral-400 mt-4 h-6"> {/* Fixed height */}
       {displayedText}
-      <span className={`ml-1 inline-block w-px h-5 bg-gray-600 dark:bg-gray-400 ${cursorClass}`}></span>
+      <span className={`ml-1 inline-block w-px h-5 bg-neutral-600 dark:bg-neutral-400 ${cursorClass}`}></span>
     </p>
   );
 };

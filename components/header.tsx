@@ -14,16 +14,16 @@ export function DashboardHeader({
     return (
         <div className={cn(
             "sticky top-0 z-20 flex items-center justify-between",
-            "w-full px-6 py-4 bg-white dark:bg-gray-900",
-            "border-b border-gray-200 dark:border-gray-800 shadow-sm"
+            "w-full px-6 py-4 bg-white dark:bg-neutral-900",
+            "border-b border-neutral-200 dark:border-neutral-800 shadow-sm"
         )}>
             {/* Left: Heading and Description */}
             <div className="grid gap-1">
-                <h1 className="font-heading text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
+                <h1 className="font-heading text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
                     {heading}
                 </h1>
                 {text && (
-                    <p className="text-md text-gray-500 dark:text-gray-400">
+                    <p className="text-md text-neutral-500 dark:text-neutral-400">
                         {text}
                     </p>
                 )}

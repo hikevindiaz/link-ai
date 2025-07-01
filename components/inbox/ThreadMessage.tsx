@@ -20,6 +20,9 @@ const urlRegex = /(?<![![])(https?:\/\/[^\s)]+)/g;
 // Regex to find bold text (** or __ delimited)
 const boldRegex = /(\*\*|__)(.*?)\1/g;
 
+// Regex to find italic text (* or _ delimited, but not ** or __)
+const italicRegex = /(?<!\*)(\*|_)(?!\*)([^*_]+?)\1(?!\*)/g;
+
 // Helper function to render content with formatting
 const renderContentWithFormatting = (text: string) => {
   if (!text) return null;
@@ -136,17 +139,37 @@ const formatTextSegment = (text: string) => {
     // Split by newlines
     .split('\n')
     .map((line, i) => {
-      // Process bold text
+      // Process bold and italic text
       const segments: React.ReactNode[] = [];
       let lastIndex = 0;
-      let match;
       
-      // Reset regex state
+      // Find all formatting segments (bold and italic) in the line
+      const allMatches: Array<{type: 'bold' | 'italic', match: RegExpExecArray}> = [];
+      
+      // Reset regex states
       boldRegex.lastIndex = 0;
+      italicRegex.lastIndex = 0;
       
-      // Find all bold segments in the line
-      while ((match = boldRegex.exec(line)) !== null) {
-        // Add text before the bold segment
+      // Find all bold segments
+      let boldMatch;
+      while ((boldMatch = boldRegex.exec(line)) !== null) {
+        allMatches.push({type: 'bold', match: boldMatch});
+      }
+      
+      // Find all italic segments
+      let italicMatch;
+      while ((italicMatch = italicRegex.exec(line)) !== null) {
+        allMatches.push({type: 'italic', match: italicMatch});
+      }
+      
+      // Sort matches by position
+      allMatches.sort((a, b) => a.match.index - b.match.index);
+      
+      // Process each match
+      allMatches.forEach((matchObj, idx) => {
+        const match = matchObj.match;
+        
+        // Add text before this segment
         if (match.index > lastIndex) {
           segments.push(
             <span key={`${i}-${lastIndex}`}>
@@ -155,18 +178,26 @@ const formatTextSegment = (text: string) => {
           );
         }
         
-        // Add the bold segment (without the delimiters)
+        // Add the formatted segment
+        if (matchObj.type === 'bold') {
         segments.push(
           <strong key={`${i}-bold-${match.index}`}>
             {processLinks(match[2])}
           </strong>
         );
+        } else {
+          segments.push(
+            <em key={`${i}-italic-${match.index}`}>
+              {processLinks(match[2])}
+            </em>
+          );
+        }
         
         // Update lastIndex to after this match
         lastIndex = match.index + match[0].length;
-      }
+      });
       
-      // Add any remaining text after the last bold segment
+      // Add any remaining text after the last formatted segment
       if (lastIndex < line.length) {
         segments.push(
           <span key={`${i}-${lastIndex}`}>
@@ -175,7 +206,7 @@ const formatTextSegment = (text: string) => {
         );
       }
       
-      // If no bold segments were found, just return the line with links processed
+      // If no formatted segments were found, just return the line with links processed
       return segments.length > 0 ? segments : processLinks(line);
     })
     // Join lines with <br> tags

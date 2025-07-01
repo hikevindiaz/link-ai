@@ -109,7 +109,7 @@ const LegendItem = ({
         // base
         "group inline-flex flex-nowrap items-center gap-1.5 whitespace-nowrap rounded px-2 py-1 transition",
         hasOnValueChange
-          ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+          ? "cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800"
           : "cursor-default",
       )}
       onClick={(e) => {
@@ -130,9 +130,9 @@ const LegendItem = ({
           // base
           "truncate whitespace-nowrap text-xs",
           // text color
-          "text-gray-700 dark:text-gray-300",
+          "text-neutral-700 dark:text-neutral-300",
           hasOnValueChange &&
-            "group-hover:text-gray-900 dark:group-hover:text-gray-50",
+            "group-hover:text-neutral-900 dark:group-hover:text-neutral-50",
           activeLegend && activeLegend !== name ? "opacity-40" : "opacity-100",
         )}
       >
@@ -178,8 +178,8 @@ const ScrollButton = ({ icon, onClick, disabled }: ScrollButtonProps) => {
         // base
         "group inline-flex size-5 items-center truncate rounded transition",
         disabled
-          ? "cursor-not-allowed text-gray-400 dark:text-gray-600"
-          : "cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-50",
+          ? "cursor-not-allowed text-neutral-400 dark:text-neutral-600"
+          : "cursor-pointer text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-neutral-50",
       )}
       disabled={disabled}
       onClick={(e) => {
@@ -343,7 +343,7 @@ const Legend = React.forwardRef<HTMLOListElement, LegendProps>((props, ref) => {
               // base
               "absolute bottom-0 right-0 top-0 flex h-full items-center justify-center pr-1",
               // background color
-              "bg-white dark:bg-gray-950",
+              "bg-white dark:bg-neutral-950",
             )}
           >
             <ScrollButton
@@ -453,9 +453,9 @@ const ChartTooltip = ({
           // base
           "rounded-xl border text-sm shadow-md",
           // border color
-          "border-gray-200 dark:border-gray-800",
+          "border-neutral-200 dark:border-neutral-800",
           // background color
-          "bg-white dark:bg-gray-950",
+          "bg-white dark:bg-neutral-950",
         )}
       >
         <div className={cn("border-b border-inherit px-4 py-2")}>
@@ -464,7 +464,7 @@ const ChartTooltip = ({
               // base
               "font-medium",
               // text color
-              "text-gray-900 dark:text-gray-50",
+              "text-neutral-900 dark:text-neutral-50",
             )}
           >
             {label}
@@ -489,7 +489,7 @@ const ChartTooltip = ({
                     // base
                     "whitespace-nowrap text-right",
                     // text color
-                    "text-gray-700 dark:text-gray-300",
+                    "text-neutral-700 dark:text-neutral-300",
                   )}
                 >
                   {category}
@@ -500,7 +500,7 @@ const ChartTooltip = ({
                   // base
                   "whitespace-nowrap text-right font-medium tabular-nums",
                   // text color
-                  "text-gray-900 dark:text-gray-50",
+                  "text-neutral-900 dark:text-neutral-50",
                 )}
               >
                 {valueFormatter(value)}
@@ -676,7 +676,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
           >
             {showGridLines ? (
               <CartesianGrid
-                className={cn("stroke-gray-200 stroke-1 dark:stroke-gray-800")}
+                className={cn("stroke-neutral-200 stroke-1 dark:stroke-neutral-800")}
                 horizontal={layout !== "vertical"}
                 vertical={layout === "vertical"}
               />
@@ -693,7 +693,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                 // base
                 "text-xs",
                 // text fill
-                "fill-gray-500 dark:fill-gray-500",
+                "fill-neutral-500 dark:fill-neutral-500",
                 { "mt-4": layout !== "vertical" },
               )}
               tickLine={false}
@@ -723,7 +723,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                 <Label
                   position="insideBottom"
                   offset={-20}
-                  className="fill-gray-800 text-sm font-medium dark:fill-gray-200"
+                  className="fill-neutral-800 text-sm font-medium dark:fill-neutral-200"
                 >
                   {xAxisLabel}
                 </Label>
@@ -740,7 +740,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                 // base
                 "text-xs",
                 // text fill
-                "fill-gray-500 dark:fill-gray-500",
+                "fill-neutral-500 dark:fill-neutral-500",
               )}
               tick={{
                 transform:
@@ -771,7 +771,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                   style={{ textAnchor: "middle" }}
                   angle={-90}
                   offset={-10}
-                  className="fill-gray-500 text-xs font-normal dark:fill-gray-500"
+                  className="fill-neutral-500 text-xs font-normal dark:fill-neutral-500"
                 >
                   {yAxisLabel}
                 </Label>

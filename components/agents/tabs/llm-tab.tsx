@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import type { Agent } from "@/types/agent";
-import { Database, Thermometer, Save, Loader2 } from "lucide-react";
+import { Database, Thermometer, Save, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,8 +23,62 @@ interface LLMTabProps {
   onSave: (data: Partial<Agent>) => Promise<any>;
 }
 
-// Default model selection - only GPT-4o mini is available
-const DEFAULT_MODEL_ID = "gpt-4.1-mini-2025-04-14";
+// Agent Mode definitions
+interface AgentMode {
+  id: string;
+  name: string;
+  description: string;
+  modelId: string;
+  badge?: string;
+  badgeColor?: string;
+}
+
+const AGENT_MODES: AgentMode[] = [
+  {
+    id: "link-core-smart",
+    name: "Link Core Smart",
+    description: "Advanced reasoning and problem-solving capabilities",
+    modelId: "gpt-4o-mini-2024-07-18",
+    badge: "Included",
+    badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+  },
+  {
+    id: "link-core-fast",
+    name: "Link Core Fast",
+    description: "Quick responses with good accuracy",
+    modelId: "gpt-4.1-nano-2025-04-14",
+    badge: "Included",
+    badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+  },
+  {
+    id: "link-health-smart",
+    name: "Link Health Smart",
+    description: "HIPAA compliant with advanced capabilities",
+    modelId: "gemini-2.5-flash",
+    badge: "HIPAA Compliant",
+    badgeColor: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+  },
+  {
+    id: "link-health-fast",
+    name: "Link Health Fast",
+    description: "HIPAA compliant with fast responses",
+    modelId: "gemini-2.5-flash-lite-preview",
+    badge: "HIPAA Compliant",
+    badgeColor: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+  }
+];
+
+// Helper function to get agent mode from model ID
+const getAgentModeFromModelId = (modelId: string): string => {
+  const mode = AGENT_MODES.find(mode => mode.modelId === modelId);
+  return mode?.id || "link-core-smart";
+};
+
+// Helper function to get model ID from agent mode
+const getModelIdFromAgentMode = (agentModeId: string): string => {
+  const mode = AGENT_MODES.find(mode => mode.id === agentModeId);
+  return mode?.modelId || "gpt-4o-mini-2024-07-18";
+};
 
 // Saving process steps messages
 const SAVING_STEPS = [
@@ -43,6 +97,9 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
     agent.knowledgeSources && agent.knowledgeSources.length > 0 
       ? agent.knowledgeSources[0].id 
       : "none"
+  );
+  const [selectedAgentMode, setSelectedAgentMode] = useState<string>(
+    getAgentModeFromModelId(agent.modelId || "gpt-4o-mini-2024-07-18")
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isDirty, setIsDirty] = useState(false);
@@ -71,6 +128,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
       try {
         // Set initial values from agent
         setTemperature(agent.temperature || 0.7);
+        setSelectedAgentMode(getAgentModeFromModelId(agent.modelId || "gpt-4o-mini-2024-07-18"));
         
         if (agent.knowledgeSources && agent.knowledgeSources.length > 0) {
           setSelectedKnowledgeSource(agent.knowledgeSources[0].id);
@@ -126,6 +184,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
   useEffect(() => {
     if (!isLoading) {
       const hasTemperatureChanged = temperature !== agent.temperature;
+      const hasAgentModeChanged = selectedAgentMode !== getAgentModeFromModelId(agent.modelId || "gpt-4o-mini-2024-07-18");
       
       // Check if knowledge source has changed
       let hasKnowledgeSourceChanged = false;
@@ -135,9 +194,9 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
         hasKnowledgeSourceChanged = selectedKnowledgeSource !== "none";
       }
 
-      setIsDirty(hasTemperatureChanged || hasKnowledgeSourceChanged);
+      setIsDirty(hasTemperatureChanged || hasKnowledgeSourceChanged || hasAgentModeChanged);
     }
-  }, [temperature, selectedKnowledgeSource, agent, isLoading]);
+  }, [temperature, selectedKnowledgeSource, selectedAgentMode, agent, isLoading]);
 
   const handleTemperatureChange = (value: number[]) => {
     setTemperature(Number(value[0].toFixed(1)));
@@ -145,6 +204,10 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
 
   const handleKnowledgeSourceChange = (value: string) => {
     setSelectedKnowledgeSource(value);
+  };
+
+  const handleAgentModeChange = (value: string) => {
+    setSelectedAgentMode(value);
   };
 
   // Simulate progress for the saving process
@@ -201,7 +264,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
       const selectedSource = knowledgeSources.find(ks => ks.id === selectedKnowledgeSource);
       
       const saveData = {
-        modelId: DEFAULT_MODEL_ID, // Always use the default model
+        modelId: getModelIdFromAgentMode(selectedAgentMode),
         temperature: temperature,
         // Only include knowledge sources if not "none"
         knowledgeSources: selectedKnowledgeSource !== "none" && selectedSource 
@@ -274,6 +337,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
   const handleCancel = () => {
     // Reset to original values
     setTemperature(agent.temperature || 0.7);
+    setSelectedAgentMode(getAgentModeFromModelId(agent.modelId || "gpt-4o-mini-2024-07-18"));
     
     if (agent.knowledgeSources && agent.knowledgeSources.length > 0) {
       setSelectedKnowledgeSource(agent.knowledgeSources[0].id);
@@ -327,7 +391,58 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
           </div>
         )}
 
-        {/* Knowledge Source - First Card */}
+        {/* Agent Mode - First Card */}
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Agent Mode</Label>
+            </div>
+          </div>
+          <div className="p-3 bg-white dark:bg-neutral-900">
+            <div className="relative">
+              <Zap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
+              <Select 
+                value={selectedAgentMode} 
+                onValueChange={handleAgentModeChange}
+                disabled={isLoading || isSaving}
+              >
+                <SelectTrigger className="pl-9">
+                  <SelectValue placeholder="Select agent mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AGENT_MODES.map((mode) => (
+                    <SelectItem key={mode.id} value={mode.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{mode.name}</span>
+                        {mode.badge && (
+                          <Badge 
+                            variant={mode.badge === "HIPAA Compliant" ? "secondary" : "default"}
+                            className={`text-xs ${mode.badge === "HIPAA Compliant" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : ""}`}
+                          >
+                            {mode.badge}
+                          </Badge>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedAgentMode && (() => {
+              const selectedMode = AGENT_MODES.find(mode => mode.id === selectedAgentMode);
+              if (!selectedMode) return null;
+              
+              return (
+                <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+                  {selectedMode.description}
+                </p>
+              );
+            })()}
+          </div>
+        </Card>
+
+        {/* Knowledge Source - Second Card */}
         <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
           <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center justify-between">

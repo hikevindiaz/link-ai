@@ -36,7 +36,7 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
   const [currentStatus, setCurrentStatus] = useState(order.status);
   
   const StatusIcon = statusConfig[currentStatus as keyof typeof statusConfig]?.icon || RiFileListLine;
-  const statusColor = statusConfig[currentStatus as keyof typeof statusConfig]?.color || "text-gray-500";
+  const statusColor = statusConfig[currentStatus as keyof typeof statusConfig]?.color || "text-neutral-500";
   
   // Function to capitalize first letter
   const capitalize = (str: string) => {
@@ -53,11 +53,11 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-800">
+      <div className="border-b border-neutral-200 dark:border-neutral-800">
         <div className="flex items-center justify-between p-4">
           <div>
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50">
+              <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
                 Order {order.id}
               </h1>
               <Badge 
@@ -72,10 +72,10 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
               </div>
             </div>
             <div className="mt-1 flex items-center gap-2">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 {formatDistanceToNow(order.createdAt, { addSuffix: true })}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 • {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
               </p>
             </div>
@@ -111,41 +111,41 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Customer Information */}
           <Card className="p-4">
-            <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-3">
+            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50 mb-3">
               Customer Information
             </h2>
             <div className="space-y-3">
               <div className="flex items-start">
-                <RiUserLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <RiUserLine className="h-5 w-5 text-neutral-400 mr-2 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     {order.customerName}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {order.customerEmail}
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start">
-                <RiPhoneLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <RiPhoneLine className="h-5 w-5 text-neutral-400 mr-2 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Phone Number
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {order.customerPhone}
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start">
-                <RiTruckLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <RiTruckLine className="h-5 w-5 text-neutral-400 mr-2 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Delivery Method
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {order.deliveryMethod}
                   </p>
                 </div>
@@ -154,10 +154,10 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
               <div className="flex items-start">
                 <RiUserStarLine className="h-5 w-5 text-blue-500 mr-2 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Agent
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {order.agent.name}
                   </p>
                 </div>
@@ -167,29 +167,29 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
           
           {/* Payment Information */}
           <Card className="p-4">
-            <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-3">
+            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50 mb-3">
               Payment Information
             </h2>
             <div className="space-y-3">
               <div className="flex items-start">
-                <RiWalletLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <RiWalletLine className="h-5 w-5 text-neutral-400 mr-2 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Payment Method
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {order.paymentMethod}
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start">
-                <RiCalendarLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <RiCalendarLine className="h-5 w-5 text-neutral-400 mr-2 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Order Date
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {order.createdAt.toLocaleDateString()} at {order.createdAt.toLocaleTimeString()}
                   </p>
                 </div>
@@ -198,22 +198,22 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
               <div className="flex items-start">
                 <StatusIcon className={cn("h-5 w-5 mr-2 mt-0.5", statusColor)} />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Order Status
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {statusConfig[currentStatus as keyof typeof statusConfig]?.label || capitalize(currentStatus)}
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start">
-                <RiMapPinLine className="h-5 w-5 text-gray-400 mr-2 mt-0.5" />
+                <RiMapPinLine className="h-5 w-5 text-neutral-400 mr-2 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Shipping Address
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {order.shippingAddress}
                   </p>
                 </div>
@@ -223,51 +223,51 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
           
           {/* Order Items */}
           <Card className="p-4 md:col-span-2">
-            <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-3">
+            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50 mb-3">
               Order Items
             </h2>
-            <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
-                <thead className="bg-gray-50 dark:bg-gray-900">
+            <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
+              <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-800">
+                <thead className="bg-neutral-50 dark:bg-neutral-900">
                   <tr>
-                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                       Product
                     </th>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                       Price
                     </th>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                       Quantity
                     </th>
-                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
                       Total
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-950 divide-y divide-gray-200 dark:divide-gray-800">
+                <tbody className="bg-white dark:bg-neutral-950 divide-y divide-neutral-200 dark:divide-neutral-800">
                   {order.items.map((item: OrderItem, index: number) => (
                     <tr key={index}>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-50">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-neutral-900 dark:text-neutral-50">
                         {item.name}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400 text-right">
                         ${item.price.toFixed(2)}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-neutral-500 dark:text-neutral-400 text-right">
                         {item.quantity}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-50 text-right">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-50 text-right">
                         ${(item.price * item.quantity).toFixed(2)}
                       </td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-gray-50 dark:bg-gray-900">
+                <tfoot className="bg-neutral-50 dark:bg-neutral-900">
                   <tr>
-                    <th scope="row" colSpan={3} className="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-gray-50">
+                    <th scope="row" colSpan={3} className="px-4 py-3 text-right text-sm font-medium text-neutral-900 dark:text-neutral-50">
                       Total
                     </th>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-50 text-right">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-neutral-900 dark:text-neutral-50 text-right">
                       ${order.total.toFixed(2)}
                     </td>
                   </tr>
@@ -278,7 +278,7 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
           
           {/* Order Timeline */}
           <Card className="p-4 md:col-span-2">
-            <h2 className="text-sm font-medium text-gray-900 dark:text-gray-50 mb-3">
+            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50 mb-3">
               Order Timeline
             </h2>
             <div className="space-y-4">
@@ -287,20 +287,20 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
                   <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
                     currentStatus === 'new' || currentStatus === 'confirmed' || currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                       ? "bg-green-100 dark:bg-green-900/20" 
-                      : "bg-gray-100 dark:bg-gray-800"
+                      : "bg-neutral-100 dark:bg-neutral-800"
                   )}>
                     <RiFileListLine className={cn("h-4 w-4", 
                       currentStatus === 'new' || currentStatus === 'confirmed' || currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                         ? "text-green-600 dark:text-green-400" 
-                        : "text-gray-400"
+                        : "text-neutral-400"
                     )} />
                   </div>
                 </div>
                 <div className="ml-4 min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Order Placed
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {order.createdAt.toLocaleDateString()} at {order.createdAt.toLocaleTimeString()}
                   </p>
                 </div>
@@ -311,20 +311,20 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
                   <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
                     currentStatus === 'confirmed' || currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                       ? "bg-green-100 dark:bg-green-900/20" 
-                      : "bg-gray-100 dark:bg-gray-800"
+                      : "bg-neutral-100 dark:bg-neutral-800"
                   )}>
                     <RiCheckboxCircleLine className={cn("h-4 w-4", 
                       currentStatus === 'confirmed' || currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                         ? "text-green-600 dark:text-green-400" 
-                        : "text-gray-400"
+                        : "text-neutral-400"
                     )} />
                   </div>
                 </div>
                 <div className="ml-4 min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Order Confirmed
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {currentStatus === 'new' || currentStatus === 'cancelled' ? 'Pending' : 'Confirmed'}
                   </p>
                 </div>
@@ -335,20 +335,20 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
                   <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
                     currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                       ? "bg-green-100 dark:bg-green-900/20" 
-                      : "bg-gray-100 dark:bg-gray-800"
+                      : "bg-neutral-100 dark:bg-neutral-800"
                   )}>
                     <RiSettings3Line className={cn("h-4 w-4", 
                       currentStatus === 'preparing' || currentStatus === 'ready' || currentStatus === 'completed'
                         ? "text-green-600 dark:text-green-400" 
-                        : "text-gray-400"
+                        : "text-neutral-400"
                     )} />
                   </div>
                 </div>
                 <div className="ml-4 min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Preparing
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {currentStatus === 'new' || currentStatus === 'confirmed' || currentStatus === 'cancelled' ? 'Pending' : 
                      currentStatus === 'preparing' ? 'In progress' : 'Completed'}
                   </p>
@@ -360,20 +360,20 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
                   <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
                     currentStatus === 'ready' || currentStatus === 'completed'
                       ? "bg-green-100 dark:bg-green-900/20" 
-                      : "bg-gray-100 dark:bg-gray-800"
+                      : "bg-neutral-100 dark:bg-neutral-800"
                   )}>
                     <RiTruckLine className={cn("h-4 w-4", 
                       currentStatus === 'ready' || currentStatus === 'completed'
                         ? "text-green-600 dark:text-green-400" 
-                        : "text-gray-400"
+                        : "text-neutral-400"
                     )} />
                   </div>
                 </div>
                 <div className="ml-4 min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Ready for {order.deliveryMethod === "In-Store Pickup" ? "Pickup" : "Delivery"}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {currentStatus === 'ready' ? 'Ready now' : 
                      currentStatus === 'completed' ? 'Completed' : 'Pending'}
                   </p>
@@ -385,20 +385,20 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
                   <div className={cn("h-8 w-8 rounded-full flex items-center justify-center", 
                     currentStatus === 'completed' 
                       ? "bg-green-100 dark:bg-green-900/20" 
-                      : "bg-gray-100 dark:bg-gray-800"
+                      : "bg-neutral-100 dark:bg-neutral-800"
                   )}>
                     <RiCheckboxCircleLine className={cn("h-4 w-4", 
                       currentStatus === 'completed' 
                         ? "text-green-600 dark:text-green-400" 
-                        : "text-gray-400"
+                        : "text-neutral-400"
                     )} />
                   </div>
                 </div>
                 <div className="ml-4 min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                     Completed
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
                     {currentStatus === 'completed' ? 'Order fulfilled' : 'Pending'}
                   </p>
                 </div>

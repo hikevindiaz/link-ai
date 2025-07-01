@@ -52,19 +52,19 @@ export default function Employees() {
   return (
     <>
       <div className="mx-auto max-w-2xl">
-        <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+        <span className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">
           Step 1
         </span>
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50 sm:text-xl">
+        <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50 sm:text-xl">
           Create a new contract
         </h1>
-        <p className="mt-6 text-gray-700 dark:text-gray-300 sm:text-sm">
+        <p className="mt-6 text-neutral-700 dark:text-neutral-300 sm:text-sm">
           Create a contract for an individual contractor and start growing your
           business easily.
         </p>
         <form onSubmit={handleSubmit} className="mt-12">
           <fieldset>
-            <legend className="text-sm font-medium leading-none text-gray-900 dark:text-gray-50">
+            <legend className="text-sm font-medium leading-none text-neutral-900 dark:text-neutral-50">
               Choose your contracting agreement
             </legend>
             <RadioCardGroup
@@ -91,7 +91,7 @@ export default function Employees() {
                         className="size-5 shrink-0 text-blue-500"
                         aria-hidden="true"
                       />
-                      <span className="block font-medium text-gray-900 dark:text-gray-50 sm:text-sm">
+                      <span className="block font-medium text-neutral-900 dark:text-neutral-50 sm:text-sm">
                         {item.label}
                       </span>
                     </div>
@@ -200,11 +200,11 @@ export default function Employees() {
               />
             </div>
           </div>
-          <Card className="mt-8 border-gray-300 dark:border-gray-800">
+          <Card className="mt-8 border-neutral-300 dark:border-neutral-800">
             <div className="gap-4 sm:flex sm:flex-nowrap sm:items-start">
               <div
                 className={cx(
-                  'flex size-9 shrink-0 items-center justify-center rounded-full shadow ring-1 ring-gray-300 transition dark:bg-gray-950 dark:ring-gray-800',
+                  'flex size-9 shrink-0 items-center justify-center rounded-full shadow ring-1 ring-neutral-300 transition dark:bg-neutral-950 dark:ring-neutral-800',
                   coverage
                     ? 'bg-blue-500 ring-blue-100 dark:bg-blue-400 dark:ring-blue-200'
                     : '',
@@ -218,10 +218,10 @@ export default function Employees() {
                 />
               </div>
               <div className="mt-4 sm:mt-0">
-                <h2 className="font-medium text-gray-900 dark:text-gray-50">
+                <h2 className="font-medium text-neutral-900 dark:text-neutral-50">
                   Contract Coverage
                 </h2>
-                <p className="mt-1 text-gray-700 dark:text-gray-400 sm:text-sm">
+                <p className="mt-1 text-neutral-700 dark:text-neutral-400 sm:text-sm">
                   Reduce misclassification risk and limit liability when hiring
                   contractors abroad.
                 </p>
@@ -243,7 +243,7 @@ export default function Employees() {
               <a href="#">Back</a>
             </Button>
             <Button
-              className="disabled:bg-gray-200 disabled:text-gray-500"
+              className="disabled:bg-neutral-200 disabled:text-neutral-500"
               type="submit"
               disabled={!selectedContractOption}
               aria-disabled={!selectedContractOption}

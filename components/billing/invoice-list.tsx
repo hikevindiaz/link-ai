@@ -73,7 +73,7 @@ export function InvoiceList() {
         );
       default:
         return (
-          <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-600/20 dark:bg-gray-900/30 dark:text-gray-400 dark:ring-gray-500/20">
+          <span className="inline-flex items-center rounded-full bg-neutral-50 px-2 py-1 text-xs font-medium text-neutral-700 ring-1 ring-inset ring-neutral-600/20 dark:bg-neutral-900/30 dark:text-neutral-400 dark:ring-neutral-500/20">
             {status}
           </span>
         );

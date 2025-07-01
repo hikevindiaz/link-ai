@@ -17,7 +17,7 @@ export function FloatingActionBar({
 }: FloatingActionBarProps) {
   return (
     <div className="fixed bottom-4 left-0 right-0 z-50 mx-auto w-full max-w-2xl px-4">
-      <div className="flex items-center justify-between rounded-lg bg-white p-4 shadow-lg dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+      <div className="flex items-center justify-between rounded-lg bg-white p-4 shadow-lg dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
         <div className="text-sm font-medium">{message}</div>
         <div className="flex items-center space-x-2">
           <Button

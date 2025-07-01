@@ -93,27 +93,27 @@ export function DeliverySettings({
           <Card key={method.id} className={`p-4 ${isDelivery ? 'opacity-70' : ''}`}>
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-full ${method.enabled ? 'bg-neutral-100 dark:bg-neutral-900/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                  <MethodIcon className={`h-5 w-5 ${method.enabled ? 'text-neutral-600 dark:text-neutral-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                <div className={`flex h-10 w-10 items-center justify-center rounded-full ${method.enabled ? 'bg-neutral-100 dark:bg-neutral-900/20' : 'bg-neutral-100 dark:bg-neutral-800'}`}>
+                  <MethodIcon className={`h-5 w-5 ${method.enabled ? 'text-neutral-600 dark:text-neutral-400' : 'text-neutral-500 dark:text-neutral-400'}`} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">{method.name}</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{method.description}</p>
+                  <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">{method.name}</h4>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">{method.description}</p>
                   
                   {method.fee !== undefined && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                       Delivery Fee: ${method.fee.toFixed(2)}
                     </p>
                   )}
                   
                   {method.minOrderAmount !== undefined && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
                       Minimum Order: ${method.minOrderAmount.toFixed(2)}
                     </p>
                   )}
                   
                   {method.estimatedTime && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
                       Estimated Time: {method.estimatedTime}
                     </p>
                   )}

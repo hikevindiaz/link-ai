@@ -102,8 +102,8 @@ const getCardBrandIcon = (brand: string) => {
         };
       default:
         return {
-          bg: 'bg-gray-200 dark:bg-gray-700',
-          textColor: 'text-gray-700 dark:text-gray-200',
+          bg: 'bg-neutral-200 dark:bg-neutral-700',
+          textColor: 'text-neutral-700 dark:text-neutral-200',
           iconColor: 'currentColor'
         };
     }
@@ -150,7 +150,7 @@ const getCardBrandIcon = (brand: string) => {
     default:
       return (
         <div className={containerClass}>
-          <CreditCard className="h-5 w-5 text-gray-500 dark:text-gray-300" />
+          <CreditCard className="h-5 w-5 text-neutral-500 dark:text-neutral-300" />
         </div>
       );
   }
@@ -468,16 +468,16 @@ export function PurchaseConfirmationDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px] dark:border-gray-800 max-h-[90vh] overflow-auto">
+      <DialogContent className="sm:max-w-[425px] dark:border-neutral-800 max-h-[90vh] overflow-auto">
         <DialogHeader>
-          <DialogTitle className="text-foreground dark:text-gray-100">
+          <DialogTitle className="text-foreground dark:text-neutral-100">
             {purchaseState === "success"
               ? "Purchase Successful!"
               : purchaseState === "error"
               ? "Purchase Failed"
               : "Confirm Phone Number Purchase"}
           </DialogTitle>
-          <DialogDescription className="text-muted-foreground dark:text-gray-400">
+          <DialogDescription className="text-muted-foreground dark:text-neutral-400">
             {purchaseState === "success"
               ? `You've successfully purchased ${purchasedPhoneNumber || phoneNumber}`
               : purchaseState === "error"
@@ -495,34 +495,34 @@ export function PurchaseConfirmationDialog({
           {purchaseState === "checking_payment" && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-              <p className="text-foreground dark:text-gray-100">Checking payment information...</p>
+              <p className="text-foreground dark:text-neutral-100">Checking payment information...</p>
             </div>
           )}
 
           {/* Confirmation state with existing payment method */}
           {purchaseState === "confirming" && selectedPaymentMethod && subscriptionInfo && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl border border-border dark:border-gray-700 bg-background dark:bg-gray-800">
-                <h3 className="text-base font-medium text-foreground dark:text-gray-100 mb-4">Purchase Details</h3>
+              <div className="p-4 rounded-xl border border-border dark:border-neutral-700 bg-background dark:bg-neutral-800">
+                <h3 className="text-base font-medium text-foreground dark:text-neutral-100 mb-4">Purchase Details</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">Phone Number</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-50">{safePhoneNumber}</span>
+                    <span className="text-neutral-600 dark:text-neutral-400">Phone Number</span>
+                    <span className="font-medium text-neutral-900 dark:text-neutral-50">{safePhoneNumber}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">Monthly Cost</span>
-                    <span className="font-medium text-gray-900 dark:text-gray-50">{formatPrice(monthlyCost)}</span>
+                    <span className="text-neutral-600 dark:text-neutral-400">Monthly Cost</span>
+                    <span className="font-medium text-neutral-900 dark:text-neutral-50">{formatPrice(monthlyCost)}</span>
                   </div>
                   
                   {subscriptionInfo && (
                     <>
                       <Divider />
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400">Due Today (Prorated)</span>
-                        <span className="font-semibold text-gray-900 dark:text-gray-50">{formatPrice(subscriptionInfo.proratedAmount)}</span>
+                        <span className="text-neutral-600 dark:text-neutral-400">Due Today (Prorated)</span>
+                        <span className="font-semibold text-neutral-900 dark:text-neutral-50">{formatPrice(subscriptionInfo.proratedAmount)}</span>
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">
                         {subscriptionInfo.daysRemaining} of {subscriptionInfo.totalDays} days remaining in billing period
                       </div>
                     </>
@@ -531,9 +531,9 @@ export function PurchaseConfirmationDialog({
               </div>
 
               {/* Payment method card display */}
-              <div className="p-4 rounded-xl border border-border dark:border-gray-700 bg-background dark:bg-gray-800">
+              <div className="p-4 rounded-xl border border-border dark:border-neutral-700 bg-background dark:bg-neutral-800">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-base font-medium text-foreground dark:text-gray-100">Payment Method</h3>
+                  <h3 className="text-base font-medium text-foreground dark:text-neutral-100">Payment Method</h3>
                   <Button 
                     variant="ghost" 
                     size="sm" 
@@ -543,14 +543,14 @@ export function PurchaseConfirmationDialog({
                     Change
                   </Button>
                 </div>
-                <div className="flex items-center p-3 rounded-xl bg-accent/50 dark:bg-gray-700">
+                <div className="flex items-center p-3 rounded-xl bg-accent/50 dark:bg-neutral-700">
                   {selectedPaymentMethod && (
                     (selectedPaymentMethod.card?.brand || selectedPaymentMethod.brand) 
                       ? getCardBrandIcon((selectedPaymentMethod.card?.brand || selectedPaymentMethod.brand) as string)
                       : getCardBrandIcon('default')
                   )}
                   <div className="flex flex-col justify-center">
-                    <p className="font-medium text-foreground dark:text-gray-100 text-base">
+                    <p className="font-medium text-foreground dark:text-neutral-100 text-base">
                       {selectedPaymentMethod 
                         ? `${formatCardBrand(selectedPaymentMethod.card?.brand || selectedPaymentMethod.brand)} •••• ${selectedPaymentMethod.card?.last4 || selectedPaymentMethod.last4 || '****'}`
                         : 'Card •••• ****'
@@ -559,7 +559,7 @@ export function PurchaseConfirmationDialog({
                     {selectedPaymentMethod && 
                      (selectedPaymentMethod.card?.exp_month || selectedPaymentMethod.exp_month) && 
                      (selectedPaymentMethod.card?.exp_year || selectedPaymentMethod.exp_year) && (
-                      <p className="text-sm text-muted-foreground dark:text-gray-400 -mt-0.5">
+                      <p className="text-sm text-muted-foreground dark:text-neutral-400 -mt-0.5">
                         Expires {selectedPaymentMethod.card?.exp_month || selectedPaymentMethod.exp_month}/
                         {((selectedPaymentMethod.card?.exp_year || selectedPaymentMethod.exp_year) || '').toString().slice(-2)}
                       </p>
@@ -629,12 +629,12 @@ export function PurchaseConfirmationDialog({
           {purchaseState === "success" && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <CheckCircle className="h-16 w-16 text-green-500 mb-4" />
-              <p className="text-lg font-semibold text-foreground dark:text-gray-100">Purchase Complete!</p>
-              <p className="mt-2 text-muted-foreground dark:text-gray-400">
+              <p className="text-lg font-semibold text-foreground dark:text-neutral-100">Purchase Complete!</p>
+              <p className="mt-2 text-muted-foreground dark:text-neutral-400">
                 Your new phone number {purchasedPhoneNumber || phoneNumber} is now active and ready to use.
               </p>
-              <div className="mt-4 p-3 rounded-xl bg-gray-50 dark:bg-gray-800 text-sm">
-                <p className="text-muted-foreground dark:text-gray-400">
+              <div className="mt-4 p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800 text-sm">
+                <p className="text-muted-foreground dark:text-neutral-400">
                   The phone number has been added to your subscription and will appear on your next invoice.
                 </p>
               </div>
@@ -645,10 +645,10 @@ export function PurchaseConfirmationDialog({
           {purchaseState === "error" && (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <AlertCircle className="h-16 w-16 text-destructive mb-4" />
-              <p className="text-lg font-semibold text-foreground dark:text-gray-100">
+              <p className="text-lg font-semibold text-foreground dark:text-neutral-100">
                 {errorMessage?.includes("payment method") ? "Payment Method Required" : "Purchase Failed"}
               </p>
-              <p className="mt-2 text-muted-foreground dark:text-gray-400">
+              <p className="mt-2 text-muted-foreground dark:text-neutral-400">
                 {errorMessage || "An error occurred during the purchase process."}
               </p>
               {/* Show specific help for payment method issues */}

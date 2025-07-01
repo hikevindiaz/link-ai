@@ -38,14 +38,14 @@ export function FormSubmissionsView({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-gray-200 dark:border-gray-800">
+      <div className="border-b border-neutral-200 dark:border-neutral-800">
         <div className="flex items-center justify-between p-4">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50">
+            <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
               {form.name}
             </h1>
             <div className="mt-1 flex items-center gap-2">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 {form.fields.length} fields
               </p>
               <Badge
@@ -54,7 +54,7 @@ export function FormSubmissionsView({
               >
                 {form.status}
               </Badge>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 {form._count?.submissions || 0} submissions
               </p>
             </div>
@@ -99,14 +99,14 @@ export function FormSubmissionsView({
       </div>
       
       {/* Search */}
-      <div className="border-b border-gray-200 p-4 dark:border-gray-800">
+      <div className="border-b border-neutral-200 p-4 dark:border-neutral-800">
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <RiSearchLine className="h-4 w-4 text-gray-400" />
+            <RiSearchLine className="h-4 w-4 text-neutral-400" />
           </div>
           <input
             type="text"
-            className="block w-full rounded-xl border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+            className="block w-full rounded-xl border border-neutral-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-neutral-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:placeholder-neutral-400"
             placeholder="Search submissions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -124,13 +124,13 @@ export function FormSubmissionsView({
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
-              <RiSearchLine className="h-6 w-6 text-gray-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+              <RiSearchLine className="h-6 w-6 text-neutral-400" />
             </div>
-            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            <h3 className="mt-2 text-sm font-medium text-neutral-900 dark:text-neutral-100">
               {searchQuery ? "No matching submissions" : "No submissions yet"}
             </h3>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
               {searchQuery
                 ? "Try adjusting your search terms"
                 : "Submissions will appear here when users fill out this form"}

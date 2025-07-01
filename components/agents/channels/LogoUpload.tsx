@@ -35,11 +35,11 @@ function DeleteLogoDialog({ open, onOpenChange, onConfirm, isDeleting = false }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-gray-900 dark:text-white">
+          <DialogTitle className="flex items-center gap-2 text-neutral-900 dark:text-white">
             <RiAlertLine className="h-5 w-5 text-orange-500" />
             Delete Logo
           </DialogTitle>
-          <DialogDescription className="pt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+          <DialogDescription className="pt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
             Are you sure you want to delete this logo? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
@@ -318,20 +318,20 @@ export function LogoUpload({
       {hasDisplayableLogo ? (
         <div className={cn(
           "relative rounded-lg p-3 flex items-center space-x-3",
-          isLoading ? "bg-gray-100 dark:bg-gray-800" : "bg-gray-50 dark:bg-gray-900"
+          isLoading ? "bg-neutral-100 dark:bg-neutral-800" : "bg-neutral-50 dark:bg-neutral-900"
         )}>
           <Avatar className="h-12 w-12 border flex-shrink-0">
             <AvatarImage src={previewUrl ?? undefined} alt="Logo Preview" className="object-cover" />
-            <AvatarFallback className="bg-gray-200 dark:bg-gray-700">
-              <RiImageLine className="h-6 w-6 text-gray-400" />
+            <AvatarFallback className="bg-neutral-200 dark:bg-neutral-700">
+              <RiImageLine className="h-6 w-6 text-neutral-400" />
             </AvatarFallback>
           </Avatar>
           <div className="flex-grow min-w-0">
-            <p className="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
+            <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50 truncate">
               {selectedFile ? selectedFile.name : (currentLogoUrl ? 'Current Logo' : 'No logo selected')}
             </p>
             {selectedFile && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 {(selectedFile.size / 1024).toFixed(1)} KB
               </p>
             )}
@@ -355,7 +355,7 @@ export function LogoUpload({
                 <button
                   type="button"
                   onClick={handleRemoveFile}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-neutral-500"
+                  className="p-1 text-neutral-400 hover:text-neutral-600 dark:text-neutral-500 dark:hover:text-neutral-300 rounded-full focus:outline-none focus:ring-2 focus:ring-neutral-500"
                   aria-label="Remove logo"
                 >
                   <RiCloseLine className="h-4 w-4" />
@@ -383,9 +383,9 @@ export function LogoUpload({
           onDragLeave={handleDrag}
           onDrop={handleDrop}
           className={cn(
-            "flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 px-4 py-6 text-center",
+            "flex flex-col items-center justify-center space-y-2 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 px-4 py-6 text-center",
             dragActive ? "border-neutral-500 bg-neutral-50 dark:bg-neutral-900/20" : "",
-            isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-gray-400 dark:hover:border-gray-500"
+            isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-500"
           )}
           onClick={(e) => {
             e.preventDefault();
@@ -395,14 +395,14 @@ export function LogoUpload({
           }}
         >
           <RiUpload2Line
-            className="mx-auto size-6 text-gray-400 dark:text-gray-500"
+            className="mx-auto size-6 text-neutral-400 dark:text-neutral-500"
             aria-hidden={true}
           />
-          <div className="flex text-xs text-gray-600 dark:text-gray-400">
+          <div className="flex text-xs text-neutral-600 dark:text-neutral-400">
             <label
               htmlFor="logo-upload-input"
               className={cn(
-                "relative font-medium text-neutral-600 dark:text-neutral-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-neutral-500 focus-within:ring-offset-2 dark:focus-within:ring-offset-gray-900",
+                "relative font-medium text-neutral-600 dark:text-neutral-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-neutral-500 focus-within:ring-offset-2 dark:focus-within:ring-offset-neutral-900",
                 isLoading ? "cursor-not-allowed" : "cursor-pointer hover:text-neutral-500 dark:hover:text-neutral-300"
               )}
             >
@@ -421,7 +421,7 @@ export function LogoUpload({
             </label>
             <p className="pl-1">or drag and drop</p>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
             PNG, JPG, GIF, SVG up to 2MB.
           </p>
         </div>

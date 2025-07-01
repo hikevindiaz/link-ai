@@ -132,7 +132,7 @@ export default function DebugToolsPage() {
       
       <Card className="p-6">
         <h2 className="text-xl font-semibold mb-4">Status</h2>
-        <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded">
+        <div className="p-4 bg-neutral-100 dark:bg-neutral-800 rounded">
           {statusMessage || 'No actions taken yet'}
         </div>
       </Card>

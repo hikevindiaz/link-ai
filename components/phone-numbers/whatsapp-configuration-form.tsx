@@ -173,15 +173,15 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
   if (!isWhatsAppIntegrationEnabled) {
     return (
       <Card id="whatsapp-section" className="overflow-hidden">
-        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <RiWhatsappFill className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">
+              <RiWhatsappFill className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                 WhatsApp Configuration
               </h4>
             </div>
-            <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex items-center gap-2 text-neutral-500">
               <RiErrorWarningFill className="h-5 w-5" />
               <span className="text-sm">Integration Disabled</span>
             </div>
@@ -218,11 +218,11 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
   return (
     <>
       <Card id="whatsapp-section" className="overflow-hidden">
-        <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+        <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <RiWhatsappFill className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">
+              <RiWhatsappFill className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                 WhatsApp Business
               </h4>
             </div>
@@ -232,7 +232,7 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
                 <span className="text-sm">Configured</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-gray-500">
+              <div className="flex items-center gap-2 text-neutral-500">
                 <span className="text-sm">Not Configured</span>
               </div>
             )}
@@ -290,11 +290,11 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
                 </p>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-3">
-                <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              <div className="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4 space-y-3">
+                <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                   What you'll need:
                 </h4>
-                <ul className="space-y-2 text-xs text-gray-600 dark:text-gray-400">
+                <ul className="space-y-2 text-xs text-neutral-600 dark:text-neutral-400">
                   <li className="flex items-start">
                     <span className="mr-2">•</span>
                     <span>A Facebook account to create or connect your business profile</span>
@@ -350,7 +350,7 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
                       <li>• Choose your business display name</li>
                     </ul>
                   </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
                     Make sure pop-ups are enabled for this site.
                   </p>
                 </>
@@ -360,7 +360,7 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
                 <div className="text-center py-4">
                   <Icons.spinner className="h-8 w-8 animate-spin mx-auto text-neutral-600" />
                   <p className="mt-3 font-medium">Connecting to WhatsApp Business...</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
                     Please complete the setup in the popup window
                   </p>
                 </div>
@@ -370,7 +370,7 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
                 <div className="text-center py-4">
                   <Icons.spinner className="h-8 w-8 animate-spin mx-auto text-neutral-600" />
                   <p className="mt-3 font-medium">Verifying your setup...</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
                     This may take a few moments
                   </p>
                 </div>
@@ -382,7 +382,7 @@ export function WhatsAppConfigurationForm({ phoneNumber, onStatusUpdate }: Whats
                   <p className="mt-3 font-medium text-green-800 dark:text-green-200">
                     WhatsApp Business is now configured!
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
                     Your AI agent can now communicate through WhatsApp
                   </p>
                 </div>

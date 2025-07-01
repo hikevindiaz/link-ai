@@ -68,13 +68,13 @@ export default function DebugPage() {
               </p>
               <div className="mt-4">
                 <h3 className="font-medium mb-2">Response Data:</h3>
-                <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-auto max-h-96">
+                <pre className="bg-neutral-100 dark:bg-neutral-800 p-4 rounded overflow-auto max-h-96">
                   {JSON.stringify(agentsResponse.data, null, 2)}
                 </pre>
               </div>
             </div>
           ) : (
-            <p className="text-gray-500">No data fetched yet</p>
+            <p className="text-neutral-500">No data fetched yet</p>
           )}
         </Card>
         
@@ -87,13 +87,13 @@ export default function DebugPage() {
               </p>
               <div className="mt-4">
                 <h3 className="font-medium mb-2">Response Data:</h3>
-                <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded overflow-auto max-h-96">
+                <pre className="bg-neutral-100 dark:bg-neutral-800 p-4 rounded overflow-auto max-h-96">
                   {JSON.stringify(phoneNumbersResponse.data, null, 2)}
                 </pre>
               </div>
             </div>
           ) : (
-            <p className="text-gray-500">No data fetched yet</p>
+            <p className="text-neutral-500">No data fetched yet</p>
           )}
         </Card>
       </div>

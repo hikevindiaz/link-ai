@@ -420,10 +420,10 @@ export function CheckoutConfirmationDialog({
                   <RiCheckLine className="h-16 w-16 text-green-600 dark:text-green-400" />
                 </div>
               </div>
-              <h3 className="mt-6 text-xl font-semibold text-gray-900 dark:text-gray-50">
+              <h3 className="mt-6 text-xl font-semibold text-neutral-900 dark:text-neutral-50">
                 Success!
               </h3>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
                 Your {selectedPlan.name} subscription has been activated.
               </p>
             </div>
@@ -472,15 +472,15 @@ export function CheckoutConfirmationDialog({
               <Card className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                    <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
                       {selectedPlan.name} Plan
                     </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
                       {selectedPlan.description}
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-50">
+                    <div className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
                       {selectedPlan.price}
                     </div>
                   </div>
@@ -490,15 +490,15 @@ export function CheckoutConfirmationDialog({
 
                 {/* Core Capacity */}
                 <div className="mb-4">
-                  <h4 className="font-medium text-gray-900 dark:text-gray-50 mb-3">
+                  <h4 className="font-medium text-neutral-900 dark:text-neutral-50 mb-3">
                     Core Capacity:
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {selectedPlan.capacity.map((item, index) => (
                       <div key={index} className="flex items-center gap-3">
-                        {index === 0 && <RiUserLine className="h-4 w-4 text-gray-500" />}
-                        {index === 1 && <RiMessage3Line className="h-4 w-4 text-gray-500" />}
-                        <span className="text-sm text-gray-700 dark:text-gray-300">{item}</span>
+                        {index === 0 && <RiUserLine className="h-4 w-4 text-neutral-500" />}
+                        {index === 1 && <RiMessage3Line className="h-4 w-4 text-neutral-500" />}
+                        <span className="text-sm text-neutral-700 dark:text-neutral-300">{item}</span>
                       </div>
                     ))}
                   </div>
@@ -506,19 +506,19 @@ export function CheckoutConfirmationDialog({
 
                 {/* Included Features */}
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-gray-50 mb-3">
+                  <h4 className="font-medium text-neutral-900 dark:text-neutral-50 mb-3">
                     Included Features:
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {selectedPlan.features.slice(0, 4).map((feature) => (
                       <div key={feature} className="flex items-center gap-2">
                         <RiCheckLine className="h-4 w-4 text-neutral-500 flex-shrink-0" />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                        <span className="text-sm text-neutral-700 dark:text-neutral-300">{feature}</span>
                       </div>
                     ))}
                   </div>
                   {selectedPlan.features.length > 4 && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
                       +{selectedPlan.features.length - 4} more features included
                     </p>
                   )}
@@ -527,7 +527,7 @@ export function CheckoutConfirmationDialog({
 
               {/* Billing Summary */}
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-4">
                   Billing Summary
                 </h3>
                 
@@ -549,7 +549,7 @@ export function CheckoutConfirmationDialog({
                     
                     {/* Trial Details */}
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-neutral-600 dark:text-neutral-400">
                         Free trial
                       </span>
                       <span className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -561,7 +561,7 @@ export function CheckoutConfirmationDialog({
                     
                     {/* Due Today */}
                     <div className="flex justify-between items-center">
-                      <span className="font-medium text-gray-900 dark:text-gray-50">
+                      <span className="font-medium text-neutral-900 dark:text-neutral-50">
                         Due today
                       </span>
                       <span className="font-bold text-lg text-green-600 dark:text-green-400">
@@ -573,10 +573,10 @@ export function CheckoutConfirmationDialog({
                     
                     {/* After Trial */}
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-neutral-600 dark:text-neutral-400">
                         After trial ends
                       </span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                      <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                         {selectedPlan.price}
                       </span>
                     </div>
@@ -602,7 +602,7 @@ export function CheckoutConfirmationDialog({
                       
                       {/* Trial Details */}
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
                           Free trial
                         </span>
                         <span className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -614,7 +614,7 @@ export function CheckoutConfirmationDialog({
                       
                       {/* Due Today */}
                       <div className="flex justify-between items-center">
-                        <span className="font-medium text-gray-900 dark:text-gray-50">
+                        <span className="font-medium text-neutral-900 dark:text-neutral-50">
                           Due today
                         </span>
                         <span className="font-bold text-lg text-green-600 dark:text-green-400">
@@ -627,10 +627,10 @@ export function CheckoutConfirmationDialog({
                       {/* Trial End / First Billing */}
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
                             Trial ends
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                             {billingPreview.trialEndDate 
                               ? new Date(billingPreview.trialEndDate).toLocaleDateString('en-US', {
                                   month: 'long',
@@ -642,10 +642,10 @@ export function CheckoutConfirmationDialog({
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
                             First billing charge
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                             ${billingPreview.firstBillingAmount?.toFixed(2) || billingPreview.monthlyAmount.toFixed(2)}
                           </span>
                         </div>
@@ -677,13 +677,13 @@ export function CheckoutConfirmationDialog({
                       {/* All Line Items */}
                       {billingPreview.prorationAdjustments?.map((adjustment, index) => (
                         <div key={index} className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
                             {adjustment.description}
                           </span>
                           <span className={`text-sm font-medium ${
                             adjustment.amount < 0 
                               ? 'text-green-600 dark:text-green-400' 
-                              : 'text-gray-900 dark:text-gray-50'
+                              : 'text-neutral-900 dark:text-neutral-50'
                           }`}>
                             {adjustment.amount < 0 ? '-' : '+'}${Math.abs(adjustment.amount).toFixed(2)}
                           </span>
@@ -693,10 +693,10 @@ export function CheckoutConfirmationDialog({
                       {/* If no proration adjustments, show a message */}
                       {(!billingPreview.prorationAdjustments || billingPreview.prorationAdjustments.length === 0) && (
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
                             Plan upgrade charge
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                             +${billingPreview.dueToday.toFixed(2)}
                           </span>
                         </div>
@@ -706,10 +706,10 @@ export function CheckoutConfirmationDialog({
                       
                       {/* Due Today */}
                       <div className="flex justify-between items-center">
-                        <span className="font-medium text-gray-900 dark:text-gray-50">
+                        <span className="font-medium text-neutral-900 dark:text-neutral-50">
                           Due today
                         </span>
-                        <span className="font-bold text-lg text-gray-900 dark:text-gray-50">
+                        <span className="font-bold text-lg text-neutral-900 dark:text-neutral-50">
                           ${billingPreview.dueToday.toFixed(2)}
                         </span>
                       </div>
@@ -729,10 +729,10 @@ export function CheckoutConfirmationDialog({
                       {/* Next Billing */}
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
                             Next billing date
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                             {billingPreview.nextBillingDate 
                               ? new Date(billingPreview.nextBillingDate).toLocaleDateString('en-US', {
                                   month: 'long',
@@ -744,10 +744,10 @@ export function CheckoutConfirmationDialog({
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
                             Monthly charge
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                             ${billingPreview.monthlyAmount.toFixed(2)}
                           </span>
                         </div>
@@ -778,7 +778,7 @@ export function CheckoutConfirmationDialog({
                       
                       {/* Free Trial */}
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400">
                           14-day free trial
                         </span>
                         <span className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -790,7 +790,7 @@ export function CheckoutConfirmationDialog({
                       
                       {/* Due Today */}
                       <div className="flex justify-between items-center">
-                        <span className="font-medium text-gray-900 dark:text-gray-50">
+                        <span className="font-medium text-neutral-900 dark:text-neutral-50">
                           Due today
                         </span>
                         <span className="font-bold text-lg text-green-600 dark:text-green-400">
@@ -803,10 +803,10 @@ export function CheckoutConfirmationDialog({
                       {/* Trial End / Billing Start */}
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
                             Trial ends
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                             {billingPreview.trialEndDate 
                               ? new Date(billingPreview.trialEndDate).toLocaleDateString('en-US', {
                                   month: 'long',
@@ -818,10 +818,10 @@ export function CheckoutConfirmationDialog({
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-neutral-600 dark:text-neutral-400">
                             First billing charge
                           </span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                          <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                             ${billingPreview.firstBillingAmount?.toFixed(2) || billingPreview.monthlyAmount.toFixed(2)}
                           </span>
                         </div>
@@ -831,7 +831,7 @@ export function CheckoutConfirmationDialog({
                 ) : (
                   <div className="flex items-center justify-center py-8">
                     <div className="animate-spin h-6 w-6 border-2 border-neutral-500 border-t-transparent rounded-full"></div>
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                    <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">
                       Calculating billing...
                     </span>
                   </div>
@@ -841,7 +841,7 @@ export function CheckoutConfirmationDialog({
               {/* Payment Method Section */}
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
                     Payment Method
                   </h3>
                   {hasPaymentMethods && (
@@ -856,14 +856,14 @@ export function CheckoutConfirmationDialog({
                 </div>
 
                 {hasPaymentMethods ? (
-                  <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                    <RiBankCardLine className="h-6 w-6 text-gray-500" />
+                  <div className="flex items-center gap-3 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                    <RiBankCardLine className="h-6 w-6 text-neutral-500" />
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900 dark:text-gray-50">
+                      <div className="font-medium text-neutral-900 dark:text-neutral-50">
                         {formatCardBrand(defaultPaymentMethod.card?.brand || defaultPaymentMethod.brand)} 
                         ••••{defaultPaymentMethod.card?.last4 || defaultPaymentMethod.last4}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-sm text-neutral-600 dark:text-neutral-400">
                         Expires {defaultPaymentMethod.card?.exp_month || defaultPaymentMethod.exp_month}/
                         {defaultPaymentMethod.card?.exp_year || defaultPaymentMethod.exp_year}
                       </div>
@@ -876,11 +876,11 @@ export function CheckoutConfirmationDialog({
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <RiBankCardLine className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h4 className="font-medium text-gray-900 dark:text-gray-50 mb-2">
+                    <RiBankCardLine className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
+                    <h4 className="font-medium text-neutral-900 dark:text-neutral-50 mb-2">
                       No payment method found
                     </h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                       Add a payment method to complete your subscription
                     </p>
                     <Button
@@ -895,8 +895,8 @@ export function CheckoutConfirmationDialog({
               {/* Terms and Action Buttons */}
               {hasPaymentMethods && (
                 <>
-                  <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-lg">
+                    <div className="text-sm text-neutral-600 dark:text-neutral-400">
                       {billingPreview?.isTrial ? (
                         <>
                           <p className="mb-2">

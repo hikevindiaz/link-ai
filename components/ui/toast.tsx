@@ -27,13 +27,13 @@ const toastVariants = cva(
     {
         variants: {
             variant: {
-                default: "bg-white border-gray-200 text-gray-900 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-50",
+                default: "bg-white border-neutral-200 text-neutral-900 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-50",
                 destructive:
                     "destructive group border-red-500 bg-red-500 text-white dark:border-red-900 dark:bg-red-900",
-                info: "bg-white border-blue-200 text-gray-900 dark:bg-gray-800 dark:border-blue-800 dark:text-gray-50",
-                success: "bg-white border-green-200 text-gray-900 dark:bg-gray-800 dark:border-green-800 dark:text-gray-50",
-                warning: "bg-white border-yellow-200 text-gray-900 dark:bg-gray-800 dark:border-yellow-800 dark:text-gray-50",
-                error: "bg-white border-red-200 text-gray-900 dark:bg-gray-800 dark:border-red-800 dark:text-gray-50",
+                info: "bg-white border-blue-200 text-neutral-900 dark:bg-neutral-800 dark:border-blue-800 dark:text-neutral-50",
+                success: "bg-white border-green-200 text-neutral-900 dark:bg-neutral-800 dark:border-green-800 dark:text-neutral-50",
+                warning: "bg-white border-yellow-200 text-neutral-900 dark:bg-neutral-800 dark:border-yellow-800 dark:text-neutral-50",
+                error: "bg-white border-red-200 text-neutral-900 dark:bg-neutral-800 dark:border-red-800 dark:text-neutral-50",
             },
         },
         defaultVariants: {
@@ -79,7 +79,7 @@ const ToastClose = React.forwardRef<
     <ToastPrimitives.Close
         ref={ref}
         className={cn(
-            "absolute right-2 top-2 rounded-xl p-1 text-gray-500 opacity-100 transition-opacity hover:text-gray-900 focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 dark:text-gray-400 dark:hover:text-gray-300",
+            "absolute right-2 top-2 rounded-xl p-1 text-neutral-500 opacity-100 transition-opacity hover:text-neutral-900 focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 dark:text-neutral-400 dark:hover:text-neutral-300",
             className
         )}
         toast-close=""

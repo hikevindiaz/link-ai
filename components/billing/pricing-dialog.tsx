@@ -318,10 +318,10 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
               <div className="w-fit mx-auto rounded-lg px-3 py-1 bg-neutral-50 text-neutral-700 dark:bg-neutral-900/20 dark:text-neutral-400 mb-4">
                 <span className="text-sm font-medium">Transparent Pricing</span>
               </div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-50 mb-4">
+              <h1 className="text-4xl font-bold text-neutral-900 dark:text-neutral-50 mb-4">
                 Plans that scale with your business
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+              <p className="text-lg text-neutral-600 dark:text-neutral-400 max-w-3xl mx-auto">
                 Choose the perfect plan for your needs. All plans include usage-based billing with clear overage pricing.
                 No hidden fees, cancel anytime.
               </p>
@@ -330,7 +330,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
             {/* Billing Toggle */}
             <section className="mb-12">
               <div className="flex items-center justify-center gap-4">
-                <Label className="text-base font-medium text-gray-700 dark:text-gray-300">
+                <Label className="text-base font-medium text-neutral-700 dark:text-neutral-300">
                   Monthly
                 </Label>
                 <Switch
@@ -341,7 +341,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                     )
                   }
                 />
-                <Label className="text-base font-medium text-gray-700 dark:text-gray-300">
+                <Label className="text-base font-medium text-neutral-700 dark:text-neutral-300">
                   Yearly 
                   <span className="ml-1 text-green-600 dark:text-green-400 font-semibold">
                     (Save 15%)
@@ -369,14 +369,14 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                       <div className={classNames(
                         plan.isRecommended 
                           ? 'border-2 border-neutral-500 shadow-lg' 
-                          : 'border border-gray-200 dark:border-gray-800',
-                        'rounded-xl bg-white dark:bg-gray-950 p-8 h-full flex flex-col'
+                          : 'border border-neutral-200 dark:border-neutral-800',
+                        'rounded-xl bg-white dark:bg-neutral-950 p-8 h-full flex flex-col'
                       )}>
                         <div className="text-center mb-8">
                           <div className="flex items-center justify-between mb-2">
                             <h3 className={classNames(
                               "text-xl font-bold",
-                              plan.isRecommended ? "text-neutral-600 dark:text-neutral-400" : "text-gray-900 dark:text-gray-50"
+                              plan.isRecommended ? "text-neutral-600 dark:text-neutral-400" : "text-neutral-900 dark:text-neutral-50"
                             )}>
                               {plan.name}
                             </h3>
@@ -392,42 +392,42 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                             ) : null}
                           </div>
                           <div className="mb-4">
-                            <span className="text-4xl font-bold text-gray-900 dark:text-gray-50">
+                            <span className="text-4xl font-bold text-neutral-900 dark:text-neutral-50">
                               {plan.price[billingFrequency]}
                             </span>
-                            <span className="text-gray-600 dark:text-gray-400 ml-1">
+                            <span className="text-neutral-600 dark:text-neutral-400 ml-1">
                               /month
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
                             {plan.description}
                           </p>
                         </div>
 
                         <div className="mb-8">
-                          <h4 className="font-semibold text-gray-900 dark:text-gray-50 mb-4">
+                          <h4 className="font-semibold text-neutral-900 dark:text-neutral-50 mb-4">
                             Core Capacity:
                           </h4>
                           <ul className="space-y-3">
                             {plan.capacity.map((item, index) => (
                               <li key={index} className="flex items-center gap-3">
-                                {index === 0 && <RiUserLine className="h-4 w-4 text-gray-500" />}
-                                {index === 1 && <RiMessage3Line className="h-4 w-4 text-gray-500" />}
-                                <span className="text-sm text-gray-700 dark:text-gray-300">{item}</span>
+                                {index === 0 && <RiUserLine className="h-4 w-4 text-neutral-500" />}
+                                {index === 1 && <RiMessage3Line className="h-4 w-4 text-neutral-500" />}
+                                <span className="text-sm text-neutral-700 dark:text-neutral-300">{item}</span>
                               </li>
                             ))}
                           </ul>
                         </div>
 
                         <div className="mb-8 flex-grow">
-                          <h4 className="font-semibold text-gray-900 dark:text-gray-50 mb-4">
+                          <h4 className="font-semibold text-neutral-900 dark:text-neutral-50 mb-4">
                             Included Features:
                           </h4>
                           <ul className="space-y-3">
                             {plan.features.map((feature) => (
                               <li key={feature} className="flex items-center gap-3">
                                 <RiCheckLine className="h-4 w-4 text-neutral-500 flex-shrink-0" />
-                                <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                                <span className="text-sm text-neutral-700 dark:text-neutral-300">{feature}</span>
                               </li>
                             ))}
                           </ul>
@@ -462,26 +462,26 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
             {/* Detailed Comparison Table (Desktop) */}
             <section className="hidden lg:block">
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 text-center mb-4">
+                <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50 text-center mb-4">
                   Detailed Feature Comparison
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-center">
+                <p className="text-neutral-600 dark:text-neutral-400 text-center">
                   Compare all features across our plans to find the perfect fit for your needs
                 </p>
               </div>
 
-              <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+              <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
                 <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-900">
+                  <thead className="bg-neutral-50 dark:bg-neutral-900">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-50">
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-neutral-900 dark:text-neutral-50">
                         Features
                       </th>
                       {plans.map((plan) => (
                         <th key={plan.id} className="px-6 py-4 text-center text-sm font-semibold">
                           <div className="flex items-center justify-center gap-2 mb-1">
                             <div className={classNames(
-                              plan.isRecommended ? 'text-neutral-600 dark:text-neutral-400' : 'text-gray-900 dark:text-gray-50'
+                              plan.isRecommended ? 'text-neutral-600 dark:text-neutral-400' : 'text-neutral-900 dark:text-neutral-50'
                             )}>
                               {plan.name}
                             </div>
@@ -491,29 +491,29 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400 font-normal">
+                          <div className="text-xs text-neutral-600 dark:text-neutral-400 font-normal">
                             {plan.price[billingFrequency]}/month
                           </div>
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                  <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
                     {sections.map((section, sectionIdx) => (
                       <Fragment key={section.name}>
-                        <tr className="bg-gray-25 dark:bg-gray-925">
-                          <td colSpan={4} className="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-gray-50">
+                        <tr className="bg-neutral-25 dark:bg-neutral-925">
+                          <td colSpan={4} className="px-6 py-4 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
                             {section.name}
                           </td>
                         </tr>
                         {section.features.map((feature) => (
-                          <tr key={feature.name} className="hover:bg-gray-50 dark:hover:bg-gray-900">
-                            <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-50">
+                          <tr key={feature.name} className="hover:bg-neutral-50 dark:hover:bg-neutral-900">
+                            <td className="px-6 py-4 text-sm text-neutral-900 dark:text-neutral-50">
                               <div className="flex items-center gap-2">
                                 <span>{feature.name}</span>
                                 {feature.tooltip && (
                                   <Tooltip content={feature.tooltip}>
-                                    <RiInformationLine className="h-4 w-4 text-gray-400" />
+                                    <RiInformationLine className="h-4 w-4 text-neutral-400" />
                                   </Tooltip>
                                 )}
                               </div>
@@ -521,13 +521,13 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                             {plans.map((plan) => (
                               <td key={plan.name} className="px-6 py-4 text-center">
                                 {typeof feature.plans[plan.name] === 'string' ? (
-                                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                                  <span className="text-sm text-neutral-700 dark:text-neutral-300">
                                     {feature.plans[plan.name]}
                                   </span>
                                 ) : feature.plans[plan.name] === true ? (
                                   <RiCheckLine className="h-5 w-5 text-neutral-500 mx-auto" />
                                 ) : (
-                                  <RiSubtractLine className="h-5 w-5 text-gray-400 mx-auto" />
+                                  <RiSubtractLine className="h-5 w-5 text-neutral-400 mx-auto" />
                                 )}
                               </td>
                             ))}
@@ -544,19 +544,19 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
             <section className="lg:hidden">
               <div className="space-y-8">
                 {plans.map((plan) => (
-                  <div key={plan.id} className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+                  <div key={plan.id} className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                      <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
                         {plan.name}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
                         {plan.price[billingFrequency]} per month
                       </p>
                     </div>
                     
                     {sections.map((section) => (
                       <div key={section.name} className="mb-6">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-50 mb-3">
+                        <h4 className="font-semibold text-neutral-900 dark:text-neutral-50 mb-3">
                           {section.name}
                         </h4>
                         <ul className="space-y-2">
@@ -564,10 +564,10 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                             feature.plans[plan.name] ? (
                               <li key={feature.name} className="flex items-center gap-3">
                                 <RiCheckLine className="h-4 w-4 text-neutral-500 flex-shrink-0" />
-                                <span className="text-sm text-gray-700 dark:text-gray-300">
+                                <span className="text-sm text-neutral-700 dark:text-neutral-300">
                                   {feature.name}
                                   {typeof feature.plans[plan.name] === 'string' && (
-                                    <span className="text-gray-500 ml-1">
+                                    <span className="text-neutral-500 ml-1">
                                       ({feature.plans[plan.name]})
                                     </span>
                                   )}
@@ -586,52 +586,52 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
             {/* Overage Costs Section */}
             <section className="mt-12">
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 text-center mb-4">
+                <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50 text-center mb-4">
                   Overage Pricing
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 text-center">
+                <p className="text-neutral-600 dark:text-neutral-400 text-center">
                   When you exceed your plan limits, you'll only pay for what you use
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {plans.map((plan) => (
-                  <div key={plan.id} className="border border-gray-200 dark:border-gray-800 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50 mb-4 text-center">
+                  <div key={plan.id} className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-4 text-center">
                       {plan.name} Overage Rates
                     </h3>
                     <ul className="space-y-2 text-sm">
                       <li className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Messages</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-50">$0.03</span>
+                        <span className="text-neutral-600 dark:text-neutral-400">Messages</span>
+                        <span className="font-medium text-neutral-900 dark:text-neutral-50">$0.03</span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Web Searches</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-50">
+                        <span className="text-neutral-600 dark:text-neutral-400">Web Searches</span>
+                        <span className="font-medium text-neutral-900 dark:text-neutral-50">
                           {plan.id === 'starter' ? '$0.10' : plan.id === 'growth' ? '$0.08' : '$0.06'}
                         </span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Summaries</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-50">
+                        <span className="text-neutral-600 dark:text-neutral-400">Summaries</span>
+                        <span className="font-medium text-neutral-900 dark:text-neutral-50">
                           {plan.id === 'starter' ? '$0.05' : plan.id === 'growth' ? '$0.04' : '$0.03'}
                         </span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">WhatsApp</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-50">
+                        <span className="text-neutral-600 dark:text-neutral-400">WhatsApp</span>
+                        <span className="font-medium text-neutral-900 dark:text-neutral-50">
                           {plan.id === 'starter' ? '$0.07' : plan.id === 'growth' ? '$0.06' : '$0.05'}
                         </span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Voice</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-50">
+                        <span className="text-neutral-600 dark:text-neutral-400">Voice</span>
+                        <span className="font-medium text-neutral-900 dark:text-neutral-50">
                           {plan.id === 'starter' ? '$0.15' : plan.id === 'growth' ? '$0.12' : '$0.10'}
                         </span>
                       </li>
                       <li className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">SMS</span>
-                        <span className="font-medium text-gray-900 dark:text-gray-50">
+                        <span className="text-neutral-600 dark:text-neutral-400">SMS</span>
+                        <span className="font-medium text-neutral-900 dark:text-neutral-50">
                           {plan.id === 'starter' ? '$0.08' : plan.id === 'growth' ? '$0.08' : '$0.06'}
                         </span>
                       </li>
@@ -643,11 +643,11 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
 
             {/* Footer */}
             <section className="mt-12 text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                 All plans include overage billing for usage beyond included limits. 
                 Cancel anytime.
               </p>
-              <div className="flex justify-center gap-6 text-xs text-gray-500">
+              <div className="flex justify-center gap-6 text-xs text-neutral-500">
                 <span>✓ 14-day free trial</span>
                 <span>✓ Cancel anytime</span>
                 <span>✓ 24/7 support</span>

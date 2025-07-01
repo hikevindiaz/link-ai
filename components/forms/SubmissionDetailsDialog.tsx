@@ -42,29 +42,29 @@ export function SubmissionDetailsDialog({
         
         <div className="mt-4 space-y-4">
           {/* Submission Meta */}
-          <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/50">
+          <div className="rounded-xl bg-neutral-50 p-4 dark:bg-neutral-800/50">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Form</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Form</p>
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                   {submission.formName || "Form"}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Chatbot</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Chatbot</p>
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                   {submission.chatbotName}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Submitted</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-50" title={formattedDate}>
+                <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Submitted</p>
+                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50" title={formattedDate}>
                   {timeAgo}
                 </p>
               </div>
               {submission.threadId && (
                 <div>
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Conversation</p>
+                  <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Conversation</p>
                   <a
                     href={`/dashboard/conversations/${submission.threadId}`}
                     target="_blank"
@@ -83,16 +83,16 @@ export function SubmissionDetailsDialog({
           
           {/* Submission Data */}
           <div>
-            <h3 className="mb-3 text-sm font-medium text-gray-900 dark:text-gray-50">
+            <h3 className="mb-3 text-sm font-medium text-neutral-900 dark:text-neutral-50">
               Form Data
             </h3>
             <div className="space-y-3">
               {Object.entries(submission.data).map(([fieldName, value]) => (
-                <div key={fieldName} className="rounded-xl border border-gray-200 p-3 dark:border-gray-700">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                <div key={fieldName} className="rounded-xl border border-neutral-200 p-3 dark:border-neutral-700">
+                  <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
                     {fieldName}
                   </p>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-gray-50 whitespace-pre-wrap">
+                  <p className="mt-1 text-sm text-neutral-900 dark:text-neutral-50 whitespace-pre-wrap">
                     {value || "-"}
                   </p>
                 </div>

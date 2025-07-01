@@ -219,7 +219,7 @@ export function WelcomeModal({ isOpen, onOpenChange, initialStep = 0 }: WelcomeM
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-3xl p-0 overflow-hidden">
-        <div className="flex flex-col bg-white dark:bg-gray-950 overflow-y-auto max-h-[80vh]">
+        <div className="flex flex-col bg-white dark:bg-neutral-950 overflow-y-auto max-h-[80vh]">
           <div className="px-6 pt-6">
             {/* Link AI Profile Icon */}
             <div className="flex justify-center mb-4">
@@ -254,7 +254,7 @@ export function WelcomeModal({ isOpen, onOpenChange, initialStep = 0 }: WelcomeM
                 variant="ghost" 
                 size="sm" 
                 onClick={handleSkipOnboarding}
-                className="text-xs text-gray-500"
+                className="text-xs text-neutral-500"
               >
                 Skip for now
               </Button>
@@ -293,10 +293,10 @@ export function WelcomeModal({ isOpen, onOpenChange, initialStep = 0 }: WelcomeM
 
           {/* Help section */}
           <div className="px-6 pb-6 mt-4">
-            <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">
+            <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
               Need help?
             </h4>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-500">
               Connect with a member of our team at{' '}
               <a
                 href="mailto:support@getlinkai.com"

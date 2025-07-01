@@ -1,4 +1,4 @@
-type Category = "red" | "orange" | "emerald" | "gray"
+type Category = "red" | "orange" | "emerald" | "neutral"
 type Metric = {
   label: string
   value: number
@@ -25,8 +25,8 @@ const categoryConfig = {
     activeClass: "bg-emerald-500 dark:bg-emerald-500",
     bars: 3,
   },
-  gray: {
-    activeClass: "bg-gray-300 dark:bg-gray-800",
+  neutral: {
+    activeClass: "bg-neutral-300 dark:bg-neutral-800",
     bars: 0,
   },
 } as const
@@ -34,7 +34,7 @@ const categoryConfig = {
 function Indicator({ number }: { number: number }) {
   const category = getCategory(number)
   const config = categoryConfig[category]
-  const inactiveClass = "bg-gray-300 dark:bg-gray-800"
+  const inactiveClass = "bg-neutral-300 dark:bg-neutral-800"
 
   return (
     <div className="flex gap-0.5">
@@ -74,14 +74,14 @@ const metrics: Metric[] = [
 function MetricCard({ metric }: { metric: Metric }) {
   return (
     <div>
-      <dt className="text-sm text-gray-500 dark:text-gray-500">
+      <dt className="text-sm text-neutral-500 dark:text-neutral-500">
         {metric.label}
       </dt>
       <dd className="mt-1.5 flex items-center gap-2">
         <Indicator number={metric.value} />
-        <p className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+        <p className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
           {metric.percentage}{" "}
-          <span className="font-medium text-gray-400 dark:text-gray-600">
+          <span className="font-medium text-neutral-400 dark:text-neutral-600">
             - {metric.fraction}
           </span>
         </p>
@@ -93,7 +93,7 @@ function MetricCard({ metric }: { metric: Metric }) {
 export function MetricsCards() {
   return (
     <>
-      <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+      <h1 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
         Overview
       </h1>
       <dl className="mt-6 flex flex-wrap items-center gap-x-12 gap-y-8">

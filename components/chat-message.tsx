@@ -31,14 +31,33 @@ export function ChatMessage({ message, children, chatbot, isFirst, ...props }: C
                         className={cn('pl-10 group relative mb-4 flex justify-end items-end')}
                         {...props}
                     >
-                        <p
+                        <div
                             style={{ color: chatbot.userReplyTextColor, background: chatbot.userReplyBackgroundColor }}
-                            className="p-2 text-sm rounded-lg mr-4 whitespace-pre-wrap"
+                            className="p-2 text-sm rounded-lg mr-4 whitespace-pre-wrap leading-relaxed"
                             dir={getDirection(chatbot.rightToLeftLanguage)} // Set text direction
                         >
                             <svg fill={chatbot.userReplyBackgroundColor} className="absolute bottom-[0px] right-11" height="14" width="13"><path d="M6 .246c-.175 5.992-1.539 8.89-5.5 13.5 6.117.073 9.128-.306 12.5-3L6 .246Z"></path></svg>
+                            <MemoizedReactMarkdown 
+                                className="prose prose-sm max-w-none text-inherit [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                    p({ children }) {
+                                        return <p className="mb-2 last:mb-0 leading-relaxed" dir={getDirection(chatbot.rightToLeftLanguage)}>{children}</p>
+                                    },
+                                    strong({ children }) {
+                                        return <strong className="font-bold">{children}</strong>
+                                    },
+                                    em({ children }) {
+                                        return <em className="italic">{children}</em>
+                                    },
+                                    code({ children }) {
+                                        return <code className="bg-black/10 px-1 py-0.5 rounded text-xs font-mono">{children}</code>
+                                    }
+                                }}
+                            >
                             {message.content}
-                        </p>
+                            </MemoizedReactMarkdown>
+                        </div>
                         <div
                             className={cn(
                                 'flex size-8 shrink-0 select-none items-center justify-center rounded-xl border shadow',
@@ -67,7 +86,7 @@ export function ChatMessage({ message, children, chatbot, isFirst, ...props }: C
                             {message.content == "loading" ? <Icons.loading className="animate-spin" /> :
                                 <>
                                     <MemoizedReactMarkdown
-                                        className="w-full prose text-sm break-words prose-p:leading-relaxed prose-pre:p-0"
+                                        className="w-full prose prose-sm text-sm break-words prose-p:leading-relaxed prose-pre:p-0 prose-strong:font-bold prose-em:italic [&>*:first-child]:mt-0"
                                         remarkPlugins={[remarkGfm, remarkMath]}
                                         components={{
                                             a({ node, children, ...props }) {
@@ -78,7 +97,34 @@ export function ChatMessage({ message, children, chatbot, isFirst, ...props }: C
                                                 )
                                             },
                                             p({ children }) {
-                                                return <p className="mb-2 last:mb-0" dir={getDirection(chatbot.rightToLeftLanguage)}>{children}</p>
+                                                return <p className="mb-3 last:mb-0 leading-relaxed" dir={getDirection(chatbot.rightToLeftLanguage)}>{children}</p>
+                                            },
+                                            strong({ children }) {
+                                                return <strong className="font-bold text-gray-900 dark:text-gray-100">{children}</strong>
+                                            },
+                                            em({ children }) {
+                                                return <em className="italic text-gray-800 dark:text-gray-200">{children}</em>
+                                            },
+                                            ul({ children }) {
+                                                return <ul className="list-disc list-outside ml-4 mb-3 space-y-1">{children}</ul>
+                                            },
+                                            ol({ children }) {
+                                                return <ol className="list-decimal list-outside ml-4 mb-3 space-y-1">{children}</ol>
+                                            },
+                                            li({ children }) {
+                                                return <li className="py-0.5 leading-relaxed">{children}</li>
+                                            },
+                                            blockquote({ children }) {
+                                                return <blockquote className="border-l-4 border-gray-300 pl-4 py-2 mb-3 italic text-gray-700 dark:text-gray-300 dark:border-gray-600">{children}</blockquote>
+                                            },
+                                            h1({ children }) {
+                                                return <h1 className="text-2xl font-bold mt-6 mb-3 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">{children}</h1>
+                                            },
+                                            h2({ children }) {
+                                                return <h2 className="text-xl font-bold mt-5 mb-3 text-gray-900 dark:text-gray-100">{children}</h2>
+                                            },
+                                            h3({ children }) {
+                                                return <h3 className="text-lg font-semibold mt-4 mb-2 text-gray-900 dark:text-gray-100">{children}</h3>
                                             },
                                             code({ node, className, children, ...props }) {
                                                 const match = /language-(\w+)/.exec(className || '')

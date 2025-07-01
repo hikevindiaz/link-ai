@@ -12,8 +12,8 @@ This document outlines the complete design system, typography, colors, and styli
 /* Background Colors */
 --bg-light: #ffffff;           /* White background (light mode) */
 --bg-dark: #000000;            /* Black background (dark mode) */
---bg-card-light: #F5F5F7;      /* Light gray card background */
---bg-card-dark: #262626;       /* Dark gray card background (neutral-800) */
+--bg-card-light: #F5F5F7;      /* Light neutral card background */
+--bg-card-dark: #262626;       /* Dark neutral card background (neutral-800) */
 ```
 
 ### Neutral Color Palette
@@ -147,12 +147,12 @@ className={`${inter.variable} font-inter antialiased`}
 ```css
 /* Primary Button */
 .btn-primary {
-  @apply bg-black hover:bg-gray-800 text-white dark:bg-white dark:hover:bg-gray-200 dark:text-black;
+  @apply bg-black hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black;
 }
 
 /* Secondary Button */
 .btn-secondary {
-  @apply bg-gray-600 hover:bg-gray-700 text-white dark:bg-gray-500 dark:hover:bg-gray-600;
+  @apply bg-neutral-600 hover:bg-neutral-700 text-white dark:bg-neutral-500 dark:hover:bg-neutral-600;
 }
 
 /* Button Sizing */

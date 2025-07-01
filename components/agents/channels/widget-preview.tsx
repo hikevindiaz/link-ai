@@ -24,7 +24,7 @@ export function WidgetPreview({
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-medium">Widget Preview</h3>
-      <div className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="border rounded-lg p-4 bg-neutral-50 dark:bg-neutral-900 flex items-center justify-center">
         <div className="relative cursor-pointer overflow-hidden animate-border"
           style={{ 
             width: '220px',
@@ -34,7 +34,7 @@ export function WidgetPreview({
             boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
           }}
         >
-          <div className="flex items-center gap-2 px-3 py-2 rounded-[14px] w-full bg-white dark:bg-gray-950">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-[14px] w-full bg-white dark:bg-neutral-950">
             {useRiveOrb ? (
               <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center">
                 <div className="scale-150 transform-gpu">

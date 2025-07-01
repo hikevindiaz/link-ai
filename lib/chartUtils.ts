@@ -39,11 +39,11 @@ export const chartColors = {
     fill: "fill-amber-500 dark:fill-amber-500",
     text: "text-amber-500 dark:text-amber-500",
   },
-  gray: {
-    bg: "bg-gray-400 dark:bg-gray-600",
-    stroke: "stroke-gray-400 dark:stroke-gray-600",
-    fill: "fill-gray-400 dark:fill-gray-600",
-    text: "text-gray-400 dark:text-gray-600",
+  neutral: {
+    bg: "bg-neutral-400 dark:bg-neutral-600",
+    stroke: "stroke-neutral-400 dark:stroke-neutral-600",
+    fill: "fill-neutral-400 dark:fill-neutral-600",
+    text: "text-neutral-400 dark:text-neutral-600",
   },
   rose: {
     bg: "bg-rose-600 dark:bg-rose-500",
@@ -87,11 +87,11 @@ export const chartColors = {
     fill: "fill-red-500 dark:fill-red-500",
     text: "text-red-500 dark:text-red-500",
   },
-  lightGray: {
-    bg: "bg-gray-300 dark:bg-gray-700",
-    stroke: "stroke-gray-300 dark:stroke-gray-700",
-    fill: "fill-gray-300 dark:fill-gray-700",
-    text: "text-gray-300 dark:text-gray-700",
+  lightneutral: {
+    bg: "bg-neutral-300 dark:bg-neutral-700",
+    stroke: "stroke-neutral-300 dark:stroke-neutral-700",
+    fill: "fill-neutral-300 dark:fill-neutral-700",
+    text: "text-neutral-300 dark:text-neutral-700",
   },
 } as const satisfies {
   [color: string]: {
@@ -111,8 +111,8 @@ export const chartGradientColors = {
   violet:
     "from-violet-200 to-violet-500 dark:from-violet-200/10 dark:to-violet-400",
   amber: "from-amber-200 to-amber-500 dark:from-amber-200/10 dark:to-amber-400",
-  gray: "from-gray-200 to-gray-500 dark:from-gray-200/10 dark:to-gray-400",
-  lightGray: "from-gray-200 to-gray-500 dark:from-gray-200/10 dark:to-gray-400",
+  neutral: "from-neutral-200 to-neutral-500 dark:from-neutral-200/10 dark:to-neutral-400",
+  lightneutral: "from-neutral-200 to-neutral-500 dark:from-neutral-200/10 dark:to-neutral-400",
   rose: "from-rose-200 to-rose-500 dark:from-rose-200/10 dark:to-rose-400",
   sky: "from-sky-200 to-sky-500 dark:from-sky-200/10 dark:to-sky-400",
   cyan: "from-cyan-200 to-cyan-500 dark:from-cyan-200/10 dark:to-cyan-400",
@@ -161,11 +161,11 @@ export const chartConditionalColors = {
     high: "fill-amber-400 dark:fill-amber-500",
     critical: "fill-amber-500 dark:fill-amber-600",
   },
-  gray: {
-    low: "fill-gray-200 dark:fill-gray-300",
-    medium: "fill-gray-300 dark:fill-gray-400",
-    high: "fill-gray-400 dark:fill-gray-500",
-    critical: "fill-gray-500 dark:fill-gray-600",
+  neutral: {
+    low: "fill-neutral-200 dark:fill-neutral-300",
+    medium: "fill-neutral-300 dark:fill-neutral-400",
+    high: "fill-neutral-400 dark:fill-neutral-500",
+    critical: "fill-neutral-500 dark:fill-neutral-600",
   },
   rose: {
     low: "fill-rose-200 dark:fill-rose-300",
@@ -203,11 +203,11 @@ export const chartConditionalColors = {
     high: "fill-red-400 dark:fill-red-500",
     critical: "fill-red-500 dark:fill-red-600",
   },
-  lightGray: {
-    low: "fill-gray-200 dark:fill-gray-300",
-    medium: "fill-gray-300 dark:fill-gray-400",
-    high: "fill-gray-400 dark:fill-gray-500",
-    critical: "fill-gray-500 dark:fill-gray-600",
+  lightneutral: {
+    low: "fill-neutral-200 dark:fill-neutral-300",
+    medium: "fill-neutral-300 dark:fill-neutral-400",
+    high: "fill-neutral-400 dark:fill-neutral-500",
+    critical: "fill-neutral-500 dark:fill-neutral-600",
   },
 }
 
@@ -233,10 +233,10 @@ export const getColorClassName = (
   type: ColorUtility,
 ): string => {
   const fallbackColor = {
-    bg: "bg-gray-500",
-    stroke: "stroke-gray-500",
-    fill: "fill-gray-500",
-    text: "text-gray-500",
+    bg: "bg-neutral-500",
+    stroke: "stroke-neutral-500",
+    fill: "fill-neutral-500",
+    text: "text-neutral-500",
   }
   return chartColors[color]?.[type] ?? fallbackColor[type]
 }
@@ -252,10 +252,10 @@ export const getConditionalColorClassName = (
   color: AvailableChartConditionalColorsKeys,
 ) => {
   const fallbackColors = {
-    low: "fill-gray-300 dark:fill-gray-400",
-    medium: "fill-gray-400 dark:fill-gray-500",
-    high: "fill-gray-500 dark:fill-gray-600",
-    critical: "fill-gray-600 dark:fill-gray-700",
+    low: "fill-neutral-300 dark:fill-neutral-400",
+    medium: "fill-neutral-400 dark:fill-neutral-500",
+    high: "fill-neutral-500 dark:fill-neutral-600",
+    critical: "fill-neutral-600 dark:fill-neutral-700",
   }
 
   const classes = chartConditionalColors[color] ?? fallbackColors

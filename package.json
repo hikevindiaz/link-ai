@@ -26,7 +26,8 @@
     "fix-twilio-webhooks": "ts-node scripts/fix-twilio-webhooks.ts",
     "add-twilio-subaccount-fields": "ts-node scripts/add-twilio-subaccount-fields.ts",
     "check-webhook-config": "ts-node scripts/check-webhook-config.ts",
-    "update-phone-token": "ts-node scripts/update-phone-subaccount-token.ts"
+    "update-phone-token": "ts-node scripts/update-phone-subaccount-token.ts",
+    "add-llm-models": "ts-node scripts/add-llm-models.ts"
   },
   "dependencies": {
     "@ai-sdk/fireworks": "0.1.16",
@@ -44,6 +45,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@google-cloud/storage": "^7.16.0",
+    "@google/generative-ai": "^0.24.1",
     "@headlessui/react": "^2.2.0",
     "@headlessui/tailwindcss": "^0.2.1",
     "@heroicons/react": "^2.2.0",

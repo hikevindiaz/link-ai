@@ -114,13 +114,13 @@ export function NotificationSettings({
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">SMS Notifications</h4>
+              <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">SMS Notifications</h4>
               <Switch 
                 checked={settings.smsEnabled} 
                 onCheckedChange={handleToggleSMS} 
               />
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
               Send SMS notifications to customers about their order status
             </p>
             
@@ -144,7 +144,7 @@ export function NotificationSettings({
                     </SelectContent>
                   </Select>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                   This number will be used as the sender for SMS notifications
                 </p>
               </div>
@@ -156,7 +156,7 @@ export function NotificationSettings({
       {settings.smsEnabled && (
         <>
           <h3 className="text-sm font-medium mt-6">Notification Templates</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
             Customize the messages sent to customers for each order status
           </p>
           
@@ -169,14 +169,14 @@ export function NotificationSettings({
               <Card key={status} className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${template.enabled ? 'bg-neutral-100 dark:bg-neutral-900/20' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                      <StatusIcon className={`h-5 w-5 ${template.enabled ? statusInfo?.color || 'text-neutral-600 dark:text-neutral-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${template.enabled ? 'bg-neutral-100 dark:bg-neutral-900/20' : 'bg-neutral-100 dark:bg-neutral-800'}`}>
+                      <StatusIcon className={`h-5 w-5 ${template.enabled ? statusInfo?.color || 'text-neutral-600 dark:text-neutral-400' : 'text-neutral-500 dark:text-neutral-400'}`} />
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-gray-50">
+                      <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
                         {statusInfo?.label || capitalize(status)} Notification
                       </h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
                         {template.message.length > 100 
                           ? `${template.message.substring(0, 100)}...` 
                           : template.message}
@@ -214,8 +214,8 @@ export function NotificationSettings({
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="template-message">Message Template</Label>
-                      <div className="text-xs text-gray-500">
-                        Available variables: <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">{'{{orderNumber}}'}</code>, <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">{'{{customerName}}'}</code>
+                      <div className="text-xs text-neutral-500">
+                        Available variables: <code className="bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">{'{{orderNumber}}'}</code>, <code className="bg-neutral-100 dark:bg-neutral-800 px-1 py-0.5 rounded">{'{{customerName}}'}</code>
                       </div>
                     </div>
                     <Textarea 
@@ -226,9 +226,9 @@ export function NotificationSettings({
                     />
                   </div>
                   
-                  <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-xl">
+                  <div className="bg-neutral-50 dark:bg-neutral-900 p-3 rounded-xl">
                     <h5 className="text-xs font-medium mb-2">Preview</h5>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">
                       {editingTemplate.message
                         .replace(/{{orderNumber}}/g, 'ORD-123')
                         .replace(/{{customerName}}/g, 'John Smith')}

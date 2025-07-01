@@ -30,11 +30,11 @@ const ExistingFilesList: React.FC<ExistingFilesListProps> = ({
           {files.map((file) => (
             <Card key={file.id} className="flex items-center justify-between p-4">
               <div className="flex items-center">
-                <File className="h-5 w-5 mr-3 text-gray-500" />
+                <File className="h-5 w-5 mr-3 text-neutral-500" />
                 <div>
                   <div className="font-medium">{file.name}</div>
                   {file.createdAt && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-neutral-500">
                       Added on {formatDate(file.createdAt)}
                     </div>
                   )}
@@ -53,13 +53,13 @@ const ExistingFilesList: React.FC<ExistingFilesListProps> = ({
           ))}
         </div>
       ) : (
-        <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/30 dark:bg-gray-900/20">
+        <div className="mt-6 flex justify-center items-center py-12 rounded-lg border border-dashed border-neutral-200 dark:border-neutral-800 bg-neutral-50/30 dark:bg-neutral-900/20">
           <div className="text-center">
             <RiFileLine className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+            <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
               No files added yet
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 max-w-xs mx-auto">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 max-w-xs mx-auto">
               Upload files to add knowledge to your Agent
             </p>
           </div>

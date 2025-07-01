@@ -64,7 +64,7 @@ const FileProgressItem: React.FC<FileProgressItemProps> = ({
           <span className={cn(
             fileStatus.status === 'error' ? 'text-red-500' : 
             fileStatus.status === 'complete' ? 'text-green-600' : 
-            'text-gray-600',
+            'text-neutral-600',
             'font-medium'
           )}>
             {getStatusText()}
@@ -83,7 +83,7 @@ const FileProgressItem: React.FC<FileProgressItemProps> = ({
           <span className={cn(
             fileStatus.status === 'error' ? 'text-red-500' : 
             fileStatus.status === 'complete' ? 'text-green-600' : 
-            'text-gray-600',
+            'text-neutral-600',
             'font-medium'
           )}>
             {displayProgress}%
@@ -91,7 +91,7 @@ const FileProgressItem: React.FC<FileProgressItemProps> = ({
         )}
       </div>
       {fileStatus.status !== 'queued' && (
-        <div className={`relative h-2 w-full overflow-hidden rounded-full ${fileStatus.status === 'error' ? 'bg-red-100 dark:bg-red-950/30' : 'bg-gray-100 dark:bg-gray-800'}`}>
+        <div className={`relative h-2 w-full overflow-hidden rounded-full ${fileStatus.status === 'error' ? 'bg-red-100 dark:bg-red-950/30' : 'bg-neutral-100 dark:bg-neutral-800'}`}>
           <div 
             className={`h-full transition-all ${indicatorColor}`}
             style={{ width: `${displayProgress}%` }}
