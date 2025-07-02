@@ -73,6 +73,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow voice server to access chat-interface API
+  if (pathname.startsWith("/api/chat-interface") && 
+      req.headers.get('user-agent')?.includes('axios')) {
+    return NextResponse.next();
+  }
+
   // Allow chatbot and related API routes for embed functionality
   if (req.headers.get('referer')?.includes('/embed/') && 
       (pathname.startsWith("/api/chatbots/") || 
