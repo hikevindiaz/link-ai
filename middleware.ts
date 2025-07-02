@@ -73,10 +73,17 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow voice server to access chat-interface API
-  if (pathname.startsWith("/api/chat-interface") && 
-      req.headers.get('user-agent')?.includes('axios')) {
-    return NextResponse.next();
+  // Allow voice server to access chat-interface API with proper authentication
+  if (pathname.startsWith("/api/chat-interface")) {
+    const apiKey = req.headers.get('x-api-key');
+    const validApiKey = process.env.VOICE_SERVER_API_KEY;
+    
+    if (apiKey && validApiKey && apiKey === validApiKey) {
+      console.log('[Middleware] Voice server authenticated successfully');
+      return NextResponse.next();
+    }
+    // If API key doesn't match, continue with normal authentication flow
+    console.log('[Middleware] Voice server API key invalid or missing');
   }
 
   // Allow chatbot and related API routes for embed functionality
