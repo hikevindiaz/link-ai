@@ -149,12 +149,12 @@ export class OpenAIProvider implements AIProvider {
       'GPT-3.5': 'gpt-3.5-turbo',
       'GPT-4 (Legacy)': 'gpt-4-1106-preview',
       'GPT-3.5 Turbo (Legacy)': 'gpt-3.5-turbo',
-      'GPT-4.1 Nano': 'gpt-4o-mini',
+      'GPT-4.1 Nano': 'gpt-4.1-nano',
       'O4 Mini': 'gpt-4o-mini',
       
       // Model IDs to OpenAI model names
       'gpt-4o-mini-2024-07-18': 'gpt-4o-mini', // Link Core Smart - correct model
-      'gpt-4.1-nano-2025-04-14': 'gpt-4o-mini', // Link Core Fast
+      'gpt-4.1-nano-2025-04-14': 'gpt-4.1-nano', // Link Core Fast
       'o4-mini-2025-04-16': 'gpt-4o-mini', // Legacy mapping
       'gpt-4.1-mini-2025-04-14': 'gpt-4o-mini', // Fix invalid model
       'gpt-4o-mini-realtime-preview': 'gpt-4o-realtime-preview',
