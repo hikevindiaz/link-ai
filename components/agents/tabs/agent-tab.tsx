@@ -239,21 +239,48 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
       const agentName = form.getValues('name');
       const isDefaultPrompt = !currentPrompt || currentPrompt === DEFAULT_SIMPLE_PROMPT;
       
-      // Fetch business info
-      const businessInfo = await fetchBusinessInfo();
+      if (!agentName || agentName.trim() === '') {
+        toast.error('Please enter an agent name first');
+        return;
+      }
+      
+      let requestBody;
+      
+      if (isDefaultPrompt) {
+        // Generate a new prompt using business data
+        const businessInfo = await fetchBusinessInfo();
+        
+        requestBody = {
+          type: 'new',
+          agentName: agentName.trim(),
+          businessName: businessInfo.businessName || 'Your Business',
+          industry: businessInfo.industry || 'technology',
+        };
+      } else {
+        // Improve existing prompt using the template
+        requestBody = {
+          type: 'improve',
+          agentName: agentName.trim(),
+          currentPrompt,
+          template: DEFAULT_PROMPT_TEMPLATE,
+        };
+      }
+      
+      console.log('Sending prompt generation request:', requestBody);
       
       const response = await fetch('/api/ai/generate-prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          agentName,
-          currentPrompt,
-          businessInfo,
-          isDefaultPrompt,
-        }),
+        body: JSON.stringify(requestBody),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('API error response:', errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
       
       const data = await response.json();
       
@@ -262,11 +289,12 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
         setIsDirty(true);
         toast.success(isDefaultPrompt ? 'New prompt generated successfully!' : 'Prompt improved successfully!');
       } else {
+        console.error('API response missing expected data:', data);
         toast.error('Failed to generate prompt. Please try again.');
       }
     } catch (error) {
       console.error('Error generating prompt:', error);
-      toast.error('Failed to generate prompt. Please try again.');
+      toast.error(`Failed to generate prompt: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsGeneratingPrompt(false);
     }
