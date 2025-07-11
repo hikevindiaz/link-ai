@@ -18,8 +18,6 @@ export async function POST(req: Request) {
       return new Response('Missing or invalid messages', { status: 400 });
     }
 
-    console.log(`[Chat Interface] Processing ${messages.length} messages for chatbot ${chatbotId} (streaming: ${stream})`);
-
     // Initialize Agent Runtime with the chatbot configuration
     const agentRuntime = await AgentRuntime.fromChatbotId(chatbotId, {
       type: 'web',
@@ -46,8 +44,6 @@ export async function POST(req: Request) {
       }
     });
 
-    console.log(`[Chat Interface] Agent Runtime initialized successfully`);
-
     // Convert messages to AgentMessage format
     const agentMessages: AgentMessage[] = messages.map((msg: any, index: number) => ({
       id: msg.id || `msg-${Date.now()}-${index}`,
@@ -59,8 +55,6 @@ export async function POST(req: Request) {
 
     // If streaming is disabled, use the original non-streaming approach
     if (!stream) {
-      console.log(`[Chat Interface] Processing messages with Agent Runtime (non-streaming)...`);
-      
       const input: MessageProcessingInput = {
         threadId: threadId || `web-${Date.now()}`,
         messages: agentMessages
@@ -91,10 +85,22 @@ export async function POST(req: Request) {
         }
       };
       
-      const response = await agentRuntime.processMessages(input, channelContext);
-      console.log(`[Chat Interface] Agent Runtime processing complete`);
+      const assistantMessage = await agentRuntime.processMessages(input, channelContext);
       
-      const messageContent = response?.content || 'No response generated';
+      const messageContent = assistantMessage?.content || 'No response generated';
+      
+      // If tool invocations are present, return as JSON to preserve the data
+      if (assistantMessage?.toolInvocations && assistantMessage.toolInvocations.length > 0) {
+        return new Response(JSON.stringify({
+          content: messageContent,
+          toolInvocations: assistantMessage.toolInvocations
+        }), {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+      }
       
       return new Response(messageContent, {
         status: 200,
@@ -105,8 +111,6 @@ export async function POST(req: Request) {
     }
 
     // STREAMING APPROACH: Node.js with proper flushing
-    console.log(`[Chat Interface] Starting streaming processing...`);
-    
     let fullResponse = '';
     const startTime = Date.now();
     
@@ -114,8 +118,6 @@ export async function POST(req: Request) {
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream({
       async start(controller) {
-        console.log(`[Chat Interface] Stream started at ${Date.now() - startTime}ms`);
-        
         try {
           // Create proper input for processMessages
           const messageInput = {
@@ -157,18 +159,15 @@ export async function POST(req: Request) {
                 // Immediately send each token
                 controller.enqueue(encoder.encode(token));
                 fullResponse += token;
-                console.log(`[Chat Interface] Token flushed: "${token.substring(0, 30)}..." (${token.length} chars)`);
               } catch (error) {
-                console.error('[Chat Interface] Stream encoding error:', error);
+                // Silent error handling
               }
             },
             onComplete: (finalResponse?: string) => {
-              console.log(`[Chat Interface] Stream completed at ${Date.now() - startTime}ms. Total response length: ${finalResponse?.length || fullResponse.length}`);
               if (finalResponse) fullResponse = finalResponse;
-              controller.close();
+              // Don't close the controller here - we'll do it after sending tool invocations
             },
             onError: (error: any) => {
-              console.error('[Chat Interface] Stream error:', error);
               const errorMessage = '\n\nI apologize, but I encountered an error processing your request. Please try again.';
               controller.enqueue(encoder.encode(errorMessage));
               controller.close();
@@ -176,39 +175,43 @@ export async function POST(req: Request) {
           };
           
           // Process AI response using agent runtime (with streaming)
-          await agentRuntime.processMessages(
+          const assistantMessage = await agentRuntime.processMessages(
             messageInput,
             channelContext,
             streamingResponse
           );
+
+          // If tool invocations are present, send them as a special marker
+          if (assistantMessage?.toolInvocations && assistantMessage.toolInvocations.length > 0) {
+            const toolInvocationsMarker = `\n\n<!--TOOL_INVOCATIONS:${JSON.stringify(assistantMessage.toolInvocations)}-->\n`;
+            controller.enqueue(encoder.encode(toolInvocationsMarker));
+          }
           
-          console.log(`[Chat Interface] AI processing completed`);
+          // Now close the controller after everything has been sent
+          controller.close();
           
         } catch (error) {
-          console.error('[Chat Interface] Processing error:', error);
           const errorMessage = '\n\nI apologize, but I encountered an error. Please try again.';
           controller.enqueue(encoder.encode(errorMessage));
           controller.close();
         }
       },
       cancel() {
-        console.log(`[Chat Interface] Stream cancelled by client`);
+        // Stream cancelled by client
       }
     });
 
     // Return streaming response with proper headers for Node.js
     return new Response(readableStream, {
-      headers: {
+        headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache, no-transform',
+          'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
         'Transfer-Encoding': 'chunked',
       }
-    });
+      });
 
-  } catch (error) {
-    console.error('[Chat Interface] Error processing messages:', error);
-    
+    } catch (error) {
     return new Response(
       JSON.stringify({ 
         error: 'Failed to process messages',

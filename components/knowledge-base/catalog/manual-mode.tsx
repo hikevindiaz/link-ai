@@ -642,7 +642,7 @@ export function ManualMode({
                             </div>
                           )}
                           <div>
-                            <div className="font-medium text-neutral-900 dark:text-neutral-50">{product.title}</div>
+                            <div className="font-semibold text-black dark:text-white">{product.title}</div>
                             <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 line-clamp-1">{product.description}</div>
                           </div>
                         </div>

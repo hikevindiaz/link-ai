@@ -198,7 +198,7 @@ export function PricingStep({ selectedPlan, onSelectPlan, onPrev, onComplete, is
       {!showPaymentForm ? (
         <>
           {/* Pricing Table */}
-          <div className="overflow-x-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
+          <div className="overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800">
             <table className="min-w-full divide-y divide-neutral-200 dark:divide-neutral-800">
               <thead className="bg-neutral-50 dark:bg-neutral-800">
                 <tr>

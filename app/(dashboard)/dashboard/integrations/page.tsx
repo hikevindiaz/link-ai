@@ -29,6 +29,7 @@ import {
   RiToggleLine,
   RiDriveFill,
 } from '@remixicon/react';
+import { IconPlaneDeparture } from '@tabler/icons-react';
 import { toast } from "react-hot-toast";
 
 import { Button } from '@/components/ui/button';
@@ -45,7 +46,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { LoadingState } from "@/components/LoadingState";
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface IntegrationItem {
   id: string;
@@ -177,6 +178,15 @@ const allIntegrationsData: IntegrationItem[] = [
     iconUrl: 'https://www.svgrepo.com/show/475644/drive-color.svg',
     comingSoon: false,
   },
+  {
+    id: 'ext-aviationstack',
+    name: 'AviationStack',
+    description: 'Real-time flight tracking and aviation data',
+    icon: IconPlaneDeparture,
+    status: 'Enable',
+    isModule: false,
+    comingSoon: false,
+  },
 ];
 
 const ThemedSvg = ({ src, alt, className = "size-6" }: { src: string; alt: string; className?: string }) => {
@@ -215,8 +225,8 @@ export default function IntegrationsPage() {
             isEnabled: isEnabled, 
             status: newStatus
           };
-        } else if (item.id === 'ext-whatsapp' || item.id === 'ext-google-drive') {
-          // Handle WhatsApp and Google Drive integrations
+        } else if (item.id === 'ext-whatsapp' || item.id === 'ext-google-drive' || item.id === 'ext-aviationstack') {
+          // Handle WhatsApp, Google Drive, and AviationStack integrations
           const isEnabled = userSettings[item.id] ?? false;
           return {
             ...item,
@@ -290,7 +300,45 @@ export default function IntegrationsPage() {
       });
 
   if (isInitializing || sessionStatus === 'loading') {
-      return <LoadingState text="Loading integration settings..." />;
+      return (
+        <div className="p-0">
+          {/* Header skeleton */}
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0 px-4 md:px-8 pt-6">
+            <div className="flex items-center space-x-2">
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+              <Skeleton className="h-10 w-full sm:w-64" />
+              <Skeleton className="h-10 w-full sm:w-40" />
+            </div>
+          </div>
+          <div className="my-4 px-4 md:px-8">
+            <Skeleton className="h-px w-full" />
+          </div>
+          
+          {/* Card grid skeleton */}
+          <div className="px-4 md:px-8 mt-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((item) => (
+                <div key={item} className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+                  <div className="flex items-start gap-4">
+                    <Skeleton className="h-10 w-10 rounded-xl" />
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-20 mb-1" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
   }
 
   // Define gradient colors (can be customized)
@@ -304,10 +352,10 @@ export default function IntegrationsPage() {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0 px-4 md:px-8 pt-6">
         {/* Left Side: Title & Count */}
         <div className="flex items-center space-x-2">
-          <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
+          <h3 className="text-xl font-semibold text-black dark:text-white">
             Integrations & Modules
           </h3>
-          <span className="inline-flex size-6 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-50">
+          <span className="inline-flex size-6 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-black dark:bg-neutral-800 dark:text-white">
             {filteredAndSortedData.length}
           </span>
         </div>
@@ -359,7 +407,7 @@ export default function IntegrationsPage() {
                     )}
                   </span>
                   <div className="flex-1">
-                    <dt className="text-sm font-semibold text-neutral-900 dark:text-neutral-50">
+                    <dt className="text-sm font-semibold text-black dark:text-white">
                       {item.name}
                     </dt>
                     <dd className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
@@ -383,7 +431,7 @@ export default function IntegrationsPage() {
                     </div>
                   ) : item.comingSoon === true ? (
                     <Badge variant="secondary" className="text-xs font-normal py-0.5">Coming Soon</Badge>
-                  ) : (item.id === 'ext-whatsapp' || item.id === 'ext-google-drive') ? (
+                  ) : (item.id === 'ext-whatsapp' || item.id === 'ext-google-drive' || item.id === 'ext-aviationstack') ? (
                     <div className="flex items-center space-x-2">
                       <Switch
                         id={`integration-toggle-${item.id}`}

@@ -47,6 +47,13 @@ export interface AgentMessage {
   content: string;
   type: 'text' | 'audio' | 'image' | 'function_call' | 'function_result';
   timestamp: Date;
+  toolInvocations?: Array<{
+    toolCallId: string;
+    toolName: string;
+    args: any;
+    state: 'result';
+    result: any;
+  }>;
   metadata?: {
     audioUrl?: string;
     imageUrl?: string;
@@ -111,6 +118,7 @@ export interface AgentConfig {
   chatFileAttachementEnabled: boolean;
   calendarEnabled: boolean;
   calendarId?: string;
+  aviationStackEnabled?: boolean;
   
   // Knowledge and tools
   knowledgeSourceIds: string[];
@@ -138,6 +146,7 @@ export interface AgentTool {
   description: string;
   parameters: Record<string, any>;
   handler: (args: any, context: AgentContext) => Promise<any>;
+  systemPrompt?: string; // Optional system prompt to include when this tool is enabled
 }
 
 export interface AgentContext {
@@ -193,7 +202,7 @@ export interface StreamingResponse {
 
 // AI Provider interface
 export interface AIProvider {
-  generate(messages: any[], options: AIProviderOptions): Promise<string>;
+  generate(messages: any[], options: AIProviderOptions): Promise<any>;
   generateStream(
     messages: any[], 
     options: AIProviderOptions, 

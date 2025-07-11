@@ -62,10 +62,10 @@ import { AddonConfigModal } from "@/components/agents/modals/addon-config-modal"
 import { AgentHeader } from "@/components/agents/agent-header"
 import { CallTab } from "@/components/agents/tabs/call-tab"
 import { ActionsTab } from "@/components/agents/tabs/actions-tab"
-import { FloatingActionCard } from "@/components/agents/floating-action-card"
 import { agentSchema, type AgentFormValues } from "@/lib/validations/agent"
 import type { Agent } from "@/types/agent"
 import { logger } from "@/lib/logger"
+import { AgentConfigProvider } from "@/hooks/use-agent-config"
 
 interface Action {
   id: string
@@ -142,8 +142,9 @@ export function AgentSettings({ agent, onSave, showHeader = true, activeTab = "l
   };
 
   return (
-    <TooltipProvider>
-      <div className="flex flex-col h-full max-w-full overflow-x-hidden">
+    <AgentConfigProvider initialAgent={agent}>
+      <TooltipProvider>
+        <div className="flex flex-col h-full max-w-full overflow-x-hidden">
         {showHeader && (
           <div className="flex-none p-8 pb-0">
             <AgentHeader 
@@ -223,5 +224,6 @@ export function AgentSettings({ agent, onSave, showHeader = true, activeTab = "l
         agent={agent}
       />
     </TooltipProvider>
+    </AgentConfigProvider>
   )
 } 

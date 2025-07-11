@@ -43,17 +43,80 @@ export class AgentRuntime {
     this.analytics = AnalyticsService.getInstance();
     
     // Register built-in tools
-    Object.values(builtInTools).forEach(tool => this.toolExecutor.registerTool(tool));
+    console.log('🔧 Starting tool registration', {
+      agentId: config.id,
+      availableTools: Object.keys(builtInTools),
+      knowledgeConfig: {
+        useWebSearch: config.knowledgeConfig?.useWebSearch || false,
+        websiteInstructionsCount: config.knowledgeConfig?.websiteInstructions?.length || 0,
+        knowledgeSourceIds: config.knowledgeConfig?.knowledgeSourceIds?.length || 0
+      }
+    });
+    
+    Object.entries(builtInTools).forEach(([key, tool]) => {
+      // Only register Google search tool if web search is configured
+      if (key === 'googleSearch') {
+        if (config.knowledgeConfig?.useWebSearch && config.knowledgeConfig?.websiteInstructions?.length > 0) {
+          this.toolExecutor.registerTool(tool);
+          console.log('✅ Google search tool registered', { 
+            agentId: config.id,
+            websiteCount: config.knowledgeConfig.websiteInstructions.length,
+            websiteInstructions: config.knowledgeConfig.websiteInstructions.map(w => w.url)
+          });
+        } else {
+          console.log('❌ Google search tool NOT registered - web search not configured', { 
+            agentId: config.id,
+            useWebSearch: config.knowledgeConfig?.useWebSearch || false,
+            websiteInstructionsCount: config.knowledgeConfig?.websiteInstructions?.length || 0,
+            websiteInstructions: config.knowledgeConfig?.websiteInstructions || []
+          });
+        }
+      } else if (key === 'aviationStack') {
+        // Only register AviationStack tool if enabled
+        if (config.aviationStackEnabled) {
+          this.toolExecutor.registerTool(tool);
+          console.log('✅ AviationStack tool registered', { 
+            agentId: config.id,
+            toolName: tool.name,
+            toolId: tool.id
+          });
+        } else {
+          console.log('❌ AviationStack tool NOT registered - not enabled', { 
+            agentId: config.id,
+            aviationStackEnabled: config.aviationStackEnabled || false
+          });
+        }
+      } else if (key === 'weather') {
+        // Register weather tool unconditionally - it's a common use case
+        this.toolExecutor.registerTool(tool);
+        console.log('✅ Weather tool registered', { 
+          agentId: config.id,
+          toolName: tool.name,
+          toolId: tool.id
+        });
+      } else {
+        // Register all other built-in tools unconditionally
+        this.toolExecutor.registerTool(tool);
+        console.log('✅ Built-in tool registered', { 
+          agentId: config.id,
+          toolName: tool.name,
+          toolId: tool.id
+        });
+      }
+    });
     
     // Load custom tools if any
     if (config.tools) {
       config.tools.forEach(tool => this.toolExecutor.registerTool(tool));
     }
     
-    logger.info('Agent runtime initialized', { 
+    console.log('🚀 Agent runtime initialized', { 
       agentId: config.id,
-      model: config.modelName 
-    }, 'agent-runtime');
+      model: config.modelName,
+      totalToolsRegistered: this.toolExecutor.getTools().size,
+      registeredToolNames: Array.from(this.toolExecutor.getTools().keys()),
+      hasGoogleSearch: this.toolExecutor.getTools().has('google_search')
+    });
   }
   
   /**
@@ -150,6 +213,7 @@ export class AgentRuntime {
       chatFileAttachementEnabled: chatbot.chatFileAttachementEnabled,
       calendarEnabled: chatbot.calendarEnabled,
       calendarId: chatbot.calendarId || undefined,
+      aviationStackEnabled: (chatbot as any).aviationStackEnabled || false,
       
       // Knowledge sources
       knowledgeSourceIds: chatbot.knowledgeSources.map(ks => ks.id),
@@ -162,6 +226,18 @@ export class AgentRuntime {
     // Cache the configuration for future requests
     this.configCache.set(chatbotId, { config, timestamp: now });
     console.log(`[Agent Runtime] Configuration loaded and cached in ${Date.now() - startTime}ms`);
+    
+    // DEBUG: Log configuration before creating runtime
+    console.log('🔧 Creating AgentRuntime with config', {
+      chatbotId,
+      configId: config.id,
+      modelName: config.modelName,
+      knowledgeConfig: {
+        useWebSearch: config.knowledgeConfig?.useWebSearch || false,
+        websiteInstructionsCount: config.knowledgeConfig?.websiteInstructions?.length || 0,
+        knowledgeSourceIds: config.knowledgeConfig?.knowledgeSourceIds?.length || 0
+      }
+    });
     
     const runtime = new AgentRuntime(config);
     
@@ -251,10 +327,24 @@ export class AgentRuntime {
       // Wait for vector search to complete
       const vectorContext = await vectorSearchPromise;
 
-      // Build enhanced system prompt with vector context
+      // Detect user language and add language-specific instructions
+      const detectedLanguage = this.detectUserLanguage(userQuery, channelConfig.language, channelConfig.secondLanguage);
+      const languageInstructions = channelConfig.language !== detectedLanguage || channelConfig.secondLanguage 
+        ? `\n\n--- LANGUAGE INSTRUCTION FOR THIS MESSAGE ---
+The user appears to be communicating in: ${detectedLanguage}
+IMPORTANT: Respond in the same language the user is using (${detectedLanguage}).
+If user is speaking Spanish, respond in Spanish.
+If user is speaking English, respond in English.
+Match the user's language preference for this conversation.
+--- END LANGUAGE INSTRUCTION ---`
+        : '';
+
+      // Build enhanced system prompt with vector context and language instructions
       let enhancedPrompt = channelConfig.prompt;
       if (vectorContext) {
-        enhancedPrompt = `${vectorContext}\n\n--- ORIGINAL SYSTEM PROMPT ---\n${channelConfig.prompt}`;
+        enhancedPrompt = `${vectorContext}\n\n--- ORIGINAL SYSTEM PROMPT ---\n${channelConfig.prompt}${languageInstructions}`;
+      } else {
+        enhancedPrompt = `${channelConfig.prompt}${languageInstructions}`;
       }
 
       // Update system message with enhanced prompt
@@ -580,6 +670,212 @@ export class AgentRuntime {
   private generateMessageId(): string {
     return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
+
+  /**
+   * Generate response with proper tool call handling
+   */
+  private async generateWithToolCalls(
+    messages: any[],
+    options: any,
+    streaming?: StreamingResponse
+  ): Promise<{ content: string; toolInvocations?: any[] }> {
+    console.log('🌟 generateWithToolCalls called', {
+      messageCount: messages.length,
+      hasTools: !!options.tools,
+      toolCount: options.tools?.length || 0,
+      toolNames: options.tools?.map((t: any) => t.function.name) || []
+    });
+    
+    let currentMessages = [...messages];
+    let iterationCount = 0;
+    const maxIterations = 10; // Prevent infinite loops
+    let toolInvocations: any[] = []; // Collect tool invocations
+    
+    while (iterationCount < maxIterations) {
+      iterationCount++;
+      
+      console.log('🔄 AI generation iteration', {
+        iteration: iterationCount,
+        messageCount: currentMessages.length,
+        agentId: this.config.id
+      });
+      
+      const choice = await this.aiProvider.generate(currentMessages, options);
+      const finishReason = choice?.finish_reason;
+      
+      console.log('🤖 AI Provider Response', {
+        hasChoice: !!choice,
+        finishReason,
+        hasMessage: !!choice?.message,
+        hasToolCalls: !!choice?.message?.tool_calls,
+        toolCallCount: choice?.message?.tool_calls?.length || 0
+      });
+      
+      // If no tool calls, return the response
+      if (finishReason !== 'tool_calls') {
+        const response = choice?.message?.content || '';
+        
+        console.log('🎯 Final response generated', { 
+          responseLength: response.length,
+          finishReason,
+          iterations: iterationCount,
+          toolInvocationsCount: toolInvocations.length
+        });
+        
+        // If streaming was requested, simulate streaming by sending the full response
+        if (streaming && streaming.onToken) {
+          // Send response in chunks to simulate streaming
+          const chunkSize = 10;
+          for (let i = 0; i < response.length; i += chunkSize) {
+            const chunk = response.slice(i, i + chunkSize);
+            streaming.onToken(chunk);
+            // Small delay to simulate streaming
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+        }
+        
+        // Notify streaming complete
+        if (streaming?.onComplete) {
+          streaming.onComplete();
+        }
+        
+        return { 
+          content: response,
+          toolInvocations: toolInvocations.length > 0 ? toolInvocations : undefined
+        };
+      }
+      
+      // Handle tool calls
+      const toolCalls = choice?.message?.tool_calls;
+      if (toolCalls && toolCalls.length > 0) {
+        console.log('🔧 Tool calls detected', { 
+          toolCallCount: toolCalls.length,
+          toolCalls: toolCalls.map(tc => ({
+            id: tc.id,
+            name: tc.function.name,
+            argumentsLength: tc.function.arguments.length
+          })),
+          iteration: iterationCount
+        });
+        
+        // Add the assistant's message with tool calls
+        currentMessages.push({
+          role: 'assistant',
+          content: null,
+          tool_calls: toolCalls
+        });
+        
+        // Execute each tool call
+        for (const toolCall of toolCalls) {
+          try {
+            const args = JSON.parse(toolCall.function.arguments);
+            
+            console.log('🔧 Executing tool', {
+              toolName: toolCall.function.name,
+              toolId: toolCall.id,
+              args: args
+            });
+            
+                         // Create a context for tool execution
+             const context = {
+               agent: this.config,
+               channel: {
+                 type: 'web' as const,
+                 sessionId: `session_${Date.now()}`,
+                 userId: this.config.userId,
+                 chatbotId: this.config.id,
+                 threadId: `thread_${Date.now()}`,
+                 capabilities: {
+                   supportsAudio: false,
+                   supportsVideo: false,
+                   supportsImages: false,
+                   supportsFiles: false,
+                   supportsRichText: true,
+                   supportsTypingIndicator: false,
+                   supportsDeliveryReceipts: false,
+                   supportsInterruption: false
+                 }
+               },
+              conversation: {
+                id: `conv_${Date.now()}`,
+                sessionId: `session_${Date.now()}`,
+                messages: [],
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                isActive: true,
+                metadata: {}
+              },
+              tools: this.toolExecutor.getTools()
+            };
+            
+            // Execute the tool
+            const result = await this.toolExecutor.executeTool(
+              toolCall.function.name,
+              args,
+              context
+            );
+            
+            console.log('✅ Tool executed successfully', {
+              toolName: toolCall.function.name,
+              toolId: toolCall.id,
+              resultType: typeof result
+            });
+            
+            // Collect tool invocation data for UI rendering
+            toolInvocations.push({
+              toolCallId: toolCall.id,
+              toolName: toolCall.function.name,
+              args: args,
+              state: 'result',
+              result: result
+            });
+            
+            // Add tool result message
+            currentMessages.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify(result)
+            });
+            
+          } catch (error) {
+            console.error('❌ Tool execution failed', {
+              toolName: toolCall.function.name,
+              toolId: toolCall.id,
+              error: error.message
+            });
+            
+            // Add error result
+            currentMessages.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify({
+                error: `Tool execution failed: ${error.message}`,
+                success: false
+              })
+            });
+          }
+        }
+        
+        // Continue the loop to get the final response
+        continue;
+      }
+      
+      // Shouldn't reach here, but just in case
+      break;
+    }
+    
+    // If we've exceeded max iterations, return an error
+    console.error('Exceeded maximum iterations in tool call loop', {
+      maxIterations,
+      finalIteration: iterationCount,
+      agentId: this.config.id
+    });
+    
+    return { 
+      content: 'I apologize, but I encountered an issue while processing your request. Please try again.',
+      toolInvocations: toolInvocations.length > 0 ? toolInvocations : undefined
+    };
+  }
   
   /**
    * Get the conversation manager instance
@@ -796,28 +1092,77 @@ export class AgentRuntime {
     // Add company context
     systemPrompt += `\n\nYou are ${chatbotName}, representing ${companyName}.`;
 
+    // Add language handling instructions
+    if (chatbot.language || chatbot.secondLanguage) {
+      systemPrompt += `\n\n# Language Guidelines
+
+## Language Configuration:
+- **Primary Language**: ${chatbot.language || 'en-US'}
+- **Secondary Language**: ${chatbot.secondLanguage || 'Not configured'}
+
+## Language Response Strategy:
+- **ALWAYS respond in the same language the user is speaking**
+- If user speaks in English, respond in English
+- If user speaks in Spanish, respond in Spanish
+- If user speaks in your primary language (${chatbot.language || 'en-US'}), respond in that language
+- If user speaks in your secondary language (${chatbot.secondLanguage || 'none'}), respond in that language
+- If you're unsure of the user's language, default to your primary language (${chatbot.language || 'en-US'})
+- Maintain consistent language throughout the conversation unless the user switches languages
+
+## Language Detection:
+- Pay attention to the language of the user's message
+- Look for language indicators like vocabulary, grammar, and sentence structure
+- Common language patterns:
+  - English: "Hello", "How are you?", "Can you help me?"
+  - Spanish: "Hola", "¿Cómo estás?", "¿Puedes ayudarme?"
+  - Detect and match the user's language preference
+
+## Important Notes:
+- Be fluent and natural in both languages
+- Maintain your personality and tone regardless of language
+- Don't mention language switching unless specifically asked
+- If user mixes languages, respond in the dominant language of their message`;
+    }
+
+    // Add comprehensive response strategy
+    systemPrompt += `\n\n# Response Strategy Guidelines
+
+## Knowledge Priority (in order):
+1. **FIRST PRIORITY**: Use your knowledge base content (documents, Q&A, files, etc.) when available
+2. **SECOND PRIORITY**: Use live search tools when configured and appropriate
+3. **THIRD PRIORITY**: Use general knowledge for non-business questions or when no specific knowledge is available
+
+## When to Use Different Knowledge Sources:
+- **Business-specific questions**: Always check knowledge base first, then use live search if configured
+- **General questions**: Use general knowledge (weather, facts, definitions, etc.)
+- **Current events**: Use live search tools if configured and relevant
+- **Mixed questions**: Combine knowledge base + general knowledge as appropriate
+
+## Response Approach:
+- **ALWAYS provide a helpful answer** - never say "I don't know" without offering alternatives
+- If knowledge base has no match: Use general knowledge and mention you can help with business-specific questions
+- If live search is configured: Use it for current information when relevant
+- Be natural and conversational while maintaining accuracy`;
+
     // Add channel-specific context
     if (channelContext?.type) {
       switch (channelContext.type) {
-        case 'voice':
         case 'phone':
-          systemPrompt += '\n\nYou are currently in a voice conversation. Keep responses concise and conversational.';
-          break;
-        case 'web':
-          systemPrompt += '\n\nYou are helping users through our website chat interface.';
+          systemPrompt += '\n\nYou are on a phone call. Keep responses conversational and concise.';
           break;
         case 'whatsapp':
-          systemPrompt += '\n\nYou are communicating via WhatsApp. Keep messages friendly and mobile-appropriate.';
+          systemPrompt += '\n\nYou are communicating via WhatsApp. Use emojis when appropriate and keep messages friendly.';
+          break;
+        case 'instagram':
+          systemPrompt += '\n\nYou are communicating via Instagram. Keep messages brief and engaging.';
+          break;
+        case 'messenger':
+          systemPrompt += '\n\nYou are communicating via Facebook Messenger. Be friendly and conversational.';
           break;
         case 'sms':
           systemPrompt += '\n\nYou are communicating via SMS. Keep messages brief and clear.';
           break;
       }
-    }
-
-    // Add calendar context if enabled
-    if (chatbot.calendarEnabled && chatbot.calendar) {
-      systemPrompt += '\n\nYou can help users schedule appointments. Use the calendar tools when users want to book, view, or manage appointments.';
     }
 
     // Add location context if available
@@ -831,6 +1176,69 @@ export class AgentRuntime {
 
     return systemPrompt;
   }
+  
+  /**
+   * Generate Google search tool prompt based on configured websites
+   */
+  private static generateGoogleSearchPrompt(websiteInstructions: Array<{url: string, instructions?: string}>): string {
+    return `# Google Search Tool - EXTREMELY RESTRICTED USE
+I have access to the google_search tool but it should RARELY be used. This tool is ONLY for the specific website instructions below.
+
+## FORBIDDEN - DO NOT USE GOOGLE SEARCH FOR:
+- General questions that can be answered with general knowledge
+- Business questions not related to the configured websites
+- Explanations, definitions, or how-to questions
+- Any question that can be answered without live web data
+- Questions about your capabilities or general topics
+- Weather, news, facts, or information available in general knowledge
+- ANY question when you can provide a helpful response using general knowledge
+
+## ONLY USE GOOGLE SEARCH WHEN:
+- The user's question EXPLICITLY asks for information from one of the configured websites below
+- The user specifically mentions wanting current/live information from these exact websites
+- The question cannot be answered AT ALL without live data from these specific sites
+
+## Configured Search Instructions:${websiteInstructions.map(site => 
+  `\n- **${site.url}**${site.instructions ? `: ${site.instructions}` : ': ONLY when users specifically ask for current information from this exact website'}`
+).join('')}
+
+## DEFAULT RESPONSE STRATEGY:
+1. **ALWAYS TRY FIRST**: Provide a helpful response using general knowledge
+2. **PREFER**: Answer with your training data and general knowledge
+3. **ONLY IF IMPOSSIBLE**: Use google_search for the specific configured websites above
+4. **NEVER**: Use google_search as a fallback for general questions
+
+## REMEMBER:
+- You are knowledgeable and can answer most questions without web search
+- Users prefer quick, helpful responses over web searches
+- Only search when the user specifically needs current data from configured websites
+- When in doubt, provide a helpful response with general knowledge instead of searching`;
+  }
+  
+  /**
+   * Get tool system prompts for enabled tools
+   */
+  private getToolSystemPrompts(): string[] {
+    const prompts: string[] = [];
+    
+    // Get all registered tools
+    const tools = this.toolExecutor.getTools();
+    
+    for (const [name, tool] of tools) {
+      // Handle Google search tool specially - it needs dynamic prompt generation
+      if (name === 'google_search' && this.config.knowledgeConfig?.websiteInstructions?.length) {
+        const googlePrompt = AgentRuntime.generateGoogleSearchPrompt(
+          this.config.knowledgeConfig.websiteInstructions
+        );
+        prompts.push(googlePrompt);
+      } else if (tool.systemPrompt) {
+        // Add the tool's static system prompt if it has one
+        prompts.push(tool.systemPrompt);
+      }
+    }
+    
+    return prompts;
+  }
 
   /**
    * Load calendar tools for this agent
@@ -838,7 +1246,7 @@ export class AgentRuntime {
   async loadCalendarTools(calendar: any): Promise<void> {
     // Import calendar tools dynamically to avoid circular dependencies
     try {
-      const { getCalendarTools } = await import('../../app/api/chat-interface/tools/calendar-tools');
+      const { getCalendarTools } = await import('./tools/calendar-tools');
       
       const calendarConfig = {
         defaultCalendarId: calendar.id,
@@ -854,40 +1262,8 @@ export class AgentRuntime {
         confirmationMessage: calendar.confirmationMessage || 'I\'ve successfully scheduled your appointment! You will receive a confirmation email.',
       };
 
-      const calendarToolDefinitions = getCalendarTools(calendarConfig);
-      
-      // Convert OpenAI function definitions to AgentTools
-      const calendarTools: AgentTool[] = calendarToolDefinitions.map(toolDef => ({
-        id: toolDef.name,
-        name: toolDef.name,
-        description: toolDef.description,
-        parameters: toolDef.parameters,
-        handler: async (args: any, context: AgentContext) => {
-          // Import calendar handlers dynamically
-          const { 
-            handleCheckAvailability,
-            handleBookAppointment,
-            handleViewAppointment,
-            handleModifyAppointment,
-            handleCancelAppointment
-          } = await import('../../app/api/chat-interface/handlers/calendar');
-          
-          switch (toolDef.name) {
-            case 'check_availability':
-              return await handleCheckAvailability(args, calendarConfig);
-            case 'book_appointment':
-              return await handleBookAppointment(args, calendarConfig, context.agent.userId);
-            case 'view_appointment':
-              return await handleViewAppointment(args);
-            case 'modify_appointment':
-              return await handleModifyAppointment(args, calendarConfig);
-            case 'cancel_appointment':
-              return await handleCancelAppointment(args);
-            default:
-              throw new Error(`Unknown calendar tool: ${toolDef.name}`);
-          }
-        }
-      }));
+      // Get calendar tools in AgentTool format
+      const calendarTools = getCalendarTools(calendarConfig);
       
       // Register calendar tools
       calendarTools.forEach(tool => {
@@ -896,7 +1272,8 @@ export class AgentRuntime {
 
       logger.info('Calendar tools loaded', { 
         calendarId: calendar.id,
-        toolCount: calendarTools.length 
+        toolCount: calendarTools.length,
+        toolNames: calendarTools.map(t => t.name)
       }, 'agent-runtime');
     } catch (error) {
       logger.error('Failed to load calendar tools', { error: error.message }, 'agent-runtime');
@@ -906,6 +1283,151 @@ export class AgentRuntime {
   /**
    * Unified message processing method that handles all channels with Supabase vector search
    */
+  /**
+   * Detect the language of a user message
+   */
+  private detectUserLanguage(userMessage: string, primaryLanguage: string, secondaryLanguage?: string): string {
+    if (!userMessage || userMessage.trim().length === 0) {
+      return primaryLanguage;
+    }
+
+    const message = userMessage.toLowerCase().trim();
+    
+    // Common Spanish patterns
+    const spanishPatterns = [
+      /\b(hola|buenos?\s*d[ií]as?|buenas?\s*tardes?|buenas?\s*noches?)\b/,
+      /\b(gracias?|por\s*favor|disculpe?|perdón|lo\s*siento)\b/,
+      /\b(s[ií]|no|qu[eé]|c[oó]mo|cu[aá]ndo|d[oó]nde|por\s*qu[eé])\b/,
+      /\b(puedes?|puede?|ayuda|ayudar|necesito|quiero)\b/,
+      /\b(est[aá]s?|es|son|tiene?|tengo|hacer|decir)\b/,
+      /\b(restaurantes?|mejores|informaci[oó]n|lugar|lugares)\b/,
+      /¿[^?]*\?/,
+      /\b(en|la|el|los|las|de|del|para|con|por|sobre)\b/
+    ];
+
+    // Common English patterns
+    const englishPatterns = [
+      /\b(hello|hi|hey|good\s*morning|good\s*afternoon|good\s*evening)\b/,
+      /\b(thank\s*you|thanks|please|excuse\s*me|sorry|help)\b/,
+      /\b(yes|no|what|how|when|where|why|who|which)\b/,
+      /\b(can\s*you|could\s*you|would\s*you|i\s*need|i\s*want)\b/,
+      /\b(are|is|am|have|has|do|does|will|would|could)\b/,
+      /\b(restaurants?|best|information|place|places)\b/,
+      /\b(the|and|or|but|in|on|at|for|with|about)\b/
+    ];
+
+    let spanishScore = 0;
+    let englishScore = 0;
+
+    // Count Spanish patterns
+    for (const pattern of spanishPatterns) {
+      const matches = message.match(pattern);
+      if (matches) {
+        spanishScore += matches.length;
+      }
+    }
+
+    // Count English patterns
+    for (const pattern of englishPatterns) {
+      const matches = message.match(pattern);
+      if (matches) {
+        englishScore += matches.length;
+      }
+    }
+
+    // Determine language based on scores
+    if (spanishScore > englishScore) {
+      // Return Spanish if it's configured as primary or secondary
+      if (primaryLanguage?.includes('es') || primaryLanguage?.includes('ES')) {
+        return primaryLanguage;
+      } else if (secondaryLanguage?.includes('es') || secondaryLanguage?.includes('ES')) {
+        return secondaryLanguage;
+      }
+      // Default to Spanish language code if detected but not configured
+      return 'es-ES';
+    } else if (englishScore > spanishScore) {
+      // Return English if it's configured as primary or secondary
+      if (primaryLanguage?.includes('en') || primaryLanguage?.includes('EN')) {
+        return primaryLanguage;
+      } else if (secondaryLanguage?.includes('en') || secondaryLanguage?.includes('EN')) {
+        return secondaryLanguage;
+      }
+      // Default to English language code if detected but not configured
+      return 'en-US';
+    }
+
+    // Default to primary language if no clear detection
+    return primaryLanguage;
+  }
+
+  /**
+   * Determine if a user query requires knowledge search using lightweight intent detection
+   */
+  private async determineIntentForKnowledgeSearch(userQuery: string): Promise<boolean> {
+    // Skip intent detection for very short queries
+    if (userQuery.length < 5) {
+      return false;
+    }
+    
+    // Common patterns that don't need knowledge search
+    const casualPatterns = [
+      /^(hi|hello|hey|hola|buenos?\s+d[ií]as?|buenas\s+tardes?|buenas\s+noches?)[\s\W]*$/i,
+      /^(how\s+are\s+you|c[oó]mo\s+est[aá]s?|qu[eé]\s+tal)[\s\W]*$/i,
+      /^(thanks?|gracias?|thank\s+you)[\s\W]*$/i,
+      /^(bye|goodbye|adi[oó]s?|hasta\s+luego)[\s\W]*$/i,
+      /^(yes|no|s[ií]|okay|ok|bien|bueno)[\s\W]*$/i,
+      /^(good|bien|perfecto|perfect|great|excelente)[\s\W]*$/i
+    ];
+    
+    // Check if query matches casual patterns
+    for (const pattern of casualPatterns) {
+      if (pattern.test(userQuery.trim())) {
+        console.log('[Intent Detection] ❌ Casual greeting/response detected - skipping knowledge search');
+        return false;
+      }
+    }
+    
+    // Quick intent classification using gpt-4.1-nano for speed
+    try {
+      const intentPrompt = `Analyze this user message and determine if it requires searching through knowledge/documents to answer properly.
+
+User message: "${userQuery}"
+
+Respond with only "NO" ONLY if the message is clearly:
+- A simple greeting (hi, hello, hey)
+- A farewell (bye, goodbye, see you)
+- A simple acknowledgment (thanks, ok, yes, no)
+- Basic politeness (how are you, good morning)
+
+For ALL other messages including questions, requests for information, or anything that might benefit from specific knowledge, respond with "YES".
+
+When in doubt, respond with "YES" to ensure comprehensive answers.
+
+Response:`;
+
+      const response = await this.aiProvider.generate(
+        [{ role: 'user', content: intentPrompt }],
+        {
+          model: 'gpt-4.1-nano', // Use fastest model for intent detection
+          temperature: 0,
+          maxTokens: 5
+        }
+      );
+      
+      // Extract content from response object (now returns object instead of string)
+      const responseContent = typeof response === 'string' ? response : response?.message?.content || '';
+      const needsKnowledge = responseContent.trim().toUpperCase().includes('YES');
+      console.log(`[Intent Detection] ${needsKnowledge ? '✅ Knowledge search needed' : '❌ General conversation'} for: "${userQuery.substring(0, 50)}..."`);
+      
+      return needsKnowledge;
+      
+    } catch (error) {
+      console.error('[Intent Detection] Error in intent classification:', error);
+      // Default to knowledge search on error to be safe
+      return true;
+    }
+  }
+
   async processMessages(input: MessageProcessingInput, channelContext: ChannelContext, streaming?: StreamingResponse): Promise<any> {
     try {
       logger.info('Processing messages', { 
@@ -938,8 +1460,24 @@ export class AgentRuntime {
       // START PARALLEL PROCESSING: Vector search runs in parallel with message prep
       let vectorContext = '';
       
-      // Start vector search immediately (don't await yet)
+      // Check if vector search should be explicitly skipped
+      const skipVectorSearch = channelContext.metadata?.skipVectorSearch === true;
+      
+      // Smart intent detection to decide if vector search is needed
+      const needsKnowledgeSearch = await this.determineIntentForKnowledgeSearch(userQuery);
+      
+      // Start vector search immediately (don't await yet) - unless skipped for voice or intent
       const vectorSearchPromise = (async () => {
+        if (skipVectorSearch) {
+          console.log('[Agent Runtime] Skipping vector search - explicitly disabled');
+          return '';
+        }
+        
+        if (!needsKnowledgeSearch) {
+          console.log('[Agent Runtime] Skipping vector search - general conversation detected');
+          return '';
+        }
+        
         if (this.config.knowledgeConfig?.useSupabaseVectorSearch && 
             this.config.knowledgeConfig?.knowledgeSourceIds?.length > 0) {
           
@@ -1019,11 +1557,56 @@ export class AgentRuntime {
       
       console.log('[DEBUG] Parallel processing complete - vector context ready');
 
-      // Build enhanced system prompt with vector context
+      // Detect user language and add language-specific instructions
+      const detectedLanguage = this.detectUserLanguage(userQuery, this.config.language, this.config.secondLanguage);
+      
+      console.log('[DEBUG] Language Detection:', {
+        userQuery: userQuery.substring(0, 100),
+        primaryLanguage: this.config.language,
+        secondaryLanguage: this.config.secondLanguage,
+        detectedLanguage: detectedLanguage,
+        willAddLanguageInstructions: this.config.language !== detectedLanguage || this.config.secondLanguage
+      });
+      
+      // Create strong language instructions that MUST be followed
+      const languageInstructions = `\n\n🚨 CRITICAL LANGUAGE INSTRUCTION - HIGHEST PRIORITY 🚨
+The user is writing in: ${detectedLanguage}
+YOU MUST RESPOND IN: ${detectedLanguage}
+
+${detectedLanguage.includes('en') || detectedLanguage.includes('EN') ? 
+'The user is speaking ENGLISH. You MUST respond in ENGLISH only.' : 
+detectedLanguage.includes('es') || detectedLanguage.includes('ES') ? 
+'El usuario está hablando en ESPAÑOL. DEBES responder SOLO en ESPAÑOL.' : 
+`The user is speaking in ${detectedLanguage}. You MUST respond in ${detectedLanguage}.`}
+
+This is a MANDATORY instruction that overrides ALL other language settings.
+DO NOT respond in any other language regardless of your default configuration.
+🚨 END CRITICAL LANGUAGE INSTRUCTION 🚨`;
+
+      // Build enhanced system prompt with vector context and language instructions
       let enhancedSystemPrompt = this.config.prompt;
+      
+      // Add tool system prompts
+      const toolPrompts = this.getToolSystemPrompts();
+      if (toolPrompts.length > 0) {
+        enhancedSystemPrompt += '\n\n' + toolPrompts.join('\n\n');
+      }
+      
       if (vectorContext) {
-        enhancedSystemPrompt = `${vectorContext}\n\n--- ORIGINAL SYSTEM PROMPT ---\n${this.config.prompt}`;
-        console.log('[DEBUG] Enhanced system prompt with vector context');
+        // Put language instructions FIRST, then vector context, then original prompt
+        enhancedSystemPrompt = `${languageInstructions}\n\n${vectorContext}\n\n--- ORIGINAL SYSTEM PROMPT ---\n${enhancedSystemPrompt}`;
+        console.log('[DEBUG] Enhanced system prompt with PRIORITY language instructions and vector context');
+      } else {
+        // Put language instructions FIRST for maximum priority
+        enhancedSystemPrompt = `${languageInstructions}\n\n${enhancedSystemPrompt}\n\n--- FALLBACK INSTRUCTIONS ---
+Since no specific knowledge base content was found for this query:
+1. Provide a helpful answer using general knowledge - you are knowledgeable and capable
+2. For business-specific questions, explain what you can help with based on your knowledge base
+3. NEVER use search tools as a fallback for general questions
+4. ONLY use search tools if the user EXPLICITLY asks for current information from configured websites
+5. When in doubt, provide a helpful response with general knowledge instead of searching
+6. Maintain your personality and conversational style`;
+        console.log('[DEBUG] No vector context - using PRIORITY language instructions with fallback');
       }
 
       // Update the system message with enhanced prompt
@@ -1033,25 +1616,57 @@ export class AgentRuntime {
       }
 
       // Add vector store IDs for file search if available (legacy support)
+      const toolDefinitions = this.toolExecutor.getToolDefinitions();
+      
+      // DEBUG: Log detailed tool information
+      console.log('🔍 Tool Definitions Retrieved', {
+        agentId: this.config.id,
+        totalRegisteredTools: this.toolExecutor.getTools().size,
+        registeredToolNames: Array.from(this.toolExecutor.getTools().keys()),
+        toolDefinitionCount: toolDefinitions.length,
+        toolDefinitionNames: toolDefinitions.map(def => def.function.name),
+        hasGoogleSearchTool: this.toolExecutor.getTools().has('google_search'),
+        hasGoogleSearchDefinition: toolDefinitions.some(def => def.function.name === 'google_search')
+      });
+      
       const aiOptions: any = {
         model: this.config.modelName || 'gpt-4o-mini',
         temperature: this.config.temperature,
         maxTokens: this.config.maxCompletionTokens,
-        tools: this.toolExecutor.getToolDefinitions(),
+        tools: toolDefinitions,
         toolChoice: 'auto',
         knowledgeSourceIds: this.config.knowledgeConfig?.knowledgeSourceIds || []
       };
+      
+      // DEBUG: Log AI options including tools
+      console.log('🤖 AI Generation Options', {
+        agentId: this.config.id,
+        model: aiOptions.model,
+        toolCount: toolDefinitions.length,
+        toolNames: toolDefinitions.map(def => def.function.name),
+        hasGoogleSearch: toolDefinitions.some(def => def.function.name === 'google_search'),
+        toolChoice: aiOptions.toolChoice,
+        temperature: aiOptions.temperature,
+        maxTokens: aiOptions.maxTokens
+      });
 
       // Legacy OpenAI vector store support
       if (this.config.knowledgeConfig?.useFileSearch && this.config.knowledgeConfig.vectorStoreIds?.length > 0) {
         aiOptions.vectorStoreIds = this.config.knowledgeConfig.vectorStoreIds;
       }
 
-      // Generate response with optional streaming
+      // Generate response with optional streaming and tool call handling
       let responseContent: string;
+      let toolInvocations: any[] | undefined;
       
-      if (streaming) {
-        // Use streaming generation
+      // Use non-streaming mode if tools are available to properly handle tool calls
+      if (streaming && (!toolDefinitions || toolDefinitions.length === 0)) {
+        // Use streaming generation only when no tools are available
+        console.log('🔄 Using streaming generation (no tools)', {
+          agentId: this.config.id,
+          toolCount: toolDefinitions.length
+        });
+        
         responseContent = await this.aiProvider.generateStream(
           aiMessages, 
           aiOptions,
@@ -1061,8 +1676,17 @@ export class AgentRuntime {
         // Notify streaming complete
         streaming.onComplete?.();
       } else {
-        // Use non-streaming generation
-        responseContent = await this.aiProvider.generate(aiMessages, aiOptions);
+        // Use non-streaming generation for tool calls or when explicitly requested
+        console.log('🔄 Using non-streaming generation', {
+          agentId: this.config.id,
+          reason: toolDefinitions.length > 0 ? 'tools_available' : 'no_streaming_requested',
+          toolCount: toolDefinitions.length,
+          hasStreaming: !!streaming
+        });
+        
+        const result = await this.generateWithToolCalls(aiMessages, aiOptions, streaming);
+        responseContent = result.content;
+        toolInvocations = result.toolInvocations;
       }
 
       // Create assistant message
@@ -1071,7 +1695,8 @@ export class AgentRuntime {
         role: 'assistant',
         content: responseContent,
         type: 'text',
-        timestamp: new Date()
+        timestamp: new Date(),
+        toolInvocations: toolInvocations
       };
 
       // Add to conversation and save

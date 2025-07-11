@@ -130,7 +130,9 @@ export async function GET(
         lastTrainedAt: true,
         // Calendar integration fields
         calendarEnabled: true,
-        calendarId: true
+        calendarId: true,
+        // Aviation Stack integration
+        aviationStackEnabled: true
       };
     }
 
@@ -284,6 +286,9 @@ export async function PATCH(
     // Calendar integration
     if (body.calendarEnabled !== undefined) updateData.calendarEnabled = body.calendarEnabled;
     if (body.calendarId !== undefined) updateData.calendarId = body.calendarId;
+    
+    // Aviation Stack integration
+    if (body.aviationStackEnabled !== undefined) updateData.aviationStackEnabled = body.aviationStackEnabled;
     
     // Widget settings
     if (body.chatTitle !== undefined) updateData.chatTitle = body.chatTitle;

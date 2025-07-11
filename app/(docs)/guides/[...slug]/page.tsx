@@ -152,7 +152,7 @@ export default function GuidePage({ params }: GuidePageProps) {
                     </div>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2 md:gap-6 mt-8">
-                    <div className="group relative rounded-lg border p-6 shadow-md transition-shadow hover:shadow-lg">
+                    <div className="group relative rounded-xl border p-6 shadow-md transition-shadow hover:shadow-lg">
                         <div className="flex flex-col justify-between space-y-4">
                             <div className="space-y-2">
                                 <h2 className="text-xl font-medium tracking-tight">
@@ -164,7 +164,7 @@ export default function GuidePage({ params }: GuidePageProps) {
                             </div>
                         </div>
                     </div>
-                    <div className="group relative rounded-lg border p-6 shadow-md transition-shadow hover:shadow-lg">
+                    <div className="group relative rounded-xl border p-6 shadow-md transition-shadow hover:shadow-lg">
                         <div className="flex flex-col justify-between space-y-4">
                             <div className="space-y-2">
                                 <h2 className="text-xl font-medium tracking-tight">

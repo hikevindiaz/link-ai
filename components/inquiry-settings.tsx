@@ -114,7 +114,7 @@ export function InquirySettings({ chatbot }: ChatbotOperationsProps) {
                             control={form.control}
                             name="inquiryEnabled"
                             render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             Enable User Inquiry / Support Ticket Feature
@@ -137,7 +137,7 @@ export function InquirySettings({ chatbot }: ChatbotOperationsProps) {
                             control={form.control}
                             name="inquiryLinkText"
                             render={({ field }) => (
-                                <FormItem className="flex flex-col justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-col justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             Inquiry Link Text
@@ -160,7 +160,7 @@ export function InquirySettings({ chatbot }: ChatbotOperationsProps) {
                             control={form.control}
                             name="inquiryTitle"
                             render={({ field }) => (
-                                <FormItem className="flex flex-col justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-col justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             Inquiry Form Title Text
@@ -183,7 +183,7 @@ export function InquirySettings({ chatbot }: ChatbotOperationsProps) {
                             control={form.control}
                             name="inquirySubtitle"
                             render={({ field }) => (
-                                <FormItem className="flex flex-col justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-col justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             Inquiry Form Subtitle text
@@ -206,7 +206,7 @@ export function InquirySettings({ chatbot }: ChatbotOperationsProps) {
                             control={form.control}
                             name="inquiryAutomaticReplyText"
                             render={({ field }) => (
-                                <FormItem className="flex flex-col justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-col justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             Inquiry Automatic Reply Message Text
@@ -229,7 +229,7 @@ export function InquirySettings({ chatbot }: ChatbotOperationsProps) {
                             control={form.control}
                             name="inquiryEmailLabel"
                             render={({ field }) => (
-                                <FormItem className="flex flex-col justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-col justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             Email Input Label
@@ -252,7 +252,7 @@ export function InquirySettings({ chatbot }: ChatbotOperationsProps) {
                             control={form.control}
                             name="inquiryMessageLabel"
                             render={({ field }) => (
-                                <FormItem className="flex flex-col justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-col justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             Message Textarea Label
@@ -275,7 +275,7 @@ export function InquirySettings({ chatbot }: ChatbotOperationsProps) {
                             control={form.control}
                             name="inquirySendButtonText"
                             render={({ field }) => (
-                                <FormItem className="flex flex-col justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-col justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             Text in the send button
@@ -298,7 +298,7 @@ export function InquirySettings({ chatbot }: ChatbotOperationsProps) {
                             control={form.control}
                             name="inquiryDisplayLinkAfterXMessage"
                             render={({ field }) => (
-                                <FormItem className="flex flex-col justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-col justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             Display Link After X Chatbot Reply

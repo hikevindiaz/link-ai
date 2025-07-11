@@ -270,7 +270,7 @@ const WelcomeBanner = ({
             </DialogHeader>
             
             <div className="space-y-6 mt-6">
-              <div className="bg-neutral-50 dark:bg-neutral-900/20 rounded-lg p-6">
+              <div className="bg-neutral-50 dark:bg-neutral-900/20 rounded-xl p-6">
                 <h3 className="font-semibold text-neutral-900 dark:text-neutral-50 mb-3">
                   Smart content management
                 </h3>
@@ -280,7 +280,7 @@ const WelcomeBanner = ({
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
                       <FileText className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
                     </div>
                     <div>
@@ -292,7 +292,7 @@ const WelcomeBanner = ({
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
                       <Globe className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
                     </div>
                     <div>
@@ -304,7 +304,7 @@ const WelcomeBanner = ({
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
                       <MessageSquare className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
                     </div>
                     <div>
@@ -316,7 +316,7 @@ const WelcomeBanner = ({
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-8 h-8 bg-neutral-100 dark:bg-neutral-900/30 rounded-xl flex items-center justify-center flex-shrink-0 mt-1">
                       <ShoppingCart className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
                     </div>
                     <div>

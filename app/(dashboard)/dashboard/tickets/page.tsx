@@ -20,6 +20,7 @@ import {
 
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Divider } from '@/components/Divider';
 import { ProgressCircle } from '@/components/ui/ProgressCircle';
 import { Button } from "@/components/Button";
@@ -325,29 +326,34 @@ export default function TicketsPage() {
 
   // Render the empty state when no ticket is selected
   const renderEmptyState = () => (
-    <div className="flex h-full flex-col items-center justify-center p-6">
-      <div className="mx-auto max-w-md text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-900">
-          <RiFileListLine className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
+    <div className="flex h-full items-center justify-center p-6">
+      <Card className="p-6 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+        <div className="flex flex-col items-center max-w-md">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+            <RiFileListLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+          </div>
+          
+          <h3 className="text-sm font-semibold text-black dark:text-white mb-1">
+            {filteredTickets.length > 0 
+              ? 'Select a Ticket' 
+              : 'No Tickets Found'}
+          </h3>
+          
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4 text-center">
+            {filteredTickets.length > 0 
+              ? 'Select a ticket from the sidebar to view details.' 
+              : 'No tickets match your current filters. Try changing your filter settings or create a new ticket.'}
+          </p>
+          
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            size="sm"
+          >
+            <RiAddLine className="mr-2 h-4 w-4" />
+            Create New Ticket
+          </Button>
         </div>
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
-          {filteredTickets.length > 0 
-            ? 'Select a Ticket' 
-            : 'No Tickets Found'}
-        </h1>
-        <p className="mt-2 text-neutral-500 dark:text-neutral-400">
-          {filteredTickets.length > 0 
-            ? 'Select a ticket from the sidebar to view details.' 
-            : 'No tickets match your current filters. Try changing your filter settings or create a new ticket.'}
-        </p>
-        <Button 
-          className="mt-6" 
-          onClick={() => setIsCreateDialogOpen(true)}
-        >
-          <RiAddLine className="mr-2 h-4 w-4" />
-          Create New Ticket
-        </Button>
-      </div>
+      </Card>
     </div>
   );
 
@@ -358,7 +364,7 @@ export default function TicketsPage() {
     return (
       <div className="p-6 overflow-auto">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
+          <h2 className="text-xl font-semibold text-black dark:text-white">
             Ticket Details
           </h2>
           <div className="flex items-center space-x-2">
@@ -508,7 +514,7 @@ export default function TicketsPage() {
         <div className={`${isMobileView ? 'w-full' : 'w-80'} border-r border-neutral-200 dark:border-neutral-800 flex flex-col`}>
           <div className="p-4 pb-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+              <h2 className="text-xl font-semibold text-black dark:text-white">
                 Support Tickets
               </h2>
               <div className="flex items-center space-x-2">
@@ -573,9 +579,27 @@ export default function TicketsPage() {
           
           <div className="flex-1 overflow-y-auto p-4">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-                <span className="ml-2 text-sm text-neutral-500">Loading tickets...</span>
+              <div className="grid grid-cols-1 gap-2">
+                {[1, 2, 3, 4].map((item) => (
+                  <div key={item} className="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+                    <div className="flex items-center">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="ml-3 flex-1">
+                        <div className="flex justify-between items-center">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-5 w-16 rounded-full" />
+                        </div>
+                        <div className="mt-1 flex items-center justify-between">
+                          <Skeleton className="h-3 w-40" />
+                          <div className="flex items-center space-x-1">
+                            <Skeleton className="h-4 w-4 rounded-full" />
+                            <Skeleton className="h-3 w-8" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredTickets.length > 0 ? (
               <div className="grid grid-cols-1 gap-2">
@@ -584,7 +608,7 @@ export default function TicketsPage() {
                     key={ticket.id} 
                     onClick={() => handleSelectTicket(ticket)}
                     className={cn(
-                      "group transition-all duration-200 cursor-pointer p-3 rounded-lg border relative",
+                      "group transition-all duration-200 cursor-pointer p-3 rounded-xl border relative",
                       "hover:bg-neutral-50 dark:hover:bg-neutral-900",
                       "hover:shadow-sm",
                       "bg-white dark:bg-black border-neutral-200 dark:border-neutral-800",
@@ -602,7 +626,7 @@ export default function TicketsPage() {
                       <div className="ml-3 w-full overflow-hidden">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center max-w-[70%]">
-                            <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                            <div className="truncate text-sm font-semibold text-black dark:text-white">
                               {ticket.subject}
                             </div>
                             <div className="ml-2 flex-shrink-0">

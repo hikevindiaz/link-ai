@@ -31,7 +31,7 @@ import { AppointmentDetailsView } from "@/components/calendar/AppointmentDetails
 import { CalendarMainView } from "@/components/calendar/CalendarMainView";
 import { CreateAppointmentDialog } from "@/components/calendar/CreateAppointmentDialog";
 import { CalendarSettingsDialog } from "@/components/calendar/CalendarSettingsDialog";
-import { LoadingState } from "@/components/LoadingState";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
     AppointmentStatus, 
     type Appointment, 
@@ -1004,8 +1004,14 @@ return (
               }
              )}> 
             {isLoading && (
-             <div className="flex items-center justify-center h-full py-10"> {/* Added flex wrapper for centering */} 
-                 <LoadingState text="Loading calendar data..." />
+             <div className="flex h-full items-center justify-center p-8">
+               <div className="p-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+                 <div className="flex flex-col items-center max-w-md">
+                   <Skeleton className="h-10 w-10 rounded-xl mb-4" />
+                   <Skeleton className="h-4 w-48 mb-1" />
+                   <Skeleton className="h-3 w-64" />
+                 </div>
+               </div>
              </div>
              )}
 
@@ -1052,20 +1058,27 @@ return (
                 )}
                 {/* Empty state when NO calendars exist */}
                 {!isLoading && !error && calendars.length === 0 && (
-                    <div className="flex h-full flex-col items-center justify-center text-center p-6">
-                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-900">
-                            <Icons.calendar className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
+                    <div className="flex h-full items-center justify-center p-6">
+                        <Card className="p-6 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+                            <div className="flex flex-col items-center max-w-md">
+                                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+                                    <Icons.calendar className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
                         </div>
-                        <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
+                                
+                                <h3 className="text-sm font-semibold text-black dark:text-white mb-1">
                            No Calendars Found
-                        </h1>
-                        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                                </h3>
+                                
+                                <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4 text-center">
                             Create your first calendar using the <Icons.calendarPlus className="inline h-4 w-4 mx-0.5"/> button above to get started.
                         </p>
-                        <Button variant="primary" className="mt-6" onClick={() => setCreateCalendarOpen(true)}>
+                                
+                                <Button variant="primary" onClick={() => setCreateCalendarOpen(true)} size="sm">
                            <Icons.add className="mr-2 h-4 w-4" />
                            Create Your First Calendar
                         </Button>
+                            </div>
+                        </Card>
                     </div>
                 )}
                 </>
@@ -1158,7 +1171,7 @@ return (
 
               {/* Weekend Availability */}
               <div className="flex items-center justify-between py-2 px-3 border rounded-xl">
-                <Label className="text-sm text-neutral-700">Include weekends</Label>
+                <Label className="text-sm text-black dark:text-white">Include weekends</Label>
                 <div className="flex items-center gap-2">
                   <Label className="text-xs text-neutral-500">Sat</Label>
                   <input 
@@ -1179,7 +1192,7 @@ return (
 
               {/* Default Duration */}
               <div className="flex items-center justify-between py-2 px-3 border rounded-xl">
-                <Label className="text-sm text-neutral-700">Default appointment duration</Label>
+                <Label className="text-sm text-black dark:text-white">Default appointment duration</Label>
                 <Select 
                   value={newCalendarSettings.defaultDuration?.toString() || '30'}
                   onValueChange={(value) => setNewCalendarSettings(prev => ({...prev, defaultDuration: parseInt(value)}))}
@@ -1197,7 +1210,7 @@ return (
 
               {/* Phone Requirement */}
               <div className="flex items-center justify-between py-2 px-3 border rounded-xl">
-                <Label className="text-sm text-neutral-700">Require phone number for bookings</Label>
+                <Label className="text-sm text-black dark:text-white">Require phone number for bookings</Label>
                 <input 
                   type="checkbox" 
                   checked={!!newCalendarSettings.requirePhoneNumber}

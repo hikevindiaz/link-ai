@@ -29,11 +29,12 @@ export class GeminiProvider implements AIProvider {
   /**
    * Generate a non-streaming response
    */
-  async generate(messages: any[], options: AIProviderOptions): Promise<string> {
+  async generate(messages: any[], options: AIProviderOptions): Promise<any> {
     try {
       logger.debug('Generating Gemini response', { 
         model: options.model,
-        messageCount: messages.length 
+        messageCount: messages.length,
+        toolCount: options.tools?.length || 0
       }, 'gemini-provider');
       
       const model = this.client.getGenerativeModel({ 
@@ -60,7 +61,14 @@ export class GeminiProvider implements AIProvider {
         responsePreview: response.substring(0, 100)
       }, 'gemini-provider');
       
-      return response;
+      // Return in OpenAI-compatible format for consistency
+      return {
+        message: {
+          content: response,
+          tool_calls: null // Gemini doesn't support tool calls yet
+        },
+        finish_reason: 'stop'
+      };
       
     } catch (error) {
       logger.error('Error generating Gemini response', { 

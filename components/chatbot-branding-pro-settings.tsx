@@ -100,7 +100,7 @@ export function ChatbotBrandingProSettingsForm({ chatbot, className, ...props }:
                             control={form.control}
                             name="displayBranding"
                             render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4">
                                     <div className="space-y-0.5">
                                         <FormLabel className="text-base">
                                             OpenAssistantGPT Branding Label

@@ -82,7 +82,7 @@ export default function VoiceExperiencePage() {
               messages.map((message, index) => (
                 <div 
                   key={index}
-                  className={`p-3 rounded-lg ${
+                  className={`p-3 rounded-xl ${
                     message.role === 'user' 
                       ? 'bg-neutral-50 dark:bg-neutral-900/30 ml-6' 
                       : 'bg-neutral-100 dark:bg-neutral-800 mr-6'

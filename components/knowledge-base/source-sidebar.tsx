@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { RiAddLine, RiMoreLine, RiDeleteBinLine, RiAlertLine, RiClipboardLine, RiEdit2Line } from '@remixicon/react';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -74,6 +75,7 @@ export function SourceSidebar() {
   const { isMobileView, setShowDetailsOnMobile } = useKnowledgeBase(); // Use context
   const [sources, setSources] = useState<Source[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [pendingStatusChecks, setPendingStatusChecks] = useState<Set<string>>(new Set());
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newSourceName, setNewSourceName] = useState('');
   const [newSourceDescription, setNewSourceDescription] = useState('');
@@ -107,7 +109,7 @@ export function SourceSidebar() {
           initialStatuses[source.id] = {
             hasContent: false,
             isAssigned: false,
-            isLoading: true
+            isLoading: false
           };
           initialTooltips[source.id] = "Copy ID";
         });
@@ -115,13 +117,20 @@ export function SourceSidebar() {
         setCopyTooltip(initialTooltips);
         
         // Check status for each source
-        data.forEach((source: Source) => {
-          checkSourceStatus(source.id);
-        });
+        if (data.length > 0) {
+          const sourceIds = data.map((source: Source) => source.id);
+          setPendingStatusChecks(new Set(sourceIds));
+          
+          data.forEach((source: Source) => {
+            checkSourceStatus(source.id);
+          });
+        } else {
+          // No sources, stop loading immediately
+          setIsLoading(false);
+        }
       } catch (error) {
         console.error('Error fetching sources:', error);
         toast.error('Failed to load knowledge sources');
-      } finally {
         setIsLoading(false);
       }
     };
@@ -132,11 +141,7 @@ export function SourceSidebar() {
   // Check if source has content and if it's assigned to any agent
   const checkSourceStatus = async (sourceId: string) => {
     try {
-      // Set initial loading state
-      setSourceStatuses(prev => ({
-        ...prev,
-        [sourceId]: { ...prev[sourceId], isLoading: true }
-      }));
+      // Note: We don't set individual loading states anymore since main loading handles it
       
       // Initialize with defaults in case of errors
       let hasFiles = false;
@@ -235,6 +240,19 @@ export function SourceSidebar() {
           isLoading: false
         }
       }));
+
+      // Remove from pending checks and check if all are complete
+      setPendingStatusChecks(prev => {
+        const newPending = new Set(prev);
+        newPending.delete(sourceId);
+        
+        // If no more pending checks, we can stop the main loading
+        if (newPending.size === 0) {
+          setIsLoading(false);
+        }
+        
+        return newPending;
+      });
     } catch (error) {
       console.error(`Error checking status for source ${sourceId}:`, error);
       setSourceStatuses(prev => ({
@@ -245,6 +263,19 @@ export function SourceSidebar() {
           isLoading: false
         }
       }));
+      
+      // Remove from pending checks even on error
+      setPendingStatusChecks(prev => {
+        const newPending = new Set(prev);
+        newPending.delete(sourceId);
+        
+        // If no more pending checks, we can stop the main loading
+        if (newPending.size === 0) {
+          setIsLoading(false);
+        }
+        
+        return newPending;
+      });
     }
   };
 
@@ -416,7 +447,7 @@ export function SourceSidebar() {
     <div className="flex flex-col h-full">
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+          <h2 className="text-xl font-semibold text-black dark:text-white">
             My Sources
           </h2>
           <Button
@@ -434,9 +465,21 @@ export function SourceSidebar() {
       
       <div className="flex-1 overflow-auto px-4 pb-4">
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-neutral-600"></div>
-            <span className="ml-2 text-sm text-gray-500">Loading sources...</span>
+          <div className="grid grid-cols-1 gap-2 mt-1">
+            {[1, 2, 3, 4].map((item) => (
+              <div key={item} className="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+                <div className="flex items-center">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="ml-3 flex-1">
+                    <div className="flex justify-between items-center">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-6 w-6 rounded-full" />
+                    </div>
+                    <Skeleton className="mt-1 h-3 w-32" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : sources.length > 0 ? (
           <div className="grid grid-cols-1 gap-2 mt-1">
@@ -463,7 +506,7 @@ export function SourceSidebar() {
                   <div className="ml-3 w-full overflow-hidden">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center max-w-[70%]">
-                        <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                        <div className="truncate text-sm font-medium text-black dark:text-white">
                           {source.name}
                         </div>
                         <div className="ml-2 flex-shrink-0">
@@ -471,7 +514,7 @@ export function SourceSidebar() {
                             <KnowledgeSourceBadge 
                               hasContent={sourceStatuses[source.id].hasContent}
                               isAssigned={sourceStatuses[source.id].isAssigned}
-                              isLoading={sourceStatuses[source.id].isLoading}
+                              isLoading={false}
                               needsSaving={false}
                               compact={true}
                             />
@@ -542,7 +585,7 @@ export function SourceSidebar() {
         ) : (
           <div className="flex h-full items-center justify-center py-8 text-center">
             <div className="flex flex-col items-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 No knowledge sources yet.
               </p>
               <Button

@@ -222,7 +222,7 @@ export default function VerifyEmailPage() {
         </div>
 
         {/* Code Input */}
-        <div className="bg-white dark:bg-neutral-900 rounded-lg shadow-lg p-8 border border-neutral-200 dark:border-neutral-800">
+        <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-lg p-8 border border-neutral-200 dark:border-neutral-800">
           {/* Message Display */}
           <AnimatePresence mode="wait">
             {message && (
@@ -230,7 +230,7 @@ export default function VerifyEmailPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className={`mb-6 p-4 rounded-lg flex items-start gap-3 ${
+                className={`mb-6 p-4 rounded-xl flex items-start gap-3 ${
                   message.type === 'success' 
                     ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800' 
                     : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800'
@@ -264,7 +264,7 @@ export default function VerifyEmailPage() {
                 onPaste={index === 0 ? handlePaste : undefined}
                 className={`
                   w-12 h-14 text-center text-xl font-semibold
-                  border-2 rounded-lg transition-all
+                  border-2 rounded-xl transition-all
                   ${digit ? 'border-neutral-400 bg-neutral-50 dark:bg-neutral-800 dark:border-neutral-600' : 'border-neutral-300 dark:border-neutral-700'}
                   focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-400/20 dark:focus:ring-neutral-600/20
                   dark:bg-neutral-800 dark:text-neutral-50

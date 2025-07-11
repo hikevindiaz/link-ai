@@ -852,12 +852,12 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
         </TabsList>
 
         <TabsContent value="liveSearch" className="space-y-4 pt-4">
-          <Card className="p-6">
+          <Card className="px-3 py-2">
             <div className="space-y-8">
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Globe className="h-5 w-5 text-neutral-500" />
-                  <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
+                  <h2 className="text-lg font-semibold text-black dark:text-white">
                     Add Website Content
                   </h2>
                 </div>
@@ -1019,12 +1019,12 @@ export function WebsiteTab({ source }: WebsiteTabProps) {
         </TabsContent>
 
         <TabsContent value="crawler" className="space-y-4 pt-4">
-          <Card className="p-6">
+          <Card className="px-3 py-2">
             <div className="space-y-8">
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Globe className="h-5 w-5 text-neutral-500" />
-                  <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
+                  <h2 className="text-lg font-semibold text-black dark:text-white">
                     Add Website Content
                   </h2>
                 </div>

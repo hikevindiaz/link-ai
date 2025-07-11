@@ -45,6 +45,9 @@ export async function GET(request: Request, { params }: RouteProps) {
       leads: integrationSettings.some(
         (setting) => setting.integrationId === 'module-forms' && setting.isEnabled
       ),
+      aviationstack: integrationSettings.some(
+        (setting) => setting.integrationId === 'ext-aviationstack' && setting.isEnabled
+      ),
     };
 
     return NextResponse.json(integrations);
@@ -104,6 +107,13 @@ export async function POST(request: Request, { params }: RouteProps) {
     if ('leads' in integrations) {
       const isEnabled = !!integrations.leads;
       const result = await upsertIntegrationSetting(userId, 'module-forms', isEnabled);
+      results.push(result);
+    }
+
+    // Handle aviationstack integration
+    if ('aviationstack' in integrations) {
+      const isEnabled = !!integrations.aviationstack;
+      const result = await upsertIntegrationSetting(userId, 'ext-aviationstack', isEnabled);
       results.push(result);
     }
 

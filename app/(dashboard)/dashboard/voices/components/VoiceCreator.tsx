@@ -492,7 +492,7 @@ const VoiceCreator = ({ onBack, onVoiceCreated, onVoiceUpdated, isMobileView, vo
                       type="button"
                       onClick={() => handleTemplateSelect(isSelected ? '' : template.id)}
                       className={cn(
-                        "p-3 rounded-lg border text-left transition-all duration-200",
+                        "p-3 rounded-xl border text-left transition-all duration-200",
                         "hover:border-neutral-300 hover:shadow-sm",
                         isSelected 
                           ? "border-neutral-500 bg-neutral-50 dark:bg-neutral-500/10 ring-1 ring-neutral-500/20" 

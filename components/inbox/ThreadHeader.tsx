@@ -20,8 +20,8 @@ export function ThreadHeader({
   onDelete
 }: ThreadHeaderProps) {
   return (
-    <div className="border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between">
-      <span className="text-sm text-gray-600">Source: {conversation.source ?? "Web Widget"}</span>
+    <div className="border-b border-neutral-200 dark:border-neutral-800 p-4 flex items-center justify-between">
+      <span className="text-sm text-neutral-600">Source: {conversation.source ?? "Web Widget"}</span>
       <div className="flex items-center space-x-2">
         <Button
           variant={summaryGenerated ? "primary" : "secondary"}

@@ -21,7 +21,7 @@ const EmailConfirmationEmail = (props: { confirmationCode?: string; theme?: 'lig
       <Tailwind>
         <Head />
         <Preview>Your Link AI confirmation code: {confirmationCode}</Preview>
-        <Body className="bg-gray-100 font-sans py-[40px]">
+        <Body className="bg-neutral-100 font-sans py-[40px]">
           <Container className="bg-white rounded-[8px] shadow-lg max-w-[600px] mx-auto overflow-hidden">
             {/* Top Frame with Light Logo */}
             <Section className="bg-black w-full py-[12px] text-center">
@@ -47,25 +47,25 @@ const EmailConfirmationEmail = (props: { confirmationCode?: string; theme?: 'lig
                 }}>
                   Confirm Your Email ✉️
                 </Text>
-                <Text className="text-[16px] text-gray-600 leading-[1.6] mb-[16px]">
+                <Text className="text-[16px] text-neutral-600 leading-[1.6] mb-[16px]">
                   Thanks for signing up! We're excited to have you on board and can't wait for you to start building intelligent agents that transform customer interactions.
                 </Text>
-                <Text className="text-[16px] text-gray-600 leading-[1.6] mb-[16px]">
+                <Text className="text-[16px] text-neutral-600 leading-[1.6] mb-[16px]">
                   For your security and to complete your account setup, please verify your email address using the confirmation code below.
                 </Text>
               </Section>
 
               {/* Confirmation Code */}
               <Section className="text-center mb-[32px]">
-                <Text className="text-[16px] text-gray-700 mb-[16px] font-semibold">
+                <Text className="text-[16px] text-neutral-700 mb-[16px] font-semibold">
                   Your confirmation code:
                 </Text>
-                <Section className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-[8px] py-[24px] px-[32px] mb-[16px]">
-                  <Text className="text-[36px] font-bold text-gray-900 text-center m-0 letter-spacing-[8px] font-mono">
+                <Section className="bg-neutral-50 border-2 border-dashed border-neutral-300 rounded-[8px] py-[24px] px-[32px] mb-[16px]">
+                  <Text className="text-[36px] font-bold text-neutral-900 text-center m-0 letter-spacing-[8px] font-mono">
                     {confirmationCode}
                   </Text>
                 </Section>
-                <Text className="text-[14px] text-gray-500 mb-[24px]">
+                <Text className="text-[14px] text-neutral-500 mb-[24px]">
                   This code will expire in 10 minutes for security
                 </Text>
               </Section>
@@ -95,47 +95,47 @@ const EmailConfirmationEmail = (props: { confirmationCode?: string; theme?: 'lig
 
               {/* Features Preview */}
               <Section className="mb-[32px]">
-                <Text className="text-[16px] text-gray-600 leading-[1.6] mb-[16px]">
+                <Text className="text-[16px] text-neutral-600 leading-[1.6] mb-[16px]">
                   Once your email is confirmed, you'll have full access to:
                 </Text>
-                <Text className="text-[14px] text-gray-600 leading-[1.6] mb-[8px] pl-[16px]">
+                <Text className="text-[14px] text-neutral-600 leading-[1.6] mb-[8px] pl-[16px]">
                   • Create and customize intelligent agents
                 </Text>
-                <Text className="text-[14px] text-gray-600 leading-[1.6] mb-[8px] pl-[16px]">
+                <Text className="text-[14px] text-neutral-600 leading-[1.6] mb-[8px] pl-[16px]">
                   • Access our custom voice creator
                 </Text>
-                <Text className="text-[14px] text-gray-600 leading-[1.6] mb-[8px] pl-[16px]">
+                <Text className="text-[14px] text-neutral-600 leading-[1.6] mb-[8px] pl-[16px]">
                   • Integrate agents with your existing systems
                 </Text>
-                <Text className="text-[14px] text-gray-600 leading-[1.6] mb-[16px] pl-[16px]">
+                <Text className="text-[14px] text-neutral-600 leading-[1.6] mb-[16px] pl-[16px]">
                   • Monitor performance and analytics
                 </Text>
               </Section>
 
               {/* Security Notice */}
               <Section className="mb-[32px] border-l-4 border-yellow-400 pl-[16px] bg-yellow-50 py-[16px] pr-[16px] rounded-r-[4px]">
-                <Text className="text-[14px] text-gray-700 leading-[1.6] mb-[8px] font-semibold">
+                <Text className="text-[14px] text-neutral-700 leading-[1.6] mb-[8px] font-semibold">
                   🔒 Security Notice
                 </Text>
-                <Text className="text-[14px] text-gray-600 leading-[1.6]">
+                <Text className="text-[14px] text-neutral-600 leading-[1.6]">
                   If you didn't create a Link AI account, you can safely ignore this email. Never share this confirmation code with anyone else.
                 </Text>
               </Section>
 
               {/* Closing Message */}
               <Section className="mb-[32px]">
-                <Text className="text-[16px] text-gray-600 leading-[1.6] mb-[16px]">
+                <Text className="text-[16px] text-neutral-600 leading-[1.6] mb-[16px]">
                   We're here to help you every step of the way. If you have any questions or need assistance, don't hesitate to reach out to our support team.
                 </Text>
-                <Text className="text-[16px] text-gray-700 leading-[1.6] font-semibold">
+                <Text className="text-[16px] text-neutral-700 leading-[1.6] font-semibold">
                   Welcome to Link AI!<br />
-                  <span className="text-[14px] text-gray-500 font-normal">The Link AI Team</span>
+                  <span className="text-[14px] text-neutral-500 font-normal">The Link AI Team</span>
                 </Text>
               </Section>
 
               {/* Footer */}
-              <Section className="border-t border-gray-200 pt-[24px]">
-                <Text className="text-[14px] text-gray-500 text-center mb-[16px]">
+              <Section className="border-t border-neutral-200 pt-[24px]">
+                <Text className="text-[14px] text-neutral-500 text-center mb-[16px]">
                   Need help? 
                   <Link 
                     href="https://support.getlinkai.com" 
@@ -151,13 +151,13 @@ const EmailConfirmationEmail = (props: { confirmationCode?: string; theme?: 'lig
                     className="w-full h-auto object-cover max-w-[20px] mx-auto"
                   />
                 </Section>
-                <Text className="text-[12px] text-gray-400 text-center mb-[8px] m-0">
+                <Text className="text-[12px] text-neutral-400 text-center mb-[8px] m-0">
                   Link AI - A service from EVERMEDIA CORP.
                 </Text>
-                <Text className="text-[12px] text-gray-400 text-center mb-[8px] m-0">
+                <Text className="text-[12px] text-neutral-400 text-center mb-[8px] m-0">
                   PO BOX 1964, Guayama, PR, 00785
                 </Text>
-                <Text className="text-[12px] text-gray-400 text-center m-0">
+                <Text className="text-[12px] text-neutral-400 text-center m-0">
                   © 2025 EVERMEDIA CORP. All rights reserved.
                 </Text>
               </Section>

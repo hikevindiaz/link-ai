@@ -168,7 +168,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                                 control={form.control}
                                 name="chatTitle"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col items-left justify-between rounded-lg border p-4">
+                                    <FormItem className="flex flex-col items-left justify-between rounded-xl border p-4">
                                         <div className="space-y-0.5">
                                             <FormLabel className="text-base">
                                                 Chatbox Title
@@ -192,7 +192,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                                 control={form.control}
                                 name="chatMessagePlaceHolder"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col items-left justify-between rounded-lg border p-4">
+                                    <FormItem className="flex flex-col items-left justify-between rounded-xl border p-4">
                                         <div className="space-y-0.5">
                                             <FormLabel className="text-base">
                                                 Chatbox Input Message Placeholder Text
@@ -215,7 +215,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                             <FormField
                                 name="bubbleColor"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col items-left justify-between rounded-lg border p-4">
+                                    <FormItem className="flex flex-col items-left justify-between rounded-xl border p-4">
                                         <div className="space-y-4">
                                             <h1>Customize Your Chatbot Widget</h1>
                                             <div className="flex">
@@ -245,7 +245,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                                                     </div>
                                                 </div>
                                                 <div className="flex w-full items-center text-center justify-center">
-                                                    <div className="ml-4 mr-4 shadow-lg border bg-white border-gray-200 rounded-full p-4" style={{ background: bubbleColor }}>
+                                                    <div className="ml-4 mr-4 shadow-lg border bg-white border-neutral-200 rounded-full p-4" style={{ background: bubbleColor }}>
                                                         <Icons.message style={{ color: bubbleLogoColor }} />
                                                     </div>
                                                 </div>
@@ -257,7 +257,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                             <FormField
                                 name="headerColor"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col items-left justify-between rounded-lg border p-4">
+                                    <FormItem className="flex flex-col items-left justify-between rounded-xl border p-4">
                                         <div className="space-y-4">
                                             <h1>Customize Your Chatbox Header</h1>
                                             <div className="flex">
@@ -291,7 +291,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                                                         <h3 style={{ color: chatHeaderTextColor }} className="text-xl font-semibold">Chat with our AI</h3>
                                                         <div>
                                                             <Button variant="ghost">
-                                                                <Icons.close style={{ color: chatHeaderTextColor }} className="h-5 w-5 text-gray-500" />
+                                                                <Icons.close style={{ color: chatHeaderTextColor }} className="h-5 w-5 text-neutral-500" />
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -304,7 +304,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                             <FormField
                                 name="userReply"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col items-left justify-between rounded-lg border p-4">
+                                    <FormItem className="flex flex-col items-left justify-between rounded-xl border p-4">
                                         <div className="space-y-4">
                                             <h1>Customize Your User Reply</h1>
                                             <div className="flex">
@@ -336,7 +336,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                                                 </div>
                                                 <div className="flex w-full items-center text-center justify-center">
                                                     <div key="0" className="flex w-5/6 items-end gap-2">
-                                                        <div className="rounded-lg p-2" style={{ background: userBubbleColor }}>
+                                                        <div className="rounded-xl p-2" style={{ background: userBubbleColor }}>
                                                             <p className="text-md" style={{ color: userBubbleMessageColor }}>I need help with my customization what color should I choose?</p>
                                                         </div>
                                                     </div>
@@ -349,7 +349,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                             <FormField
                                 name="chatbotLogo"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col items-left justify-between rounded-lg border p-4">
+                                    <FormItem className="flex flex-col items-left justify-between rounded-xl border p-4">
                                         <div className="space-y-4">
                                             <h1>Images</h1>
                                             <div className="flex">
@@ -394,7 +394,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                                 name="chatInputStyle"
                                 control={form.control}
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-col items-left justify-between rounded-lg border p-4">
+                                    <FormItem className="flex flex-col items-left justify-between rounded-xl border p-4">
                                         <div className="space-y-4">
                                             <h1>Styles</h1>
                                             <div className="flex">
@@ -439,7 +439,7 @@ export function CustomizationSettings({ chatbot }: ChatbotOperationsProps) {
                                 control={form.control}
                                 name="chatHistoryEnabled"
                                 render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                                    <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4">
                                         <div className="space-y-0.5">
                                             <FormLabel className="text-base">
                                                 Chat History

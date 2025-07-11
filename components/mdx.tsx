@@ -38,7 +38,7 @@ function CustomHeading(props: any) {
 
 export const H1 = ({ children }: React.HTMLProps<HTMLHeadingElement>) => (
   <CustomHeading
-    className="text-3xl font-bold normal-case tracking-tight text-gray-900 sm:text-4xl dark:text-gray-50"
+    className="text-3xl font-bold normal-case tracking-tight text-neutral-900 sm:text-4xl dark:text-neutral-50"
     level={1}
   >
     {children}
@@ -47,7 +47,7 @@ export const H1 = ({ children }: React.HTMLProps<HTMLHeadingElement>) => (
 
 export const H2 = ({ children }: React.HTMLProps<HTMLHeadingElement>) => (
   <CustomHeading
-    className="mb-4 text-lg font-semibold normal-case tracking-tight text-gray-900 dark:text-gray-50"
+    className="mb-4 text-lg font-semibold normal-case tracking-tight text-neutral-900 dark:text-neutral-50"
     level={2}
   >
     {children}
@@ -56,7 +56,7 @@ export const H2 = ({ children }: React.HTMLProps<HTMLHeadingElement>) => (
 
 export const H3 = ({ children }: React.HTMLProps<HTMLHeadingElement>) => (
   <CustomHeading
-    className="mb-2 font-semibold normal-case tracking-tight text-gray-900 dark:text-gray-50"
+    className="mb-2 font-semibold normal-case tracking-tight text-neutral-900 dark:text-neutral-50"
     level={3}
   >
     {children}
@@ -64,18 +64,18 @@ export const H3 = ({ children }: React.HTMLProps<HTMLHeadingElement>) => (
 )
 
 export const P = (props: React.HTMLProps<HTMLParagraphElement>) => (
-  <p {...props} className="mb-8 leading-7 text-gray-600 dark:text-gray-400" />
+  <p {...props} className="mb-8 leading-7 text-neutral-600 dark:text-neutral-400" />
 )
 
 export const Ul = (props: React.HTMLAttributes<HTMLUListElement>) => (
   <ul
-    className="mb-10 ml-[30px] list-['–__'] space-y-1 leading-8 text-gray-600 dark:text-gray-400"
+    className="mb-10 ml-[30px] list-['–__'] space-y-1 leading-8 text-neutral-600 dark:text-neutral-400"
     {...props}
   />
 )
 
 export const Bold = (props: React.HTMLAttributes<HTMLSpanElement>) => (
-  <span className="font-semibold text-gray-900 dark:text-gray-50" {...props} />
+  <span className="font-semibold text-neutral-900 dark:text-neutral-50" {...props} />
 )
 
 export function CustomLink(props: any) {
@@ -108,13 +108,13 @@ export const ChangelogEntry = ({
   date: string
   children: any
 }) => (
-  <div className="relative my-20 flex flex-col justify-center gap-x-14 border-b border-gray-200 md:flex-row dark:border-gray-800">
+  <div className="relative my-20 flex flex-col justify-center gap-x-14 border-b border-neutral-200 md:flex-row dark:border-neutral-800">
     <div className="mb-4 md:mb-10 md:w-1/3">
       <div className="sticky top-24 flex items-center space-x-2 md:block md:space-x-0 md:space-y-1.5">
         <span className="inline-flex items-center rounded-lg bg-neutral-50 px-2.5 py-1 text-xs font-medium text-neutral-700 ring-1 ring-inset ring-neutral-700/10 dark:bg-neutral-500/20 dark:text-neutral-400 dark:ring-neutral-400/10">
           {version}
         </span>
-        <span className="block whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+        <span className="block whitespace-nowrap text-sm text-neutral-600 dark:text-neutral-400">
           {date}
         </span>
       </div>
@@ -135,7 +135,7 @@ export const ChangelogImage = ({
     alt={alt}
     width={width}
     height={height}
-    className="mb-10 overflow-hidden rounded-xl shadow-md shadow-black/15 ring-1 ring-gray-200/50 dark:ring-gray-800"
+    className="mb-10 overflow-hidden rounded-xl shadow-md shadow-black/15 ring-1 ring-neutral-200/50 dark:ring-neutral-800"
     {...props}
   />
 )

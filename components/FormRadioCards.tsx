@@ -48,7 +48,7 @@ export function FormRadioItem({
   return (
     <label
       className={cn(
-        "flex cursor-pointer flex-col rounded-lg border border-gray-200 p-4 transition-all hover:border-gray-300 dark:border-gray-800 dark:hover:border-gray-700",
+        "flex cursor-pointer flex-col rounded-lg border border-neutral-200 p-4 transition-all hover:border-neutral-300 dark:border-neutral-800 dark:hover:border-neutral-700",
         checked && "border-neutral-500 ring-1 ring-neutral-500 dark:border-neutral-500 dark:ring-neutral-500",
         className
       )}

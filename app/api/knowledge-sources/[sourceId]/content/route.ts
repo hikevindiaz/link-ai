@@ -179,7 +179,7 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
     if (!hasAccess) {
       return new Response("Unauthorized", { status: 403 });
     }
-
+    
     try {
       console.log("📋 Parsing form data...");
       const formData = await req.formData();
@@ -365,7 +365,7 @@ async function handleFileUpload(req: Request, context: z.infer<typeof routeConte
 
   } catch (outerError) {
     console.error("Outer catch - Critical error in file upload:", outerError);
-    
+
     // Execute rollback if we have a fileId
     if (fileId) {
       await rollback.executeRollback(`Critical error: ${outerError instanceof Error ? outerError.message : 'Unknown error'}`);

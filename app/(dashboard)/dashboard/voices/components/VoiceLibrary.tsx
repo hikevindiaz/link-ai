@@ -98,7 +98,7 @@ const VoiceLibrary = ({
       
       {/* Banner */}
       {showBanner && (
-        <div className="relative isolate flex items-center gap-x-6 overflow-hidden bg-gradient-to-r from-pink-100 via-purple-100 to-neutral-100 px-6 py-2.5 sm:px-3.5 sm:before:flex-1 w-full mb-6 rounded-lg">
+        <div className="relative isolate flex items-center gap-x-6 overflow-hidden bg-gradient-to-r from-pink-100 via-purple-100 to-neutral-100 px-6 py-2.5 sm:px-3.5 sm:before:flex-1 w-full mb-6 rounded-xl">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <p className="text-sm/6 text-neutral-900">
               <strong className="font-semibold">Voice Library</strong>
@@ -146,9 +146,24 @@ const VoiceLibrary = ({
 
       {/* Loading state */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-          <span className="ml-2 text-sm text-neutral-500">Loading voices...</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <div key={item} className="p-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+              <div className="flex items-center mb-4">
+                <div className="h-8 w-8 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-3 flex items-center justify-center">
+                  <div className="h-4 w-4 bg-neutral-300 dark:bg-neutral-600 rounded-full"></div>
+                </div>
+                <div className="flex-1">
+                  <div className="h-4 w-20 bg-neutral-200 dark:bg-neutral-700 rounded mb-1"></div>
+                  <div className="h-3 w-32 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex-1 h-10 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+                <div className="h-8 w-8 bg-neutral-200 dark:bg-neutral-700 rounded-full"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : voices.length === 0 ? (
         <div className="flex h-full items-center justify-center py-8 text-center">

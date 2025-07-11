@@ -33,7 +33,7 @@ export function ChatMessage({ message, children, chatbot, isFirst, ...props }: C
                     >
                         <div
                             style={{ color: chatbot.userReplyTextColor, background: chatbot.userReplyBackgroundColor }}
-                            className="p-2 text-sm rounded-lg mr-4 whitespace-pre-wrap leading-relaxed"
+                            className="p-2 text-sm rounded-xl mr-4 whitespace-pre-wrap leading-relaxed"
                             dir={getDirection(chatbot.rightToLeftLanguage)} // Set text direction
                         >
                             <svg fill={chatbot.userReplyBackgroundColor} className="absolute bottom-[0px] right-11" height="14" width="13"><path d="M6 .246c-.175 5.992-1.539 8.89-5.5 13.5 6.117.073 9.128-.306 12.5-3L6 .246Z"></path></svg>
@@ -100,10 +100,10 @@ export function ChatMessage({ message, children, chatbot, isFirst, ...props }: C
                                                 return <p className="mb-3 last:mb-0 leading-relaxed" dir={getDirection(chatbot.rightToLeftLanguage)}>{children}</p>
                                             },
                                             strong({ children }) {
-                                                return <strong className="font-bold text-gray-900 dark:text-gray-100">{children}</strong>
+                                                return <strong className="font-bold text-neutral-900 dark:text-neutral-100">{children}</strong>
                                             },
                                             em({ children }) {
-                                                return <em className="italic text-gray-800 dark:text-gray-200">{children}</em>
+                                                return <em className="italic text-neutral-800 dark:text-neutral-200">{children}</em>
                                             },
                                             ul({ children }) {
                                                 return <ul className="list-disc list-outside ml-4 mb-3 space-y-1">{children}</ul>
@@ -115,16 +115,16 @@ export function ChatMessage({ message, children, chatbot, isFirst, ...props }: C
                                                 return <li className="py-0.5 leading-relaxed">{children}</li>
                                             },
                                             blockquote({ children }) {
-                                                return <blockquote className="border-l-4 border-gray-300 pl-4 py-2 mb-3 italic text-gray-700 dark:text-gray-300 dark:border-gray-600">{children}</blockquote>
+                                                return <blockquote className="border-l-4 border-neutral-300 pl-4 py-2 mb-3 italic text-neutral-700 dark:text-neutral-300 dark:border-neutral-600">{children}</blockquote>
                                             },
                                             h1({ children }) {
-                                                return <h1 className="text-2xl font-bold mt-6 mb-3 text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2">{children}</h1>
+                                                return <h1 className="text-2xl font-bold mt-6 mb-3 text-neutral-900 dark:text-neutral-100 border-b border-neutral-200 dark:border-neutral-700 pb-2">{children}</h1>
                                             },
                                             h2({ children }) {
-                                                return <h2 className="text-xl font-bold mt-5 mb-3 text-gray-900 dark:text-gray-100">{children}</h2>
+                                                return <h2 className="text-xl font-bold mt-5 mb-3 text-neutral-900 dark:text-neutral-100">{children}</h2>
                                             },
                                             h3({ children }) {
-                                                return <h3 className="text-lg font-semibold mt-4 mb-2 text-gray-900 dark:text-gray-100">{children}</h3>
+                                                return <h3 className="text-lg font-semibold mt-4 mb-2 text-neutral-900 dark:text-neutral-100">{children}</h3>
                                             },
                                             code({ node, className, children, ...props }) {
                                                 const match = /language-(\w+)/.exec(className || '')

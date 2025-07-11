@@ -180,7 +180,7 @@ export default function InvitationHandler({ token }: InvitationHandlerProps) {
 
         {invitation && (
           <div className="w-full space-y-4 mb-6">
-            <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4 text-left">
+            <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-4 text-left">
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-neutral-600 dark:text-neutral-400">Email:</span>

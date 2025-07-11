@@ -1,5 +1,8 @@
 import { logger } from '@/lib/logger';
 import { AgentTool, AgentContext } from './types';
+import { googleSearchTool } from './tools/google-search-tool';
+import { aviationStackTool } from './tools/aviationstack-tool';
+import { weatherTool } from './tools/weather-tool';
 
 export class ToolExecutor {
   private tools: Map<string, AgentTool> = new Map();
@@ -9,10 +12,12 @@ export class ToolExecutor {
    */
   registerTool(tool: AgentTool): void {
     this.tools.set(tool.name, tool);
-    logger.info('Registered tool', { 
+    console.log('🔧 Registered tool', { 
       toolName: tool.name,
-      toolId: tool.id 
-    }, 'tool-executor');
+      toolId: tool.id,
+      totalTools: this.tools.size,
+      allToolNames: Array.from(this.tools.keys())
+    });
   }
   
   /**
@@ -20,7 +25,7 @@ export class ToolExecutor {
    */
   unregisterTool(toolName: string): void {
     this.tools.delete(toolName);
-    logger.info('Unregistered tool', { toolName }, 'tool-executor');
+    console.log('Unregistered tool', { toolName });
   }
   
   /**
@@ -47,6 +52,13 @@ export class ToolExecutor {
       });
     }
     
+    // DEBUG: Log tool definitions being sent to AI
+    console.log('🔧 Tool Definitions for AI', {
+      toolCount: definitions.length,
+      toolNames: definitions.map(def => def.function.name),
+      hasGoogleSearch: definitions.some(def => def.function.name === 'google_search')
+    });
+    
     return definitions;
   }
   
@@ -61,16 +73,16 @@ export class ToolExecutor {
     const tool = this.tools.get(toolName);
     
     if (!tool) {
-      logger.error('Tool not found', { toolName }, 'tool-executor');
+      console.error('Tool not found', { toolName });
       throw new Error(`Tool '${toolName}' not found`);
     }
     
     try {
-      logger.debug('Executing tool', { 
+      console.log('🔨 Executing tool from ToolExecutor', { 
         toolName, 
         args,
         chatbotId: context.agent.id 
-      }, 'tool-executor');
+      });
       
       // Validate arguments against schema if needed
       const validatedArgs = this.validateArguments(tool, args);
@@ -78,19 +90,19 @@ export class ToolExecutor {
       // Execute the tool
       const result = await tool.handler(validatedArgs, context);
       
-      logger.debug('Tool executed successfully', { 
+      console.log('✅ Tool executed successfully in ToolExecutor', { 
         toolName,
         resultType: typeof result 
-      }, 'tool-executor');
+      });
       
       return result;
       
     } catch (error) {
-      logger.error('Error executing tool', { 
+      console.error('❌ Error executing tool in ToolExecutor', { 
         toolName,
         error: error.message,
         args 
-      }, 'tool-executor');
+      });
       throw error;
     }
   }
@@ -258,5 +270,20 @@ export const builtInTools = {
         throw new Error(`Failed to evaluate expression: ${error.message}`);
       }
     }
-  }
+  },
+
+  /**
+   * Google Programmable Search JSON API
+   */
+  googleSearch: googleSearchTool,
+
+  /**
+   * AviationStack API for flight tracking and aviation data
+   */
+  aviationStack: aviationStackTool,
+
+  /**
+   * Weather API for current weather information
+   */
+  weather: weatherTool
 } as const; 

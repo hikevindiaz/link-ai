@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import { RiAddLine, RiDatabase2Line, RiAlertLine, RiArrowUpCircleLine } from '@remixicon/react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ProgressDialog } from '@/components/ui/progress-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useKnowledgeBase } from './layout';
 
 export default function KnowledgeBasePage() {
@@ -232,10 +234,17 @@ export default function KnowledgeBasePage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="flex items-center">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-          <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">Loading...</span>
+      <div className="flex h-full items-center justify-center p-6">
+        <div className="p-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+          <div className="flex flex-col items-center max-w-md">
+            <Skeleton className="h-10 w-10 rounded-xl mb-4" />
+            <Skeleton className="h-4 w-32 mb-2" />
+            <Skeleton className="h-3 w-64 mb-6" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-32 rounded-xl" />
+              <Skeleton className="h-8 w-24 rounded-xl" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -243,71 +252,78 @@ export default function KnowledgeBasePage() {
 
   if (databaseError) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-6">
-        <div className="mx-auto max-w-md">
-          <Alert variant="destructive" className="mb-6">
-            <RiAlertLine className="h-4 w-4" />
-            <AlertTitle>Database Setup Required</AlertTitle>
-            <AlertDescription>
-              The database tables for knowledge sources have not been created yet. Please run the following commands in your terminal:
-            </AlertDescription>
-          </Alert>
-          
-          <div className="rounded-xl bg-neutral-900 p-4 text-white">
-            <pre className="overflow-x-auto text-sm">
-              <code>
-                npx prisma generate{'\n'}
-                npx prisma db push
-              </code>
-            </pre>
+      <div className="flex h-full items-center justify-center p-6">
+        <Card className="p-6 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="flex flex-col items-center max-w-md">
+            <Alert variant="destructive" className="mb-6">
+              <RiAlertLine className="h-4 w-4" />
+              <AlertTitle>Database Setup Required</AlertTitle>
+              <AlertDescription>
+                The database tables for knowledge sources have not been created yet. Please run the following commands in your terminal:
+              </AlertDescription>
+            </Alert>
+            
+            <div className="rounded-xl bg-neutral-900 p-4 text-white">
+              <pre className="overflow-x-auto text-sm">
+                <code>
+                  npx prisma generate{'\n'}
+                  npx prisma db push
+                </code>
+              </pre>
+            </div>
+            
+            <p className="mt-4 text-xs text-neutral-500 dark:text-neutral-400">
+              After running these commands, restart your development server and refresh this page.
+            </p>
+            
+            <Button 
+              className="mt-6 w-full" 
+              onClick={() => window.location.reload()}
+              size="sm"
+            >
+              Refresh Page
+            </Button>
           </div>
-          
-          <p className="mt-4 text-sm text-neutral-500">
-            After running these commands, restart your development server and refresh this page.
-          </p>
-          
-          <Button 
-            className="mt-6 w-full" 
-            onClick={() => window.location.reload()}
-          >
-            Refresh Page
-          </Button>
-        </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-6 relative">
-      <div className="mx-auto max-w-md text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
-          <RiDatabase2Line className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
-        </div>
-        <h1 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">Knowledge Base</h1>
-        <p className="mt-2 text-neutral-500 dark:text-neutral-400">
-          Add knowledge to make your AI assistants smarter.
-        </p>
-        <div className="mt-6 flex justify-center gap-2">
-          <Button 
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="inline-flex items-center"
-          >
-            <RiAddLine className="mr-1 h-4 w-4" />
-            Create New Source
-          </Button>
-          
-          {hasExistingSources && (
+    <div className="flex h-full items-center justify-center p-6 relative">
+      <Card className="p-6 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+        <div className="flex flex-col items-center max-w-md text-center">
+          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+            <RiDatabase2Line className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+          </div>
+          <h1 className="text-sm font-semibold text-black dark:text-white">Knowledge Base</h1>
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+            Add knowledge to make your AI assistants smarter.
+          </p>
+          <div className="mt-6 flex justify-center gap-2">
             <Button 
-              variant="secondary"
-              onClick={handleTrainAgents}
+              onClick={() => setIsCreateDialogOpen(true)}
               className="inline-flex items-center"
+              size="sm"
             >
-              <RiArrowUpCircleLine className="mr-1 h-4 w-4" />
-              Train Agents
+              <RiAddLine className="mr-1 h-4 w-4" />
+              Create New Source
             </Button>
-          )}
+            
+            {hasExistingSources && (
+              <Button 
+                variant="secondary"
+                onClick={handleTrainAgents}
+                className="inline-flex items-center"
+                size="sm"
+              >
+                <RiArrowUpCircleLine className="mr-1 h-4 w-4" />
+                Train Agents
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      </Card>
       
       {/* Progress Dialog for training */}
       <ProgressDialog

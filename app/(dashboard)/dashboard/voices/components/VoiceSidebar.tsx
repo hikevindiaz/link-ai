@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Icons } from '@/components/icons';
 import { Badge } from '@/components/ui/badge';
 import { RiDeleteBinLine, RiAddLine, RiMoreFill, RiMicLine } from '@remixicon/react';
@@ -107,7 +108,7 @@ const VoiceSidebar = ({
     <div className={`flex-shrink-0 border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black flex flex-col ${isMobileView ? 'w-full' : 'w-80'}`}>
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">My Voices</h2>
+          <h2 className="text-xl font-semibold text-black dark:text-white">My Voices</h2>
           <Button
             variant="secondary"
             className="h-8 w-8 p-0"
@@ -122,9 +123,21 @@ const VoiceSidebar = ({
       <div className="border-t border-neutral-200 dark:border-neutral-800 mt-4">
         <div className="flex-1 overflow-auto px-4 pt-4 pb-4">
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-              <span className="ml-2 text-sm text-neutral-500">Loading voices...</span>
+            <div className="grid grid-cols-1 gap-2">
+              {[1, 2, 3].map((item) => (
+                <div key={item} className="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+                  <div className="flex items-center">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <div className="ml-3 flex-1">
+                      <div className="flex justify-between items-center">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-6 w-6 rounded-full" />
+                      </div>
+                      <Skeleton className="mt-1 h-3 w-32" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : userVoices.length === 0 ? (
             <div className="flex h-full items-center justify-center py-8 text-center">
@@ -164,13 +177,13 @@ const VoiceSidebar = ({
                     )}
                   >
                     <div className="flex items-center">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-medium">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200 text-xs font-medium">
                         <RiMicLine className="h-4 w-4" />
                       </span>
                       <div className="ml-3 w-full overflow-hidden">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center max-w-[70%]">
-                            <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                            <div className="truncate text-sm font-medium text-black dark:text-white">
                               {capitalizeVoiceName(voice.name)}
                             </div>
                             <div className="ml-2 flex-shrink-0">

@@ -12,7 +12,7 @@ import { cn, focusRing } from "@/lib/utils"
 const buttonVariants = tv({
   base: [
     // base
-    "relative inline-flex items-center justify-center whitespace-nowrap rounded-lg border px-0 py-0 text-center text-base font-normal shadow-sm transition-all duration-200 ease-in-out",
+    "relative inline-flex items-center justify-center whitespace-nowrap rounded-xl border px-0 py-0 text-center text-base font-normal shadow-sm transition-all duration-200 ease-in-out",
     // disabled
     "disabled:pointer-events-none disabled:shadow-none disabled:opacity-50",
     // focus
@@ -85,7 +85,7 @@ const buttonVariants = tv({
     size: {
       default: "h-10 px-4 py-2",
       sm: "h-9 rounded-xl px-3 text-sm",
-      lg: "h-12 rounded-lg px-8 text-lg",
+      lg: "h-12 rounded-xl px-8 text-lg",
       icon: "h-10 w-10",
     },
   },

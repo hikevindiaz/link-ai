@@ -80,4 +80,6 @@ export interface Agent {
   // Calendar integration
   calendarEnabled?: boolean;
   calendarId?: string | null;
+  // AviationStack integration
+  aviationStackEnabled?: boolean;
 }

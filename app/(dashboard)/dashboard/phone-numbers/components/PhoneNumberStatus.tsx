@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -123,7 +124,7 @@ export function PhoneNumberStatus({ phoneNumber }: PhoneNumberStatusProps) {
         </div>
       </div>
       <div className="p-4 bg-white dark:bg-neutral-900/50">
-        <div className={`rounded-lg p-4 ${statusDetails.bgColor}`}>
+        <div className={`rounded-xl p-4 ${statusDetails.bgColor}`}>
           <div className="flex items-start">
             <div className="mr-3 mt-0.5">
               {statusDetails.icon}

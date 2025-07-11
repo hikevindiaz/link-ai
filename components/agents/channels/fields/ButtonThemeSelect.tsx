@@ -219,7 +219,7 @@ export const ButtonThemeSelect = ({
     }
     return (
       <div className="flex items-center gap-2">
-        <div className="h-3 w-3 rounded-full bg-white border border-gray-200"></div>
+        <div className="h-3 w-3 rounded-full bg-white border border-neutral-200"></div>
         <span>Light</span>
       </div>
     );
@@ -233,7 +233,7 @@ export const ButtonThemeSelect = ({
         render={({ field }) => (
           <FormItem>
             <div className="flex items-center justify-between">
-              <FormLabel className="text-sm font-medium text-gray-900 dark:text-white">
+              <FormLabel className="text-sm font-medium text-neutral-900 dark:text-white">
                 Button Theme
               </FormLabel>
             </div>
@@ -253,7 +253,7 @@ export const ButtonThemeSelect = ({
               <SelectContent>
                 <SelectItem value="light">
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded-full bg-white border border-gray-200"></div>
+                    <div className="h-4 w-4 rounded-full bg-white border border-neutral-200"></div>
                     <span>Light</span>
                   </div>
                 </SelectItem>
@@ -265,7 +265,7 @@ export const ButtonThemeSelect = ({
                 </SelectItem>
               </SelectContent>
             </Select>
-            <FormDescription className="text-xs text-gray-500 dark:text-gray-400">
+            <FormDescription className="text-xs text-neutral-500 dark:text-neutral-400">
               Choose the color theme for the chat button.
             </FormDescription>
           </FormItem>

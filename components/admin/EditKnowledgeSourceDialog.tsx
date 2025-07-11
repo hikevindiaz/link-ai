@@ -129,7 +129,7 @@ export function EditKnowledgeSourceDialog({
 
         <div className="space-y-6">
           {/* Knowledge Source Info */}
-          <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+          <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-4">
             <div className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1">
               <div><strong>ID:</strong> {knowledgeSource.id}</div>
               <div><strong>Created:</strong> {new Date(knowledgeSource.createdAt).toLocaleString()}</div>
@@ -207,7 +207,7 @@ export function EditKnowledgeSourceDialog({
           {knowledgeSource._count && (
             <div className="space-y-2">
               <Label>Content Summary</Label>
-              <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+              <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
                     <div className="font-medium text-neutral-900 dark:text-neutral-100">

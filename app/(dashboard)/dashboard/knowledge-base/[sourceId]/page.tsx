@@ -5,6 +5,9 @@ import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { SourceSettings } from '@/components/knowledge-base/source-settings';
 import { Source } from '@/components/knowledge-base/source-sidebar';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { RiFileUnknowLine } from '@remixicon/react';
 import { useKnowledgeBase } from '../layout';
 
 export default function SourcePage() {
@@ -45,10 +48,17 @@ export default function SourcePage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="flex items-center">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-          <span className="ml-2 text-sm text-neutral-500">Loading source...</span>
+      <div className="flex h-full items-center justify-center p-6">
+        <div className="p-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+          <div className="flex flex-col items-center max-w-md">
+            <Skeleton className="h-10 w-10 rounded-xl mb-4" />
+            <Skeleton className="h-4 w-32 mb-2" />
+            <Skeleton className="h-3 w-64 mb-6" />
+            <div className="flex gap-2">
+              <Skeleton className="h-8 w-32 rounded-xl" />
+              <Skeleton className="h-8 w-24 rounded-xl" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -56,15 +66,20 @@ export default function SourcePage() {
 
   if (!source) {
     return (
-      <div className="flex h-full flex-col items-center justify-center p-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-neutral-50">
-            Source Not Found
-          </h1>
-          <p className="mt-2 text-neutral-500 dark:text-neutral-400">
-            The knowledge source you're looking for doesn't exist or you don't have access to it.
-          </p>
-        </div>
+      <div className="flex h-full items-center justify-center p-6">
+        <Card className="p-6 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+          <div className="flex flex-col items-center max-w-md text-center">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+              <RiFileUnknowLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+            </div>
+            <h1 className="text-sm font-semibold text-black dark:text-white">
+              Source Not Found
+            </h1>
+            <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
+              The knowledge source you're looking for doesn't exist or you don't have access to it.
+            </p>
+          </div>
+        </Card>
       </div>
     );
   }

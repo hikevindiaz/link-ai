@@ -5,6 +5,7 @@ import { notFound, useSearchParams } from 'next/navigation';
 import { ChatContainer } from '@/components/chat-interface/chat-container';
 import { Chat } from '@/components/chat-interface/chat';
 import { generateUUID } from '@/lib/chat-interface/utils';
+import RiveGlint from '@/components/chat-interface/rive-glint';
 
 interface ChatPageProps {
   params: {
@@ -74,7 +75,13 @@ export default function AgentChatPage({ params }: ChatPageProps) {
   if (isLoading) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <div className="text-lg text-neutral-500">Loading agent...</div>
+        <div className="flex flex-col items-center gap-4">
+          <RiveGlint 
+            isThinking={true} 
+            className="w-20 h-20" 
+          />
+          <div className="text-sm text-neutral-500">Loading agent...</div>
+        </div>
       </div>
     );
   }
@@ -87,8 +94,7 @@ export default function AgentChatPage({ params }: ChatPageProps) {
     <ChatContainer className="flex h-full w-full flex-col overflow-hidden">
       <div className="flex-1 relative h-[calc(100vh-64px)]">
         <Chat
-          id={threadId}
-          initialMessages={[]}
+          currentThreadId={threadId}
           chatbotId={agentId}
           selectedChatModel={agent?.modelId || 'gpt-4'}
           selectedVisibilityType="private"

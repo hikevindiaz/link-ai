@@ -57,7 +57,7 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
         <div className="flex items-center justify-between p-4">
           <div>
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
+              <h1 className="text-xl font-semibold text-black dark:text-white">
                 Order {order.id}
               </h1>
               <Badge 
@@ -111,7 +111,7 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Customer Information */}
           <Card className="p-4">
-            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50 mb-3">
+            <h2 className="text-sm font-semibold text-black dark:text-white mb-3">
               Customer Information
             </h2>
             <div className="space-y-3">
@@ -167,7 +167,7 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
           
           {/* Payment Information */}
           <Card className="p-4">
-            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50 mb-3">
+            <h2 className="text-sm font-semibold text-black dark:text-white mb-3">
               Payment Information
             </h2>
             <div className="space-y-3">
@@ -223,7 +223,7 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
           
           {/* Order Items */}
           <Card className="p-4 md:col-span-2">
-            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50 mb-3">
+            <h2 className="text-sm font-semibold text-black dark:text-white mb-3">
               Order Items
             </h2>
             <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
@@ -278,7 +278,7 @@ export function OrderDetails({ order, onUpdateStatus }: OrderDetailsProps) {
           
           {/* Order Timeline */}
           <Card className="p-4 md:col-span-2">
-            <h2 className="text-sm font-medium text-neutral-900 dark:text-neutral-50 mb-3">
+            <h2 className="text-sm font-semibold text-black dark:text-white mb-3">
               Order Timeline
             </h2>
             <div className="space-y-4">

@@ -1,111 +1,161 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
-export const dynamic = 'force-dynamic';
+// ElevenLabs voice categorization - Updated with actual voice IDs from user's account
+const VOICE_CATEGORIES = {
+  'Featured Voices ✨': [
+    'XXsBDdWcaBwGFMjlkpTk', // David
+    'o23dcncTCdpfslLGLVQO', // isabella
+    'ed4GJ8WlKc0WZP6hN6yB', // xiomara
+    'mK8r15WhTmRMsh9ngXv4', // New featured voice
+  ],
+  'Best for English': [
+    '9BWtsMINqrJLrRacOk9x', // Aria
+    'EXAVITQu4vr4xnSDxMaL', // Sarah
+    'FGY2WhTYpPnrIDTdsKH5', // Laura
+    'XB0fDUnXU5powFXDhCwa', // Charlotte
+  ],
+  'Best for Spanish': [
+    'ed4GJ8WlKc0WZP6hN6yB', // xiomara
+    'WOSzFvlJRm2hkYb3KA5w', // Juan Campillo
+    'dlGxemPxFMTY7iXagmOj', // Fernando Martinez
+    'js7Ktj7UJCd7W0StVolw', // Santiago Méndez Bravo
+    'zl1Ut8dvwcVSuQSB9XkG', // Ninoska - Pro Spanish Teacher
+  ],
+  'Upbeat': [
+    'crQgCQuWgUucmYHEPsrB', // Fran - Fresh & Upbeat
+    'SAz9YHcvj6GT2YYXdXww', // River
+    'Xb7hH8MSUJpSbSDYk0k2', // Alice
+    'pFZP5JQG7iQjIQuC4Bku', // Lily
+  ],
+  'Serious': [
+    'JBFqnCBsd6RMkjVDRZzb', // George
+    'TX3LPaxmHKxFdv7VOQHJ', // Liam
+    'cjVigY5qzO86Huf0OWal', // Eric
+    'onwK4e9ZLuTAKqWW03F9', // Daniel
+  ],
+  'Men': [
+    'XXsBDdWcaBwGFMjlkpTk', // David
+    'IKne3meq5aSn9XLyUdCD', // Charlie
+    'JBFqnCBsd6RMkjVDRZzb', // George
+    'N2lVS1w4EtoT3dr4eOWO', // Callum
+    'TX3LPaxmHKxFdv7VOQHJ', // Liam
+    'bIHbv24MWmeRgasZH58o', // Will
+    'cjVigY5qzO86Huf0OWal', // Eric
+    'nPczCjzI2devNBz1zQrb', // Brian
+    'onwK4e9ZLuTAKqWW03F9', // Daniel
+    'pqHfZKP75CvOlQylNhV4', // Bill
+    'WOSzFvlJRm2hkYb3KA5w', // Juan Campillo
+    'dlGxemPxFMTY7iXagmOj', // Fernando Martinez
+    'js7Ktj7UJCd7W0StVolw', // Santiago Méndez Bravo
+    'l1zE9xgNpUTaQCZzpNJa', // Alberto Rodriguez
+    'sKgg4MPUDBy69X7iv3fA', // Alejandro Durán
+  ],
+  'Women': [
+    'o23dcncTCdpfslLGLVQO', // Isabella
+    'ed4GJ8WlKc0WZP6hN6yB', // Xiomara
+    '9BWtsMINqrJLrRacOk9x', // Aria
+    'EXAVITQu4vr4xnSDxMaL', // Sarah
+    'FGY2WhTYpPnrIDTdsKH5', // Laura
+    'XB0fDUnXU5powFXDhCwa', // Charlotte
+    'Xb7hH8MSUJpSbSDYk0k2', // Alice
+    'XrExE9yKIg1WjnnlVkGX', // Matilda
+    'cgSgspJ2msm6clMCkdW9', // Jessica
+    'iP95p4xoKVk53GoZ742B', // Chris
+    'pFZP5JQG7iQjIQuC4Bku', // Lily
+    '6JSoCQ43KH437uIcMmw1', // Mary
+    'crQgCQuWgUucmYHEPsrB', // Fran - Fresh & Upbeat
+    'zl1Ut8dvwcVSuQSB9XkG', // Ninoska - Pro Spanish Teacher
+  ],
+};
 
-export async function GET() {
+// Helper function to fetch voice data from ElevenLabs
+async function fetchVoiceFromElevenLabs(voiceId: string, apiKey: string) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Get API key from environment variables
-    const apiKey = process.env.ELEVENLABS_API_KEY;
-    
-    if (!apiKey) {
-      return NextResponse.json({ error: 'ElevenLabs API key is not configured' }, { status: 500 });
-    }
-
-    // Fetch all voices from ElevenLabs
-    const voicesResponse = await fetch('https://api.elevenlabs.io/v1/voices', {
+    const response = await fetch(`https://api.elevenlabs.io/v1/voices/${voiceId}`, {
       headers: {
-        'Accept': 'application/json',
         'xi-api-key': apiKey
       }
     });
 
-    if (!voicesResponse.ok) {
-      return NextResponse.json({ error: 'Failed to fetch voices from ElevenLabs' }, { status: voicesResponse.status });
+    if (!response.ok) {
+      console.error(`Failed to fetch voice ${voiceId}:`, response.status);
+      return null;
     }
 
-    const voicesData = await voicesResponse.json();
+    const voiceData = await response.json();
     
-    // Fetch detailed information for each voice including sample text and settings
-    const detailedVoicesPromises = voicesData.voices.map(async (voice: any) => {
-      try {
-        const detailsResponse = await fetch(`https://api.elevenlabs.io/v1/voices/${voice.voice_id}/settings`, {
-          headers: {
-            'Accept': 'application/json',
-            'xi-api-key': apiKey
-          }
-        });
-        
-        if (!detailsResponse.ok) {
-          console.warn(`Failed to fetch settings for voice ${voice.voice_id}`);
-          return {
-            ...voice,
-            sampleText: voice.preview_url ? 'Hi there, this is a sample of my voice.' : null,
-            settings: {
-              stability: 0.75,
-              similarity_boost: 0.75,
-              style: 0.0,
-              use_speaker_boost: true
-            }
-          };
-        }
-        
-        const settings = await detailsResponse.json();
-        
-        // Extract language information from fine_tuning or labels
-        let language = 'en'; // Default to English
-        
-        // Check fine_tuning for language information
-        if (voice.fine_tuning && voice.fine_tuning.language) {
-          language = voice.fine_tuning.language;
-        }
-        
-        // Check labels for language or accent information
-        if (voice.labels) {
-          // Check for Spanish keywords in labels
-          const isSpanish = Object.values(voice.labels).some((label: any) => 
-            typeof label === 'string' && 
-            (label.toLowerCase().includes('spanish') || 
-             label.toLowerCase().includes('español') || 
-             label.toLowerCase().includes('latino') || 
-             label.toLowerCase().includes('latina') ||
-             label.toLowerCase().includes('mexican'))
-          );
-          
-          if (isSpanish) {
-            language = 'es';
-          }
-        }
-        
-        // Get the sample text for this voice based on detected language
-        let sampleText = language === 'es' 
-          ? '¡Hola! ¿Cómo puedo ayudarte hoy?' 
-          : 'Hi there, this is a sample of my voice.';
-        
-        return {
-          ...voice,
-          language,
-          sampleText,
-          settings
-        };
-      } catch (error) {
-        console.error(`Error fetching details for voice ${voice.voice_id}:`, error);
-        return voice;
+    return {
+      id: voiceData.voice_id,
+      name: voiceData.name,
+      description: voiceData.description || 'Professional voice',
+      languages: voiceData.labels?.language ? [voiceData.labels.language] : ['English'],
+      gender: voiceData.labels?.gender || 'unknown',
+      accent: voiceData.labels?.accent || null,
+      age: voiceData.labels?.age || null,
+      use_case: voiceData.labels?.use_case || null,
+      previewUrl: voiceData.preview_url || null,
+    };
+  } catch (error) {
+    console.error(`Error fetching voice ${voiceId}:`, error);
+    return null;
+  }
+}
+
+// GET /api/elevenlabs/voices - Get all available voices organized by categories
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const apiKey = process.env.ELEVENLABS_API_KEY;
+    
+    if (!apiKey) {
+      return NextResponse.json({ error: 'ElevenLabs API key not configured' }, { status: 500 });
+    }
+
+    // Get all unique voice IDs from categories
+    const allVoiceIds = new Set<string>();
+    Object.values(VOICE_CATEGORIES).forEach(voiceIds => {
+      voiceIds.forEach(id => allVoiceIds.add(id));
+    });
+
+    // Fetch voice data from ElevenLabs API
+    const voiceDataPromises = Array.from(allVoiceIds).map(voiceId => 
+      fetchVoiceFromElevenLabs(voiceId, apiKey)
+    );
+
+    const voiceDataResults = await Promise.all(voiceDataPromises);
+    
+    // Create a map of voice ID to voice data
+    const voiceDataMap = new Map<string, any>();
+    voiceDataResults.forEach(voiceData => {
+      if (voiceData) {
+        voiceDataMap.set(voiceData.id, voiceData);
       }
     });
-    
-    const detailedVoices = await Promise.all(detailedVoicesPromises);
-    
-    return NextResponse.json(detailedVoices);
+
+    // Build categorized voices using real ElevenLabs data
+    const categorizedVoices = Object.entries(VOICE_CATEGORIES).map(([category, voiceIds]) => ({
+      category,
+      voices: voiceIds
+        .map(voiceId => voiceDataMap.get(voiceId))
+        .filter(voice => voice !== undefined) // Remove any voices that failed to fetch
+    }));
+
+    // Calculate total voices that were successfully fetched
+    const totalVoices = Array.from(voiceDataMap.values()).length;
+
+    return NextResponse.json({ 
+      categories: categorizedVoices,
+      totalVoices
+    });
   } catch (error) {
-    console.error('Error fetching voices:', error);
+    console.error('Error fetching ElevenLabs voices:', error);
     return NextResponse.json({ error: 'Failed to fetch voices' }, { status: 500 });
   }
 } 

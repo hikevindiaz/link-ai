@@ -1,98 +1,89 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { db as prisma } from '@/lib/db';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
-    const { voiceName, openaiVoice, language, description } = await request.json();
-    
-    // Fetch user's business information
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        companyName: true,
-      }
-    });
-    
-    // Determine business name to use
-    const businessName = user?.companyName || null;
-    
-    const languageInstruction = language 
-      ? `Write the text in ${language}. Use natural, native-speaker level ${language}.`
-      : 'Write the text in English.';
-    
-    const businessContext = businessName 
-      ? `The business name is "${businessName}". Include this business name naturally in the test text when appropriate (e.g., "Thank you for calling ${businessName}" or "Welcome to ${businessName}").`
-      : 'No business name is available, so focus on general assistant greetings.';
-    
-    const prompt = `Generate test text for a custom voice called "${voiceName}" that uses OpenAI's "${openaiVoice}" voice${description ? ` with this personality: ${description}` : ''}. 
 
-${languageInstruction}
+    const { voiceName, voiceDescription, language, gender } = await request.json();
 
-${businessContext}
+    if (!voiceName) {
+      return NextResponse.json({ error: 'Voice name is required' }, { status: 400 });
+    }
 
-The test text should:
-- Be 2-3 sentences long
-- Showcase how the voice sounds in conversation
-- Be natural and engaging
-- Include a greeting and a helpful statement
-- Match the voice's personality (if provided)
-- Be appropriate for testing voice quality and characteristics
-${businessName ? `- Naturally incorporate the business name "${businessName}" when relevant` : ''}
+    const apiKey = process.env.OPENAI_API_KEY;
+    
+    if (!apiKey) {
+      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+    }
 
-Examples of good test text:
-${businessName ? `- "Thank you for calling ${businessName}! I'm your virtual assistant, ready to help you with any questions you might have. How can I make your day better?"` : ''}
-- "Hello! I'm your virtual assistant, ready to help you with any questions you might have. How can I make your day better?"
-- "Greetings! I'm here to assist you with professional expertise and friendly guidance. What would you like to accomplish today?"
-- "Hi there! I'm excited to help you discover new possibilities and find the answers you're looking for. Let's get started!"
+    // Create a prompt based on voice characteristics
+    const languageText = language?.includes('Spanish') ? 'Spanish' : 'English';
+    const genderContext = gender === 'male' ? 'masculine' : gender === 'female' ? 'feminine' : 'neutral';
+    
+    const prompt = `Generate a brief, professional customer service opening text (1-2 sentences) for a voice assistant named "${voiceName}". 
 
-Generate something unique and fitting for this specific voice${businessName ? ` that includes the business name "${businessName}"` : ''}.`;
+Voice characteristics:
+- Description: ${voiceDescription || 'Professional voice'}
+- Language: ${languageText}
+- Gender: ${genderContext}
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+The text should be:
+- Warm and welcoming
+- Professional but friendly
+- Suitable for customer service
+- ${languageText === 'Spanish' ? 'Written in Spanish' : 'Written in English'}
+- Brief (maximum 20 words)
+
+Examples of good openings:
+- "Hello! I'm Sarah, your AI assistant. How can I help you today?"
+- "Hi there! This is Alex from customer support. What can I do for you?"
+
+Just return the opening text, nothing else.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
       messages: [
         {
-          role: 'system',
-          content: 'You are a helpful assistant that generates appropriate test text for voice testing. The text should be natural, engaging, and showcase the voice characteristics well.'
+          role: "system",
+          content: "You are a helpful assistant that generates professional customer service opening texts. Always respond with just the opening text, no quotes or additional formatting."
         },
         {
-          role: 'user',
+          role: "user",
           content: prompt
         }
       ],
+      max_tokens: 50,
       temperature: 0.7,
-      max_tokens: 200,
     });
-    
-    const testText = response.choices[0]?.message?.content?.trim();
-    
-    if (!testText) {
-      throw new Error('Failed to generate test text');
+
+    const generatedText = completion.choices[0]?.message?.content?.trim();
+
+    if (!generatedText) {
+      return NextResponse.json({ error: 'Failed to generate text' }, { status: 500 });
     }
-    
-    // Remove quotes if the AI wrapped the text in them
-    const cleanedText = testText.replace(/^["']|["']$/g, '');
-    
-    return NextResponse.json({ testText: cleanedText });
-    
+
+    return NextResponse.json({ 
+      text: generatedText,
+      voiceName,
+      language: languageText
+    });
+
   } catch (error) {
     console.error('Error generating test text:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ 
-      error: 'Failed to generate test text',
-      details: errorMessage 
+      error: 'Failed to generate text',
+      message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 } 

@@ -93,10 +93,10 @@ export function CreateAppointmentDialog({
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black/70 overflow-y-auto">
       <div className="min-h-screen py-8 px-4 flex items-center justify-center">
-        <div className="bg-white dark:bg-[#090E1A] rounded-xl border border-gray-200 dark:border-gray-900 shadow-lg w-full max-w-[500px] p-6">
+        <div className="bg-white dark:bg-[#090E1A] rounded-xl border border-neutral-200 dark:border-neutral-900 shadow-lg w-full max-w-[500px] p-6">
           <div className="pb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Create New Appointment</h2>
-            <p className="text-gray-500 dark:text-gray-500">Add a new appointment to your calendar.</p>
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">Create New Appointment</h2>
+            <p className="text-neutral-500 dark:text-neutral-500">Add a new appointment to your calendar.</p>
           </div>
           
           <div className="grid gap-4 py-2">
@@ -118,7 +118,7 @@ export function CreateAppointmentDialog({
                   ))}
                 </SelectContent>
               </Select>
-              {calendars.length === 0 && <p className="text-xs text-gray-500">You need to create a calendar first.</p>}
+              {calendars.length === 0 && <p className="text-xs text-neutral-500">You need to create a calendar first.</p>}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="clientName" className="text-sm font-medium">
@@ -136,7 +136,7 @@ export function CreateAppointmentDialog({
             
             <div className="grid gap-2">
               <Label htmlFor="clientPhoneNumber" className="text-sm font-medium">
-                Client Phone <span className="text-xs text-gray-500">(Optional)</span>
+                Client Phone <span className="text-xs text-neutral-500">(Optional)</span>
               </Label>
               <Input
                 id="clientPhoneNumber"

@@ -256,7 +256,7 @@ export function CreateKnowledgeSourceDialog({
                     <Label className="text-sm text-neutral-600 dark:text-neutral-400">
                       Select agents to assign this knowledge source to:
                     </Label>
-                    <div className="max-h-40 overflow-y-auto border border-neutral-200 dark:border-neutral-700 rounded-lg p-3 space-y-2">
+                    <div className="max-h-40 overflow-y-auto border border-neutral-200 dark:border-neutral-700 rounded-xl p-3 space-y-2">
                       {getAvailableAgents().length === 0 ? (
                         <p className="text-sm text-neutral-500 text-center py-4">
                           No agents found for the selected owner

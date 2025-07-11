@@ -411,7 +411,7 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
               >
                 {
                   fileUploaded &&
-                  <div className="flex w-full sm:w-1/2 items-center p-2 bg-white border rounded-lg shadow-sm">
+                  <div className="flex w-full sm:w-1/2 items-center p-2 bg-white border rounded-xl shadow-sm">
                     <Icons.document className="text-neutral-400 w-6 h-6 flex-shrink-0" />
                     <div className="flex flex-col pl-3 pr-6 flex-1 min-w-0">
                       <span className="font-sm text-neutral-800 truncate">{inputFileRef.current?.files![0].name}</span>
@@ -460,7 +460,7 @@ export function Chat({ chatbot, defaultMessage, className, withExitX = false, cl
                       tabIndex={0}
                       onKeyDown={onKeyDown}
                       placeholder={chatbot.chatMessagePlaceHolder}
-                      className="border-0 border-neutral-300 rounded-lg min-h-[60px] w-full resize-none bg-white pl-4 py-[1rem] sm:text-sm shadow-sm focus-visible:ring-0"
+                      className="border-0 border-neutral-300 rounded-xl min-h-[60px] w-full resize-none bg-white pl-4 py-[1rem] sm:text-sm shadow-sm focus-visible:ring-0"
                       spellCheck={false}
                       autoComplete="off"
                       autoCorrect="off"

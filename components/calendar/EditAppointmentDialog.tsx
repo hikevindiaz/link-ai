@@ -153,7 +153,7 @@ export function EditAppointmentDialog({
                 ))}
               </SelectContent>
             </Select>
-            {calendars.length === 0 && <p className="text-xs text-gray-500">No calendars available.</p>}
+            {calendars.length === 0 && <p className="text-xs text-neutral-500">No calendars available.</p>}
           </div>
 
           {/* Client Name */}
@@ -174,7 +174,7 @@ export function EditAppointmentDialog({
           {/* Client Phone */}
           <div className="grid gap-2">
             <Label htmlFor="edit-clientPhoneNumber" className="text-sm font-medium">
-              Client Phone <span className="text-xs text-gray-500">(Optional)</span>
+              Client Phone <span className="text-xs text-neutral-500">(Optional)</span>
             </Label>
             <Input
               id="edit-clientPhoneNumber"
@@ -299,7 +299,7 @@ export function EditAppointmentDialog({
           )}
         </div>
 
-        <DialogFooter className="pt-4 border-t dark:border-gray-700"> {/* Add separator */}
+        <DialogFooter className="pt-4 border-t dark:border-neutral-700"> {/* Add separator */}
           <Button
             variant="secondary"
             onClick={() => onOpenChange(false)}

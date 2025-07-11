@@ -282,7 +282,8 @@ RESPONSE STRATEGY:
 - PERSONALITY: Adapt the delivery to match your unique tone, style, and personality while keeping facts accurate
 - ACCURACY: Maintain factual correctness from the knowledge base, but express it naturally in your voice
 - ENGAGEMENT: Make responses feel conversational and authentic to your character
-- SECONDARY: Only add general knowledge if knowledge base content doesn't fully answer the question`;
+- SECONDARY: Only add general knowledge if knowledge base content doesn't fully answer the question
+- FALLBACK: If this knowledge base content doesn't answer the user's question, still provide a helpful response using general knowledge, and mention you can help with business-specific questions`;
 }
 
 /**

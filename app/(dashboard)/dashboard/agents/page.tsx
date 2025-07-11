@@ -61,6 +61,7 @@ import { AgentSettings } from "@/components/agents/agent-settings";
 import type { Agent } from "@/types/agent";
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { logger } from "@/lib/logger";
+import RiveGlint from "@/components/chat-interface/rive-glint";
 
 // Define a simplified agent type for the list view
 interface SimpleAgent {
@@ -207,6 +208,19 @@ const TabNavigationLink: React.FC<{
     </a>
   );
 };
+
+// Add skeleton loading component after the imports
+const AgentSkeleton = () => (
+  <div className="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+    <div className="flex items-center">
+      <div className="h-8 w-8 rounded-full bg-neutral-200 dark:bg-neutral-700 animate-pulse"></div>
+      <div className="ml-3 flex-1">
+        <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse mb-2"></div>
+        <div className="h-3 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse w-3/4"></div>
+      </div>
+    </div>
+  </div>
+);
 
 export default function TestChatbotPage() {
   const { data: session } = useSession();
@@ -489,8 +503,8 @@ export default function TestChatbotPage() {
   // Custom styling for active tab
   const getTabClassName = (tabName: string) => {
     const baseClasses = "inline-flex gap-2 items-center";
-    const activeClasses = "text-neutral-600 font-medium border-b-2 border-neutral-600 dark:text-neutral-500 dark:border-neutral-500";
-    const inactiveClasses = "text-neutral-500 hover:text-neutral-700 hover:border-b-2 hover:border-neutral-300 dark:text-neutral-400 dark:hover:text-neutral-300 dark:hover:border-neutral-700";
+    const activeClasses = "text-black font-medium border-b-2 border-black dark:text-white dark:border-white";
+    const inactiveClasses = "text-neutral-500 hover:text-black hover:border-b-2 hover:border-neutral-300 dark:text-neutral-400 dark:hover:text-white dark:hover:border-neutral-700";
     
     // Add mobile-specific classes
     const mobileClasses = isMobileView ? "py-2 px-3 text-sm" : "py-3 px-3";
@@ -528,7 +542,7 @@ export default function TestChatbotPage() {
           isMobileView ? "w-full" : "w-80")}>
           <div className="p-4 pb-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-normal text-neutral-700 dark:text-neutral-200">
+              <h2 className="text-xl font-semibold text-black dark:text-white">
                 My Agents
               </h2>
               <Button
@@ -545,9 +559,10 @@ export default function TestChatbotPage() {
           
           <div className="px-4 pb-4 flex-1 overflow-auto">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-600 dark:border-t-neutral-400"></div>
-                <span className="ml-2 text-sm text-neutral-500 dark:text-neutral-400">Loading agents...</span>
+              <div className="grid grid-cols-1 gap-2 mt-2">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <AgentSkeleton key={index} />
+                ))}
               </div>
             ) : agents.length > 0 ? (
               <div className="grid grid-cols-1 gap-2 mt-2">
@@ -592,7 +607,7 @@ export default function TestChatbotPage() {
                         <div className="ml-3 w-full overflow-hidden">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center max-w-[85%]">
-                              <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                              <div className="truncate text-sm font-medium text-black dark:text-white">
                                 {agent.name}
                               </div>
                             </div>
@@ -665,19 +680,22 @@ export default function TestChatbotPage() {
               </div>
             ) : (
               <div className="flex h-full items-center justify-center py-8 text-center">
-                <div className="flex flex-col items-center">
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    No agents yet.
-                  </p>
-                  <Button 
-                    variant="secondary"
-                    className="mt-4"
-                    onClick={() => setIsDrawerOpen(true)}
-                  >
-                    <RiAddLine className="mr-2 h-4 w-4" />
-                    Create New Agent
-                  </Button>
-                </div>
+                <Card className="p-6 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+                  <div className="flex flex-col items-center max-w-md">
+                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+                      <LinkAIAgentIcon className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-black dark:text-white mb-1">
+                      Create your first agent
+                    </h3>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
+                      Build AI agents that can chat with customers and help grow your business.
+                    </p>
+                    <Button size="sm" onClick={() => setIsDrawerOpen(true)}>
+                      Create new agent
+                    </Button>
+                  </div>
+                </Card>
               </div>
             )}
           </div>
@@ -691,12 +709,12 @@ export default function TestChatbotPage() {
           {isMobileView && showAgentDetailsOnMobile && selectedAgent && (
             <div className="sticky top-0 z-10 bg-background border-b border-neutral-200 dark:border-neutral-800">
               <div className="flex items-center px-4 py-2.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowAgentDetailsOnMobile(false)}
-                  className="mr-2 text-neutral-600 dark:text-neutral-300 p-1 h-auto"
-                >
+                                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAgentDetailsOnMobile(false)}
+                    className="mr-2 text-black dark:text-white p-1 h-auto"
+                  >
                   <RiArrowLeftLine className="h-5 w-5" />
                 </Button>
                 <h2 className="text-sm font-medium flex-1 truncate">Back to agents</h2>
@@ -713,7 +731,7 @@ export default function TestChatbotPage() {
                   <div className="flex flex-wrap items-center justify-between gap-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                       <h1 className={cn(
-                        "text-xl sm:text-2xl font-normal text-neutral-700 dark:text-neutral-200",
+                        "text-xl sm:text-2xl font-semibold text-black dark:text-white",
                         isMobileView && "pr-2"
                       )}>
                         {selectedAgent.name}
@@ -732,7 +750,10 @@ export default function TestChatbotPage() {
                           isMobileView && "h-8 text-sm px-3"
                         )}
                       >
-                        <RiChatSmileAiLine className="h-4 w-4" />
+                        <RiveGlint 
+                          isSpeaking={true}
+                          className="w-4 h-4"
+                        />
                         {isMobileView ? "Talk to agent" : "Talk to your agent"}
                       </Button>
                     </div>
@@ -749,7 +770,7 @@ export default function TestChatbotPage() {
                             className={`h-6 w-6 p-0 transition-colors duration-200 ${
                               copySuccess 
                                 ? "text-green-500 bg-green-50 hover:text-green-600 dark:bg-green-900/20 dark:text-green-400" 
-                                : "text-neutral-500 hover:text-neutral-600"
+                                : "text-neutral-500 hover:text-black dark:hover:text-white"
                             }`}
                             onClick={handleCopyAgentId}
                           >
@@ -766,7 +787,7 @@ export default function TestChatbotPage() {
                       </Tooltip>
                     </TooltipProvider>
                     <code className={cn(
-                      "text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded font-mono text-neutral-700 dark:text-neutral-300",
+                      "text-xs bg-neutral-100 dark:bg-neutral-800 px-2 py-1 rounded font-mono text-black dark:text-white",
                       isMobileView ? "max-w-[120px] sm:max-w-xs truncate" : "max-w-xs overflow-x-auto"
                     )}>
                       {selectedAgent.id}
@@ -936,25 +957,26 @@ export default function TestChatbotPage() {
             </div>
           ) : (
             <div className="flex h-full flex-col items-center justify-center p-6">
-              <div className="mx-auto max-w-md text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
-                  <LinkAIAgentIcon className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
+              <Card className="p-6 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+                <div className="mx-auto max-w-lg text-center">
+                  <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+                    <LinkAIAgentIcon className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
+                  </div>
+                  <h1 className="text-lg font-semibold text-black dark:text-white mb-2">
+                    {agents.length > 0 
+                      ? 'Select an agent' 
+                      : 'Create your first agent'}
+                  </h1>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+                    {agents.length > 0 
+                      ? 'Choose an agent from the sidebar to view and manage its settings.' 
+                      : 'Build AI agents that can chat with customers and help grow your business.'}
+                  </p>
+                  <Button onClick={() => setIsDrawerOpen(true)}>
+                    Create new agent
+                  </Button>
                 </div>
-                <h1 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">
-                  {agents.length > 0 
-                    ? 'Select an Agent' 
-                    : 'Welcome to Agents'}
-                </h1>
-                <p className="mt-2 text-neutral-500 dark:text-neutral-400">
-                  {agents.length > 0 
-                    ? 'Select an agent from the sidebar or create a new one to get started.' 
-                    : 'Create your first agent to enhance your business operations.'}
-                </p>
-                <Button className="mt-6" onClick={() => setIsDrawerOpen(true)}>
-                  <RiAddLine className="mr-2 h-4 w-4" />
-                  Create New Agent
-                </Button>
-              </div>
+              </Card>
             </div>
           )}
         </div>

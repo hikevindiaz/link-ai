@@ -10,6 +10,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { RiAddLine, RiDeleteBin6Line, RiCheckboxCircleFill } from '@remixicon/react';
@@ -31,7 +32,7 @@ interface PaymentMethodsSectionProps {
   isLoading?: boolean;
 }
 
-// Loading component with neutral theme
+// Loading component with skeleton design
 function PaymentMethodsLoading() {
   return (
     <div className="space-y-6">
@@ -40,17 +41,62 @@ function PaymentMethodsLoading() {
           <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
             Payment method
           </h2>
+          <Skeleton className="mt-2 h-4 w-96" />
         </div>
+        <Skeleton className="mt-4 h-10 w-32" />
       </div>
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600 mb-4"></div>
-        <h3 className="text-base font-medium text-neutral-900 dark:text-neutral-50 mb-2">
-          Loading payment methods
-        </h3>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
-          Please wait while we retrieve your saved payment methods.
-        </p>
-      </div>
+      
+      <Table className="mt-10">
+        <TableHead>
+          <TableRow className="border-b border-neutral-200 dark:border-neutral-800">
+            <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
+              Provider
+            </TableCell>
+            <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
+              Status
+            </TableCell>
+            <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
+              Type
+            </TableCell>
+            <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
+              Number (Last 4)
+            </TableCell>
+            <TableCell className="text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
+              Exp. Date
+            </TableCell>
+            <TableCell className="text-right text-xs font-medium uppercase text-neutral-500 dark:text-neutral-500">
+              <span className="sr-only">Edit</span>
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {[1, 2].map((item) => (
+            <TableRow key={item}>
+              <TableCell className="py-2.5">
+                <Skeleton className="h-4 w-16" />
+              </TableCell>
+              <TableCell className="py-2.5">
+                <div className="flex items-center gap-1.5">
+                  <Skeleton className="h-4 w-4 rounded-full" />
+                  <Skeleton className="h-4 w-14" />
+                </div>
+              </TableCell>
+              <TableCell className="py-2.5">
+                <Skeleton className="h-4 w-12" />
+              </TableCell>
+              <TableCell className="py-2.5">
+                <Skeleton className="h-4 w-20" />
+              </TableCell>
+              <TableCell className="py-2.5">
+                <Skeleton className="h-4 w-16" />
+              </TableCell>
+              <TableCell className="text-right py-2.5">
+                <Skeleton className="h-8 w-8 rounded-xl" />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -132,26 +178,7 @@ export function PaymentMethodsSection({
 
   // Show loading state from internal fetch
   if (isPaymentMethodsLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="sm:flex sm:items-start sm:justify-between sm:space-x-10">
-          <div>
-            <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
-              Payment method
-            </h2>
-          </div>
-        </div>
-        <div className="flex flex-col items-center justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600 mb-4"></div>
-          <h3 className="text-base font-medium text-neutral-900 dark:text-neutral-50 mb-2">
-            Loading payment methods
-          </h3>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
-            Please wait while we retrieve your saved payment methods.
-          </p>
-        </div>
-      </div>
-    );
+    return <PaymentMethodsLoading />;
   }
 
   return (

@@ -41,7 +41,7 @@ export function FormSubmissionsView({
       <div className="border-b border-neutral-200 dark:border-neutral-800">
         <div className="flex items-center justify-between p-4">
           <div>
-            <h1 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
+            <h1 className="text-xl font-semibold text-black dark:text-white">
               {form.name}
             </h1>
             <div className="mt-1 flex items-center gap-2">

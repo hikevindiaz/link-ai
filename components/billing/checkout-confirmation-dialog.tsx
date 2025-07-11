@@ -154,7 +154,7 @@ function PaymentMethodForm({
 
   return (
     <div className="space-y-6">
-      <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-lg">
+      <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-xl">
         <div className="flex items-center gap-3 mb-2">
           <RiShieldCheckLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
           <span className="font-medium text-neutral-900 dark:text-neutral-100">
@@ -170,7 +170,7 @@ function PaymentMethodForm({
         <PaymentElement />
         
         {error && (
-          <div className="text-red-500 text-sm mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+          <div className="text-red-500 text-sm mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
             {error}
           </div>
         )}
@@ -535,7 +535,7 @@ export function CheckoutConfirmationDialog({
                   // Simple billing summary for onboarding flow
                   <div className="space-y-3">
                     {/* Trial Information */}
-                    <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-lg mb-4">
+                    <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-xl mb-4">
                       <div className="flex items-center gap-2 mb-2">
                         <RiCheckLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
                         <span className="font-medium text-neutral-900 dark:text-neutral-100">
@@ -585,7 +585,7 @@ export function CheckoutConfirmationDialog({
                   billingPreview.isTrial ? (
                     <div className="space-y-3">
                       {/* Trial Information */}
-                      <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-lg mb-4">
+                      <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-xl mb-4">
                         <div className="flex items-center gap-2 mb-2">
                           <RiCheckLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
                           <span className="font-medium text-neutral-900 dark:text-neutral-100">
@@ -652,7 +652,7 @@ export function CheckoutConfirmationDialog({
                       </div>
                       
                       {/* Important Note about Add-ons */}
-                      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mt-3">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl mt-3">
                         <p className="text-sm text-blue-700 dark:text-blue-300">
                           <strong>Note:</strong> The first billing charge shown above covers the base {selectedPlan.name} plan only. 
                           Phone numbers and other add-ons will be billed separately and may result in a higher total charge.
@@ -662,7 +662,7 @@ export function CheckoutConfirmationDialog({
                   ) : billingPreview.isChangingPlan ? (
                     <div className="space-y-3">
                       {/* Plan Change Information */}
-                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg mb-4">
+                      <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl mb-4">
                         <div className="flex items-center gap-2 mb-2">
                           <RiCheckLine className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                           <span className="font-medium text-yellow-900 dark:text-yellow-100">
@@ -716,7 +716,7 @@ export function CheckoutConfirmationDialog({
                       
                       {/* Warning if amount seems high */}
                       {billingPreview.dueToday > billingPreview.monthlyAmount * 1.2 && (
-                        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
+                        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-xl">
                           <p className="text-sm text-yellow-700 dark:text-yellow-300">
                             <strong>Note:</strong> This charge includes prorated adjustments for your plan change. 
                             Your regular monthly billing will be ${billingPreview.monthlyAmount.toFixed(2)}.
@@ -754,7 +754,7 @@ export function CheckoutConfirmationDialog({
                       </div>
                       
                       {/* Note about separate billing */}
-                      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mt-3">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-xl mt-3">
                         <p className="text-sm text-blue-700 dark:text-blue-300">
                           <strong>Note:</strong> Phone numbers and other add-ons are billed separately 
                           and will appear as additional line items on your invoice.
@@ -764,7 +764,7 @@ export function CheckoutConfirmationDialog({
                   ) : (
                     <div className="space-y-3">
                       {/* New Subscription Trial */}
-                      <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-lg mb-4">
+                      <div className="bg-neutral-50 dark:bg-neutral-900/20 p-4 rounded-xl mb-4">
                         <div className="flex items-center gap-2 mb-2">
                           <RiCheckLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
                           <span className="font-medium text-neutral-900 dark:text-neutral-100">
@@ -856,7 +856,7 @@ export function CheckoutConfirmationDialog({
                 </div>
 
                 {hasPaymentMethods ? (
-                  <div className="flex items-center gap-3 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                  <div className="flex items-center gap-3 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-xl">
                     <RiBankCardLine className="h-6 w-6 text-neutral-500" />
                     <div className="flex-1">
                       <div className="font-medium text-neutral-900 dark:text-neutral-50">
@@ -895,7 +895,7 @@ export function CheckoutConfirmationDialog({
               {/* Terms and Action Buttons */}
               {hasPaymentMethods && (
                 <>
-                  <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-lg">
+                  <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-xl">
                     <div className="text-sm text-neutral-600 dark:text-neutral-400">
                       {billingPreview?.isTrial ? (
                         <>

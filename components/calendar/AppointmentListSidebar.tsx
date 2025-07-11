@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/DropdownMenu";
 import { Icons } from "@/components/icons"; // Use our Icons component
-import { LoadingState } from "@/components/LoadingState"; // Import LoadingState
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 
 // Import the actual types from the API module
 import type { Appointment, AppointmentStatus, Calendar } from "@/lib/api/appointments";
@@ -106,7 +106,7 @@ export function AppointmentListSidebar({
     )}>
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+          <h2 className="text-xl font-semibold text-black dark:text-white">
             Appointments
           </h2>
           
@@ -231,8 +231,21 @@ export function AppointmentListSidebar({
       {/* Appointment List */}
       <div className="flex-1 overflow-auto px-4 pb-4">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <LoadingState text="Loading appointments..." size="small" />
+          <div className="grid grid-cols-1 gap-2 mt-1">
+            {Array(3).fill(0).map((_, i) => (
+              <div key={i} className="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                <div className="flex items-center">
+                  <Skeleton className="h-8 w-8 rounded-full" />
+                  <div className="ml-3 w-full">
+                    <div className="flex justify-between items-center">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </div>
+                    <Skeleton className="mt-1 h-3 w-32" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredAppointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">

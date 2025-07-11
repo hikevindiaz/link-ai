@@ -9,7 +9,7 @@ interface RouteParams {
   };
 }
 
-// DELETE /api/user/voices/[id] - Delete a user's custom voice
+// DELETE /api/user/voices/[id] - Delete a user's voice
 export async function DELETE(request: Request, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
@@ -63,7 +63,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
   }
 }
 
-// PUT /api/user/voices/[id] - Update a user's custom voice
+// PUT /api/user/voices/[id] - Update a user's voice
 export async function PUT(request: Request, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
@@ -136,7 +136,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
       voice: {
         id: updatedVoice.id,
         name: updatedVoice.name,
-        openaiVoice: updatedVoice.openaiVoice,
+        elevenLabsVoiceId: updatedVoice.elevenLabsVoiceId,
         description: updatedVoice.description,
         language: updatedVoice.language,
         isDefault: updatedVoice.isDefault,

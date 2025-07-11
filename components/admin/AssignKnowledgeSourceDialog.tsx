@@ -152,7 +152,7 @@ export function AssignKnowledgeSourceDialog({
 
         <div className="space-y-6">
           {/* Knowledge Source Info */}
-          <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+          <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-4">
             <div className="space-y-2">
               <div className="font-medium text-neutral-900 dark:text-neutral-100">
                 {knowledgeSource.name}
@@ -169,7 +169,7 @@ export function AssignKnowledgeSourceDialog({
           </div>
 
           {/* Assignment Stats */}
-          <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-4">
             <div className="flex items-center justify-between text-sm">
               <div>
                 <span className="text-neutral-600 dark:text-neutral-400">Currently assigned to: </span>
@@ -203,7 +203,7 @@ export function AssignKnowledgeSourceDialog({
           {/* Agents List */}
           <div className="space-y-2">
             <Label>Select Agents ({filteredAgents.length} available)</Label>
-            <div className="max-h-80 overflow-y-auto border border-neutral-200 dark:border-neutral-700 rounded-lg">
+            <div className="max-h-80 overflow-y-auto border border-neutral-200 dark:border-neutral-700 rounded-xl">
               {filteredAgents.length === 0 ? (
                 <div className="p-8 text-center text-neutral-500">
                   {searchTerm ? 'No agents found matching your search' : 'No agents available'}
@@ -217,7 +217,7 @@ export function AssignKnowledgeSourceDialog({
                     return (
                       <div 
                         key={agent.id} 
-                        className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors ${
+                        className={`flex items-center space-x-3 p-3 rounded-xl border transition-colors ${
                           isSelected 
                             ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900/20' 
                             : 'border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800'

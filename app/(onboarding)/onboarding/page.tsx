@@ -520,7 +520,7 @@ export default function OnboardingPage() {
                     {simplifiedPlans.map((plan) => (
                       <div
                         key={plan.id}
-                        className={`relative rounded-lg border-2 p-6 cursor-pointer transition-all ${
+                        className={`relative rounded-xl border-2 p-6 cursor-pointer transition-all ${
                           formData.billing.selectedPlan === plan.id
                             ? 'border-neutral-400 bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-900'
                             : 'border-neutral-200 hover:border-neutral-300 dark:border-neutral-700 dark:hover:border-neutral-600'

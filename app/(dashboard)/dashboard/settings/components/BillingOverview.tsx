@@ -2,6 +2,7 @@
 
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/Button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface BillingOverviewProps {
   currentPlan: any;
@@ -24,15 +25,64 @@ interface BillingOverviewProps {
   isLoading?: boolean;
 }
 
-// Loading component with neutral theme
+// Loading component with skeleton design
 function BillingOverviewLoading() {
   return (
-    <div className="mt-8 rounded-lg border border-neutral-200 bg-white text-neutral-950 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-50 p-6">
-      <div className="flex items-center justify-center space-x-3">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Loading billing information...
-        </p>
+    <div className="mt-8 rounded-xl border border-neutral-200 bg-white text-neutral-950 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-50 p-0">
+      <div className="flex items-start space-x-10 px-6 py-2">
+        <ul className="w-full divide-y divide-neutral-200 text-sm text-neutral-500 dark:divide-neutral-800 dark:text-neutral-500">
+          {/* Plan Skeleton */}
+          <li className="flex items-center justify-between py-4">
+            <div className="w-full">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-24" />
+              </div>
+              <Skeleton className="mt-1 h-3 w-20" />
+            </div>
+          </li>
+          
+          {/* Usage Items Skeleton */}
+          {[1, 2, 3].map((item) => (
+            <li key={item} className="flex items-center justify-between py-4">
+              <div className="w-full">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-5 w-28" />
+                  <Skeleton className="h-5 w-16" />
+                </div>
+                <div className="w-full md:w-1/2">
+                  <Skeleton className="mt-2 h-1.5 w-full rounded-full" />
+                  <div className="mt-1 flex items-center justify-between">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))}
+          
+          {/* Phone Number Skeleton */}
+          <li className="flex items-center justify-between py-4">
+            <div className="w-full">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-48" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-5 w-16" />
+              </div>
+              <Skeleton className="mt-1 h-3 w-40" />
+            </div>
+          </li>
+        </ul>
+      </div>
+      
+      {/* Footer Skeleton */}
+      <div className="border-t border-neutral-200 bg-neutral-50 px-6 py-3 dark:border-neutral-800 dark:bg-neutral-900">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-24" />
+        </div>
       </div>
     </div>
   );
@@ -102,7 +152,7 @@ export function BillingOverview({
   }
 
   return (
-    <div className="mt-8 rounded-lg border border-neutral-200 bg-white text-neutral-950 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-50 p-0">
+    <div className="mt-8 rounded-xl border border-neutral-200 bg-white text-neutral-950 shadow-sm dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-50 p-0">
       <div className="flex items-start space-x-10 px-6 py-2">
         <ul className="w-full divide-y divide-neutral-200 text-sm text-neutral-500 dark:divide-neutral-800 dark:text-neutral-500">
           {/* Plan */}

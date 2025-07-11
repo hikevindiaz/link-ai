@@ -124,13 +124,13 @@ export const RealtimeVoiceInterface = forwardRef<RealtimeVoiceInterfaceHandle, R
           {isCallActive && (userTranscript || assistantTranscript) && (
             <div className="mt-4 w-full max-w-md space-y-2 max-h-48 overflow-y-auto">
               {userTranscript && (
-                <div className="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-3 text-sm text-neutral-700 dark:text-neutral-300">
+                <div className="bg-neutral-50 dark:bg-neutral-900 rounded-xl p-3 text-sm text-neutral-700 dark:text-neutral-300">
                   <span className="font-medium text-neutral-600 dark:text-neutral-400">You: </span>
                   {userTranscript}
                 </div>
               )}
               {assistantTranscript && (
-                <div className="bg-neutral-50 dark:bg-neutral-900/20 rounded-lg p-3 text-sm text-neutral-700 dark:text-neutral-300">
+                <div className="bg-neutral-50 dark:bg-neutral-900/20 rounded-xl p-3 text-sm text-neutral-700 dark:text-neutral-300">
                   <span className="font-medium text-neutral-600 dark:text-neutral-400">Assistant: </span>
                   {assistantTranscript}
                 </div>
@@ -151,7 +151,7 @@ export const RealtimeVoiceInterface = forwardRef<RealtimeVoiceInterfaceHandle, R
           
           {/* Error state */}
           {isError && (
-            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg text-sm w-full max-w-md">
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl text-sm w-full max-w-md">
               <div className="flex items-center mb-2">
                 <div className="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
                 <h3 className="font-medium text-red-800 dark:text-red-300">Connection Error</h3>
@@ -170,7 +170,7 @@ export const RealtimeVoiceInterface = forwardRef<RealtimeVoiceInterfaceHandle, R
 
           {/* Debug information */}
           {debug && isCallActive && (
-            <div className="mt-4 p-3 bg-neutral-100 dark:bg-neutral-800 rounded-lg text-xs w-full max-w-md">
+            <div className="mt-4 p-3 bg-neutral-100 dark:bg-neutral-800 rounded-xl text-xs w-full max-w-md">
               <h4 className="font-medium mb-2">Debug Info:</h4>
               <div className="space-y-1 text-neutral-600 dark:text-neutral-400">
                 <div>Session State: {sessionState}</div>

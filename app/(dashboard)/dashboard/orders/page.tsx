@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/Button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Divider } from "@/components/Divider";
 import { ArrowLeft } from "lucide-react";
 import { 
@@ -37,6 +38,7 @@ import {
   RiShoppingBag3Line
 } from "@remixicon/react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Import components
 import { OrderList } from "@/components/orders/OrderList";
@@ -67,11 +69,30 @@ export default function OrdersPage() {
   const [notificationSettings, setNotificationSettings] = useState(defaultNotificationSettings);
   const [settingsTab, setSettingsTab] = useState("hours");
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Add mobile responsiveness state
   const [isMobileView, setIsMobileView] = useState(false);
   const [showOrderDetailsOnMobile, setShowOrderDetailsOnMobile] = useState(false);
+  
+  // Simulate fetching orders
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        setOrders(mockOrders);
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchOrders();
+  }, []);
   
   // Check for mobile view on mount and window resize
   useEffect(() => {
@@ -166,6 +187,20 @@ export default function OrdersPage() {
     setShowOrderDetailsOnMobile(false);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center p-8">
+        <div className="p-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+          <div className="flex flex-col items-center max-w-md">
+            <Skeleton className="h-10 w-10 rounded-xl mb-4" />
+            <Skeleton className="h-4 w-48 mb-1" />
+            <Skeleton className="h-3 w-64" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full">
       {/* Left Sidebar - Order List */}
@@ -173,7 +208,7 @@ export default function OrdersPage() {
         <div className={`${isMobileView ? 'w-full' : 'w-80'} border-r border-neutral-200 dark:border-neutral-800 flex flex-col`}>
           <div className="p-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+              <h2 className="text-xl font-semibold text-black dark:text-white">
                 Orders
               </h2>
               
@@ -342,20 +377,22 @@ export default function OrdersPage() {
               onUpdateStatus={handleUpdateOrderStatus}
             />
           ) : (
-            <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-              <div className="flex max-w-md flex-col items-center">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-900">
-                  <RiShoppingBag3Line className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
+            <div className="flex h-full items-center justify-center p-8">
+              <Card className="p-6 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+                <div className="flex flex-col items-center max-w-md">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+                    <RiShoppingBag3Line className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
                 </div>
                 
-                <h2 className="mt-4 text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+                  <h3 className="text-sm font-semibold text-black dark:text-white mb-1">
                   Select an order to view details
-                </h2>
+                  </h3>
                 
-                <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center">
                   Choose an order from the sidebar to view its details and manage it.
                 </p>
               </div>
+              </Card>
             </div>
           )}
         </div>

@@ -20,7 +20,7 @@ export function OrderList({ orders, selectedOrder, onSelectOrder }: OrderListPro
   if (orders.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400">
           No orders found
         </p>
       </div>
@@ -35,7 +35,7 @@ export function OrderList({ orders, selectedOrder, onSelectOrder }: OrderListPro
             key={order.id}
             onClick={() => onSelectOrder(order)}
             className={cn(
-              "group transition-all duration-200 cursor-pointer p-3 rounded-lg border relative",
+              "group transition-all duration-200 cursor-pointer p-3 rounded-xl border relative",
               "hover:bg-neutral-50 dark:hover:bg-neutral-900",
               "hover:shadow-sm",
               "bg-white dark:bg-black border-neutral-200 dark:border-neutral-800",
@@ -53,7 +53,7 @@ export function OrderList({ orders, selectedOrder, onSelectOrder }: OrderListPro
               <div className="ml-3 w-full overflow-hidden">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center max-w-[70%]">
-                    <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                    <div className="truncate text-sm font-semibold text-black dark:text-white">
                       {order.id}
                     </div>
                     <div className="ml-2 flex-shrink-0">
@@ -65,7 +65,7 @@ export function OrderList({ orders, selectedOrder, onSelectOrder }: OrderListPro
                       </Badge>
                     </div>
                   </div>
-                  <div className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                  <div className="text-sm font-semibold text-black dark:text-white">
                     ${order.total.toFixed(2)}
                   </div>
                 </div>

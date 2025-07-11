@@ -84,9 +84,9 @@ export function AppointmentDetailsView({
 
   return (
     <div>
-      <header className="border-b border-gray-200 dark:border-gray-800 pb-4 mb-6">
+      <header className="border-b border-neutral-200 dark:border-neutral-800 pb-4 mb-6">
         <div className="sm:flex sm:items-center sm:justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
             Appointment Details
           </h3>
           <div className="mt-3 flex items-center gap-x-2 sm:mt-0">
@@ -144,11 +144,11 @@ export function AppointmentDetailsView({
                 {getInitials(appointment.clientName)}
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-50">
+                <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-50">
                    {/* Use clientName */} 
                   {appointment.clientName}
                 </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center flex-wrap gap-x-2 gap-y-1">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 flex items-center flex-wrap gap-x-2 gap-y-1">
                   <span className="flex items-center"><Icons.calendar className="mr-1.5 h-4 w-4 opacity-70"/> {formatDate(appointment.startTime)}</span>
                   <span className="hidden sm:inline">•</span>
                   <span className="flex items-center"><Icons.clock className="mr-1.5 h-4 w-4 opacity-70"/> {appointment.startTime.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})} - {appointment.endTime.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})}</span>
@@ -161,9 +161,9 @@ export function AppointmentDetailsView({
             <Divider className="my-5" />
 
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Description</h3>
-              <p className="text-sm text-gray-700 dark:text-gray-300 break-words">
-                {appointment.description || <span className="italic text-gray-500">No description provided.</span>}
+              <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">Description</h3>
+              <p className="text-sm text-neutral-700 dark:text-neutral-300 break-words">
+                {appointment.description || <span className="italic text-neutral-500">No description provided.</span>}
               </p>
             </div>
 
@@ -173,8 +173,8 @@ export function AppointmentDetailsView({
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {appointment.clientEmail && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Email</h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                  <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">Email</h3>
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300 flex items-center">
                     <Icons.mail className="mr-2 h-4 w-4 opacity-70" />
                     <a href={`mailto:${appointment.clientEmail}`} className="hover:underline">
                       {appointment.clientEmail}
@@ -184,8 +184,8 @@ export function AppointmentDetailsView({
               )}
               {appointment.clientPhoneNumber && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Phone</h3>
-                  <p className="text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                  <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">Phone</h3>
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300 flex items-center">
                     <Icons.phone className="mr-2 h-4 w-4 opacity-70" />
                     <a href={`tel:${appointment.clientPhoneNumber}`} className="hover:underline">
                       {appointment.clientPhoneNumber}
@@ -199,8 +199,8 @@ export function AppointmentDetailsView({
 
             {/* Placeholder Source Info */}
             <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Source</h3>
-                <p className="text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">Source</h3>
+                <p className="text-sm text-neutral-700 dark:text-neutral-300 flex items-center">
                    <Icons.import className="mr-2 h-4 w-4 opacity-70" /> {/* Using Import icon as placeholder */} 
                     Manual
                    {/* Later, replace "Manual" with {appointment.source || "N/A"} when field exists */} 
@@ -211,7 +211,7 @@ export function AppointmentDetailsView({
 
             {/* Moved Actions */}
             <div className="mt-6">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4">Actions</h3>
+                <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-4">Actions</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
                     {/* Only show Mark as Completed if not already completed or cancelled */} 
                     {appointment.status !== AppointmentStatusEnum.COMPLETED && appointment.status !== AppointmentStatusEnum.CANCELLED && (

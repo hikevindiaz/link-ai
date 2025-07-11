@@ -315,7 +315,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
           <div className="py-6">
             {/* Header Section */}
             <section className="text-center mb-12">
-              <div className="w-fit mx-auto rounded-lg px-3 py-1 bg-neutral-50 text-neutral-700 dark:bg-neutral-900/20 dark:text-neutral-400 mb-4">
+              <div className="w-fit mx-auto rounded-xl px-3 py-1 bg-neutral-50 text-neutral-700 dark:bg-neutral-900/20 dark:text-neutral-400 mb-4">
                 <span className="text-sm font-medium">Transparent Pricing</span>
               </div>
               <h1 className="text-4xl font-bold text-neutral-900 dark:text-neutral-50 mb-4">
@@ -470,7 +470,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
                 </p>
               </div>
 
-              <div className="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+              <div className="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-800">
                 <table className="w-full">
                   <thead className="bg-neutral-50 dark:bg-neutral-900">
                     <tr>
@@ -544,7 +544,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
             <section className="lg:hidden">
               <div className="space-y-8">
                 {plans.map((plan) => (
-                  <div key={plan.id} className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+                  <div key={plan.id} className="border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
                     <div className="mb-6">
                       <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
                         {plan.name}
@@ -596,7 +596,7 @@ export function PricingDialog({ open, onOpenChange, currentPlan, onPlanConfirmed
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {plans.map((plan) => (
-                  <div key={plan.id} className="border border-neutral-200 dark:border-neutral-800 rounded-lg p-6">
+                  <div key={plan.id} className="border border-neutral-200 dark:border-neutral-800 rounded-xl p-6">
                     <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50 mb-4 text-center">
                       {plan.name} Overage Rates
                     </h3>

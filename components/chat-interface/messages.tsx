@@ -40,11 +40,6 @@ function PureMessages({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
-  // Debug log on status change to help diagnose issues
-  useEffect(() => {
-    console.log(`[Messages] Status changed to: ${status}, message count: ${messages.length}`);
-  }, [status, messages.length]);
-
   const UserAvatar = ({ email }: { email?: string }) => {
     if (email) {
       return (
@@ -65,8 +60,8 @@ function PureMessages({
     }
     
     return (
-      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-        <UserIcon className="w-6 h-6 text-gray-500" />
+      <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center">
+        <UserIcon className="w-6 h-6 text-neutral-500" />
       </div>
     );
   };
@@ -99,14 +94,51 @@ function PureMessages({
       {status === 'submitted' && 
         messages.length > 0 &&
         messages[messages.length - 1].role === 'user' && (
-          <ThinkingMessage />
+          <ThinkingMessage 
+            isStreaming={false} 
+            userQuery={messages[messages.length - 1].content}
+            agentId={chatbotId}
+            toolInvocations={(() => {
+              // Try to find toolInvocations in the most recent assistant message
+              const lastAssistantMessage = messages.slice().reverse().find(m => m.role === 'assistant');
+              return lastAssistantMessage?.toolInvocations;
+            })()}
+          />
       )}
 
       {/* Also show ThinkingMessage in streaming state for better user feedback */}
       {status === 'streaming' && 
         messages.length > 0 &&
         messages[messages.length - 1].role === 'user' && (
-          <ThinkingMessage />
+          <ThinkingMessage 
+            isStreaming={true}
+            userQuery={messages[messages.length - 1].content}
+            agentId={chatbotId}
+            toolInvocations={(() => {
+              // Check the last message (might be assistant with toolInvocations)
+              const lastMessage = messages[messages.length - 1];
+              const lastAssistantMessage = messages.slice().reverse().find(m => m.role === 'assistant');
+              
+              // Try last message first, then last assistant message
+              return lastMessage?.toolInvocations || lastAssistantMessage?.toolInvocations;
+            })()}
+          />
+      )}
+
+      {/* Show ThinkingMessage during streaming when assistant is responding */}
+      {status === 'streaming' && 
+        messages.length > 0 &&
+        messages[messages.length - 1].role === 'assistant' && (
+          <ThinkingMessage 
+            isStreaming={true}
+            agentId={chatbotId}
+            userQuery={(() => {
+              // Find the most recent user message
+              const lastUserMessage = messages.slice().reverse().find(m => m.role === 'user');
+              return lastUserMessage?.content;
+            })()}
+            toolInvocations={messages[messages.length - 1].toolInvocations}
+          />
       )}
 
       <div
@@ -120,37 +152,44 @@ function PureMessages({
 export const Messages = memo(PureMessages, (prevProps, nextProps) => {
   // Always re-render if status changes - this is critical for UI updates
   if (prevProps.status !== nextProps.status) {
-    console.log(`[Messages Memo] Re-rendering due to status change: ${prevProps.status} -> ${nextProps.status}`);
     return false;
   }
   
   // Always re-render if message count changes
   if (prevProps.messages.length !== nextProps.messages.length) {
-    console.log(`[Messages Memo] Re-rendering due to message count change: ${prevProps.messages.length} -> ${nextProps.messages.length}`);
     return false;
   }
   
-  // Always re-render if messages content changed
-  if (!equal(prevProps.messages, nextProps.messages)) {
-    console.log('[Messages Memo] Re-rendering due to message content change');
-    return false;
-  }
-  
-  // If artifact visibility changed but other properties didn't, optimize render
-  if (prevProps.isArtifactVisible !== nextProps.isArtifactVisible) {
-    const shouldSkipRender = prevProps.messages.length === nextProps.messages.length &&
-      equal(prevProps.messages, nextProps.messages) &&
-      prevProps.status === nextProps.status;
+  // CRITICAL: Handle streaming optimization FIRST before doing expensive equality checks
+  if (nextProps.status === 'streaming' && prevProps.status === 'streaming') {
+    const prevLastMessage = prevProps.messages[prevProps.messages.length - 1];
+    const nextLastMessage = nextProps.messages[nextProps.messages.length - 1];
     
-    if (shouldSkipRender) {
-      console.log('[Messages Memo] Skipping render for artifact visibility change only');
+    if (prevLastMessage && nextLastMessage && prevLastMessage.id === nextLastMessage.id) {
+      const contentLengthDiff = Math.abs((nextLastMessage.content?.length || 0) - (prevLastMessage.content?.length || 0));
+      const hasStructuralChange = !equal(prevLastMessage.toolInvocations, nextLastMessage.toolInvocations);
+      
+      // During streaming, only re-render every 100 characters or on structural changes
+      if (contentLengthDiff < 100 && !hasStructuralChange) {
+        return true; // Skip re-render for small content changes during streaming
+      } else {
+        // Allow re-render for significant changes
+        return false;
+      }
     }
-    return shouldSkipRender;
+  }
+  
+  // Only do expensive equality check if NOT in streaming mode
+  if (nextProps.status !== 'streaming' || prevProps.status !== 'streaming') {
+  if (!equal(prevProps.messages, nextProps.messages)) {
+    return false;
+  }
   }
   
   // Re-render if other important props change
   if (prevProps.chatbotLogoURL !== nextProps.chatbotLogoURL) return false;
   if (prevProps.welcomeMessage !== nextProps.welcomeMessage) return false;
+  if (prevProps.isArtifactVisible !== nextProps.isArtifactVisible) return false;
   
   // Default to preventing unnecessary re-renders
   return true;

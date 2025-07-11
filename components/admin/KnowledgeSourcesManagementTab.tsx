@@ -343,7 +343,7 @@ export function KnowledgeSourcesManagementTab({
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
+                      <button className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl">
                         <IconDots className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
                       </button>
                     </DropdownMenuTrigger>
@@ -442,7 +442,7 @@ export function KnowledgeSourcesManagementTab({
                 <Skeleton className="h-4 w-20" />
               </TableCell>
               <TableCell>
-                <Skeleton className="h-6 w-6 rounded" />
+                <Skeleton className="h-6 w-6 rounded-xl" />
               </TableCell>
             </TableRow>
           ))}
@@ -453,7 +453,7 @@ export function KnowledgeSourcesManagementTab({
 
   return (
     <div className="px-4 md:px-8 pt-6">
-      <h1 className="text-xl font-normal text-neutral-700 dark:text-neutral-200">
+      <h1 className="text-xl font-semibold text-black dark:text-white">
         Knowledge Sources Management
       </h1>
       <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
@@ -462,7 +462,7 @@ export function KnowledgeSourcesManagementTab({
       
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-normal text-neutral-700 dark:text-neutral-200">
+          <h2 className="text-lg font-semibold text-black dark:text-white">
             All Knowledge Sources ({filteredSources.length})
           </h2>
           <Button 

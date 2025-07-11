@@ -9,7 +9,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const tabNavigationVariants = cva(
-  "flex items-center gap-x-2 border-b border-gray-200 dark:border-gray-800",
+  "flex items-center gap-x-2 border-b border-neutral-200 dark:border-neutral-800",
   {
     variants: {
       size: {
@@ -40,7 +40,7 @@ const TabNavigation = React.forwardRef<HTMLDivElement, TabNavigationProps>(
 TabNavigation.displayName = "TabNavigation"
 
 const tabNavigationLinkVariants = cva(
-  "inline-flex items-center border-b-2 border-transparent px-4 py-3 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200",
+  "inline-flex items-center border-b-2 border-transparent px-4 py-3 text-sm font-medium text-neutral-500 hover:border-neutral-300 hover:text-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200",
   {
     variants: {
       active: {

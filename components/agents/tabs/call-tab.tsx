@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { IconPhoneRinging } from "@tabler/icons-react"
 
 interface CallTabProps {
   agent: Agent
@@ -40,8 +41,10 @@ interface CustomVoice {
 export function CallTab({ agent, onSave }: CallTabProps) {
   // Utility function to capitalize voice names properly
   const capitalizeVoiceName = (name: string): string => {
-    if (!name) return name;
-    return name.charAt(0).toUpperCase() + name.slice(1);
+    return name
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   };
 
   // Use a ref to track if we've already initialized our local state
@@ -475,11 +478,11 @@ export function CallTab({ agent, onSave }: CallTabProps) {
     >
       <div className="space-y-6">
         {/* Phone Number */}
-        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Phone Number</Label>
+              <Label className="text-sm font-semibold text-black dark:text-white">Phone Number</Label>
               {selectedPhoneNumberId && (
                 <Badge variant="secondary" className="ml-auto">
                   <CheckCircle className="h-3 w-3 mr-1" />
@@ -488,9 +491,9 @@ export function CallTab({ agent, onSave }: CallTabProps) {
               )}
             </div>
           </div>
-          <div className="p-3 bg-white dark:bg-neutral-900">
+          <div className="px-3 py-2 bg-white dark:bg-neutral-900">
             {errors.phoneNumbers ? (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="rounded-xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
                   <span>{errors.phoneNumbers}</span>
@@ -507,14 +510,14 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                     {loadingStates.phoneNumbers ? (
                       <div className="flex items-center pl-9 h-10">
                         <Loader2 className="h-4 w-4 animate-spin mr-2 text-neutral-500" />
-                        <span className="text-sm text-neutral-500">Loading phone numbers...</span>
+                        <span className="text-xs text-neutral-500">Loading phone numbers...</span>
                       </div>
                     ) : (
                       <Select 
                         value={selectedPhoneNumberId || 'none'}
                         onValueChange={handlePhoneNumberChange}
                       >
-                        <SelectTrigger className="pl-9">
+                        <SelectTrigger className="pl-9 rounded-xl">
                           <SelectValue placeholder="Select phone number" />
                         </SelectTrigger>
                         <SelectContent>
@@ -540,14 +543,14 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                     )}
                   </div>
                   <div className="mt-2 flex items-center gap-1">
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
                       {availablePhoneNumbers.length === 0 ? (
                         "No available phone numbers found. You can purchase a new one"
                       ) : (
                         "You can manage your phone numbers"
                       )}
                     </p>
-                    <a href="/dashboard/phone-numbers" className="text-sm text-neutral-600 hover:underline dark:text-neutral-400">
+                    <a href="/dashboard/phone-numbers" className="text-xs text-neutral-600 hover:underline dark:text-neutral-400">
                       here
                     </a>
                   </div>
@@ -558,16 +561,16 @@ export function CallTab({ agent, onSave }: CallTabProps) {
         </Card>
 
         {/* Voice Selection */}
-        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Voice</Label>
+              <IconPhoneRinging className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+              <Label className="text-sm font-semibold text-black dark:text-white">Voice</Label>
             </div>
           </div>
-          <div className="p-3 bg-white dark:bg-neutral-900">
+          <div className="px-3 py-2 bg-white dark:bg-neutral-900">
             {errors.voices ? (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="rounded-xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
                   <span>{errors.voices}</span>
@@ -579,30 +582,25 @@ export function CallTab({ agent, onSave }: CallTabProps) {
             ) : (
               <div className="flex-1">
                 <div className="relative">
-                  <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
+                  <IconPhoneRinging className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
                   {loadingStates.voices ? (
                     <div className="flex items-center pl-9 h-10">
                       <Loader2 className="h-4 w-4 animate-spin mr-2 text-neutral-500" />
-                      <span className="text-sm text-neutral-500">Loading voices...</span>
+                      <span className="text-xs text-neutral-500">Loading voices...</span>
                     </div>
                   ) : (
                     <Select 
                       value={selectedVoice || 'none'} 
                       onValueChange={handleVoiceChange}
                     >
-                      <SelectTrigger className="pl-9">
+                      <SelectTrigger className="pl-9 rounded-xl">
                         <SelectValue placeholder="Select voice" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Default Voice</SelectItem>
                         {voices.map((voice) => (
                           <SelectItem key={voice.id} value={voice.id}>
-                            <div className="flex flex-col items-start text-left w-full">
-                              <span className="font-medium">{capitalizeVoiceName(voice.name)}</span>
-                              <span className="text-xs text-neutral-500">
-                                {voice.openaiVoice} {voice.language ? `• ${voice.language}` : ''}
-                              </span>
-                            </div>
+                            <span className="font-medium">{capitalizeVoiceName(voice.name)}</span>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -610,19 +608,19 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                   )}
                 </div>
                 <div className="mt-2 flex items-center gap-1">
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
                     {voices.length === 0 ? (
                       "No voices found. You can add voices from your voice library"
                     ) : (
                       "You can manage your voices"
                     )}
                   </p>
-                  <a href="/dashboard/voices" className="text-sm text-neutral-600 hover:underline dark:text-neutral-400">
+                  <a href="/dashboard/voices" className="text-xs text-neutral-600 hover:underline dark:text-neutral-400">
                     here
                   </a>
                 </div>
                 {initialValues.voice && !voices.some(v => v.id === initialValues.voice) && !loadingStates.voices && (
-                  <div className="mt-2 text-sm text-yellow-600 dark:text-yellow-500 flex items-center">
+                  <div className="mt-2 text-xs text-yellow-600 dark:text-yellow-500 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />
                     Your agent has a voice assigned in the database, but it's not available in your account.
                   </div>
@@ -633,20 +631,20 @@ export function CallTab({ agent, onSave }: CallTabProps) {
         </Card>
 
         {/* Response Rate Selection */}
-        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Response Rate</Label>
+              <Label className="text-sm font-semibold text-black dark:text-white">Response Rate</Label>
             </div>
           </div>
-          <div className="p-3 bg-white dark:bg-neutral-900">
+          <div className="px-3 py-2 bg-white dark:bg-neutral-900">
             <div className="flex-1">
               <Select 
                 value={responseRate} 
                 onValueChange={(value: 'rapid' | 'normal' | 'patient') => setResponseRate(value)}
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-xl">
                   <SelectValue placeholder="Select response rate" />
                 </SelectTrigger>
                 <SelectContent>
@@ -655,7 +653,7 @@ export function CallTab({ agent, onSave }: CallTabProps) {
                   <SelectItem value="patient">Patient (More thoughtful)</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+              <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
                 This controls how quickly your agent responds during conversations.
               </p>
             </div>

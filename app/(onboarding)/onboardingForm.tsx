@@ -17,7 +17,7 @@ export default function OnboardingForm() {
     <section className="py-8 bg-white dark:bg-neutral-900 lg:py-0">
       <div className="lg:flex">
         <div className="hidden w-full max-w-md p-12 lg:h-screen lg:block bg-primary-600">
-          <Card className="block p-8 text-white rounded-lg bg-primary-500">
+          <Card className="block p-8 text-white rounded-xl bg-primary-500">
             <h3 className="mb-1 text-2xl font-semibold">Your selected plan</h3>
             <p className="mb-4 font-light text-primary-100 sm:text-lg">30-day free trial</p>
             <ul role="list" className="space-y-4 text-left">
@@ -68,23 +68,23 @@ export default function OnboardingForm() {
               <div className="grid gap-5 my-6 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="full-name" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-white">Full Name</Label>
-                  <Input type="text" name="full-name" id="full-name" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" placeholder="Bonnie" required />
+                  <Input type="text" name="full-name" id="full-name" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-xl focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" placeholder="Bonnie" required />
                 </div>
                 <div>
                   <Label htmlFor="email" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-white">Your email</Label>
-                  <Input type="email" name="email" id="email" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" placeholder="name@company.com" required />
+                  <Input type="email" name="email" id="email" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-xl focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" placeholder="name@company.com" required />
                 </div>
                 <div>
                   <Label htmlFor="password" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-white">Password</Label>
-                  <Input type="password" name="password" id="password" placeholder="••••••••" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" required />
+                  <Input type="password" name="password" id="password" placeholder="••••••••" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-xl focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" required />
                 </div>
                 <div>
                   <Label htmlFor="confirm-password" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-white">Confirm password</Label>
-                  <Input type="password" name="confirm-password" id="confirm-password" placeholder="••••••••" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" required />
+                  <Input type="password" name="confirm-password" id="confirm-password" placeholder="••••••••" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-xl focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" required />
                 </div>
                 <div>
                   <Label htmlFor="country" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-white">Country</Label>
-                  <select id="country" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                  <select id="country" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
                     <option selected>Choose your country</option>
                     <option value="USA">USA</option>
                     <option value="UK">United Kingdom</option>
@@ -98,7 +98,7 @@ export default function OnboardingForm() {
                 </div>
                 <div>
                   <Label htmlFor="phone-number" className="block mb-2 text-sm font-medium text-neutral-900 dark:text-white">Phone</Label>
-                  <Input type="number" name="phone-number" id="phone-number" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" placeholder="+123 567 890" required />
+                  <Input type="number" name="phone-number" id="phone-number" className="bg-neutral-50 border border-neutral-300 text-neutral-900 text-sm rounded-xl focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-neutral-700 dark:border-neutral-600 dark:placeholder-neutral-400 dark:text-white" placeholder="+123 567 890" required />
                 </div>
               </div>
               <div className="mb-6 space-y-3">
@@ -120,8 +120,8 @@ export default function OnboardingForm() {
                 </div>
               </div>
               <div className="flex space-x-3">
-                <a href="#" className="text-center items-center w-full py-2.5 sm:py-3.5 text-sm font-medium text-neutral-900 focus:outline-none bg-white rounded-lg border border-neutral-200 hover:bg-neutral-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-neutral-200 dark:focus:ring-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-600 dark:hover:text-white dark:hover:bg-neutral-700">Prev: Personal Info</a>
-                <Button type="submit" className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 sm:py-3.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Next: Account Info</Button>
+                <a href="#" className="text-center items-center w-full py-2.5 sm:py-3.5 text-sm font-medium text-neutral-900 focus:outline-none bg-white rounded-xl border border-neutral-200 hover:bg-neutral-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-neutral-200 dark:focus:ring-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-600 dark:hover:text-white dark:hover:bg-neutral-700">Prev: Personal Info</a>
+                <Button type="submit" className="w-full text-white bg-primary-600 hover:bg-primary-700 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-xl text-sm px-5 py-2.5 sm:py-3.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Next: Account Info</Button>
               </div>
             </form>
           </div>

@@ -40,7 +40,7 @@ export function AdvancedSettings({
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-medium text-gray-900 dark:text-white">Advanced Settings</h3>
-      <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+      <div className="flex flex-row items-center justify-between rounded-xl border p-4">
         <div className="space-y-0.5">
           <Label className="text-base text-gray-900 dark:text-white">
             Display Branding
@@ -55,7 +55,7 @@ export function AdvancedSettings({
         />
       </div>
 
-      <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+      <div className="flex flex-row items-center justify-between rounded-xl border p-4">
         <div className="space-y-0.5">
           <Label className="text-base text-gray-900 dark:text-white">
             File Attachment

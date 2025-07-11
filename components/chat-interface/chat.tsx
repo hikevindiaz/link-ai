@@ -11,7 +11,7 @@ import { VisibilityType } from '@/components/chat-interface/visibility-selector'
 import { useArtifactSelector } from '@/components/chat-interface/hooks/use-artifact';
 import { SuggestedActions } from '@/components/chat-interface/suggested-actions';
 import { toast } from 'sonner';
-import { RealtimeVoiceInterface, RealtimeVoiceInterfaceHandle } from '@/components/chat-interface/realtime-voice-interface';
+import { VoiceInterface } from '@/components/chat-interface/voice-interface';
 
 interface Attachment {
   id: string;
@@ -78,39 +78,55 @@ export function Chat({
     api: '/api/chat-interface',
     streamProtocol: 'text',
     onResponse: async (response) => {
-      console.log('[Chat Interface] Response received, streaming started');
       if (response.status !== 200) {
-        console.error(`[Chat Interface] Response error: ${response.status} ${response.statusText}`);
         toast.error('Error receiving response from AI');
       }
     },
     onFinish: (message) => {
-      console.log('[Chat Interface] Message streaming complete:', message.id);
       lastResponseRef.current = message.content;
       
-      // Force a re-render to ensure UI updates but don't re-fetch messages
-      setMessages(prevMessages => {
-        console.log('[Chat Debug] onFinish updating messages array, current count:', prevMessages.length);
-        return [...prevMessages];
-      });
+      // Parse tool invocations from the message content
+      const toolInvocationsMatch = message.content?.match(/<!--TOOL_INVOCATIONS:([\s\S]+?)-->/);
+      if (toolInvocationsMatch) {
+        try {
+          const toolInvocations = JSON.parse(toolInvocationsMatch[1]);
+          
+          // Clean the message content by removing the tool invocations marker
+          const cleanContent = message.content?.replace(/\n\n<!--TOOL_INVOCATIONS:[\s\S]+?-->\n/, '');
+          
+          // Update the message with tool invocations and clean content
+          setMessages(prevMessages => {
+            const updatedMessages = [...prevMessages];
+            const lastMessageIndex = updatedMessages.length - 1;
+            
+            if (lastMessageIndex >= 0 && updatedMessages[lastMessageIndex].id === message.id) {
+              updatedMessages[lastMessageIndex] = {
+                ...updatedMessages[lastMessageIndex],
+                content: cleanContent,
+                toolInvocations: toolInvocations
+              };
+            }
+            
+            return updatedMessages;
+          });
+        } catch (error) {
+          // Silent error handling
+        }
+      } else {
+        // No tool invocations, just update as normal
+        setMessages(prevMessages => {
+          return [...prevMessages];
+        });
+      }
       
       // Removed automatic TTS when in voice mode - voice interface handles its own responses
     },
     onError: (error) => {
-      console.error('[Chat Interface] Streaming error:', error);
       toast.error('Error receiving message from AI. Please try again.');
       // Force a refresh of UI state to prevent stale state
       setMessages(prevMessages => [...prevMessages]);
     }
   });
-
-  // Debug whenever messages change
-  useEffect(() => {
-    console.log('[Chat Debug] Messages updated:', messages.length);
-    messages.forEach((msg, i) => {
-      console.log(`[Chat Debug] Message ${i}: id=${msg.id || 'NO_ID'}, role=${msg.role}, content=${msg.content?.substring(0, 30) || 'empty'}...`);
-    });
-  }, [messages]);
 
   // Ensure all messages have IDs
   const messagesWithIds = useMemo(() => {
@@ -118,29 +134,21 @@ export function Chat({
       ...msg,
       id: msg.id || `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
     }));
-    console.log(`[Chat Debug] Processed ${result.length} messages with IDs`);
     return result;
   }, [messages]);
 
   // Helper status variables
   const status = isLoading ? 'streaming' : error ? 'error' : 'ready';
   
-  // Debug whenever status changes
-  useEffect(() => {
-    console.log(`[Chat Debug] Status changed to: ${status}`);
-  }, [status]);
-  
   // Force refresh thread messages when thread ID changes
   useEffect(() => {
     if (currentThreadId) {
       // Manually fetch the latest messages to ensure we have everything
-      console.log(`[Chat Debug] Thread ID changed, refreshing messages for ${currentThreadId}`);
       
       fetch(`/api/chat-interface?id=${currentThreadId}`)
         .then(res => res.json())
         .then(data => {
           if (data.messages && Array.isArray(data.messages)) {
-            console.log(`[Chat Debug] Fetched ${data.messages.length} messages from API`);
             setMessages(data.messages);
           }
         })
@@ -150,18 +158,16 @@ export function Chat({
     }
   }, [currentThreadId, setMessages]);
 
-  // Refs to the voice interfaces for TTS - only need Realtime now
-  const realtimeVoiceInterfaceRef = useRef<RealtimeVoiceInterfaceHandle>(null);
+  // Refs to the voice interfaces - using streamlined approach
+  const voiceInterfaceRef = useRef<any>(null);
 
   // Mode change handler
   function handleModeChange(mode: 'text' | 'voice') {
-    console.log("[Chat] Switching mode to:", mode);
     setCurrentMode(mode);
   }
 
   // Handle transcript from voice interface
   function handleTranscriptReceived(transcript: string, isFinal: boolean) {
-    console.log(`[Chat] Transcript received (final: ${isFinal}):`, transcript);
     
     if (isFinal && transcript.trim()) {
       // Create message and append to chat
@@ -176,7 +182,6 @@ export function Chat({
 
   // Handle LLM response for text-to-speech
   async function handleAppend(message: any) {
-    console.log('[Chat] Appending message:', message);
     
     try {
       // Ensure message has an ID before appending
@@ -186,13 +191,11 @@ export function Chat({
       
       // Track state before append
       const messageCountBefore = messages.length;
-      console.log(`[Chat Debug] Before append: ${messageCountBefore} messages, status=${status}`);
       
       // Add the message to the UI
       await append(message);
       
       // Track state after append
-      console.log(`[Chat Debug] After append: ${messages.length} messages, status=${status}`);
       
     } catch (err) {
       console.error('[Chat] Error appending message:', err);
@@ -207,7 +210,6 @@ export function Chat({
     if (!input.trim() && !attachments.length) return;
     
     try {
-      console.log(`[Chat Debug] Submitting message: ${input.substring(0, 30)}...`);
       
       const userMessage = {
         role: 'user',
@@ -235,7 +237,6 @@ export function Chat({
     const intervalId = setInterval(() => {
       if (isLoading) {
         // Force a re-render during streaming to ensure UI updates
-        console.log('[Chat Debug] Forcing UI refresh during streaming');
         setMessages(prevMessages => [...prevMessages]);
       }
     }, 100); // Check very frequently - every 100ms during streaming
@@ -246,10 +247,8 @@ export function Chat({
   // Add error recovery effect
   useEffect(() => {
     if (error) {
-      console.error('[Chat Debug] Detected error state, attempting recovery:', error);
       // After a brief delay, try to recover from error state
       const timeoutId = setTimeout(() => {
-        console.log('[Chat Debug] Attempting to refresh messages after error');
         setMessages(prevMessages => [...prevMessages]);
       }, 1000);
       
@@ -258,7 +257,7 @@ export function Chat({
   }, [error, setMessages]);
 
   return (
-    <div className="chat-interface-container flex flex-col min-w-0 h-dvh bg-white dark:bg-neutral-950">
+    <div className="chat-interface-container flex flex-col min-w-0 h-dvh bg-white dark:bg-black">
       <ChatHeader
         chatId={currentThreadId}
         selectedModelId={selectedChatModel}
@@ -319,12 +318,11 @@ export function Chat({
           </form>
         </>
       ) : (
-        // Voice interface - WebRTC Realtime API
-        <RealtimeVoiceInterface
+        // Voice interface - STT → AgentRuntime → TTS
+        <VoiceInterface
           chatbotId={chatbotId}
           welcomeMessage={welcomeMessage}
           onTranscriptReceived={handleTranscriptReceived}
-          ref={realtimeVoiceInterfaceRef}
           debug={false}
         />
       )}

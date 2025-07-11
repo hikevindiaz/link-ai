@@ -155,13 +155,13 @@ export default function DocPage({ params }: DocPageProps) {
                     <div className="space-y-4">
                         <h2 className="text-2xl font-bold">Getting Started</h2>
                         <div className="grid gap-4 md:grid-cols-2">
-                            <a href="/docs/introduction" className="group rounded-lg border p-4 hover:bg-muted">
+                            <a href="/docs/introduction" className="group rounded-xl border p-4 hover:bg-muted">
                                 <h3 className="font-medium">Introduction</h3>
                                 <p className="text-sm text-muted-foreground">
                                     Learn the basics of our platform.
                                 </p>
                             </a>
-                            <a href="/docs/installation" className="group rounded-lg border p-4 hover:bg-muted">
+                            <a href="/docs/installation" className="group rounded-xl border p-4 hover:bg-muted">
                                 <h3 className="font-medium">Installation</h3>
                                 <p className="text-sm text-muted-foreground">
                                     How to install and set up our product.

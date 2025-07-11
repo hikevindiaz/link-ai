@@ -53,7 +53,7 @@ function CodeSnippet({ code }: { code: string }) {
     <div className="relative">
       <div className="flex">
         <div className="relative flex-grow">
-          <pre className="relative text-sm sm:text-base bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+          <pre className="relative text-sm sm:text-base bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
             <code className="language-html break-all whitespace-pre-wrap">
               {code}
             </code>
@@ -63,7 +63,7 @@ function CodeSnippet({ code }: { code: string }) {
           <button
             onClick={copyToClipboard}
             className={cn(
-              "flex items-center justify-center h-10 w-10 rounded-lg border",
+              "flex items-center justify-center h-10 w-10 rounded-xl border",
               "transition-all duration-200",
               "hover:bg-neutral-100 dark:hover:bg-neutral-800",
               "border-neutral-200 dark:border-neutral-800",
@@ -390,7 +390,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
                           control={form.control}
                           name="chatHistoryEnabled"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4">
                               <div className="space-y-0.5">
                                 <FormLabel className="text-base">Chat History</FormLabel>
                                 <FormDescription>
@@ -510,7 +510,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
 
                         <div className="space-y-4">
                           <h3 className="text-sm font-medium">Chatbot Image</h3>
-                          <div className="flex justify-center rounded-lg border border-dashed border-neutral-300 px-6 py-10 dark:border-neutral-800">
+                          <div className="flex justify-center rounded-xl border border-dashed border-neutral-300 px-6 py-10 dark:border-neutral-800">
                             <div className="text-center">
                               <RiFileLine className="mx-auto h-12 w-12 text-neutral-400" />
                               <div className="mt-4 flex text-sm leading-6 text-neutral-500">
@@ -561,7 +561,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
                           control={form.control}
                           name="displayBranding"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4">
                               <div className="space-y-0.5">
                                 <FormLabel className="text-base">
                                   Link AI Branding Label
@@ -584,7 +584,7 @@ export function WidgetTab({ agent, onSave }: WidgetTabProps) {
                           control={form.control}
                           name="fileAttachmentEnabled"
                           render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                            <FormItem className="flex flex-row items-center justify-between rounded-xl border p-4">
                               <div className="space-y-0.5">
                                 <FormLabel className="text-base">
                                   Chatbot File Attachment

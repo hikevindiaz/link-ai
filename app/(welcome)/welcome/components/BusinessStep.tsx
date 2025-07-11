@@ -299,7 +299,7 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                                 field.onChange(updatedValue);
                               }}
                               className={cn(
-                                "relative flex items-center gap-3 rounded-lg border p-4 cursor-pointer transition-all",
+                                "relative flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition-all",
                                 isSelected
                                   ? "border-neutral-500 bg-neutral-50"
                                   : "border-neutral-200 hover:border-neutral-300"
@@ -366,7 +366,7 @@ export function BusinessStep({ initialValues, onNext, onPrev, isSubmitting = fal
                                 field.onChange(updatedValue);
                               }}
                               className={cn(
-                                "relative flex items-center gap-3 rounded-lg border p-4 cursor-pointer transition-all",
+                                "relative flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition-all",
                                 isSelected
                                   ? "border-neutral-500 bg-neutral-50"
                                   : "border-neutral-200 hover:border-neutral-300"

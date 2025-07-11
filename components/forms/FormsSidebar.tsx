@@ -3,7 +3,7 @@ import { Button } from "@/components/Button";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Divider } from "@/components/Divider";
-import { LoadingState } from "@/components/LoadingState";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RiMoreFill, RiAddLine, RiDeleteBinLine, RiSettings4Line } from "@remixicon/react";
 import { Form } from "@/hooks/useForms";
 import {
@@ -50,7 +50,7 @@ export function FormsSidebar({
     <div className={cn("w-80 border-r border-neutral-200 dark:border-neutral-800 flex flex-col", className)}>
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+          <h2 className="text-xl font-semibold text-black dark:text-white">
             Forms
           </h2>
           <Button
@@ -67,7 +67,24 @@ export function FormsSidebar({
       
       <div className="px-4 pb-4 flex-1 overflow-auto">
         {isLoading ? (
-          <LoadingState text="Loading forms..." />
+          <div className="grid grid-cols-1 gap-2 mt-1">
+            {[1, 2, 3, 4].map((item) => (
+              <div key={item} className="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+                <div className="flex items-center">
+                  <Skeleton className="h-8 w-8 rounded-full mr-3" />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center">
+                        <Skeleton className="h-4 w-20 mr-2" />
+                        <Skeleton className="h-5 w-12 rounded-full" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : forms.length > 0 ? (
           <div className="grid grid-cols-1 gap-2 mt-1">
             {forms.map((form) => (
@@ -75,7 +92,7 @@ export function FormsSidebar({
                 key={form.id} 
                 onClick={() => onSelectForm(form)}
                 className={cn(
-                  "group transition-all duration-200 cursor-pointer p-3 rounded-lg border relative",
+                  "group transition-all duration-200 cursor-pointer p-3 rounded-xl border relative",
                   "hover:bg-neutral-50 dark:hover:bg-neutral-900",
                   "hover:shadow-sm",
                   "bg-white dark:bg-black border-neutral-200 dark:border-neutral-800",
@@ -93,7 +110,7 @@ export function FormsSidebar({
                   <div className="ml-3 w-full overflow-hidden">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center max-w-[70%]">
-                        <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
+                        <div className="truncate text-sm font-medium text-black dark:text-white">
                           {form.name}
                         </div>
                         <div className="ml-2 flex-shrink-0">
@@ -159,7 +176,7 @@ export function FormsSidebar({
         ) : (
           <div className="flex h-full items-center justify-center py-8 text-center">
             <div className="flex flex-col items-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
                 No forms yet.
               </p>
               <Button 

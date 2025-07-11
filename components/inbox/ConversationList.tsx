@@ -1,6 +1,7 @@
 import { formatDistanceToNow } from "date-fns";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Conversation } from "@/types/inbox";
 import { getInitials, truncateText } from "@/types/inbox";
@@ -25,9 +26,24 @@ export function ConversationList({
   return (
     <div className="px-4 pb-4 flex-1 overflow-auto">
       {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-          <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">Loading conversations...</span>
+        <div className="grid grid-cols-1 gap-2 mt-1">
+          {[1, 2, 3, 4, 5].map((item) => (
+            <div key={item} className="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+              <div className="flex items-center">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="ml-3 flex-1">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="ml-2 h-4 w-8 rounded-full" />
+                    </div>
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <Skeleton className="mt-1 h-3 w-48" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : conversations.length > 0 ? (
         <div className="grid grid-cols-1 gap-2 mt-1">

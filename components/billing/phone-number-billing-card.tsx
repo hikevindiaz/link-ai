@@ -65,7 +65,7 @@ export function PhoneNumberBillingCard() {
       case 'suspended':
         return <Badge className="bg-yellow-100 text-yellow-800">Suspended</Badge>;
       case 'pending':
-        return <Badge className="bg-gray-100 text-gray-800">Pending</Badge>;
+        return <Badge className="bg-neutral-100 text-neutral-800">Pending</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -75,9 +75,9 @@ export function PhoneNumberBillingCard() {
     return (
       <Card className="p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-6 bg-neutral-200 rounded w-1/3 mb-4"></div>
+          <div className="h-4 bg-neutral-200 rounded w-2/3 mb-2"></div>
+          <div className="h-4 bg-neutral-200 rounded w-1/2"></div>
         </div>
       </Card>
     );
@@ -86,10 +86,10 @@ export function PhoneNumberBillingCard() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-semibold text-gray-900 dark:text-gray-50">
+        <h2 className="font-semibold text-neutral-900 dark:text-neutral-50">
           Phone Numbers
         </h2>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-500">
+        <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-500">
           Manage your phone numbers and their billing
         </p>
       </div>
@@ -97,7 +97,7 @@ export function PhoneNumberBillingCard() {
       {phoneNumbers.length === 0 ? (
         <Card className="p-6 text-center">
           <svg
-            className="mx-auto h-12 w-12 text-gray-400"
+            className="mx-auto h-12 w-12 text-neutral-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -109,10 +109,10 @@ export function PhoneNumberBillingCard() {
               d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
             />
           </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-gray-50">
+          <h3 className="mt-2 text-sm font-medium text-neutral-900 dark:text-neutral-50">
             No phone numbers
           </h3>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-neutral-500">
             Purchase phone numbers to enable voice and SMS capabilities
           </p>
           <Button
@@ -130,17 +130,17 @@ export function PhoneNumberBillingCard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-gray-900 dark:text-gray-50">
+                      <p className="font-medium text-neutral-900 dark:text-neutral-50">
                         {number.phoneNumber}
                       </p>
                       {getStatusBadge(number.status)}
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-neutral-500 mt-1">
                       {number.country} • ${number.monthlyPrice.toFixed(2)}/month
                       {number.agentName && ` • Assigned to ${number.agentName}`}
                     </p>
                     {number.nextBillingDate && (
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-neutral-400 mt-1">
                         Next billing: {new Date(number.nextBillingDate).toLocaleDateString()}
                       </p>
                     )}

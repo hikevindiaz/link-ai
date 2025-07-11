@@ -249,13 +249,13 @@ export async function handleCheckAvailability(params: any, calendarConfig: Calen
         });
         
         if (isBooked) {
-          // Find the next available slot after the requested time
+          // Find up to 3 available slots after the requested time
           const nextAvailableSlots = [];
           const searchEndTime = new Date(checkDate + 'T23:59:59');
           
           // Start searching from the requested time
-          for (let searchHour = hour; searchHour < 18; searchHour++) {
-            for (let searchMinute = (searchHour === hour ? minute : 0); searchMinute < 60; searchMinute += 30) {
+          for (let searchHour = hour; searchHour < 18 && nextAvailableSlots.length < 3; searchHour++) {
+            for (let searchMinute = (searchHour === hour ? minute : 0); searchMinute < 60 && nextAvailableSlots.length < 3; searchMinute += 30) {
               const searchSlotTime = new Date(checkDate + 'T00:00:00');
               searchSlotTime.setHours(searchHour, searchMinute, 0, 0);
               
@@ -282,23 +282,33 @@ export async function handleCheckAvailability(params: any, calendarConfig: Calen
                       timeZone: DEFAULT_TIMEZONE
                     })
                   });
-                  break; // Found the next available slot
                 }
               }
             }
-            if (nextAvailableSlots.length > 0) break; // Stop searching once we found one
           }
           
-          // If we found a next available slot on the same day
+          // If we found alternative slots on the same day
           if (nextAvailableSlots.length > 0) {
-            const nextSlot = nextAvailableSlots[0];
+            let alternativeMessage = `Sorry, **${friendlyTime}** on **${friendlyDate}** is not available.\n\n`;
+            
+            if (nextAvailableSlots.length === 1) {
+              alternativeMessage += `However, I have **${nextAvailableSlots[0].display}** available on the same day.\n\nWould you like to book this time instead?`;
+            } else {
+              alternativeMessage += `However, I have these alternative times available on the same day:\n\n`;
+              nextAvailableSlots.forEach(slot => {
+                alternativeMessage += `• ${slot.display}\n`;
+              });
+              alternativeMessage += `\nWhich time works best for you?`;
+            }
+            
             return JSON.stringify({
               success: false,
-              message: `Sorry, **${friendlyTime}** on **${friendlyDate}** is not available.\n\nHowever, I have **${nextSlot.display}** available on the same day.\n\nWould you like to book this time instead?`,
+              message: alternativeMessage,
               available: false,
-              nextAvailable: true,
-              nextSlotTime: nextSlot.time.toISOString(),
-              nextSlotDisplay: nextSlot.display
+              alternativeSlots: nextAvailableSlots.map(slot => ({
+                time: slot.time.toISOString(),
+                display: slot.display
+              }))
             });
           } else {
             // No slots available for the rest of the day
@@ -315,7 +325,7 @@ export async function handleCheckAvailability(params: any, calendarConfig: Calen
             message: `Great! **${friendlyTime}** on **${friendlyDate}** is available.\n\nDoes this time work for you?`,
             date: checkDate,
             slots: [friendlyTime],
-            nextSlotTime: slotTime.toISOString()
+            specificSlotTime: slotTime.toISOString()
           });
         }
       }
@@ -384,16 +394,29 @@ export async function handleCheckAvailability(params: any, calendarConfig: Calen
       });
     }
     
-    // Return only the first available slot
-    const nextSlot = slots[0];
+    // Return up to 3 available slots
+    const availableSlots = slots.slice(0, 3);
+    const slotDisplays = availableSlots.map(slot => slot.display);
+    
+    let message = '';
+    if (availableSlots.length === 1) {
+      message = `I have **${slotDisplays[0]}** available on **${friendlyDate}**.\n\nDoes this time work for you?`;
+    } else if (availableSlots.length === 2) {
+      message = `I have these times available on **${friendlyDate}**:\n\n• ${slotDisplays[0]}\n• ${slotDisplays[1]}\n\nWhich time works best for you?`;
+    } else {
+      message = `I have these times available on **${friendlyDate}**:\n\n• ${slotDisplays[0]}\n• ${slotDisplays[1]}\n• ${slotDisplays[2]}\n\nWhich time works best for you? (I have ${slots.length - 3} more slots available if needed)`;
+    }
     
     return JSON.stringify({
       success: true,
       available: true,
-      message: `Perfect! I have **${nextSlot.display}** available on **${friendlyDate}**.\n\nDoes this time work for you?`,
+      message: message,
       date: checkDate,
-      slots: [nextSlot.display],
-      nextSlotTime: nextSlot.time.toISOString()
+      slots: slotDisplays,
+      allAvailableSlots: availableSlots.map(slot => ({
+        time: slot.time.toISOString(),
+        display: slot.display
+      }))
     });
     
   } catch (error) {

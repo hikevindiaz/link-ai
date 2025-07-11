@@ -254,7 +254,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
           <DrawerBody className="text-center py-8">
             <div className="mb-4">
               <Icons.warning className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-neutral-600 dark:text-neutral-400">
                 You need an active subscription to purchase phone numbers.
               </p>
             </div>
@@ -283,11 +283,11 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
           <DrawerBody className="overflow-auto">
             {isCheckingSubscription || isLoadingCountries ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-neutral-600 mb-4"></div>
-                <h3 className="text-base font-medium text-gray-900 dark:text-gray-50 mb-2">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600 mb-4"></div>
+                <h3 className="text-base font-medium text-neutral-900 dark:text-neutral-50 mb-2">
                   {isCheckingSubscription ? 'Verifying subscription' : 'Loading countries'}
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center">
                   {isCheckingSubscription 
                     ? 'Please wait while we check your subscription status.'
                     : 'Please wait while we load available countries.'
@@ -296,7 +296,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
               </div>
             ) : (
               <>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
                   Select your country to start searching.
                 </p>
                 <div className="mt-4">
@@ -309,8 +309,8 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
                     <SelectContent>
                       {isLoadingCountries ? (
                         <div className="flex items-center justify-center py-4">
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-neutral-600 mr-2"></div>
-                          <span className="text-sm text-gray-500">Loading countries...</span>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600 mr-2"></div>
+                          <span className="text-sm text-neutral-500">Loading countries...</span>
                         </div>
                       ) : Array.isArray(countries) && countries.length > 0 ? (
                         countries.map((country) => (
@@ -323,7 +323,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
                         ))
                       ) : (
                         <div className="flex items-center justify-center py-4">
-                          <span className="text-sm text-gray-500">No countries available</span>
+                          <span className="text-sm text-neutral-500">No countries available</span>
                         </div>
                       )}
                     </SelectContent>
@@ -361,7 +361,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
                 )}
                 
                 {selectedNumber && pricingBreakdown && (
-                  <div className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-900/20 rounded-lg border border-neutral-200 dark:border-neutral-800">
+                  <div className="mt-4 p-3 bg-neutral-50 dark:bg-neutral-900/20 rounded-xl border border-neutral-200 dark:border-neutral-800">
                     <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-2">Pricing</h4>
                     <div className="space-y-1 text-xs">
                       <div className="flex justify-between font-medium text-neutral-900 dark:text-neutral-100">
@@ -377,14 +377,14 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
                 
                 {selectedNumber && (
                   <div className="mt-4">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                       Assign to Agent (Optional)
                     </label>
                     <div className="mt-1">
                       {isLoadingAgents ? (
                         <div className="flex items-center py-2">
                           <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                          <span className="text-sm text-gray-500">Loading agents...</span>
+                          <span className="text-sm text-neutral-500">Loading agents...</span>
                         </div>
                       ) : (
                         <Select onValueChange={handleSelectAgent} value={selectedAgentId || 'none'}>
@@ -402,7 +402,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
                         </Select>
                       )}
                     </div>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                       If selected, this phone number will be assigned to the agent for handling calls and messages.
                     </p>
                   </div>
@@ -431,7 +431,7 @@ const BuyPhoneNumberDrawer: React.FC<BuyPhoneNumberDrawerProps> = ({
               </Button>
               <div className="h-0.5" />
               {selectedNumber && subscriptionInfo?.renewalDate && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">
                   Added to your subscription. Next billing: {formatDate(subscriptionInfo.renewalDate)}
                 </p>
               )}

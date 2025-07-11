@@ -214,12 +214,12 @@ export function CatalogTab({ source, onSave }: CatalogTabProps) {
   };
 
   return (
-    <Card className="p-6">
+          <Card className="px-3 py-2">
       <div className="space-y-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <RiListCheck2 className="h-5 w-5 text-neutral-500" />
-            <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
+                              <h2 className="text-lg font-semibold text-black dark:text-white">
               Product Catalog
             </h2>
           </div>
@@ -238,7 +238,7 @@ export function CatalogTab({ source, onSave }: CatalogTabProps) {
             <div className="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4 border border-neutral-200 dark:border-neutral-800">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
-                  <h3 className="font-medium text-neutral-900 dark:text-neutral-50">
+                  <h3 className="font-semibold text-black dark:text-white">
                     Catalog Instructions
                   </h3>
                   <TooltipProvider>

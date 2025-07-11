@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FileSearch, FileCheck2, Trash2, User as UserIcon, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/Button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Conversation, Message, getInitials } from "@/types/inbox";
 import { ThreadHeader } from "./ThreadHeader";
 import { ThreadMessage } from "./ThreadMessage";
@@ -291,10 +292,41 @@ export function ChatThread({ conversation }: { conversation: Conversation }) {
       {/* Conversation area */}
       <div className="p-4 flex-1 overflow-auto flex flex-col space-y-4">
         {isLoadingThread ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="flex flex-col items-center">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600 mb-2"></div>
-              <span className="text-sm text-neutral-600 dark:text-neutral-400">Loading conversation...</span>
+          <div className="space-y-4">
+            {/* Welcome message skeleton */}
+            <div className="flex items-start space-x-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="flex-1">
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </div>
+            
+            {/* User message skeleton */}
+            <div className="flex items-start space-x-3 justify-end">
+              <div className="flex-1 text-right">
+                <Skeleton className="h-4 w-1/2 ml-auto mb-2" />
+                <Skeleton className="h-4 w-1/3 ml-auto" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-full" />
+            </div>
+            
+            {/* Assistant message skeleton */}
+            <div className="flex items-start space-x-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="flex-1">
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-5/6 mb-2" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </div>
+            
+            {/* User message skeleton */}
+            <div className="flex items-start space-x-3 justify-end">
+              <div className="flex-1 text-right">
+                <Skeleton className="h-4 w-2/5 ml-auto" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-full" />
             </div>
           </div>
         ) : (

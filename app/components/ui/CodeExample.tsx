@@ -119,7 +119,7 @@ export default function CodeExample() {
             key={item.name}
             className="col-span-full sm:col-span-2 lg:col-span-1"
           >
-            <div className="w-fit rounded-lg p-2 shadow-md shadow-neutral-400/30 ring-1 ring-black/5 dark:shadow-neutral-600/30 dark:ring-white/5">
+            <div className="w-fit rounded-xl p-2 shadow-md shadow-neutral-400/30 ring-1 ring-black/5 dark:shadow-neutral-600/30 dark:ring-white/5">
               <item.icon
                 aria-hidden="true"
                 className="size-6 text-neutral-600 dark:text-neutral-400"

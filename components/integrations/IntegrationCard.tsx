@@ -46,7 +46,7 @@ const IntegrationCard: React.FC<IntegrationCardProps> = ({
         </div>
 
         {/* Description */}
-        <p className="integration-description text-sm text-gray-300 mt-2">
+        <p className="integration-description text-sm text-neutral-300 mt-2">
           {description}
         </p>
 
@@ -64,7 +64,7 @@ const IntegrationCard: React.FC<IntegrationCardProps> = ({
         <div className="modal-overlay fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="modal-content bg-white p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-xl font-bold mb-4">Configure {name}</h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-neutral-600 mb-4">
               Adjust the settings for the {name} integration here.
             </p>
 
@@ -84,7 +84,7 @@ const IntegrationCard: React.FC<IntegrationCardProps> = ({
             {/* Actions */}
             <div className="flex justify-end space-x-2">
               <button
-                className="cancel-btn bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-xl"
+                className="cancel-btn bg-neutral-200 hover:bg-neutral-300 text-neutral-700 px-4 py-2 rounded-xl"
                 onClick={closeModal}
               >
                 Cancel

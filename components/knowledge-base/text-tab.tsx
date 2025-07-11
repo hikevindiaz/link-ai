@@ -563,12 +563,12 @@ export function TextContentTab({ source }: TextContentTabProps) {
   };
 
   return (
-    <Card className="p-6">
+          <Card className="px-3 py-2">
       <div className="space-y-8">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <FileText className="h-5 w-5 text-neutral-500" />
-            <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
+                              <h2 className="text-lg font-semibold text-black dark:text-white">
               Add Text Content
             </h2>
           </div>

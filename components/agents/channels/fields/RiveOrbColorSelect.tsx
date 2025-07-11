@@ -30,7 +30,7 @@ export const RiveOrbColorSelect = ({
         name="riveOrbColor"
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="text-sm font-medium text-gray-900 dark:text-gray-50">
+            <FormLabel className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
               Voice Orb Color
             </FormLabel>
             <Select
@@ -74,7 +74,7 @@ export const RiveOrbColorSelect = ({
                   <SelectItem key={option.value} value={option.value.toString()}>
                     <div className="flex items-center gap-2">
                       <div 
-                        className={`h-4 w-4 rounded-full ${option.name === "White" ? "border border-gray-200" : ""}`}
+                        className={`h-4 w-4 rounded-full ${option.name === "White" ? "border border-neutral-200" : ""}`}
                         style={{ backgroundColor: riveColorToHex[option.value] }}
                       ></div>
                       <span>{option.name}</span>
@@ -83,7 +83,7 @@ export const RiveOrbColorSelect = ({
                 ))}
               </SelectContent>
             </Select>
-            <FormDescription className="text-xs text-gray-500 dark:text-gray-500">
+            <FormDescription className="text-xs text-neutral-500 dark:text-neutral-500">
               This color will be used for the voice orb visualization.
             </FormDescription>
           </FormItem>

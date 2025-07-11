@@ -18,7 +18,7 @@ export function ChatFAQ({ faqs, onSelectQuestion }: ChatFAQProps) {
           <button
             key={index}
             onClick={() => onSelectQuestion(faq.question)}
-            className="flex-shrink-0 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-800 transition-colors whitespace-nowrap"
+            className="flex-shrink-0 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 rounded-full text-sm text-neutral-800 transition-colors whitespace-nowrap"
           >
             {faq.question}
           </button>

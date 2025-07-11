@@ -32,7 +32,7 @@ export function DashboardLayoutSkeleton({
             {Array.from({ length: itemCount }).map((_, i) => (
               <div 
                 key={i}
-                className="p-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black"
+                className="p-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black"
               >
                 <div className="flex items-start space-x-3">
                   <Skeleton className="h-8 w-8 rounded-full bg-neutral-200 dark:bg-neutral-700 flex-shrink-0" />

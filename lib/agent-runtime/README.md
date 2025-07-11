@@ -33,6 +33,39 @@ The Unified Agent Runtime is a centralized system that powers all agent/chatbot 
    - Custom tool registration
    - Parallel tool execution
 
+## Conditional Tool Prompts
+
+The agent runtime now supports conditional tool prompts to optimize token usage. Each tool can define its own system prompt that is only included when the tool is enabled for an agent.
+
+### How it Works
+
+1. **Tool Definition**: Each tool includes an optional `systemPrompt` field
+2. **Dynamic Registration**: Tools are registered based on agent configuration
+3. **Prompt Assembly**: Tool prompts are dynamically added to the system prompt
+
+### Benefits
+
+- **Reduced Token Usage**: Only include prompts for enabled tools
+- **Better Scalability**: Add new tools without bloating the system prompt
+- **Cleaner Architecture**: Each tool is self-contained with its instructions
+
+### Example
+
+```typescript
+// Tool definition with system prompt
+export const weatherTool: AgentTool = {
+  id: 'weather',
+  name: 'getWeather',
+  description: 'Get current weather information',
+  parameters: { /* ... */ },
+  systemPrompt: `# Weather Tool Available
+I have access to the getWeather tool for current weather information...`,
+  handler: async (args, context) => { /* ... */ }
+};
+
+// Only agents with weather enabled will include the weather prompt
+```
+
 ## Architecture
 
 ```

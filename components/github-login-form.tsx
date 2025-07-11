@@ -26,7 +26,7 @@ export default function GithubLoginForm() {
       <button
         disabled={loading}
         className={`${loading
-          ? "cursor-not-allowed border-gray-200 bg-gray-100"
+          ? "cursor-not-allowed border-neutral-200 bg-neutral-100"
           : "border-black bg-black text-white hover:bg-zinc-100 hover:text-black"
           } flex h-10 w-full items-center justify-center rounded-xl border text-sm transition-all focus:outline-none`}
       >

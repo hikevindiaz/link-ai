@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { OPENAI_VOICES, OpenAIVoice } from '@/app/api/openai/tts/route';
 
 // GET /api/user/voices - Get all voices for the current user
 export async function GET() {
@@ -35,7 +34,7 @@ export async function GET() {
     const voices = (userVoices?.voices || []).map(voice => ({
       id: voice.id,
       name: voice.name,
-      openaiVoice: voice.openaiVoice,
+      elevenLabsVoiceId: voice.elevenLabsVoiceId,
       description: voice.description,
       language: voice.language,
       isDefault: voice.isDefault,
@@ -49,7 +48,7 @@ export async function GET() {
   }
 }
 
-// POST /api/user/voices - Create a new custom voice
+// POST /api/user/voices - Add a new ElevenLabs voice to user's collection
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -67,14 +66,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     
-    const { name, openaiVoice, description, language, isDefault } = await request.json();
+    const { name, elevenLabsVoiceId, description, language, isDefault } = await request.json();
     
     if (!name?.trim()) {
       return NextResponse.json({ error: 'Voice name is required' }, { status: 400 });
     }
     
-    if (!openaiVoice || !OPENAI_VOICES.includes(openaiVoice)) {
-      return NextResponse.json({ error: 'Valid OpenAI voice is required' }, { status: 400 });
+    if (!elevenLabsVoiceId?.trim()) {
+      return NextResponse.json({ error: 'ElevenLabs voice ID is required' }, { status: 400 });
     }
     
     // Use a transaction to check and create
@@ -89,6 +88,18 @@ export async function POST(request: Request) {
       
       if (existingVoice) {
         throw new Error('Voice name already exists');
+      }
+      
+      // Check if this ElevenLabs voice is already added
+      const existingElevenLabsVoice = await tx.userVoice.findFirst({
+        where: {
+          userId: user.id,
+          elevenLabsVoiceId: elevenLabsVoiceId.trim()
+        }
+      });
+      
+      if (existingElevenLabsVoice) {
+        throw new Error('This voice is already in your collection');
       }
       
       // If this is being set as default, unset any existing default
@@ -109,7 +120,7 @@ export async function POST(request: Request) {
         data: {
           userId: user.id,
           name: name.trim(),
-          openaiVoice: openaiVoice as OpenAIVoice,
+          elevenLabsVoiceId: elevenLabsVoiceId.trim(),
           description: description?.trim() || null,
           language: language?.trim() || null,
           isDefault: isDefault || false,
@@ -117,21 +128,21 @@ export async function POST(request: Request) {
         }
       });
     }).catch(err => {
-      if (err.message === 'Voice name already exists') {
+      if (err.message === 'Voice name already exists' || err.message === 'This voice is already in your collection') {
         return null;
       }
       throw err;
     });
     
     if (!userVoice) {
-      return NextResponse.json({ error: 'Voice name already exists' }, { status: 409 });
+      return NextResponse.json({ error: 'Voice name already exists or voice is already in your collection' }, { status: 409 });
     }
     
     return NextResponse.json({
       voice: {
         id: userVoice.id,
         name: userVoice.name,
-        openaiVoice: userVoice.openaiVoice,
+        elevenLabsVoiceId: userVoice.elevenLabsVoiceId,
         description: userVoice.description,
         language: userVoice.language,
         isDefault: userVoice.isDefault,
@@ -139,9 +150,9 @@ export async function POST(request: Request) {
       }
     });
   } catch (error) {
-    console.error('Error creating voice:', error);
+    console.error('Error adding voice:', error);
     return NextResponse.json({ 
-      error: 'Failed to create voice',
+      error: 'Failed to add voice',
       message: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }

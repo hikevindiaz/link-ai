@@ -26,7 +26,7 @@ export function DeleteConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <div className="absolute right-0 top-0 pr-3 pt-3">
-          <DialogClose className="rounded-tremor-small p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+          <DialogClose className="rounded-tremor-small p-2 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700">
             <span className="sr-only">Close</span>
             <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -34,10 +34,10 @@ export function DeleteConfirmDialog({
           </DialogClose>
         </div>
         <DialogHeader>
-          <DialogTitle className="font-semibold text-gray-900 dark:text-gray-50">
+          <DialogTitle className="font-semibold text-neutral-900 dark:text-neutral-50">
             Delete Conversation
           </DialogTitle>
-          <DialogDescription className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+          <DialogDescription className="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400">
             This conversation and all its messages will be permanently deleted. This action cannot be undone.
           </DialogDescription>
         </DialogHeader>

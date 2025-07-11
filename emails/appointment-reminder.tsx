@@ -108,10 +108,10 @@ export default function AppointmentReminderEmail({
             <Tailwind>
                 <Head />
                 <Preview>{previewText}</Preview>
-                <Body className="bg-gray-100 font-sans py-[40px]">
-                    <Container className="bg-black mx-auto rounded-[8px] max-w-[600px] overflow-hidden border border-gray-800">
+                <Body className="bg-neutral-100 font-sans py-[40px]">
+                    <Container className="bg-black mx-auto rounded-[8px] max-w-[600px] overflow-hidden border border-neutral-800">
                         {/* Top Powered By Frame */}
-                        <Section className="bg-black text-center py-[8px] px-[20px] border-b border-gray-800">
+                        <Section className="bg-black text-center py-[8px] px-[20px] border-b border-neutral-800">
                             <Text className="text-[12px] text-white m-0">
                                 Powered by{' '}
                                 <Link
@@ -165,7 +165,7 @@ export default function AppointmentReminderEmail({
                                 
                                 <Row className="mb-[12px]">
                                     <Column>
-                                        <Text className="text-[14px] text-gray-400 m-0 font-semibold">Service:</Text>
+                                        <Text className="text-[14px] text-neutral-400 m-0 font-semibold">Service:</Text>
                                     </Column>
                                     <Column>
                                         <Text className="text-[14px] text-white m-0 font-medium">{appointmentTitle}</Text>
@@ -174,7 +174,7 @@ export default function AppointmentReminderEmail({
 
                                 <Row className="mb-[12px]">
                                     <Column>
-                                        <Text className="text-[14px] text-gray-400 m-0 font-semibold">Date & Time:</Text>
+                                        <Text className="text-[14px] text-neutral-400 m-0 font-semibold">Date & Time:</Text>
                                     </Column>
                                     <Column>
                                         <Text className="text-[14px] text-amber-300 m-0 font-bold">{appointmentDate} at {appointmentTime}</Text>
@@ -185,7 +185,7 @@ export default function AppointmentReminderEmail({
                                 {chatbotName && (
                                     <Row className="mb-[12px]">
                                         <Column>
-                                            <Text className="text-[14px] text-gray-400 m-0 font-semibold">AI Agent:</Text>
+                                            <Text className="text-[14px] text-neutral-400 m-0 font-semibold">AI Agent:</Text>
                                         </Column>
                                         <Column>
                                             <Text className="text-[14px] text-white m-0">{chatbotName}</Text>
@@ -196,7 +196,7 @@ export default function AppointmentReminderEmail({
                                 {appointmentLocation && (
                                     <Row className="mb-[12px]">
                                         <Column>
-                                            <Text className="text-[14px] text-gray-400 m-0 font-semibold">Location:</Text>
+                                            <Text className="text-[14px] text-neutral-400 m-0 font-semibold">Location:</Text>
                                         </Column>
                                         <Column>
                                             <Text className="text-[14px] text-white m-0">{appointmentLocation}</Text>
@@ -207,7 +207,7 @@ export default function AppointmentReminderEmail({
                                 {appointmentNotes && (
                                     <Row>
                                         <Column>
-                                            <Text className="text-[14px] text-gray-400 m-0 font-semibold">Notes:</Text>
+                                            <Text className="text-[14px] text-neutral-400 m-0 font-semibold">Notes:</Text>
                                         </Column>
                                         <Column>
                                             <Text className="text-[14px] text-white m-0">{appointmentNotes}</Text>
@@ -217,11 +217,11 @@ export default function AppointmentReminderEmail({
                             </Section>
 
                             {/* Booking ID Reference */}
-                            <Section className="bg-gray-900 p-[20px] rounded-[8px] mb-[32px] border border-gray-800">
+                            <Section className="bg-neutral-900 p-[20px] rounded-[8px] mb-[32px] border border-neutral-800">
                                 <Text className="text-[14px] text-white mb-[4px] m-0">
                                     <strong>Booking ID:</strong> {finalBookingId}
                                 </Text>
-                                <Text className="text-[12px] text-gray-400 m-0">
+                                <Text className="text-[12px] text-neutral-400 m-0">
                                     Reference this ID if you need to make changes
                                 </Text>
                             </Section>
@@ -234,7 +234,7 @@ export default function AppointmentReminderEmail({
                                 
                                 <Row className="mb-[12px]">
                                     <Column>
-                                        <Text className="text-[14px] text-gray-400 m-0 font-semibold">Name:</Text>
+                                        <Text className="text-[14px] text-neutral-400 m-0 font-semibold">Name:</Text>
                                     </Column>
                                     <Column>
                                         <Text className="text-[14px] text-white m-0">{clientName}</Text>
@@ -243,7 +243,7 @@ export default function AppointmentReminderEmail({
 
                                 <Row className="mb-[12px]">
                                     <Column>
-                                        <Text className="text-[14px] text-gray-400 m-0 font-semibold">Email:</Text>
+                                        <Text className="text-[14px] text-neutral-400 m-0 font-semibold">Email:</Text>
                                     </Column>
                                     <Column>
                                         <Text className="text-[14px] text-white m-0">{clientEmail}</Text>
@@ -253,7 +253,7 @@ export default function AppointmentReminderEmail({
                                 {clientPhoneNumber && (
                                     <Row>
                                         <Column>
-                                            <Text className="text-[14px] text-gray-400 m-0 font-semibold">Phone:</Text>
+                                            <Text className="text-[14px] text-neutral-400 m-0 font-semibold">Phone:</Text>
                                         </Column>
                                         <Column>
                                             <Text className="text-[14px] text-white m-0">{clientPhoneNumber}</Text>
@@ -275,7 +275,7 @@ export default function AppointmentReminderEmail({
                                     📅 Add to Calendar
                                 </Button>
                                 
-                                <Text className="text-[12px] text-gray-400 mt-[12px] m-0">
+                                <Text className="text-[12px] text-neutral-400 mt-[12px] m-0">
                                     Ensure you don't miss your appointment by adding it to your calendar
                                 </Text>
                             </Section>
@@ -297,16 +297,16 @@ export default function AppointmentReminderEmail({
                             </Section>
 
                             {/* Instructions */}
-                            <Section className="bg-gray-900 border-l-[4px] border-gray-600 p-[20px] mb-[32px] rounded-[4px]">
+                            <Section className="bg-neutral-900 border-l-[4px] border-neutral-600 p-[20px] mb-[32px] rounded-[4px]">
                                 <Heading className="text-[16px] font-bold text-white mb-[12px] m-0">
                                     Need to Make Changes?
                                 </Heading>
-                                <Text className="text-[14px] text-gray-300 m-0">
+                                <Text className="text-[14px] text-neutral-300 m-0">
                                     To reschedule, cancel, or modify your appointment, please contact us with your booking ID: <strong className="text-white">{finalBookingId}</strong>
                                 </Text>
                             </Section>
 
-                            <Hr className="border-gray-700 my-[32px]" />
+                            <Hr className="border-neutral-700 my-[32px]" />
 
                             {/* Footer */}
                             <Section className="text-center">
@@ -314,14 +314,14 @@ export default function AppointmentReminderEmail({
                                     {businessName || calendarOwnerName}
                                 </Text>
                                 {businessWebsite && (
-                                    <Text className="text-[12px] text-gray-400 mb-[4px] m-0">
-                                        <Link href={businessWebsite} className="text-gray-400 no-underline">
+                                    <Text className="text-[12px] text-neutral-400 mb-[4px] m-0">
+                                        <Link href={businessWebsite} className="text-neutral-400 no-underline">
                                             {businessWebsite}
                                         </Link>
                                     </Text>
                                 )}
                                 {calendarOwnerEmail && (
-                                    <Text className="text-[12px] text-gray-400 mb-[4px] m-0">
+                                    <Text className="text-[12px] text-neutral-400 mb-[4px] m-0">
                                         Email: {calendarOwnerEmail}
                                     </Text>
                                 )}

@@ -48,7 +48,7 @@ export function ChatHeader({
                 onClick={handleModeToggle}
                 variant="ghost"
                 size="icon" 
-                className="size-8 rounded-sm text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-white"
+                className="size-8 rounded-sm text-neutral-700 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-white"
               >
                 {currentMode === 'text' ? <RiVoiceAiLine className="size-5" /> : <RiChatAiLine className="size-5" />}
                 <span className="sr-only">Switch to {currentMode === 'text' ? 'Voice' : 'Text'} Mode</span>
@@ -62,7 +62,7 @@ export function ChatHeader({
         
         <div className="flex-1 text-center overflow-hidden whitespace-nowrap text-ellipsis">
           {chatTitle && (
-            <span className="text-base font-semibold text-gray-900 dark:text-gray-50">
+            <span className="text-base font-semibold text-neutral-900 dark:text-neutral-50">
               {chatTitle}
             </span>
           )}
@@ -72,7 +72,7 @@ export function ChatHeader({
           onClick={handleNewChat}
           variant="outline" 
           size="icon" 
-          className="size-8 rounded-sm border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+          className="size-8 rounded-sm border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
         >
           <PlusIcon className="size-4" />
           <span className="sr-only">New Chat</span>

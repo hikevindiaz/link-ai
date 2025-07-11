@@ -1,406 +1,232 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import twilio from 'twilio';
+import { db as prisma } from '@/lib/db';
 import { logger } from '@/lib/logger';
-import { storeCallConfig, getVoiceSettings } from '@/lib/twilio/call-config';
+import { RoomServiceClient, AccessToken } from 'livekit-server-sdk';
 
-// Verify Twilio webhook signature
-const validateTwilioRequest = (req: NextRequest, body: FormData, authToken?: string): boolean => {
-  // Allow bypassing signature validation for debugging (ONLY use temporarily!)
-  if (process.env.TWILIO_SIGNATURE_VALIDATION === 'disabled') {
-    console.warn('[Twilio Validation] WARNING: Signature validation is DISABLED - this should only be used for debugging!');
-    return true;
-  }
-  
-  // In production, validate signature using Twilio's validateRequest function
-  if (process.env.NODE_ENV === 'production') {
-    try {
-      const twilioSignature = req.headers.get('x-twilio-signature');
-      const url = req.url;
-      
-      console.log('[Twilio Validation] Starting validation');
-      console.log('[Twilio Validation] Request URL:', url);
-      console.log('[Twilio Validation] Twilio Signature:', twilioSignature ? 'Present' : 'Missing');
-      
-      // Use provided auth token or fall back to environment variable
-      const validationToken = authToken || process.env.TWILIO_AUTH_TOKEN;
-      console.log('[Twilio Validation] Using auth token:', authToken ? 'Phone-specific token' : 'Default environment token');
-      
-      if (!twilioSignature || !validationToken) {
-        console.error('Missing Twilio signature or auth token');
-        return false;
-      }
-      
-      // Convert FormData to plain object for validation
-      const params: Record<string, string> = {};
-      body.forEach((value, key) => {
-        params[key] = value.toString();
-      });
-      
-      console.log('[Twilio Validation] Form params:', Object.keys(params).join(', '));
-      
-      // Try multiple URL variations for validation
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dashboard.getlinkai.com';
-      const urlVariations = [
-        url, // Original URL
-        url.split('?')[0], // Without query params
-        `${baseUrl}/api/twilio/voice`, // Base configured URL
-        `${baseUrl}/api/twilio/voice/`, // With trailing slash
-        `${baseUrl.replace('https://', 'http://')}/api/twilio/voice`, // HTTP version
-        `${baseUrl.replace('https://', 'https://www.')}/api/twilio/voice`, // With www
-      ];
-      
-      // Remove duplicates
-      const uniqueUrls = [...new Set(urlVariations)];
-      
-      // Log what we're about to test
-      console.log('[Twilio Validation] Base URL from env:', baseUrl);
-      
-      console.log('[Twilio Validation] Trying URL variations:', uniqueUrls.map(u => u.split('?')[0] + (u.includes('?') ? '?...' : '')));
-      
-      // Log the actual signature for debugging (first 10 chars only for security)
-      console.log('[Twilio Validation] Signature preview:', twilioSignature?.substring(0, 10) + '...');
-      
-      for (const testUrl of uniqueUrls) {
-        const isValid = twilio.validateRequest(
-          validationToken,
-          twilioSignature,
-          testUrl,
-          params
-        );
-        
-        console.log(`[Twilio Validation] Testing URL: ${testUrl} - Result: ${isValid}`);
-        
-        if (isValid) {
-          console.log('[Twilio Validation] Validation succeeded with URL:', testUrl);
-          return true;
-        }
-      }
-      
-      console.error('[Twilio Validation] All validation attempts failed');
-      console.error('[Twilio Validation] Expected signature for:', {
-        url: url.split('?')[0],
-        paramCount: Object.keys(params).length,
-        authTokenLength: validationToken?.length
-      });
-      
-      return false;
-    } catch (error) {
-      console.error('Error validating Twilio request:', error);
-      return false;
-    }
-  }
-  
-  // Skip validation in development
-  return true;
-};
+// Environment variables
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN!;
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID!;
+const LIVEKIT_URL = process.env.LIVEKIT_URL!;
+const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY!;
+const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET!;
+
+// Initialize services
+const roomService = new RoomServiceClient(LIVEKIT_URL, LIVEKIT_API_KEY, LIVEKIT_API_SECRET);
 
 // Twilio webhook for handling incoming voice calls
 export async function POST(req: NextRequest) {
-  logger.info('Voice webhook called', {}, 'twilio-voice');
-  
-  // Log environment check
-  console.log('[Environment Check] NODE_ENV:', process.env.NODE_ENV);
-  console.log('[Environment Check] TWILIO_AUTH_TOKEN:', process.env.TWILIO_AUTH_TOKEN ? 'Set' : 'Not set');
-  console.log('[Environment Check] NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+  logger.info('📞 Incoming voice call webhook', {}, 'twilio-voice');
   
   try {
     // Parse the request body from Twilio (form data)
     const formData = await req.formData();
     
-    // Log the form data before validation
+    // Extract Twilio data
     const twilioData: Record<string, string> = {};
     formData.forEach((value, key) => {
       twilioData[key] = value.toString();
     });
-    logger.debug('Received form data before validation', twilioData, 'twilio-voice');
     
-    // Extract the "To" number to look up auth token for subaccounts
-    const toNumber = twilioData.To;
-    let phoneNumberAuthToken: string | undefined;
+    const { CallSid, From, To } = twilioData;
+    logger.info('📋 Call details', { CallSid, From, To }, 'twilio-voice');
     
-    if (toNumber) {
-      console.log('[Validation] Looking up phone number:', toNumber);
-      const phoneNumberRecord = await prisma.twilioPhoneNumber.findFirst({
-        where: { phoneNumber: toNumber }
-      });
-      
-      if (phoneNumberRecord) {
-        console.log('[Validation] Found phone number in database');
-        
-        // Use subaccount auth token if available
-        if (phoneNumberRecord.subaccountAuthToken) {
-          phoneNumberAuthToken = phoneNumberRecord.subaccountAuthToken;
-          console.log('[Validation] Using subaccount auth token for validation');
-        } else {
-          console.log('[Validation] No subaccount auth token found, using main account token');
-        }
-      } else {
-        console.log('[Validation] Phone number not found in database');
+    if (!To) {
+      logger.error('❌ No "To" number in webhook data', twilioData, 'twilio-voice');
+      return createErrorTwimlResponse('Invalid call data');
+    }
+
+    // Look up phone number and agent configuration
+    const phoneNumberRecord = await prisma.twilioPhoneNumber.findFirst({
+      where: { phoneNumber: To },
+      include: {
+        chatbot: {
+          include: {
+            model: true
+          }
+        },
+        user: true
+      }
+    });
+
+    if (!phoneNumberRecord) {
+      logger.warn('⚠️  Phone number not found', { phoneNumber: To }, 'twilio-voice');
+      return createErrorTwimlResponse('This number is not configured');
+    }
+
+    // Validate webhook signature
+    const signature = req.headers.get('x-twilio-signature');
+    const url = req.url;
+    const authToken = phoneNumberRecord.subaccountAuthToken || TWILIO_AUTH_TOKEN;
+    
+    if (signature && url) {
+      const isValid = twilio.validateRequest(authToken, signature, url, twilioData);
+      if (!isValid) {
+        logger.error('❌ Invalid Twilio signature', { CallSid }, 'twilio-voice');
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     }
-    
-    // Validate the request is from Twilio using the appropriate auth token
-    if (!validateTwilioRequest(req, formData, phoneNumberAuthToken)) {
-      logger.error('Invalid Twilio request', twilioData, 'twilio-voice');
-      return NextResponse.json(
-        { error: 'Unauthorized request' },
-        { status: 403 }
-      );
-    }
-    
-    // Extract relevant fields from the Twilio request
-    const {
-      From: from,
-      To: to,
-      CallSid: callSid
-    } = twilioData;
-    
-    // Extract agentId from URL query parameters
-    const url = new URL(req.url);
-    const agentId = url.searchParams.get('agentId');
-    
-    // If no agent ID, try to look up by phone number
-    let agent;
-    
-    if (agentId) {
-      logger.info(`Looking up agent with ID: ${agentId}`, {}, 'twilio-voice');
-      agent = await prisma.chatbot.findUnique({
-        where: { id: agentId },
-        include: {
-          model: true,
-          user: true, // Include user data
-          knowledgeSources: {
-            select: {
-              id: true,
-              name: true,
-              description: true,
-              vectorStoreId: true
-            }
-          }
-        }
-      });
-    } else if (to) {
-      logger.info(`No agent ID provided, looking up by phone number: ${to}`, {}, 'twilio-voice');
-      // Look up the phone number in our database
-      const phoneNumber = await prisma.twilioPhoneNumber.findFirst({
-        where: { phoneNumber: to },
-        include: {
-          chatbot: {
-            include: {
-              model: true,
-              user: true, // Include user data
-              knowledgeSources: {
-                select: {
-                  id: true,
-                  name: true,
-                  description: true,
-                  vectorStoreId: true
-                }
-              }
-            }
-          }
-        }
-      });
-      
-      agent = phoneNumber?.chatbot;
-    }
-    
+
+    const agent = phoneNumberRecord.chatbot;
+    const user = phoneNumberRecord.user;
+
     if (!agent) {
-      logger.error('No agent found for this call', { to, agentId }, 'twilio-voice');
-      const twiml = new twilio.twiml.VoiceResponse();
-      twiml.say('Sorry, this number is not configured to receive calls.');
-      twiml.hangup();
-      
-      return new NextResponse(twiml.toString(), {
-        headers: {
-          'Content-Type': 'text/xml'
-        }
-      });
+      logger.warn('⚠️  No agent assigned to phone number', { phoneNumber: To }, 'twilio-voice');
+      return createErrorTwimlResponse('This number is not configured with an agent');
     }
+
+    logger.info('🤖 Agent found', { 
+      agentId: agent.id, 
+      agentName: agent.name,
+      model: agent.model?.name 
+    }, 'twilio-voice');
+
+    // Create LiveKit room for this call
+    const roomName = `call_${CallSid}`;
     
-    logger.info(`Call will be handled by agent: ${agent.name} (${agent.id})`, {}, 'twilio-voice');
-    
-    // Get OpenAI API key from agent
-    const openAIKey = agent.openaiKey || process.env.OPENAI_API_KEY;
-    
-    if (!openAIKey) {
-      logger.error('No OpenAI API key found for agent', { agentId: agent.id }, 'twilio-voice');
-      const twiml = new twilio.twiml.VoiceResponse();
-      twiml.say('Sorry, this agent is not properly configured.');
-      twiml.hangup();
-      
-      return new NextResponse(twiml.toString(), {
-        headers: {
-          'Content-Type': 'text/xml'
-        }
-      });
-    }
-    
-    // Get voice settings - handles both OpenAI voice names and DB IDs
-    const voiceSettings = await getVoiceSettings(agent.voice);
-    
-    // Build comprehensive instructions including voice personality
-    let fullInstructions = agent.prompt || "You are a helpful AI assistant.";
-    if (voiceSettings.personality) {
-      fullInstructions = `${fullInstructions}\n\nVoice Personality: ${voiceSettings.personality}`;
-    }
-    if (voiceSettings.accent) {
-      fullInstructions = `${fullInstructions}\n\nSpeak with a ${voiceSettings.accent} accent.`;
-    }
-    
-    // Extract vector store IDs from knowledge sources
-    const vectorStoreIds = agent.knowledgeSources
-      ?.filter(ks => ks.vectorStoreId)
-      .map(ks => ks.vectorStoreId) || [];
-    
-    // Build tools array - for now, we'll include built-in tools and prepare for custom tools
-    const tools = [];
-    
-    // Add file search tool if there are knowledge sources
-    if (vectorStoreIds.length > 0) {
-      tools.push({
-        type: 'file_search',
-        name: 'file_search',
-        file_search: {
-          vector_store_ids: vectorStoreIds
-        }
-      });
-    }
-    
-    // Add other built-in tools if needed
-    // TODO: Load custom tools from database/configuration
-    
-    // Store full configuration for voice server to retrieve
-    const callConfig = {
-      agentId: agent.id,
-      openAIKey,
-      model: "gpt-4o-mini-realtime-preview-2024-12-17", // Use latest OpenAI Mini Realtime model
-      voice: voiceSettings,
-      instructions: fullInstructions,
-      temperature: agent.temperature || 0.7,
-      maxTokens: agent.maxCompletionTokens,
-      tools,
-      knowledge: agent.knowledgeSources || [],
-      vectorStoreIds,
-      callSid,
-      from,
-      to,
-      // Additional agent settings that might be needed
-      welcomeMessage: agent.welcomeMessage,
-      chatbotErrorMessage: agent.chatbotErrorMessage,
-      silenceTimeout: agent.silenceTimeout,
-      callTimeout: agent.callTimeout,
-      checkUserPresence: agent.checkUserPresence,
-      presenceMessage: agent.presenceMessage,
-      presenceMessageDelay: agent.presenceMessageDelay,
-      hangUpMessage: agent.hangUpMessage
-    };
-    
-    await storeCallConfig(callSid, callConfig);
-    
-    // Create a TwiML response
-    const twiml = new twilio.twiml.VoiceResponse();
-    
-    // Start by pausing briefly to let the connection establish
-    twiml.pause({ length: 1 });
-    
-    // Connect to Media Stream for real-time conversation
-    const connect = twiml.connect();
-    
-    // Get voice server URL from environment
-    const voiceServerUrl = process.env.VOICE_SERVER_URL || 'wss://voice-server.fly.dev';
-    const streamUrl = `${voiceServerUrl}/api/twilio/media-stream`;
-    
-    logger.info(`Connecting to media stream: ${streamUrl}`, { agentId: agent.id }, 'twilio-voice');
-    
-    const stream = connect.stream({
-      url: streamUrl,
-      track: 'inbound_track'
-    });
-    
-    // Pass minimal configuration via custom parameters
-    // Voice server will fetch full config using callSid
-    stream.parameter({
-      name: 'callSid',
-      value: callSid
-    });
-    
-    stream.parameter({
-      name: 'agentId',
-      value: agent.id
-    });
-    
-    stream.parameter({
-      name: 'openAIKey',
-      value: openAIKey
-    });
-    
-    stream.parameter({
-      name: 'voice',
-      value: voiceSettings.openAIVoice
-    });
-    
-    stream.parameter({
-      name: 'prompt',
-      value: fullInstructions.substring(0, 500) // Backup in case config fetch fails
-    });
-    
-    stream.parameter({
-      name: 'temperature',
-      value: String(agent.temperature || 0.7)
-    });
-    
-    stream.parameter({
-      name: 'from',
-      value: from
-    });
-    
-    // Create a thread for this call
     try {
-      const threadId = `call-${callSid}`;
-      const existingThread = await prisma.message.findFirst({
-        where: { threadId }
+      // Prepare comprehensive agent configuration
+      const agentConfig = {
+        // Agent identification
+        agentId: agent.id,
+        name: agent.name,
+        userId: user.id,
+        
+        // Core AI settings
+        systemPrompt: agent.prompt,
+        modelId: agent.modelId,
+        model: agent.model?.name || 'gpt-4o-mini',
+        temperature: agent.temperature || 0.7,
+        maxTokens: 4000,
+        
+        // Voice settings
+        language: agent.language || 'en-US',
+        voice: agent.voice,
+        elevenLabsVoiceId: agent.voice,
+        voiceName: 'Adam', // Default name
+        voiceStability: 0.3,
+        voiceSimilarity: 0.75,
+        voiceStyle: 0.0,
+        
+        // Call context
+        source: 'phone',
+        callSid: CallSid,
+        fromNumber: From,
+        toNumber: To,
+        
+        // Messages
+        welcomeMessage: agent.welcomeMessage,
+        chatbotErrorMessage: agent.chatbotErrorMessage,
+        
+        // Call settings
+        silenceTimeout: agent.silenceTimeout,
+        callTimeout: agent.callTimeout,
+        checkUserPresence: agent.checkUserPresence,
+        presenceMessage: agent.presenceMessage,
+        presenceMessageDelay: agent.presenceMessageDelay,
+        hangUpMessage: agent.hangUpMessage
+      };
+
+      // Create room with agent configuration in metadata
+      await roomService.createRoom({
+        name: roomName,
+        emptyTimeout: 600, // 10 minutes
+        maxParticipants: 10, // Allow multiple participants
+        metadata: JSON.stringify(agentConfig)
       });
       
-      if (!existingThread) {
-        // Create a new thread ID in the messages table with call metadata
-        await prisma.message.create({
-          data: {
-            threadId,
-            message: `Call started from ${from}`,
-            response: '', // Will be filled in by the conversation
-            from: from,
-            userId: agent.userId, // Should now be valid with user relation
-            chatbotId: agent.id,
-          }
-        });
-        
-        logger.info(`Created thread ${threadId} for call from ${from}`, {}, 'twilio-voice');
-      }
-    } catch (dbError) {
-      logger.error('Error creating call thread:', dbError, 'twilio-voice');
-      // Continue with the call even if we couldn't create the thread
+      logger.info('🏠 LiveKit room created', { roomName }, 'twilio-voice');
+
+      // Generate participant token for the caller
+      const callerToken = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+        identity: `caller_${From.replace(/[^a-zA-Z0-9]/g, '_')}`,
+        name: `Caller ${From}`,
+        ttl: '2h'
+      });
+
+      callerToken.addGrant({
+        roomJoin: true,
+        room: roomName,
+        canPublish: true,
+        canSubscribe: true,
+        canPublishData: true,
+        canUpdateOwnMetadata: true
+      });
+
+      const callerJwt = await callerToken.toJwt();
+
+      // Return TwiML that connects call to LiveKit
+      return createLiveKitTwimlResponse(roomName, callerJwt, CallSid);
+
+    } catch (error) {
+      logger.error('❌ Error setting up LiveKit room', { 
+        error: error.message,
+        CallSid,
+        agentId: agent.id 
+      }, 'twilio-voice');
+      return createErrorTwimlResponse('Error connecting your call');
     }
-    
-    return new NextResponse(twiml.toString(), {
-      headers: {
-        'Content-Type': 'text/xml'
-      }
-    });
-    
+
   } catch (error) {
-    logger.error('Error processing voice webhook:', error, 'twilio-voice');
-    
-    // Return a TwiML response with an error message
-    const twiml = new twilio.twiml.VoiceResponse();
-    twiml.say('Sorry, an error occurred processing your call.');
-    twiml.hangup();
-    
-    return new NextResponse(twiml.toString(), {
-      headers: {
-        'Content-Type': 'text/xml'
-      }
-    });
+    logger.error('❌ Error processing voice webhook', { 
+      error: error.message 
+    }, 'twilio-voice');
+    return createErrorTwimlResponse('An error occurred processing your call');
   }
+}
+
+// Create TwiML that connects Twilio call to LiveKit room
+function createLiveKitTwimlResponse(roomName: string, callerToken: string, callSid: string) {
+  const twiml = new twilio.twiml.VoiceResponse();
+
+  logger.info('🔗 Connecting call to LiveKit', { roomName, callSid }, 'twilio-voice');
+
+  // Connect to LiveKit room via WebRTC media streaming
+  const connect = twiml.connect();
+  
+  // Use Twilio's stream to connect to LiveKit
+  const stream = connect.stream({
+    name: 'livekit-media-stream',
+    url: `wss://${process.env.FLY_APP_NAME || 'voice-server'}.fly.dev/media-stream`
+  });
+  
+  // Pass room information to the media stream handler
+  stream.parameter({
+    name: 'room',
+    value: roomName
+  });
+  
+  stream.parameter({
+    name: 'token',
+    value: callerToken
+  });
+  
+  stream.parameter({
+    name: 'callSid',
+    value: callSid
+  });
+
+  // Add connect action that will be called after stream ends
+  twiml.say('Thank you for calling. Goodbye!');
+
+  logger.info('✅ TwiML response generated', { roomName, callSid }, 'twilio-voice');
+
+  return new NextResponse(twiml.toString(), {
+    headers: {
+      'Content-Type': 'text/xml'
+    }
+  });
+}
+
+// Create error TwiML response
+function createErrorTwimlResponse(message: string) {
+  const twiml = new twilio.twiml.VoiceResponse();
+  twiml.say(`Sorry, ${message}. Please try again later.`);
+  twiml.hangup();
+
+  return new NextResponse(twiml.toString(), {
+    headers: {
+      'Content-Type': 'text/xml'
+    }
+  });
 } 

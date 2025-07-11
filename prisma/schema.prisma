@@ -113,6 +113,7 @@ model Chatbot {
   iconType                        String?                 @default("orb")
   calendarEnabled                 Boolean                 @default(false)
   calendarId                      String?
+  aviationStackEnabled            Boolean                 @default(false)
   assistantSettings               AssistantSettings?
   ChatbotErrors                   ChatbotErrors[]
   ChatbotFiles                    ChatbotFiles[]
@@ -559,17 +560,17 @@ model SubscriptionItem {
 }
 
 model UserVoice {
-  id          String   @id @default(cuid())
-  name        String
-  language    String?
-  addedOn     DateTime @default(now())
-  userId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  description String?
-  isDefault   Boolean  @default(false)
-  openaiVoice String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                 String   @id @default(cuid())
+  name               String
+  language           String?
+  addedOn            DateTime @default(now())
+  userId             String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  description        String?
+  isDefault          Boolean  @default(false)
+  elevenLabsVoiceId  String   @map("eleven_labs_voice_id")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, name])
   @@map("user_voices")
@@ -843,8 +844,6 @@ model vector_documents {
   @@index([content_type], map: "vector_documents_type_idx")
   @@index([knowledge_source_id, content_type, content_id], map: "idx_vector_documents_content_id_chunk")
 }
-
-
 
 enum AppointmentStatus {
   PENDING

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 import { processContentV2, deleteContent, formatContent } from "@/lib/vector-service";
+import { createRollbackHandler } from '@/lib/rollback-system';
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -102,43 +103,83 @@ export async function POST(
     const json = await req.json();
     const body = textContentSchema.parse(json);
 
-    // Create text content
-    const textContent = await db.textContent.create({
-      data: {
-        content: body.content,
-        knowledgeSource: {
-          connect: {
-            id: sourceId,
+    // Create rollback handler for text content operations
+    const rollback = createRollbackHandler('text-content');
+    
+    try {
+      // CHECKPOINT 1: DATABASE ENTRY
+      console.log("💾 CHECKPOINT 1: Creating text content in database...");
+      const textContent = await db.textContent.create({
+        data: {
+          content: body.content,
+          knowledgeSource: {
+            connect: {
+              id: sourceId,
+            },
           },
         },
-      },
-    });
+      });
 
-    // Process to vector store
-    try {
-      console.log(`Processing text content ${textContent.id} to vector store for knowledge source ${sourceId}`);
-      const { content, metadata } = formatContent('text', textContent);
-      const jobId = await processContentV2(
-        sourceId,
-        textContent.id,
-        'text',
-        { content, metadata }
-      );
-      
-      if (jobId) {
-        console.log(`Successfully queued text content for vector processing with job ID: ${jobId}`);
-      } else {
-        console.log(`Text content already has vectors, no new job created`);
+      // Record successful database entry for rollback
+      rollback.recordDatabaseSuccess('text', textContent.id);
+      console.log(`✅ CHECKPOINT 1 COMPLETE: Text content created with ID: ${textContent.id}`);
+
+      // CHECKPOINT 2: VECTOR PROCESSING
+      try {
+        console.log(`🧠 CHECKPOINT 2: Processing vectors for text content...`);
+        const { content, metadata } = formatContent('text', textContent);
+        const jobId = await processContentV2(
+          sourceId,
+          textContent.id,
+          'text',
+          { content, metadata }
+        );
+        
+        if (jobId) {
+          console.log(`✅ CHECKPOINT 2 COMPLETE: Vector processing initiated for text content`);
+        } else {
+          console.log(`✅ CHECKPOINT 2 COMPLETE: Vector document already exists, skipping embedding`);
+        }
+        
+        // Record successful vector processing for rollback
+        rollback.recordVectorSuccess(sourceId, textContent.id, 'text');
+        
+      } catch (vectorError) {
+        console.error(`❌ CHECKPOINT 2 FAILED: Vector processing failed`);
+        
+        // EXECUTE ROLLBACK
+        await rollback.executeRollback(`Vector processing failed: ${vectorError instanceof Error ? vectorError.message : 'Unknown error'}`);
+        
+        throw new Error(`Text content processing failed at vector stage. All changes have been rolled back. Error: ${vectorError instanceof Error ? vectorError.message : 'Unknown error'}`);
       }
-    } catch (vectorStoreError) {
-      console.error(`Error adding text to vector store:`, vectorStoreError);
-      // Continue even if vector store processing fails
-    }
 
-    return new Response(JSON.stringify(textContent), {
-      status: 201,
-      headers: { "Content-Type": "application/json" },
-    });
+      // ALL CHECKPOINTS SUCCESSFUL
+      rollback.clear();
+      console.log(`🎉 ALL CHECKPOINTS COMPLETE: Text content operation successful`);
+
+      return new Response(JSON.stringify(textContent), {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      });
+      
+    } catch (error) {
+      console.error(`Error in text content operation:`, error);
+      
+      // Execute rollback for any partial operations
+      await rollback.executeRollback(error instanceof Error ? error.message : 'Unknown error');
+      
+      return new Response(
+        JSON.stringify({ 
+          error: "Text content creation failed", 
+          details: error instanceof Error ? error.message : "Unknown error",
+          message: "All changes have been rolled back"
+        }),
+        { 
+          status: 500,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
   } catch (error) {
     if (error instanceof z.ZodError) {
       return new Response(JSON.stringify(error.errors), {
@@ -200,7 +241,7 @@ export async function PUT(
       },
     });
 
-    // Process updated content to vector store - using adapter for LLM-agnostic approach
+    // Process updated content to vector store
     try {
       console.log(`Processing updated text content ${textContent.id} to vector store for knowledge source ${sourceId}`);
       
@@ -224,7 +265,8 @@ export async function PUT(
       }
     } catch (vectorStoreError) {
       console.error(`Error processing updated text to vector store:`, vectorStoreError);
-      // Continue even if vector store processing fails
+      // For updates, we continue even if vector store processing fails since the DB update succeeded
+      // The user should be notified that vector processing failed but content was updated
     }
 
     return new Response(JSON.stringify(textContent), {

@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Agent } from "@/types/agent";
 import { Database, Thermometer, Save, Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
@@ -20,7 +21,7 @@ interface KnowledgeSource {
 
 interface LLMTabProps {
   agent: Agent;
-  onSave: (data: Partial<Agent>) => Promise<any>;
+  onSave: (data: Partial<Agent>) => Promise<void>;
 }
 
 // Agent Mode definitions
@@ -358,6 +359,32 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
     }
   };
 
+  if (isLoading) {
+    return (
+      <SettingsTabWrapper
+        tabName="LLM"
+        isDirty={false}
+        onSave={handleSaveSettings}
+        onCancel={handleCancel}
+      >
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-6 rounded-xl">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-6 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-10 w-full rounded-xl" />
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </SettingsTabWrapper>
+    );
+  }
+
   return (
     <SettingsTabWrapper
       tabName="LLM"
@@ -369,10 +396,10 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
         {/* Dynamic Saving Progress Overlay */}
         {showSavingProgress && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="bg-white dark:bg-neutral-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-lg max-w-md w-full">
               <div className="flex items-center space-x-2 mb-4">
                 <Save className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
-                <h3 className="text-lg font-medium">Saving Agent Settings</h3>
+                <h3 className="text-lg font-semibold text-black dark:text-white">Saving Agent Settings</h3>
               </div>
               
               <Progress 
@@ -392,14 +419,14 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
         )}
 
         {/* Agent Mode - First Card */}
-        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Agent Mode</Label>
+              <Label className="text-sm font-semibold text-black dark:text-white">Agent Mode</Label>
             </div>
           </div>
-          <div className="p-3 bg-white dark:bg-neutral-900">
+          <div className="px-3 py-2 bg-white dark:bg-neutral-900">
             <div className="relative">
               <Zap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
               <Select 
@@ -407,7 +434,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
                 onValueChange={handleAgentModeChange}
                 disabled={isLoading || isSaving}
               >
-                <SelectTrigger className="pl-9">
+                <SelectTrigger className="pl-9 rounded-xl">
                   <SelectValue placeholder="Select agent mode" />
                 </SelectTrigger>
                 <SelectContent>
@@ -443,12 +470,12 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
         </Card>
 
         {/* Knowledge Source - Second Card */}
-        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                <Label className="font-medium text-neutral-900 dark:text-neutral-50">Knowledge Source</Label>
+                <Label className="text-sm font-semibold text-black dark:text-white">Knowledge Source</Label>
               </div>
               <Badge 
                 variant={badgeStatus.variant}
@@ -467,7 +494,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
               </Badge>
             </div>
           </div>
-          <div className="p-3 bg-white dark:bg-neutral-900">
+          <div className="px-3 py-2 bg-white dark:bg-neutral-900">
             <div className="flex-1">
               <div className="relative">
                 <Database className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500 dark:text-neutral-400 z-10" />
@@ -476,7 +503,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
                   onValueChange={handleKnowledgeSourceChange}
                   disabled={isLoading || isSaving}
                 >
-                  <SelectTrigger className="pl-9">
+                  <SelectTrigger className="pl-9 rounded-xl">
                     <SelectValue placeholder={isLoading ? "Loading knowledge sources..." : "Select knowledge source"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -498,54 +525,52 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
                   </SelectContent>
                 </Select>
               </div>
-              <p className="mt-2 text-sm/6 text-neutral-500 dark:text-neutral-400">
+              <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
                 Link a knowledge source to enhance your agent with custom data.
               </p>
               {selectedKnowledgeSource !== "none" && (
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  className="mt-3"
-                  onClick={navigateToKnowledgeSource}
-                  disabled={isSaving}
-                >
-                  <Database className="mr-2 h-4 w-4" />
-                  Manage Knowledge Source
-                </Button>
+                <div className="mt-3">
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={navigateToKnowledgeSource}
+                    className="rounded-xl"
+                  >
+                    Manage Knowledge Source
+                  </Button>
+                </div>
               )}
             </div>
           </div>
         </Card>
 
-        {/* Temperature */}
-        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
-          <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-800">
+        {/* Temperature - Third Card */}
+        <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
+          <div className="border-b border-neutral-200 bg-neutral-100 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-800">
             <div className="flex items-center gap-2">
               <Thermometer className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-              <Label className="font-medium text-neutral-900 dark:text-neutral-50">Temperature</Label>
+              <Label className="text-sm font-semibold text-black dark:text-white">
+                Temperature: {temperature}
+              </Label>
             </div>
           </div>
-          <div className="p-3 bg-white dark:bg-neutral-900">
+          <div className="px-3 py-2 bg-white dark:bg-neutral-900">
             <div className="space-y-4">
               <Slider
                 value={[temperature]}
                 onValueChange={handleTemperatureChange}
+                max={2}
                 min={0}
-                max={1}
                 step={0.1}
                 className="w-full"
                 disabled={isSaving}
               />
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                Current level:
-                <span className="ml-1 font-semibold text-neutral-900 dark:text-neutral-50">
-                  {temperature < 0.3 ? "Precise" : 
-                   temperature < 0.7 ? "Balanced" : "Creative"}
-                  ({temperature.toFixed(1)})
-                </span>
-              </p>
-              <p className="mt-4 text-sm/6 text-neutral-500 dark:text-neutral-400">
-                Higher temperature increases creativity but may reduce accuracy.
+              <div className="flex justify-between text-xs text-neutral-500 dark:text-neutral-400">
+                <span>More Focused</span>
+                <span>More Creative</span>
+              </div>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                Controls randomness in responses. Lower values make output more focused and deterministic.
               </p>
             </div>
           </div>

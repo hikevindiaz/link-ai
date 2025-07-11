@@ -173,7 +173,7 @@ const LoginForm = ({ error }: LoginFormProps) => {
 
             {error === 'AccountBlocked' && (
               <AnimatedElement index={1}>
-                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
                   <p className="text-sm text-red-800 dark:text-red-200 text-center">
                     Your account has been locked, please contact{' '}
                     <a 

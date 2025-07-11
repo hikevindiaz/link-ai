@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Divider } from '@/components/Divider';
 import EmptyState from '@/components/ui/empty-state';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
@@ -504,7 +505,7 @@ const PhoneNumbersPage = () => {
           isMobileView ? "w-full" : "w-80")}>
           <div className="p-4 pb-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-normal text-neutral-700 dark:text-neutral-200">
+              <h2 className="text-xl font-semibold text-black dark:text-white">
                 Phone Numbers
               </h2>
               <Button
@@ -521,9 +522,25 @@ const PhoneNumbersPage = () => {
           
           <div className="flex-1 overflow-auto px-4 pb-4">
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-                <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-400">Loading phone numbers...</span>
+              <div className="grid grid-cols-1 gap-2 mt-1">
+                {[1, 2, 3, 4, 5].map((item) => (
+                  <div key={item} className="p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+                    <div className="flex items-center">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                      <div className="ml-3 flex-1">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <Skeleton className="h-4 w-24" />
+                            <div className="ml-2">
+                              <Skeleton className="h-4 w-12" />
+                            </div>
+                          </div>
+                        </div>
+                        <Skeleton className="h-3 w-32 mt-1" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : phoneNumbers.length > 0 ? (
               <div className="grid grid-cols-1 gap-2 mt-1">
@@ -537,7 +554,7 @@ const PhoneNumbersPage = () => {
                       }
                     }}
                     className={cn(
-                      "group transition-all duration-200 cursor-pointer p-3 rounded-lg border relative",
+                      "group transition-all duration-200 cursor-pointer p-3 rounded-xl border relative",
                       "hover:bg-neutral-50 dark:hover:bg-neutral-900",
                       "hover:shadow-sm",
                       "bg-white dark:bg-black border-neutral-200 dark:border-neutral-800",
@@ -556,9 +573,9 @@ const PhoneNumbersPage = () => {
                       <div className="ml-3 w-full overflow-hidden">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center max-w-[70%]">
-                            <div className="truncate text-sm font-medium text-neutral-700 dark:text-neutral-200">
-                              {phone.number}
-                            </div>
+                                                <div className="truncate text-sm font-semibold text-black dark:text-white">
+                      {phone.number}
+                    </div>
                             <div className="ml-2 flex-shrink-0">
                               <StatusBadge 
                                 status={phone.status} 
@@ -711,7 +728,7 @@ const PhoneNumbersPage = () => {
                         <Icons.warning className="h-5 w-5 text-amber-600 dark:text-amber-500" />
                       </div>
                       <div className="ml-3 flex-1">
-                        <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200">
                           Phone Number Suspended
                         </h3>
                         <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
@@ -745,20 +762,12 @@ const PhoneNumbersPage = () => {
                         <RiInformationLine className="h-5 w-5 text-neutral-600 dark:text-neutral-500" />
                       </div>
                       <div className="ml-3">
-                        <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                        <h3 className="text-sm font-semibold text-black dark:text-white">
                           Ready for Agent Assignment
                         </h3>
                         <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
-                          Your phone number is ready to use! Assign it to an agent to start receiving calls and messages.
+                          Your phone number is ready to use! Assign it to an agent using the dropdown below.
                         </p>
-                        <Button 
-                          className="mt-3"
-                          size="sm"
-                          onClick={() => setIsAssignDialogOpen(true)}
-                        >
-                          <Icons.bot className="h-3.5 w-3.5 mr-1.5" />
-                          Assign to Agent
-                        </Button>
                       </div>
                     </div>
                   </div>
@@ -771,17 +780,17 @@ const PhoneNumbersPage = () => {
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Icons.speech className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                      <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
+                      <h4 className="text-sm font-semibold text-black dark:text-white">
                         Agent Assignment
                       </h4>
                     </div>
                     
                     {/* Progress Bar */}
                     {assignmentProgress.isAssigning && assignmentProgress.phoneNumberId === selectedPhoneNumber.id && (
-                      <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800/50 rounded-lg">
+                      <div className="mb-4 p-3 bg-neutral-50 dark:bg-neutral-950/20 border border-neutral-200 dark:border-neutral-800/50 rounded-xl">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-neutral-600"></div>
-                          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                          <span className="text-sm font-semibold text-black dark:text-white">
                             {assignmentProgress.message}
                           </span>
                         </div>
@@ -803,9 +812,8 @@ const PhoneNumbersPage = () => {
                     )}
                     
                     {isAgentsLoading ? (
-                      <div className="flex items-center py-2">
-                        <Icons.spinner className="h-4 w-4 animate-spin mr-2" />
-                        <span className="text-sm text-neutral-500">Loading agents...</span>
+                      <div className="py-2">
+                        <Skeleton className="h-10 w-full rounded-xl" />
                       </div>
                     ) : getAvailableAgents().length > 0 ? (
                       <div>
@@ -856,7 +864,7 @@ const PhoneNumbersPage = () => {
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Icons.billing className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                        <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
+                        <h4 className="text-sm font-semibold text-black dark:text-white">
                           Billing
                         </h4>
                       </div>
@@ -884,26 +892,31 @@ const PhoneNumbersPage = () => {
               </main>
             </div>
           ) : (
-            <div className="flex h-full flex-col items-center justify-center p-6">
-              <div className="mx-auto max-w-md text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-900">
-                  <RiPhoneLine className="h-6 w-6 text-neutral-600 dark:text-neutral-400" />
+            <div className="flex h-full items-center justify-center p-6">
+              <Card className="p-6 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800">
+                <div className="flex flex-col items-center max-w-md">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+                    <RiPhoneLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+                  </div>
+                  
+                  <h3 className="text-sm font-semibold text-black dark:text-white mb-1">
+                    {phoneNumbers.length > 0 
+                      ? 'Select a Phone Number' 
+                      : 'Welcome to Phone Numbers'}
+                  </h3>
+                  
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4 text-center">
+                    {phoneNumbers.length > 0 
+                      ? 'Select a phone number from the sidebar or add a new one to get started.' 
+                      : 'Add your first phone number to enhance your communication capabilities.'}
+                  </p>
+                  
+                  <Button onClick={() => setIsDrawerOpen(true)} size="sm">
+                    <RiAddLine className="mr-2 h-4 w-4" />
+                    Add Phone Number
+                  </Button>
                 </div>
-                <h1 className="text-2xl font-normal text-neutral-700 dark:text-neutral-200">
-                  {phoneNumbers.length > 0 
-                    ? 'Select a Phone Number' 
-                    : 'Welcome to Phone Numbers'}
-                </h1>
-                <p className="mt-2 text-neutral-500 dark:text-neutral-400">
-                  {phoneNumbers.length > 0 
-                    ? 'Select a phone number from the sidebar or add a new one to get started.' 
-                    : 'Add your first phone number to enhance your communication capabilities.'}
-                </p>
-                <Button className="mt-6" onClick={() => setIsDrawerOpen(true)}>
-                  <RiAddLine className="mr-2 h-4 w-4" />
-                  Add Phone Number
-                </Button>
-              </div>
+              </Card>
             </div>
           )}
         </div>

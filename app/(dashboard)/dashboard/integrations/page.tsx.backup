@@ -433,7 +433,7 @@ export default function IntegrationsPage() {
                   style={{ background: gradientStyle }}
                 >
                   <Card 
-                    className="flex flex-col justify-between p-4 relative h-full bg-white dark:bg-neutral-900 rounded-lg"
+                    className="flex flex-col justify-between p-4 relative h-full bg-white dark:bg-neutral-900 rounded-xl"
                   >
                     {cardInnerContent}
                   </Card>
@@ -444,7 +444,7 @@ export default function IntegrationsPage() {
               return (
                 <Card 
                   key={item.id} 
-                  className="flex flex-col justify-between p-4 relative border hover:shadow-md transition-shadow duration-200 h-full bg-white dark:bg-neutral-900 rounded-lg"
+                  className="flex flex-col justify-between p-4 relative border hover:shadow-md transition-shadow duration-200 h-full bg-white dark:bg-neutral-900 rounded-xl"
                 >
                   {cardInnerContent}
                 </Card>

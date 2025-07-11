@@ -15,11 +15,12 @@ export class OpenAIProvider implements AIProvider {
   /**
    * Generate a non-streaming response
    */
-  async generate(messages: any[], options: AIProviderOptions): Promise<string> {
+  async generate(messages: any[], options: AIProviderOptions): Promise<any> {
     try {
       logger.debug('Generating OpenAI response', { 
         model: options.model,
-        messageCount: messages.length 
+        messageCount: messages.length,
+        toolCount: options.tools?.length || 0
       }, 'openai-provider');
       
       const completion = await this.client.chat.completions.create({
@@ -31,14 +32,17 @@ export class OpenAIProvider implements AIProvider {
         tool_choice: options.toolChoice
       });
       
-      const response = completion.choices[0]?.message?.content || '';
+      const choice = completion.choices[0];
+      const finishReason = choice?.finish_reason;
       
+      // Return the full choice so the agent runtime can handle tool calls
       logger.debug('OpenAI response generated', { 
-        responseLength: response.length,
-        finishReason: completion.choices[0]?.finish_reason
+        finishReason,
+        hasContent: !!choice?.message?.content,
+        hasToolCalls: !!choice?.message?.tool_calls
       }, 'openai-provider');
       
-      return response;
+      return choice;
       
     } catch (error) {
       logger.error('Error generating OpenAI response', { 
@@ -64,7 +68,8 @@ export class OpenAIProvider implements AIProvider {
     try {
       logger.debug('Starting OpenAI stream', { 
         model: options.model,
-        streamId 
+        streamId,
+        toolCount: options.tools?.length || 0
       }, 'openai-provider');
       
       const stream = await this.client.chat.completions.create({
@@ -80,25 +85,81 @@ export class OpenAIProvider implements AIProvider {
       });
       
       let fullResponse = '';
+      let toolCalls: any[] = [];
+      let isToolCallComplete = false;
       
       for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content;
+        const choice = chunk.choices[0];
+        
+        // Handle regular content
+        const content = choice?.delta?.content;
         if (content) {
           fullResponse += content;
           onToken(content);
         }
         
-        // Check for tool calls
-        const toolCalls = chunk.choices[0]?.delta?.tool_calls;
-        if (toolCalls) {
-          // Handle tool calls in streaming response
-          logger.debug('Tool call detected in stream', { toolCalls }, 'openai-provider');
+        // Handle tool calls
+        const deltaToolCalls = choice?.delta?.tool_calls;
+        if (deltaToolCalls) {
+          logger.debug('🔧 Tool call delta detected', { 
+            deltaToolCalls,
+            streamId 
+          }, 'openai-provider');
+          
+          // Process tool call deltas
+          for (const deltaCall of deltaToolCalls) {
+            if (deltaCall.index !== undefined) {
+              // Initialize tool call if needed
+              if (!toolCalls[deltaCall.index]) {
+                toolCalls[deltaCall.index] = {
+                  id: deltaCall.id,
+                  type: 'function',
+                  function: {
+                    name: deltaCall.function?.name || '',
+                    arguments: deltaCall.function?.arguments || ''
+                  }
+                };
+              } else {
+                // Append to existing tool call
+                if (deltaCall.function?.arguments) {
+                  toolCalls[deltaCall.index].function.arguments += deltaCall.function.arguments;
+                }
+              }
+            }
+          }
         }
+        
+        // Check if stream is finishing
+        if (choice?.finish_reason === 'tool_calls' && toolCalls.length > 0) {
+          isToolCallComplete = true;
+          logger.info('🔧 Tool calls ready for execution', { 
+            toolCallCount: toolCalls.length,
+            toolCalls: toolCalls.map(tc => ({
+              id: tc.id,
+              name: tc.function.name,
+              argumentsLength: tc.function.arguments.length
+            }))
+          }, 'openai-provider');
+          break;
+        }
+      }
+      
+      // If we have tool calls to execute, this is not a normal streaming response
+      if (isToolCallComplete && toolCalls.length > 0) {
+        logger.info('🚫 Tool calls detected - returning empty response for tool handling', { 
+          streamId,
+          toolCallCount: toolCalls.length
+        }, 'openai-provider');
+        
+        // For now, return empty response - tool handling should be done at a higher level
+        // The agent runtime needs to handle tool calls differently for streaming
+        return '';
       }
       
       logger.debug('OpenAI stream completed', { 
         streamId,
-        responseLength: fullResponse.length 
+        responseLength: fullResponse.length,
+        hadToolCalls: toolCalls.length > 0
       }, 'openai-provider');
       
       return fullResponse;

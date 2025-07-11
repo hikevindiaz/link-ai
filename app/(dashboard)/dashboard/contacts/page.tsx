@@ -312,9 +312,60 @@ export default function ContactsPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
+      <div className="p-0">
+        {/* Header skeleton */}
+        <div className="px-4 md:px-8 pt-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
+            <div className="flex items-center space-x-2">
+              <Skeleton className="h-7 w-24" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+              <Skeleton className="h-10 w-full sm:w-64" />
+              <Skeleton className="h-10 w-full sm:w-40" />
+              <Skeleton className="h-10 w-full sm:w-32" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="my-4 px-4 md:px-8">
+          <Skeleton className="h-px w-full" />
+        </div>
+        
+        {/* Table skeleton */}
+        <div className="px-4 md:px-8">
+          <div className="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+            <div className="p-4">
+              {/* Table header skeleton */}
+              <div className="grid grid-cols-6 gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-16 ml-auto" />
+              </div>
+              
+              {/* Table rows skeleton */}
+              {[1, 2, 3, 4, 5].map((item) => (
+                <div key={item} className="grid grid-cols-6 gap-4 py-4 border-b border-neutral-100 dark:border-neutral-800 last:border-b-0">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <div className="flex gap-1">
+                    <Skeleton className="h-5 w-12 rounded-full" />
+                    <Skeleton className="h-5 w-10 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-16" />
+                  <div className="flex items-center justify-end gap-2">
+                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-8 w-8" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -326,10 +377,10 @@ export default function ContactsPage() {
         <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
           {/* Left Side: Title & Count */}
           <div className="flex items-center space-x-2">
-            <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50">
+            <h3 className="text-xl font-semibold text-black dark:text-white">
               Contacts
             </h3>
-            <span className="inline-flex size-6 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-900 dark:bg-neutral-800 dark:text-neutral-50">
+            <span className="inline-flex size-6 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-black dark:bg-neutral-800 dark:text-white">
               {filteredContacts.length}
             </span>
           </div>
@@ -384,11 +435,13 @@ export default function ContactsPage() {
         {filteredContacts.length === 0 ? (
           <Card className="p-8">
             <div className="flex flex-col items-center justify-center text-center">
-              <RiUserLine className="size-12 text-neutral-400 mb-4" />
-              <h3 className="text-lg font-medium text-neutral-900 dark:text-neutral-50 mb-2">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-900">
+                <RiUserLine className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+              </div>
+              <h3 className="text-sm font-semibold text-black dark:text-white mb-2">
                 No contacts found
               </h3>
-              <p className="text-sm text-neutral-600 dark:text-neutral-400">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 {searchQuery || toolFilter !== 'all' 
                   ? 'Try adjusting your filters to see more results.'
                   : 'Contacts will appear here when they interact with your agents.'}

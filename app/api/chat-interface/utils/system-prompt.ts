@@ -9,6 +9,7 @@ interface SystemPromptOptions {
   useFileSearch: boolean;
   useWebSearch: boolean;
   websiteInstructions: { url: string; instructions?: string }[];
+  useGoogleSearch?: boolean;
   knowledge?: string;
 }
 
@@ -22,6 +23,7 @@ export function buildSystemPrompt(options: SystemPromptOptions): string {
     useFileSearch,
     useWebSearch,
     websiteInstructions,
+    useGoogleSearch,
     knowledge
   } = options;
 
@@ -173,6 +175,48 @@ Search these websites for current information:`;
     for (const site of websiteInstructions) {
       systemPrompt += `\n- ${site.url}${site.instructions ? `: ${site.instructions}` : ''}`;
     }
+  }
+
+  // Add Google search instructions if enabled
+  if (useGoogleSearch && websiteInstructions.length > 0) {
+    systemPrompt += `
+
+# Google Search Tool - EXTREMELY RESTRICTED USE
+I have access to the google_search tool but it should RARELY be used. This tool is ONLY for the specific website instructions below.
+
+## FORBIDDEN - DO NOT USE GOOGLE SEARCH FOR:
+- General questions that can be answered with general knowledge
+- Business questions not related to the configured websites
+- Explanations, definitions, or how-to questions
+- Any question that can be answered without live web data
+- Questions about your capabilities or general topics
+- Weather, news, facts, or information available in general knowledge
+- ANY question when you can provide a helpful response using general knowledge
+
+## ONLY USE GOOGLE SEARCH WHEN:
+- The user's question EXPLICITLY asks for information from one of the configured websites below
+- The user specifically mentions wanting current/live information from these exact websites
+- The question cannot be answered AT ALL without live data from these specific sites
+
+## Configured Search Instructions:`;
+    
+    for (const site of websiteInstructions) {
+      systemPrompt += `\n- **${site.url}**${site.instructions ? `: ${site.instructions}` : ': ONLY when users specifically ask for current information from this exact website'}`;
+    }
+
+    systemPrompt += `
+
+## DEFAULT RESPONSE STRATEGY:
+1. **ALWAYS TRY FIRST**: Provide a helpful response using general knowledge
+2. **PREFER**: Answer with your training data and general knowledge
+3. **ONLY IF IMPOSSIBLE**: Use google_search for the specific configured websites above
+4. **NEVER**: Use google_search as a fallback for general questions
+
+## REMEMBER:
+- You are knowledgeable and can answer most questions without web search
+- Users prefer quick, helpful responses over web searches
+- Only search when the user specifically needs current data from configured websites
+- When in doubt, provide a helpful response with general knowledge instead of searching`;
   }
   
   const fullPrompt = !useFileSearch && !useWebSearch && knowledge
