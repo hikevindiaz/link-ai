@@ -58,24 +58,18 @@ import { z } from "zod"
 import { AgentTab } from "@/components/agents/tabs/agent-tab"
 import { ChannelsTab } from "@/components/agents/tabs/channels-tab"
 import { LLMTab } from "@/components/agents/tabs/llm-tab"
+import { ActionsTab } from "@/components/agents/tabs/actions-tab"
 import { AddonConfigModal } from "@/components/agents/modals/addon-config-modal"
 import { AgentHeader } from "@/components/agents/agent-header"
 import { CallTab } from "@/components/agents/tabs/call-tab"
-import { ActionsTab } from "@/components/agents/tabs/actions-tab"
-import { agentSchema, type AgentFormValues } from "@/lib/validations/agent"
+import { AgentConfigProvider, useAgentConfig } from "@/hooks/use-agent-config"
 import type { Agent } from "@/types/agent"
 import { logger } from "@/lib/logger"
-import { AgentConfigProvider } from "@/hooks/use-agent-config"
-
-interface Action {
-  id: string
-  type: string
-  config: Record<string, any>
-}
+import { agentSchema, type AgentFormValues } from "@/lib/validations/agent"
 
 interface AgentSettingsProps {
   agent: Agent
-  onSave: (data: Partial<Agent>) => Promise<any>
+  onSave: (data: Partial<Agent>) => Promise<Agent>
   showHeader?: boolean
   activeTab?: string
   showTabs?: boolean
@@ -94,11 +88,14 @@ const inquiryCustomizationSchema = z.object({
   inquiryDisplayLinkAfterXMessage: z.number().min(1).max(5).optional(),
 })
 
-export function AgentSettings({ agent, onSave, showHeader = true, activeTab = "linkRep", showTabs = true }: AgentSettingsProps) {
+// Internal component that has access to the AgentConfigProvider
+function AgentSettingsContent({ agent, onSave, showHeader = true, activeTab = "linkRep", showTabs = true }: AgentSettingsProps) {
+  const { refreshFromParent } = useAgentConfig();
   const [internalActiveTab, setInternalActiveTab] = useState(activeTab)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedAddonId, setSelectedAddonId] = useState("")
+  const [currentAgent, setCurrentAgent] = useState(agent)
   
   const form = useForm<AgentFormValues>({
     resolver: zodResolver(agentSchema),
@@ -109,6 +106,15 @@ export function AgentSettings({ agent, onSave, showHeader = true, activeTab = "l
   useEffect(() => {
     setInternalActiveTab(activeTab);
   }, [activeTab]);
+  
+  // Update internal agent and refresh context when agent prop changes
+  useEffect(() => {
+    if (agent && (!currentAgent || agent.id !== currentAgent.id || JSON.stringify(agent) !== JSON.stringify(currentAgent))) {
+      console.log('[AgentSettings] Agent prop changed, updating internal state and refreshing context');
+      setCurrentAgent(agent);
+      refreshFromParent(agent);
+    }
+  }, [agent, currentAgent, refreshFromParent]);
 
   const handleSaveConfig = (config: any) => {
     setIsModalOpen(false)
@@ -122,17 +128,29 @@ export function AgentSettings({ agent, onSave, showHeader = true, activeTab = "l
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  // Enhanced save handler that updates the local agent state
+  const handleSave = async (data: Partial<Agent>) => {
     try {
-      logger.info('Saving agent settings', { agentId: agent.id }, 'agent');
-      await onSave(form.getValues());
-      logger.info('Agent settings saved successfully', { agentId: agent.id }, 'agent');
+      logger.info('Saving agent settings', { agentId: agent.id, updatedFields: Object.keys(data) }, 'agent');
+      
+      // Call the parent's onSave function
+      const updatedAgent = await onSave(data);
+      
+      // Update the local agent state
+      setCurrentAgent(updatedAgent);
+      
+      // Refresh the context with the updated agent
+      refreshFromParent(updatedAgent);
+      
+      logger.info('Agent settings saved successfully', { agentId: updatedAgent.id }, 'agent');
+      
+      return updatedAgent;
     } catch (error) {
       logger.error('Failed to save agent settings', { 
         agentId: agent.id,
         error: error instanceof Error ? error.message : 'Unknown error'
       }, 'agent');
-      toast.error("Failed to save settings");
+      throw error; // Re-throw to let the tab handle the error
     }
   };
 
@@ -142,13 +160,12 @@ export function AgentSettings({ agent, onSave, showHeader = true, activeTab = "l
   };
 
   return (
-    <AgentConfigProvider initialAgent={agent}>
-      <TooltipProvider>
-        <div className="flex flex-col h-full max-w-full overflow-x-hidden">
+    <TooltipProvider>
+      <div className="flex flex-col h-full max-w-full overflow-x-hidden">
         {showHeader && (
           <div className="flex-none p-8 pb-0">
             <AgentHeader 
-              agent={agent}
+              agent={currentAgent}
               onChatClick={handleChatClick}
               onDeleteClick={handleDeleteClick}
               showActions={true}
@@ -170,45 +187,42 @@ export function AgentSettings({ agent, onSave, showHeader = true, activeTab = "l
 
                 <div className="mb-0 pb-0">
                   <TabsContent value="linkRep">
-                    <AgentTab agent={agent} onSave={onSave} />
+                    <AgentTab agent={currentAgent} onSave={handleSave} />
                   </TabsContent>
 
                   <TabsContent value="channels">
-                    <ChannelsTab agent={agent} onSave={onSave} />
+                    <ChannelsTab agent={currentAgent} onSave={handleSave} />
                   </TabsContent>
 
                   <TabsContent value="llm">
-                    <LLMTab agent={agent} onSave={onSave} />
+                    <LLMTab agent={currentAgent} onSave={handleSave} />
                   </TabsContent>
 
                   <TabsContent value="call">
-                    <CallTab agent={agent} onSave={onSave} />
+                    <CallTab agent={currentAgent} onSave={handleSave} />
                   </TabsContent>
 
                   <TabsContent value="actions">
-                    <ActionsTab
-                      agent={agent}
-                      onSave={onSave}
-                    />
+                    <ActionsTab agent={currentAgent} onSave={handleSave} />
                   </TabsContent>
                 </div>
               </Tabs>
             ) : (
               <div className="pt-0 w-full overflow-x-hidden">
                 {internalActiveTab === "linkRep" && (
-                  <AgentTab agent={agent} onSave={onSave} />
+                  <AgentTab agent={currentAgent} onSave={handleSave} />
                 )}
                 {internalActiveTab === "channels" && (
-                  <ChannelsTab agent={agent} onSave={onSave} />
+                  <ChannelsTab agent={currentAgent} onSave={handleSave} />
                 )}
                 {internalActiveTab === "llm" && (
-                  <LLMTab agent={agent} onSave={onSave} />
+                  <LLMTab agent={currentAgent} onSave={handleSave} />
                 )}
                 {internalActiveTab === "call" && (
-                  <CallTab agent={agent} onSave={onSave} />
+                  <CallTab agent={currentAgent} onSave={handleSave} />
                 )}
                 {internalActiveTab === "actions" && (
-                  <ActionsTab agent={agent} onSave={onSave} />
+                  <ActionsTab agent={currentAgent} onSave={handleSave} />
                 )}
               </div>
             )}
@@ -221,9 +235,22 @@ export function AgentSettings({ agent, onSave, showHeader = true, activeTab = "l
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveConfig}
         addonId=""
-        agent={agent}
+        agent={currentAgent}
       />
     </TooltipProvider>
+  )
+}
+
+export function AgentSettings({ agent, onSave, showHeader = true, activeTab = "linkRep", showTabs = true }: AgentSettingsProps) {
+  return (
+    <AgentConfigProvider initialAgent={agent}>
+      <AgentSettingsContent 
+        agent={agent}
+        onSave={onSave}
+        showHeader={showHeader}
+        activeTab={activeTab}
+        showTabs={showTabs}
+      />
     </AgentConfigProvider>
   )
 } 

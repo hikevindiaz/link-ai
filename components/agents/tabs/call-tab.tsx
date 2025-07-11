@@ -8,7 +8,7 @@ import type { Agent } from "@/types/agent"
 import { Phone, Clock, MessageSquare, Loader2, AlertCircle, Info, CheckCircle } from "lucide-react"
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { toast } from "sonner"
-import { SettingsTabWrapper } from "@/components/agents/settings-tab-wrapper"
+import { UniversalTabWrapper } from "@/components/universal-tab-wrapper"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -16,8 +16,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { IconPhoneRinging } from "@tabler/icons-react"
 
 interface CallTabProps {
-  agent: Agent
-  onSave: (data: Partial<Agent>) => Promise<void>
+  agent: Agent;
+  onSave: (data: Partial<Agent>) => Promise<Agent>;
 }
 
 interface PhoneNumber {
@@ -331,7 +331,7 @@ export function CallTab({ agent, onSave }: CallTabProps) {
       };
       
       // Save to the agent
-      await onSave(saveData);
+      const updatedAgent = await onSave(saveData);
       
       // Handle phone number assignment changes
       const previousPhoneNumberId = phoneNumbers.find(p => p.number === initialValues.phoneNumber)?.id || null;
@@ -448,11 +448,10 @@ export function CallTab({ agent, onSave }: CallTabProps) {
 
   if (isLoading) {
     return (
-      <SettingsTabWrapper
+      <UniversalTabWrapper
         tabName="Call"
-        isDirty={false}
-        onSave={handleSaveSettings}
-        onCancel={handleCancel}
+        agent={agent}
+        onSave={onSave}
       >
         <div className="space-y-6">
           {[1, 2, 3, 4].map((i) => (
@@ -465,16 +464,32 @@ export function CallTab({ agent, onSave }: CallTabProps) {
             </Card>
           ))}
         </div>
-      </SettingsTabWrapper>
+      </UniversalTabWrapper>
     );
   }
 
   return (
-    <SettingsTabWrapper
+    <UniversalTabWrapper
       tabName="Call"
-      isDirty={isDirty}
-      onSave={handleSaveSettings}
-      onCancel={handleCancel}
+      agent={agent}
+      onSave={onSave}
+      customSaveHandler={async (data) => {
+        // Custom save logic for call tab
+        const phoneNumberObj = phoneNumbers.find(p => p.id === selectedPhoneNumberId);
+        const phoneNumberString = phoneNumberObj ? phoneNumberObj.number : null;
+        
+        return {
+          checkUserPresence,
+          presenceMessageDelay,
+          silenceTimeout,
+          callTimeout,
+          presenceMessage,
+          hangUpMessage,
+          responseRate,
+          phoneNumber: phoneNumberString,
+          voice: selectedVoice,
+        };
+      }}
     >
       <div className="space-y-6">
         {/* Phone Number */}
@@ -807,6 +822,6 @@ export function CallTab({ agent, onSave }: CallTabProps) {
           </div>
         </Card>
       </div>
-    </SettingsTabWrapper>
+    </UniversalTabWrapper>
   )
 } 

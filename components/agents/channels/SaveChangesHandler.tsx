@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 interface SaveChangesHandlerProps {
   agent: Agent;
-  onSave: (data: Partial<Agent>) => Promise<void>;
+  onSave: (data: Partial<Agent>) => Promise<Agent>;
   widgetSettingsHasChanged: boolean;
   channelsHasChanged: boolean;
   widgetSettings: any;
@@ -136,7 +136,7 @@ export function SaveChangesHandler({
       });
       
       // Save to server
-      await onSave(updateData);
+      const updatedAgent = await onSave(updateData);
       
       setSaveStatus('success');
       toast.success("Changes saved successfully!");
@@ -144,7 +144,7 @@ export function SaveChangesHandler({
       // Dispatch a settingsSaved event to notify other components
       try {
         window.dispatchEvent(new CustomEvent('settingsSaved', { 
-          detail: { agentId: agent.id }
+          detail: { agentId: updatedAgent.id }
         }));
         console.log("SaveChangesHandler: Dispatched settingsSaved event");
       } catch (err) {

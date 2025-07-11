@@ -26,7 +26,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { SettingsTabWrapper } from "@/components/agents/settings-tab-wrapper";
+import { UniversalSavingCard } from "@/components/universal-saving-card";
 import RiveGlint from "@/components/chat-interface/rive-glint";
 import {
   AlertDialog,
@@ -103,8 +103,36 @@ const getLanguageFlag = (languageCode: string): string => {
 
 interface AgentTabProps {
   agent: Agent;
-  onSave: (data: Partial<Agent>) => Promise<void>;
+  onSave: (data: Partial<Agent>) => Promise<Agent>;
 }
+
+// Default prompt template
+const DEFAULT_SIMPLE_PROMPT = `# Identity
+You are a {role}, an expert in {domain}.
+
+# Goal
+Your objective is to {what you want the model to achieve}.
+
+# Context
+Provide any background, previous conversation, or data the model needs.
+
+# Task
+Describe precisely what you want the model to do:
+- Step 1: …
+- Step 2: …
+- …
+
+# Constraints
+- Must be no more than {X} words.
+- Only use {style/tone}.
+- Avoid {forbidden content}.
+
+# Examples (optional)
+Input: …
+Output: …
+
+# Output Format
+Specify JSON schema, bullet list, prose, code block, etc.`;
 
 export function AgentTab({ agent, onSave }: AgentTabProps) {
   const form = useForm<AgentFormValues>({
@@ -112,7 +140,7 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
     defaultValues: {
       name: agent.name,
       welcomeMessage: agent.welcomeMessage,
-      prompt: agent.prompt,
+      prompt: agent.prompt || DEFAULT_SIMPLE_PROMPT,
       errorMessage: agent.errorMessage,
       language: agent.language || 'en',
       secondLanguage: agent.secondLanguage || 'none',
@@ -124,16 +152,22 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
     form.reset({
       name: agent.name,
       welcomeMessage: agent.welcomeMessage,
-      prompt: agent.prompt,
+      prompt: agent.prompt || DEFAULT_SIMPLE_PROMPT,
       errorMessage: agent.errorMessage,
       language: agent.language || 'en',
       secondLanguage: agent.secondLanguage || 'none',
     });
+    // Reset dirty state when agent changes
+    setIsDirty(false);
+    setSaveStatus('idle');
+    setErrorMessage('');
   }, [agent, form]);
   
   // State variables for tracking form changes
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   
   // Default prompt template
@@ -164,7 +198,7 @@ Output: …
 # Output Format
 Specify JSON schema, bullet list, prose, code block, etc.`;
 
-  const DEFAULT_SIMPLE_PROMPT = "You are a helpful assistant...";
+
   
   // Track form changes
   useEffect(() => {
@@ -198,45 +232,27 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
 
   // Function to generate magic prompt
   const generateMagicPrompt = async () => {
-    if (isGeneratingPrompt) return;
-    
     setIsGeneratingPrompt(true);
     
     try {
       const currentPrompt = form.getValues('prompt');
-      const agentName = form.getValues('name') || 'AI Assistant';
+      const agentName = form.getValues('name');
+      const isDefaultPrompt = !currentPrompt || currentPrompt === DEFAULT_SIMPLE_PROMPT;
       
-      // Check if current prompt is default template or user-written
-      const isDefaultPrompt = currentPrompt === DEFAULT_PROMPT_TEMPLATE || currentPrompt.trim() === '';
-      
-      let requestData;
-      
-      if (isDefaultPrompt) {
-        // Generate new prompt using business data
-        const businessInfo = await fetchBusinessInfo();
-        requestData = {
-          type: 'new',
-          agentName,
-          businessName: businessInfo.businessName,
-          industry: businessInfo.industry,
-          template: DEFAULT_PROMPT_TEMPLATE
-        };
-      } else {
-        // Improve existing prompt using template
-        requestData = {
-          type: 'improve',
-          agentName,
-          currentPrompt,
-          template: DEFAULT_PROMPT_TEMPLATE
-        };
-      }
+      // Fetch business info
+      const businessInfo = await fetchBusinessInfo();
       
       const response = await fetch('/api/ai/generate-prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestData),
+        body: JSON.stringify({
+          agentName,
+          currentPrompt,
+          businessInfo,
+          isDefaultPrompt,
+        }),
       });
       
       const data = await response.json();
@@ -266,30 +282,42 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
   const handleSaveSettings = async () => {
     try {
       setIsSaving(true);
+      setSaveStatus('saving');
+      setErrorMessage('');
+      
       const values = form.getValues();
       
       const saveData = {
         name: values.name,
         welcomeMessage: values.welcomeMessage,
         prompt: values.prompt,
-        errorMessage: values.errorMessage,
+        chatbotErrorMessage: values.errorMessage,
         language: values.language,
         secondLanguage: values.secondLanguage === 'none' ? null : values.secondLanguage,
       };
       
-      await onSave(saveData);
+      const updatedAgent = await onSave(saveData);
       
-      form.reset(values);
-      toast.success("Basic settings saved successfully", {
-        duration: 5000, // Increased from default to stay longer (5 seconds)
-        icon: <Icons.check className="h-5 w-5 text-green-500 animate-bounce" />,
+      // Reset form with the updated agent data
+      form.reset({
+        name: updatedAgent.name,
+        welcomeMessage: updatedAgent.welcomeMessage,
+        prompt: updatedAgent.prompt || DEFAULT_SIMPLE_PROMPT,
+        errorMessage: updatedAgent.errorMessage,
+        language: updatedAgent.language || 'en',
+        secondLanguage: updatedAgent.secondLanguage || 'none',
       });
+      
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 2000);
+      
+      toast.success("Agent settings saved successfully!");
     } catch (error) {
       console.error("Error saving settings:", error);
-      toast.error("Failed to save settings", {
-        duration: 5000,
-        icon: <Icons.warning className="h-5 w-5 text-red-500" />,
-      });
+      const errorMsg = error instanceof Error ? error.message : 'An error occurred';
+      setErrorMessage(errorMsg);
+      setSaveStatus('error');
+      toast.error("Failed to save settings");
     } finally {
       setIsSaving(false);
     }
@@ -299,20 +327,18 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
     form.reset({
       name: agent.name,
       welcomeMessage: agent.welcomeMessage,
-      prompt: agent.prompt,
+      prompt: agent.prompt || DEFAULT_SIMPLE_PROMPT,
       errorMessage: agent.errorMessage,
       language: agent.language || 'en',
       secondLanguage: agent.secondLanguage || 'none',
     });
+    setIsDirty(false);
+    setSaveStatus('idle');
+    setErrorMessage('');
   };
 
   return (
-    <SettingsTabWrapper
-      tabName="Agent"
-      isDirty={isDirty}
-      onSave={handleSaveSettings}
-      onCancel={handleCancel}
-    >
+    <div className="relative">
       <Form {...form}>
         <div className="space-y-6 pt-0 overflow-x-hidden w-full">
           {/* Agent Name */}
@@ -447,7 +473,8 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
                     <FormControl>
                       <Textarea 
                         {...field}
-                        placeholder="You are a helpful assistant..."
+                        placeholder="# Identity
+You are a {role}, an expert in {domain}..."
                         maxLength={4000}
                         className="min-h-32 resize-y rounded-xl"
                       />
@@ -457,9 +484,9 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
                       <p className="text-xs text-neutral-500 dark:text-neutral-400">
                         The system prompt that guides your agent's behavior. This is not seen by the user.
                       </p>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                        {field.value?.length || 0}/4000
-                      </p>
+                      <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                        {form.getValues('prompt')?.length || 0} / 4000
+                      </div>
                     </div>
                   </FormItem>
                 )}
@@ -484,14 +511,14 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
                     <FormControl>
                       <Input 
                         {...field}
-                        placeholder="I'm sorry, I encountered an error. Please try again later."
-                        maxLength={100}
+                        placeholder="I'm sorry, I encountered an error. Please try again."
+                        maxLength={120}
                         className="rounded-xl"
                       />
                     </FormControl>
                     <FormMessage />
                     <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                      This message will be shown to users if there's an error processing their request.
+                      Message shown to users when an error occurs during conversation.
                     </p>
                   </FormItem>
                 )}
@@ -499,59 +526,76 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
             </div>
           </Card>
 
-          {/* Language Settings */}
+          {/* Languages */}
           <Card className="overflow-hidden p-0 bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 rounded-xl">
             <div className="border-b border-neutral-200 bg-neutral-100 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-800">
               <div className="flex items-center gap-2">
-                <Icons.speech className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                <Label className="text-sm font-semibold text-black dark:text-white">Language Settings</Label>
+                <Icons.globe className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
+                <Label className="text-sm font-semibold text-black dark:text-white">Languages</Label>
               </div>
             </div>
-            <div className="px-3 py-2 bg-white dark:bg-neutral-900">
-              <div className="grid gap-6">
+            <div className="px-3 py-2 bg-white dark:bg-neutral-900 space-y-4">
+              {/* Primary Language */}
+              <div>
                 <FormField
                   control={form.control}
                   name="language"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-black dark:text-white">Primary Language</FormLabel>
+                      <FormLabel className="text-sm font-medium text-black dark:text-white">
+                        Primary Language
+                      </FormLabel>
                       <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Force dirty state update
+                          setTimeout(() => {
+                            setIsDirty(true);
+                          }, 0);
+                        }} 
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger className="rounded-xl">
-                            <SelectValue placeholder="Select language" />
+                            <SelectValue placeholder="Select primary language" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {languageOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
+                          {languageOptions.map((lang) => (
+                            <SelectItem key={lang.value} value={lang.value}>
                               <div className="flex items-center gap-2">
-                                <span className="text-lg">{getLanguageFlag(option.value)}</span>
-                                <span>{option.label}</span>
+                                <span>{getLanguageFlag(lang.value)}</span>
+                                <span>{lang.label}</span>
                               </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                      <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                        The primary language your agent will use to communicate.
-                      </p>
                     </FormItem>
                   )}
                 />
+              </div>
 
+              {/* Secondary Language */}
+              <div>
                 <FormField
                   control={form.control}
                   name="secondLanguage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-black dark:text-white">Secondary Language</FormLabel>
+                      <FormLabel className="text-sm font-medium text-black dark:text-white">
+                        Secondary Language (Optional)
+                      </FormLabel>
                       <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Force dirty state update
+                          setTimeout(() => {
+                            setIsDirty(true);
+                          }, 0);
+                        }} 
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger className="rounded-xl">
@@ -559,34 +603,42 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">🚫</span>
-                              <span>None</span>
-                            </div>
-                          </SelectItem>
-                          {languageOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
+                          <SelectItem value="none">None</SelectItem>
+                          {languageOptions.map((lang) => (
+                            <SelectItem key={lang.value} value={lang.value}>
                               <div className="flex items-center gap-2">
-                                <span className="text-lg">{getLanguageFlag(option.value)}</span>
-                                <span>{option.label}</span>
+                                <span>{getLanguageFlag(lang.value)}</span>
+                                <span>{lang.label}</span>
                               </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                      <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                        Optional secondary language for bilingual support.
-                      </p>
                     </FormItem>
                   )}
                 />
               </div>
+              
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                Your agent will primarily respond in the primary language. If a secondary language is selected, 
+                it will be able to understand and respond in that language as well.
+              </p>
             </div>
           </Card>
         </div>
       </Form>
-    </SettingsTabWrapper>
+      
+      {/* Universal Saving Card */}
+      <UniversalSavingCard
+        isDirty={isDirty}
+        isSaving={isSaving}
+        saveStatus={saveStatus}
+        errorMessage={errorMessage}
+        onSave={handleSaveSettings}
+        onDiscard={handleCancel}
+        position="fixed-bottom"
+      />
+    </div>
   );
 } 

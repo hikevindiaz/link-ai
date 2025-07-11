@@ -79,6 +79,7 @@ import {
   CalendarX,
   ShoppingBag,
   CalendarPlus,
+  Globe,
 } from "lucide-react";
 
 // Import the custom Google icon from Material UI
@@ -167,6 +168,7 @@ export const Icons = {
   calendarX: CalendarX,
   shoppingBag: ShoppingBag,
   calendarPlus: CalendarPlus,
+  globe: Globe,
   // Custom Imported Icons
   google: GoogleIcon,
   gitHub: ({ ...props }: LucideProps) => (

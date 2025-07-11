@@ -97,6 +97,16 @@ function convertToAgent(chatbot: any): Agent {
     temperature: chatbot.temperature,
     maxPromptTokens: chatbot.maxPromptTokens,
     maxCompletionTokens: chatbot.maxCompletionTokens,
+    // Include Call tab fields
+    phoneNumber: chatbot.phoneNumber,
+    voice: chatbot.voice,
+    responseRate: chatbot.responseRate,
+    checkUserPresence: chatbot.checkUserPresence,
+    presenceMessage: chatbot.presenceMessage,
+    presenceMessageDelay: chatbot.presenceMessageDelay,
+    silenceTimeout: chatbot.silenceTimeout,
+    hangUpMessage: chatbot.hangUpMessage,
+    callTimeout: chatbot.callTimeout,
     // Include channel fields
     websiteEnabled: chatbot.websiteEnabled,
     whatsappEnabled: chatbot.whatsappEnabled,
@@ -109,13 +119,30 @@ function convertToAgent(chatbot: any): Agent {
     borderGradientColors: chatbot.borderGradientColors,
     iconType: chatbot.iconType || 'orb',
     chatbotLogoURL: chatbot.chatbotLogoURL || null,
+    chatMessagePlaceHolder: chatbot.chatMessagePlaceHolder,
+    chatInputStyle: chatbot.chatInputStyle,
+    chatHistoryEnabled: chatbot.chatHistoryEnabled,
+    bubbleColor: chatbot.bubbleColor,
+    bubbleTextColor: chatbot.bubbleTextColor,
+    chatBackgroundColor: chatbot.chatBackgroundColor,
+    buttonTheme: chatbot.buttonTheme,
+    chatHeaderBackgroundColor: chatbot.chatHeaderBackgroundColor,
+    chatHeaderTextColor: chatbot.chatHeaderTextColor,
+    userReplyBackgroundColor: chatbot.userReplyBackgroundColor,
+    userReplyTextColor: chatbot.userReplyTextColor,
+    displayBranding: chatbot.displayBranding,
+    chatFileAttachementEnabled: chatbot.chatFileAttachementEnabled,
     // Include knowledge sources if available
     knowledgeSources: chatbot.knowledgeSources ? chatbot.knowledgeSources.map((source: any) => ({
       id: source.id,
       name: source.name,
       description: source.description,
       vectorStoreId: source.vectorStoreId
-    })) : []
+    })) : [],
+    // Include Actions tab fields
+    calendarEnabled: chatbot.calendarEnabled,
+    calendarId: chatbot.calendarId,
+    aviationStackEnabled: chatbot.aviationStackEnabled
   };
 }
 

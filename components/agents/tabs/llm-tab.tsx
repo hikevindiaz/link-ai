@@ -10,7 +10,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { SettingsTabWrapper } from "../settings-tab-wrapper";
+import { UniversalTabWrapper } from "@/components/universal-tab-wrapper";
+import { useAgentConfig } from "@/hooks/use-agent-config";
 
 interface KnowledgeSource {
   id: string;
@@ -21,7 +22,7 @@ interface KnowledgeSource {
 
 interface LLMTabProps {
   agent: Agent;
-  onSave: (data: Partial<Agent>) => Promise<void>;
+  onSave: (data: Partial<Agent>) => Promise<Agent>;
 }
 
 // Agent Mode definitions
@@ -92,6 +93,8 @@ const SAVING_STEPS = [
 ];
 
 export function LLMTab({ agent, onSave }: LLMTabProps) {
+  const { updateCurrentData, isSaving } = useAgentConfig();
+  
   const [temperature, setTemperature] = useState<number>(agent.temperature || 0.7);
   const [knowledgeSources, setKnowledgeSources] = useState<KnowledgeSource[]>([]);
   const [selectedKnowledgeSource, setSelectedKnowledgeSource] = useState<string>(
@@ -103,8 +106,6 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
     getAgentModeFromModelId(agent.modelId || "gpt-4o-mini-2024-07-18")
   );
   const [isLoading, setIsLoading] = useState(true);
-  const [isDirty, setIsDirty] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   
   // Badge status state
   const [badgeStatus, setBadgeStatus] = useState<{
@@ -181,34 +182,38 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
     }
   };
 
-  // Check if any values have changed
-  useEffect(() => {
-    if (!isLoading) {
-      const hasTemperatureChanged = temperature !== agent.temperature;
-      const hasAgentModeChanged = selectedAgentMode !== getAgentModeFromModelId(agent.modelId || "gpt-4o-mini-2024-07-18");
-      
-      // Check if knowledge source has changed
-      let hasKnowledgeSourceChanged = false;
-      if (agent.knowledgeSources && agent.knowledgeSources.length > 0) {
-        hasKnowledgeSourceChanged = selectedKnowledgeSource !== agent.knowledgeSources[0].id;
-      } else {
-        hasKnowledgeSourceChanged = selectedKnowledgeSource !== "none";
-      }
-
-      setIsDirty(hasTemperatureChanged || hasKnowledgeSourceChanged || hasAgentModeChanged);
-    }
-  }, [temperature, selectedKnowledgeSource, selectedAgentMode, agent, isLoading]);
+  // Note: isDirty is now handled by the useAgentConfig context automatically
 
   const handleTemperatureChange = (value: number[]) => {
-    setTemperature(Number(value[0].toFixed(1)));
+    const newTemp = Number(value[0].toFixed(1));
+    setTemperature(newTemp);
+    updateCurrentData({ temperature: newTemp });
   };
 
   const handleKnowledgeSourceChange = (value: string) => {
     setSelectedKnowledgeSource(value);
+    
+    // Update the context with the new knowledge source
+    if (value === "none") {
+      updateCurrentData({ knowledgeSources: [] });
+    } else {
+      const selectedSource = knowledgeSources.find(ks => ks.id === value);
+      if (selectedSource) {
+        updateCurrentData({ 
+          knowledgeSources: [{ 
+            id: selectedSource.id, 
+            name: selectedSource.name,
+            description: selectedSource.description,
+            vectorStoreId: selectedSource.vectorStoreId
+          }]
+        });
+      }
+    }
   };
 
   const handleAgentModeChange = (value: string) => {
     setSelectedAgentMode(value);
+    updateCurrentData({ modelId: getModelIdFromAgentMode(value) });
   };
 
   // Simulate progress for the saving process
@@ -251,105 +256,7 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
     return interval;
   };
 
-  const handleSaveSettings = async () => {
-    if (isSaving) return;
-    
-    // Show checking status in badge
-    setBadgeStatus({ status: "Checking", variant: "default" });
-    
-    // Start the progress simulation
-    const progressInterval = simulateSavingProgress();
-    
-    try {
-      setIsSaving(true);
-      const selectedSource = knowledgeSources.find(ks => ks.id === selectedKnowledgeSource);
-      
-      const saveData = {
-        modelId: getModelIdFromAgentMode(selectedAgentMode),
-        temperature: temperature,
-        // Only include knowledge sources if not "none"
-        knowledgeSources: selectedKnowledgeSource !== "none" && selectedSource 
-          ? [{ 
-              id: selectedSource.id, 
-              name: selectedSource.name,
-              description: selectedSource.description,
-              vectorStoreId: selectedSource.vectorStoreId
-            }] 
-          : [],
-      };
-      
-      // Track the previous selection to determine if it was changed to/from "none"
-      const wasNone = prevSelectedSourceRef.current === "none";
-      const isNowNone = selectedKnowledgeSource === "none";
-      const changedToNone = !wasNone && isNowNone;
-      const changedFromNone = wasNone && !isNowNone;
-      
-      // Update the ref to the current selection
-      prevSelectedSourceRef.current = selectedKnowledgeSource;
-      
-      // Delay slightly to let the progress bar animate
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Actually save the data
-      const updatedAgent = await onSave(saveData);
-      
-      // Complete the progress
-      setSaveProgress(100);
-      setSavingStep("Settings saved successfully!");
-      
-      // Update badge status based on new agent data
-      if (selectedKnowledgeSource === "none") {
-        setBadgeStatus({ status: "Untrained", variant: "warning" });
-      } else if (selectedSource?.vectorStoreId) {
-        setBadgeStatus({ status: "Trained", variant: "success" });
-      } else {
-        setBadgeStatus({ status: "Untrained", variant: "warning" });
-      }
-      
-      // Hide progress after completion
-      setTimeout(() => {
-        setShowSavingProgress(false);
-      }, 2000); // Increased to 2 seconds for the success message to be visible longer
-      
-      setIsDirty(false);
-      
-      const successMessage = changedToNone 
-        ? "Knowledge source removed from agent" 
-        : changedFromNone 
-          ? "Knowledge source added to agent"
-          : "Settings saved successfully";
-      
-      toast.success(successMessage, {
-        duration: 5000,
-        icon: <Database className="h-5 w-5 text-neutral-500 animate-bounce" />,
-      });
-    } catch (error) {
-      console.error('Error saving settings:', error);
-      setShowSavingProgress(false);
-      toast.error(`Failed to save settings: ${error instanceof Error ? error.message : String(error)}`);
-      // Reset badge status on error
-      updateBadgeStatus();
-    } finally {
-      clearInterval(progressInterval);
-      setIsSaving(false);
-    }
-  };
-  
-  const handleCancel = () => {
-    // Reset to original values
-    setTemperature(agent.temperature || 0.7);
-    setSelectedAgentMode(getAgentModeFromModelId(agent.modelId || "gpt-4o-mini-2024-07-18"));
-    
-    if (agent.knowledgeSources && agent.knowledgeSources.length > 0) {
-      setSelectedKnowledgeSource(agent.knowledgeSources[0].id);
-      prevSelectedSourceRef.current = agent.knowledgeSources[0].id;
-    } else {
-      setSelectedKnowledgeSource("none");
-      prevSelectedSourceRef.current = "none";
-    }
-    
-    setIsDirty(false);
-  };
+  // Save handling is now managed by UniversalTabWrapper
 
   // Navigate to knowledge source page
   const navigateToKnowledgeSource = () => {
@@ -361,11 +268,10 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
 
   if (isLoading) {
     return (
-      <SettingsTabWrapper
+      <UniversalTabWrapper
         tabName="LLM"
-        isDirty={false}
-        onSave={handleSaveSettings}
-        onCancel={handleCancel}
+        agent={agent}
+        onSave={onSave}
       >
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
@@ -381,16 +287,33 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
             </Card>
           ))}
         </div>
-      </SettingsTabWrapper>
+      </UniversalTabWrapper>
     );
   }
 
   return (
-    <SettingsTabWrapper
+    <UniversalTabWrapper
       tabName="LLM"
-      isDirty={isDirty}
-      onSave={handleSaveSettings}
-      onCancel={handleCancel}
+      agent={agent}
+      onSave={onSave}
+      customSaveHandler={async (data) => {
+        // Custom save logic for LLM tab
+        const selectedSource = knowledgeSources.find(ks => ks.id === selectedKnowledgeSource);
+        
+        return {
+          modelId: getModelIdFromAgentMode(selectedAgentMode),
+          temperature: temperature,
+          // Only include knowledge sources if not "none"
+          knowledgeSources: selectedKnowledgeSource !== "none" && selectedSource 
+            ? [{ 
+                id: selectedSource.id, 
+                name: selectedSource.name,
+                description: selectedSource.description,
+                vectorStoreId: selectedSource.vectorStoreId
+              }] 
+            : [],
+        };
+      }}
     >
       <div className="space-y-6 pt-0 relative">
         {/* Dynamic Saving Progress Overlay */}
@@ -576,6 +499,6 @@ export function LLMTab({ agent, onSave }: LLMTabProps) {
           </div>
         </Card>
       </div>
-    </SettingsTabWrapper>
+    </UniversalTabWrapper>
   );
 }

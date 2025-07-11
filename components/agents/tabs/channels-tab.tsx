@@ -19,7 +19,7 @@ import { logger } from "@/components/agents/channels/logger"
 
 interface ChannelsTabProps {
   agent: Agent;
-  onSave: (data: Partial<Agent>) => Promise<void>;
+  onSave: (data: Partial<Agent>) => Promise<Agent>;
 }
 
 export function ChannelsTab({ agent, onSave }: ChannelsTabProps) {

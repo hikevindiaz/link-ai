@@ -23,8 +23,11 @@ interface AgentConfigContextType {
   setInitialData: (data: Agent) => void;
   updateCurrentData: (updates: Partial<Agent>) => void;
   resetToInitialData: () => void;
-  save: (saveFunction: (data: Agent) => Promise<void>) => Promise<void>;
+  save: (saveFunction: (data: Agent) => Promise<Agent>) => Promise<Agent>;
   clearSaveStatus: () => void;
+  
+  // New: Force refresh from parent
+  refreshFromParent: (parentAgent: Agent) => void;
 }
 
 const AgentConfigContext = createContext<AgentConfigContextType | undefined>(undefined);
@@ -47,13 +50,29 @@ export function AgentConfigProvider({ children, initialAgent }: AgentConfigProvi
     return !isEqual(initialData, currentData);
   }, [initialData, currentData]);
   
-  // Update current data when initial data changes
+  // Update current data when initial data changes (but only if not dirty)
   useEffect(() => {
     if (initialAgent && (!initialData || initialAgent.id !== initialData.id)) {
+      console.log('[AgentConfigProvider] Initial agent changed, updating data');
       setInitialData(initialAgent);
       setCurrentData(initialAgent);
+      setSaveStatus('idle');
+      setErrorMessage('');
     }
   }, [initialAgent, initialData]);
+  
+  // Force refresh from parent (used after successful saves)
+  const refreshFromParent = useCallback((parentAgent: Agent) => {
+    console.log('[AgentConfigProvider] Force refreshing from parent agent', {
+      agentId: parentAgent.id,
+      agentName: parentAgent.name
+    });
+    
+    setInitialData(parentAgent);
+    setCurrentData(parentAgent);
+    setSaveStatus('idle');
+    setErrorMessage('');
+  }, []);
   
   const handleSetInitialData = useCallback((data: Agent) => {
     setInitialData(data);
@@ -74,24 +93,27 @@ export function AgentConfigProvider({ children, initialAgent }: AgentConfigProvi
     }
   }, [initialData]);
   
-  const save = useCallback(async (saveFunction: (data: Agent) => Promise<void>) => {
-    if (!currentData || !isDirty) return;
+  const save = useCallback(async (saveFunction: (data: Agent) => Promise<Agent>) => {
+    if (!currentData || !isDirty) return currentData;
     
     try {
       setIsSaving(true);
       setSaveStatus('saving');
       setErrorMessage('');
       
-      await saveFunction(currentData);
+      const updatedAgent = await saveFunction(currentData);
       
-      // Update initial data to match current data after successful save
-      setInitialData({ ...currentData });
+      // Update both initial and current data with the fresh data from the server
+      setInitialData(updatedAgent);
+      setCurrentData(updatedAgent);
       setSaveStatus('success');
       
       // Auto-reset status after 2 seconds
       setTimeout(() => {
         setSaveStatus('idle');
       }, 2000);
+      
+      return updatedAgent;
     } catch (error) {
       console.error('Save failed:', error);
       setSaveStatus('error');
@@ -119,6 +141,7 @@ export function AgentConfigProvider({ children, initialAgent }: AgentConfigProvi
     resetToInitialData,
     save,
     clearSaveStatus,
+    refreshFromParent,
   }), [
     initialData,
     currentData,
@@ -131,6 +154,7 @@ export function AgentConfigProvider({ children, initialAgent }: AgentConfigProvi
     resetToInitialData,
     save,
     clearSaveStatus,
+    refreshFromParent,
   ]);
   
   return (

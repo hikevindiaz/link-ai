@@ -12,13 +12,12 @@ import { ChannelItem } from "@/components/agents/channels/channel-item"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { toast } from "sonner"
 import { useAgentConfig } from "@/hooks/use-agent-config"
-import { UniversalSavingCard } from "@/components/universal-saving-card"
+import { UniversalTabWrapper } from "@/components/universal-tab-wrapper"
 
 interface ActionsTabProps {
   agent: Agent
-  onSave: (data: Partial<Agent>) => Promise<void>
+  onSave: (data: Partial<Agent>) => Promise<Agent>
 }
 
 interface Calendar {
@@ -27,25 +26,41 @@ interface Calendar {
 }
 
 export function ActionsTab({ agent, onSave }: ActionsTabProps) {
-  const {
-    currentData,
-    updateCurrentData,
-    isDirty,
-    isSaving,
-    saveStatus,
-    errorMessage,
-    save,
-    resetToInitialData
-  } = useAgentConfig()
+  const { currentData, updateCurrentData, setInitialData } = useAgentConfig()
   
   const [isLoading, setIsLoading] = useState(true)
   const [calendars, setCalendars] = useState<Calendar[]>([])
   
-  // Use current data from context, fallback to agent prop
+  // Initialize the context with agent data if not already set
+  useEffect(() => {
+    if (agent && (!currentData || currentData.id !== agent.id)) {
+      console.log('[ActionsTab] Initializing agent data in context:', {
+        agentId: agent.id,
+        calendarEnabled: agent.calendarEnabled,
+        calendarId: agent.calendarId,
+        aviationStackEnabled: agent.aviationStackEnabled
+      });
+      setInitialData(agent);
+    }
+  }, [agent, currentData, setInitialData]);
+  
+  // Use current data from context, fallback to agent prop, with proper null checks
   const activeAgent = currentData || agent
-  const calendarEnabled = activeAgent?.calendarEnabled || false
-  const selectedCalendarId = activeAgent?.calendarId || null
-  const aviationStackEnabled = activeAgent?.aviationStackEnabled || false
+  const calendarEnabled = activeAgent?.calendarEnabled ?? false
+  const selectedCalendarId = activeAgent?.calendarId ?? null
+  const aviationStackEnabled = activeAgent?.aviationStackEnabled ?? false
+  
+  // Debug log current values
+  useEffect(() => {
+    console.log('[ActionsTab] Current values:', {
+      agentId: activeAgent?.id,
+      calendarEnabled,
+      selectedCalendarId,
+      aviationStackEnabled,
+      currentDataPresent: !!currentData,
+      activeAgentSource: currentData ? 'currentData' : 'agent'
+    });
+  }, [activeAgent?.id, calendarEnabled, selectedCalendarId, aviationStackEnabled, currentData]);
   
   // Check if user has calendar integration enabled
   const [hasCalendarIntegration, setHasCalendarIntegration] = useState(false)
@@ -84,39 +99,27 @@ export function ActionsTab({ agent, onSave }: ActionsTabProps) {
   }, [activeAgent?.userId])
   
   const handleCalendarToggle = (enabled: boolean) => {
-    updateCurrentData({
+    console.log('[ActionsTab] Calendar toggle:', { enabled, selectedCalendarId });
+    const updateData = {
       calendarEnabled: enabled,
       calendarId: enabled ? selectedCalendarId : null
-    })
+    };
+    console.log('[ActionsTab] Updating current data:', updateData);
+    updateCurrentData(updateData);
   }
   
   const handleCalendarSelect = (calendarId: string) => {
+    console.log('[ActionsTab] Calendar select:', { calendarId });
     updateCurrentData({
       calendarId: calendarId
-    })
+    });
   }
   
   const handleAviationStackToggle = (enabled: boolean) => {
+    console.log('[ActionsTab] AviationStack toggle:', { enabled });
     updateCurrentData({
       aviationStackEnabled: enabled
-    })
-  }
-  
-  const handleSave = async () => {
-    if (!isDirty) return
-    
-    try {
-      await save(onSave)
-      toast.success("Agent actions updated successfully")
-    } catch (error) {
-      console.error("Failed to save actions:", error)
-      toast.error("Failed to save actions. Please try again.")
-    }
-  }
-  
-  const handleCancel = () => {
-    resetToInitialData()
-    toast.info("Changes discarded")
+    });
   }
 
   if (isLoading) {
@@ -148,8 +151,29 @@ export function ActionsTab({ agent, onSave }: ActionsTabProps) {
     );
   }
 
+  // Custom save handler for Actions tab
+  const customSaveHandler = async (data: Partial<Agent>) => {
+    console.log('[ActionsTab] Custom save handler called with data:', {
+      calendarEnabled: data.calendarEnabled,
+      calendarId: data.calendarId,
+      aviationStackEnabled: data.aviationStackEnabled
+    });
+    
+    // Return the specific fields we want to save for the Actions tab
+    return {
+      calendarEnabled: data.calendarEnabled,
+      calendarId: data.calendarId,
+      aviationStackEnabled: data.aviationStackEnabled
+    };
+  };
+
   return (
-    <div className="relative">
+    <UniversalTabWrapper
+      tabName="Actions"
+      agent={agent}
+      onSave={onSave}
+      customSaveHandler={customSaveHandler}
+    >
       <div className="space-y-6">
         {!hasCalendarIntegration ? (
           <Alert className="rounded-xl">
@@ -391,17 +415,6 @@ export function ActionsTab({ agent, onSave }: ActionsTabProps) {
           </>
         )}
       </div>
-      
-      {/* Universal Saving Card */}
-      <UniversalSavingCard
-        isDirty={isDirty}
-        isSaving={isSaving}
-        saveStatus={saveStatus}
-        errorMessage={errorMessage}
-        onSave={handleSave}
-        onCancel={handleCancel}
-        position="fixed-bottom"
-      />
-    </div>
+    </UniversalTabWrapper>
   )
 } 
