@@ -15,7 +15,7 @@ import {
 import type { Agent } from "@/types/agent";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { agentSchema, type AgentFormValues } from "@/lib/validations/agent";
 import {
@@ -147,6 +147,19 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
     },
   });
   
+  // Watch form values to detect changes
+  const watchedValues = useWatch({
+    control: form.control,
+    name: ['name', 'welcomeMessage', 'prompt', 'errorMessage', 'language', 'secondLanguage']
+  });
+  
+  // State variables for tracking form changes
+  const [isDirty, setIsDirty] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+  
   // Reset form when agent changes
   useEffect(() => {
     form.reset({
@@ -163,12 +176,24 @@ export function AgentTab({ agent, onSave }: AgentTabProps) {
     setErrorMessage('');
   }, [agent, form]);
   
-  // State variables for tracking form changes
-  const [isDirty, setIsDirty] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+  // Watch for form changes and update isDirty state
+  useEffect(() => {
+    if (watchedValues) {
+      const [name, welcomeMessage, prompt, errorMessage, language, secondLanguage] = watchedValues;
+      
+      // Check if any field has changed from the original values
+      const hasChanges = (
+        name !== agent.name ||
+        welcomeMessage !== agent.welcomeMessage ||
+        prompt !== (agent.prompt || DEFAULT_SIMPLE_PROMPT) ||
+        errorMessage !== agent.errorMessage ||
+        language !== (agent.language || 'en') ||
+        secondLanguage !== (agent.secondLanguage || 'none')
+      );
+      
+      setIsDirty(hasChanges);
+    }
+     }, [watchedValues, agent]);
   
   // Default prompt template
   const DEFAULT_PROMPT_TEMPLATE = `# Identity
@@ -286,7 +311,6 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
       
       if (data.success && data.prompt) {
         form.setValue('prompt', data.prompt);
-        setIsDirty(true);
         toast.success(isDefaultPrompt ? 'New prompt generated successfully!' : 'Prompt improved successfully!');
       } else {
         console.error('API response missing expected data:', data);
@@ -303,7 +327,6 @@ Specify JSON schema, bullet list, prose, code block, etc.`;
   // Function to reset prompt to default
   const resetToDefaultPrompt = () => {
     form.setValue('prompt', DEFAULT_PROMPT_TEMPLATE);
-    setIsDirty(true);
     toast.success('Prompt reset to default template');
   };
 
@@ -574,13 +597,7 @@ You are a {role}, an expert in {domain}..."
                         Primary Language
                       </FormLabel>
                       <Select 
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          // Force dirty state update
-                          setTimeout(() => {
-                            setIsDirty(true);
-                          }, 0);
-                        }} 
+                        onValueChange={field.onChange} 
                         value={field.value}
                       >
                         <FormControl>
@@ -616,13 +633,7 @@ You are a {role}, an expert in {domain}..."
                         Secondary Language (Optional)
                       </FormLabel>
                       <Select 
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          // Force dirty state update
-                          setTimeout(() => {
-                            setIsDirty(true);
-                          }, 0);
-                        }} 
+                        onValueChange={field.onChange} 
                         value={field.value}
                       >
                         <FormControl>
